@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CheckCircle2, ShieldAlert, X } from 'lucide-react';
+import { CheckCircle2, ChevronLeft, ShieldAlert } from 'lucide-react';
 import { cn } from '../components/ui';
 import type { Ad } from '../data/mockData';
 
@@ -27,96 +27,97 @@ export function ReportAdModal({ ad, onClose }: ReportAdModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/75 backdrop-blur-sm sm:items-center">
-      <div className="flex max-h-[92dvh] w-full max-w-[420px] flex-col rounded-t-[36px] bg-white p-5 shadow-float sm:rounded-[36px] overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-mist pb-3">
-          <div className="flex items-center gap-2">
-            <span className="grid h-9 w-9 place-items-center rounded-full bg-coral-100 text-coral">
-              <ShieldAlert className="h-5 w-5" />
-            </span>
-            <h2 className="font-display text-[18px] font-bold text-ink">Zgłoś ogłoszenie</h2>
-          </div>
+    <div className="fixed inset-0 z-50 flex flex-col bg-white native-screen-slide select-none">
+      <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-white">
+        {/* Native Top Navigation Bar */}
+        <header className="flex h-14 items-center justify-between border-b border-mist px-4 pt-[max(env(safe-area-inset-top),8px)] shrink-0 z-20">
           <button
             onClick={onClose}
-            className="grid h-9 w-9 place-items-center rounded-full bg-mist text-ink hover:bg-mist-200"
+            aria-label="Wróć"
+            className="flex items-center gap-1 text-[14px] font-bold text-ink active:opacity-60 transition-opacity"
           >
-            <X className="h-4 w-4" />
+            <ChevronLeft className="h-5 w-5" />
+            <span>Wróć</span>
           </button>
-        </div>
+          <h2 className="font-display text-[15px] font-bold text-ink">Zgłoś ogłoszenie</h2>
+          <div className="w-12" />
+        </header>
 
         {isSubmitted ? (
-          <div className="py-8 text-center">
-            <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-100 text-emerald-600">
-              <CheckCircle2 className="h-8 w-8" />
+          <div className="flex-1 flex flex-col justify-center items-center p-6 text-center space-y-4">
+            <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-100 text-emerald-600 shadow-sm">
+              <CheckCircle2 className="h-10 w-10" />
             </div>
-            <h3 className="mt-4 font-display text-[20px] font-bold text-ink">Dziękujemy za zgłoszenie</h3>
-            <p className="mt-2 text-[13px] text-ink-500">
+            <h3 className="font-display text-[22px] font-bold text-ink">Dziękujemy za zgłoszenie</h3>
+            <p className="text-[13.5px] text-ink-500 max-w-[280px]">
               Administratorzy platformy <b>mójMińsk</b> przeanalizują ogłoszenie w ciągu kilku godzin. Dzięki Twojej czujności nasza społeczność jest bezpieczna.
             </p>
             <button
               onClick={onClose}
-              className="mt-6 flex h-12 w-full items-center justify-center rounded-full bg-ink text-[14px] font-bold text-white transition-transform active:scale-95"
+              className="mt-4 flex h-12 w-full max-w-[260px] items-center justify-center rounded-full bg-ink text-[14px] font-bold text-white transition-transform active:scale-95"
             >
               Zamknij
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-            <div className="rounded-2xl bg-mist p-3">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-ink-400">Zgłaszane ogłoszenie</p>
-              <p className="font-semibold text-[13.5px] text-ink truncate mt-0.5">{ad.title}</p>
-              <p className="text-[11.5px] text-ink-500">Wystawca: {ad.author} · ul. {ad.street}</p>
-            </div>
+          <form onSubmit={handleSubmit} className="flex-1 flex flex-col justify-between overflow-y-auto p-5 pb-[max(env(safe-area-inset-bottom),16px)]">
+            <div className="space-y-4">
+              <div className="rounded-2xl bg-mist p-3.5">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-ink-400">Zgłaszane ogłoszenie</p>
+                <p className="font-semibold text-[14px] text-ink truncate mt-0.5">{ad.title}</p>
+                <p className="text-[12px] text-ink-500">Wystawca: {ad.author} · ul. {ad.street}</p>
+              </div>
 
-            <div>
-              <label className="text-[12px] font-bold uppercase tracking-wider text-ink-400">
-                Wybierz powód zgłoszenia
-              </label>
-              <div className="mt-2 space-y-1.5">
-                {reportReasons.map((reason) => (
-                  <button
-                    key={reason}
-                    type="button"
-                    onClick={() => setSelectedReason(reason)}
-                    className={cn(
-                      'flex w-full items-center justify-between rounded-2xl border p-3 text-left text-[13px] font-semibold transition-all',
-                      selectedReason === reason
-                        ? 'border-ink bg-mist text-ink ring-1 ring-ink'
-                        : 'border-mist bg-white text-ink-600 hover:bg-mist/50',
-                    )}
-                  >
-                    <span>{reason}</span>
-                    <span
+              <div>
+                <label className="text-[12px] font-bold uppercase tracking-wider text-ink-400">
+                  Wybierz powód zgłoszenia
+                </label>
+                <div className="mt-2 space-y-2">
+                  {reportReasons.map((reason) => (
+                    <button
+                      key={reason}
+                      type="button"
+                      onClick={() => setSelectedReason(reason)}
                       className={cn(
-                        'h-4 w-4 rounded-full border-2 grid place-items-center',
-                        selectedReason === reason ? 'border-ink bg-ink text-white text-[10px]' : 'border-mist',
+                        'flex w-full items-center justify-between rounded-2xl border p-3.5 text-left text-[13px] font-semibold transition-all',
+                        selectedReason === reason
+                          ? 'border-ink bg-mist text-ink ring-1 ring-ink'
+                          : 'border-mist bg-white text-ink-600 hover:bg-mist/50',
                       )}
                     >
-                      {selectedReason === reason && '✓'}
-                    </span>
-                  </button>
-                ))}
+                      <span>{reason}</span>
+                      <span
+                        className={cn(
+                          'h-4 w-4 rounded-full border-2 grid place-items-center',
+                          selectedReason === reason ? 'border-ink bg-ink text-white text-[10px]' : 'border-mist',
+                        )}
+                      >
+                        {selectedReason === reason && '✓'}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            <label className="block">
-              <span className="text-[12px] font-bold text-ink">
-                Dodatkowe informacje <span className="text-ink-400 font-normal">(opcjonalnie)</span>
-              </span>
-              <textarea
-                rows={2}
-                value={details}
-                onChange={(e) => setDetails(e.target.value)}
-                placeholder="Napisz krótko, na czym polega problem..."
-                className="mt-1 w-full rounded-2xl bg-mist p-3 text-[13px] outline-none focus:ring-2 focus:ring-ink"
-              />
-            </label>
+              <label className="block">
+                <span className="text-[12px] font-bold text-ink">
+                  Dodatkowe informacje <span className="text-ink-400 font-normal">(opcjonalnie)</span>
+                </span>
+                <textarea
+                  rows={3}
+                  value={details}
+                  onChange={(e) => setDetails(e.target.value)}
+                  placeholder="Napisz krótko, na czym polega problem..."
+                  className="mt-1 w-full rounded-2xl bg-mist p-3.5 text-[13.5px] outline-none focus:ring-2 focus:ring-ink"
+                />
+              </label>
+            </div>
 
             <button
               type="submit"
-              className="flex h-12 w-full items-center justify-center rounded-full bg-coral text-[14px] font-bold text-ink shadow-coral transition-transform active:scale-95"
+              className="mt-4 flex h-13 w-full items-center justify-center gap-2 rounded-full bg-coral text-[15px] font-bold text-ink shadow-coral transition-transform active:scale-95"
             >
+              <ShieldAlert className="h-4 w-4" />
               Prześlij zgłoszenie do moderacji
             </button>
           </form>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { BottomNav, type TabId } from './components/BottomNav';
 import { ProductSheet } from './components/ProductSheet';
 import { CartPill, CartSheet, type CartLine } from './components/Cart';
@@ -42,6 +42,7 @@ export default function App() {
   const [sheet, setSheet] = useState<Product | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
   const [frame, setFrame] = useState<HTMLDivElement | null>(null);
+  const mainRef = useRef<HTMLElement>(null);
 
   // Dynamic ads & jobs lists
   const [adsList, setAdsList] = useState<Ad[]>(initialAds);
@@ -58,11 +59,12 @@ export default function App() {
   const [myAdsOpen, setMyAdsOpen] = useState(false);
   const [reportAd, setReportAd] = useState<Ad | null>(null);
 
-  // 1. Reset window and document scroll immediately upon navigating between tabs or overlays
+  // 1. Reset main container scroll immediately upon navigating between tabs or overlays
   useLayoutEffect(() => {
+    if (mainRef.current) {
+      mainRef.current.scrollTop = 0;
+    }
     window.scrollTo(0, 0);
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
   }, [tab, overlay]);
 
   // 2. Prevent browser from retaining scroll offsets on SPA page changes
@@ -72,20 +74,9 @@ export default function App() {
     }
   }, []);
 
-  // 3. Lock background scroll while any modal or sheet is open
-  const isAnyModalOpen = Boolean(
-    addAdOpen || chatAd || selectedAd || selectedJob || applyJob || myAdsOpen || reportAd || sheet || cartOpen
+  const isChildScreenActive = Boolean(
+    overlay || selectedAd || selectedJob || applyJob || myAdsOpen || reportAd || addAdOpen || chatAd
   );
-
-  useEffect(() => {
-    if (isAnyModalOpen) {
-      const originalOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = originalOverflow;
-      };
-    }
-  }, [isAnyModalOpen]);
 
   const handleToggleLike = useCallback((adId: string) => {
     setLikedAds((prev) => ({ ...prev, [adId]: !prev[adId] }));
@@ -223,19 +214,23 @@ export default function App() {
   const showChrome = !!user && !overlay;
 
   return (
-    <div className="min-h-screen w-full bg-mist">
+    <div className="h-full h-[100dvh] w-full overflow-hidden bg-mist select-none">
       <div
         ref={setFrame}
-        className="relative mx-auto min-h-screen w-full max-w-md bg-mist"
+        className="relative mx-auto flex h-full h-[100dvh] w-full max-w-md flex-col overflow-hidden bg-mist shadow-2xl"
       >
-        <main key={user ? (overlay ?? tab) : 'onboarding'} className="w-full">
+        <main
+          ref={mainRef}
+          key={user ? (overlay ?? tab) : 'onboarding'}
+          className="h-full w-full flex-1 overflow-y-auto overscroll-contain"
+        >
           {content}
         </main>
 
-        {showChrome && count > 0 && (tab === 'kitchen' || tab === 'home') && (
+        {showChrome && !isChildScreenActive && count > 0 && (tab === 'kitchen' || tab === 'home') && (
           <CartPill count={count} total={total} onOpen={() => setCartOpen(true)} />
         )}
-        {showChrome && <BottomNav tab={tab} onChange={setTab} />}
+        {showChrome && !isChildScreenActive && <BottomNav tab={tab} onChange={setTab} />}
 
         <ProductSheet product={sheet} onClose={() => setSheet(null)} onAdd={add} container={frame} />
         <CartSheet

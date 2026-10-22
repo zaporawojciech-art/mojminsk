@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import {
-  ArrowLeft,
+  ChevronLeft,
   Check,
   Eye,
   Heart,
@@ -70,43 +70,49 @@ export function AdDetailModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/75 backdrop-blur-sm sm:items-center">
-      <div className="flex max-h-[94dvh] w-full max-w-[440px] flex-col rounded-t-[36px] bg-mist shadow-float sm:rounded-[36px] overflow-hidden">
-        {/* Scrollable container */}
-        <div ref={scrollRef} className="overflow-y-auto">
-          {/* Hero Image & Floating Controls */}
+    <div className="fixed inset-0 z-50 flex flex-col bg-mist native-screen-slide select-none">
+      <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist">
+        {/* Native Top Navigation Bar */}
+        <header className="flex h-14 items-center justify-between border-b border-mist bg-white/95 px-4 pt-[max(env(safe-area-inset-top),8px)] backdrop-blur shrink-0 z-20">
+          <button
+            onClick={onClose}
+            aria-label="Wróć do ogłoszeń"
+            className="flex items-center gap-1 text-[14px] font-bold text-ink active:opacity-60 transition-opacity"
+          >
+            <ChevronLeft className="h-5 w-5" />
+            <span>Ogłoszenia</span>
+          </button>
+
+          <span className="font-display text-[15px] font-bold text-ink truncate max-w-[160px]">
+            {ad.title}
+          </span>
+
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={handleShare}
+              aria-label="Udostępnij"
+              className="grid h-9 w-9 place-items-center rounded-full bg-mist text-ink hover:bg-mist-200 transition-transform active:scale-90"
+            >
+              {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Share2 className="h-4 w-4" />}
+            </button>
+            <button
+              onClick={() => onToggleLike?.(ad.id)}
+              aria-label="Obserwuj"
+              className="grid h-9 w-9 place-items-center rounded-full bg-mist text-ink hover:bg-mist-200 transition-transform active:scale-90"
+            >
+              <Heart className={cn('h-4 w-4 transition-colors', isLiked && 'fill-coral text-coral')} />
+            </button>
+          </div>
+        </header>
+
+        {/* Scrollable Screen Content */}
+        <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain pb-24">
+          {/* Hero Image */}
           <div className="relative aspect-[4/3] w-full bg-mist-200">
             <Img src={ad.image} alt={ad.title} className="h-full w-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/30" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
 
-            {/* Top Navigation Row */}
-            <div className="absolute top-4 inset-x-4 flex items-center justify-between">
-              <button
-                onClick={onClose}
-                aria-label="Zamknij"
-                className="grid h-10 w-10 place-items-center rounded-full bg-white/90 text-ink shadow-md backdrop-blur transition-transform active:scale-95"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </button>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleShare}
-                  aria-label="Udostępnij"
-                  className="grid h-10 w-10 place-items-center rounded-full bg-white/90 text-ink shadow-md backdrop-blur transition-transform active:scale-95"
-                >
-                  {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Share2 className="h-4 w-4" />}
-                </button>
-                <button
-                  onClick={() => onToggleLike?.(ad.id)}
-                  aria-label="Dodaj do obserwowanych"
-                  className="grid h-10 w-10 place-items-center rounded-full bg-white/90 text-ink shadow-md backdrop-blur transition-transform active:scale-95"
-                >
-                  <Heart className={cn('h-4 w-4 transition-colors', isLiked && 'fill-coral text-coral')} />
-                </button>
-              </div>
-            </div>
-
-            {/* Status & Category Badges on Image */}
+            {/* Badges on Image */}
             <div className="absolute bottom-3 left-4 flex flex-wrap items-center gap-2">
               {currentStatus === 'reserved' && (
                 <span className="rounded-full bg-amber-400 px-3 py-1 text-[11px] font-bold text-ink shadow">
@@ -137,17 +143,17 @@ export function AdDetailModal({
             </div>
           </div>
 
-          {/* Main Info */}
-          <div className="space-y-4 p-5">
-            {/* Price & Meta */}
+          {/* Details Body */}
+          <div className="space-y-4 p-4">
+            {/* Price & Meta Card */}
             <div className="rounded-3xl bg-white p-4 shadow-card">
               <div className="flex items-baseline justify-between gap-2">
                 <span className="font-display text-[28px] font-extrabold leading-none text-ink">
                   {ad.price ? zl(ad.price) : ad.kind === 'free' ? 'Za darmo' : 'Zgłoszenie'}
                 </span>
-                <span className="flex items-center gap-1 text-[11px] text-ink-400">
+                <span className="flex items-center gap-1 text-[11.5px] text-ink-400">
                   <Clock className="h-3.5 w-3.5" />
-                  Dodano: {ad.time}
+                  {ad.time}
                 </span>
               </div>
               <h1 className="mt-2 text-[17px] font-bold leading-snug text-ink">{ad.title}</h1>
@@ -169,7 +175,7 @@ export function AdDetailModal({
               </p>
             </div>
 
-            {/* Seller / Neighbor Profile Card */}
+            {/* Neighbor Profile Card */}
             <div className="rounded-3xl bg-white p-4 shadow-card">
               <h3 className="text-[12px] font-bold uppercase tracking-wider text-ink-400">Sprzedający sąsiad</h3>
               <div className="mt-3 flex items-center gap-3">
@@ -191,19 +197,19 @@ export function AdDetailModal({
               </div>
             </div>
 
-            {/* Safety Notice */}
+            {/* Local Safety Card */}
             <div className="flex items-start gap-3 rounded-3xl bg-sand-100 p-4">
               <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-sand-700" />
               <div className="text-[12px] leading-snug text-ink-700">
                 <p className="font-bold">Odbiór osobisty w Mińsku Mazowieckim</p>
                 <p className="mt-0.5 text-ink-500">
-                  Spotkajcie się na osiedlu, sprawdźcie przedmiot na żywo i rozliczcie się bezpośrednio. Zero prowizji i bezpieczny kontakt na czacie.
+                  Spotkajcie się na osiedlu, sprawdźcie przedmiot na żywo i rozliczcie się bezpośrednio bez żadnych opłat.
                 </p>
               </div>
             </div>
 
-            {/* Owner Management Controls or Buyer Actions */}
-            {isOwner ? (
+            {/* Owner Management Controls */}
+            {isOwner && (
               <div className="space-y-2 rounded-3xl bg-white p-4 shadow-card">
                 <h3 className="text-[12px] font-bold uppercase tracking-wider text-ink-400">
                   Zarządzaj swoim ogłoszeniem
@@ -249,32 +255,32 @@ export function AdDetailModal({
                   </button>
                 )}
               </div>
-            ) : (
-              <div className="space-y-3 pt-1">
-                <button
-                  onClick={() => {
-                    onClose();
-                    onChatClick?.(ad);
-                  }}
-                  className="flex h-13 w-full items-center justify-center gap-2 rounded-full bg-coral text-[15px] font-bold text-ink shadow-coral transition-transform active:scale-95"
-                >
-                  <MessageCircle className="h-5 w-5" />
-                  Napisz do {ad.author} na czacie
-                </button>
-
-                <button
-                  onClick={() => {
-                    onReportClick?.(ad);
-                  }}
-                  className="flex w-full items-center justify-center gap-1.5 text-[11.5px] font-semibold text-ink-400 hover:text-ink-700"
-                >
-                  <ShieldAlert className="h-3.5 w-3.5" />
-                  Zgłoś to ogłoszenie (spam, nieaktualne)
-                </button>
-              </div>
             )}
           </div>
         </div>
+
+        {/* Pinned Bottom Action Bar (Native App Style) */}
+        {!isOwner && (
+          <div className="border-t border-mist bg-white px-5 py-3 pb-[max(env(safe-area-inset-bottom),14px)] shrink-0 shadow-float">
+            <button
+              onClick={() => {
+                onClose();
+                onChatClick?.(ad);
+              }}
+              className="flex h-13 w-full items-center justify-center gap-2 rounded-full bg-coral text-[15px] font-bold text-ink shadow-coral transition-transform active:scale-95"
+            >
+              <MessageCircle className="h-5 w-5" />
+              Napisz do {ad.author} na czacie
+            </button>
+            <button
+              onClick={() => onReportClick?.(ad)}
+              className="mt-2 flex w-full items-center justify-center gap-1.5 text-[11px] font-semibold text-ink-400 hover:text-ink-600"
+            >
+              <ShieldAlert className="h-3 w-3" />
+              Zgłoś nieaktualne lub naruszenie
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

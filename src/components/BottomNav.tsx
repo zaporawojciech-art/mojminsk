@@ -12,6 +12,17 @@ const items: { id: TabId; label: string; icon: typeof House }[] = [
 ];
 
 export function BottomNav({ tab, onChange }: { tab: TabId; onChange: (t: TabId) => void }) {
+  const handleSelect = (id: TabId) => {
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      try {
+        navigator.vibrate(10);
+      } catch {
+        // ignore
+      }
+    }
+    onChange(id);
+  };
+
   return (
     <nav aria-label="Nawigacja główna" className="fixed inset-x-4 bottom-[max(env(safe-area-inset-bottom),16px)] z-40 mx-auto max-w-md pointer-events-none">
       <ul className="pointer-events-auto flex items-center justify-between rounded-full bg-ink p-1.5 shadow-float">
@@ -20,7 +31,7 @@ export function BottomNav({ tab, onChange }: { tab: TabId; onChange: (t: TabId) 
           return (
             <li key={id}>
               <button
-                onClick={() => onChange(id)}
+                onClick={() => handleSelect(id)}
                 aria-label={label}
                 aria-current={active ? 'page' : undefined}
                 className={cn(

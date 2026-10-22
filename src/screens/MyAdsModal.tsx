@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import {
   CheckCircle,
+  ChevronLeft,
   Clock,
   Eye,
   Heart,
@@ -8,7 +9,6 @@ import {
   Plus,
   RefreshCw,
   Trash2,
-  X,
 } from 'lucide-react';
 import { Img, cn, zl } from '../components/ui';
 import type { Ad, Job, User } from '../data/mockData';
@@ -51,38 +51,37 @@ export function MyAdsModal({
   const activeCount = myAds.filter((a) => (a.status ?? 'active') === 'active').length;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/75 backdrop-blur-sm sm:items-center">
-      <div className="flex max-h-[92dvh] w-full max-w-[460px] flex-col rounded-t-[36px] bg-mist shadow-float sm:rounded-[36px] overflow-hidden">
-        {/* Header */}
-        <header className="flex items-center justify-between border-b border-mist-300 bg-white px-5 py-3.5 shrink-0">
-          <div>
-            <h2 className="font-display text-[19px] font-bold text-ink">Moje ogłoszenia</h2>
-            <p className="text-[12px] text-ink-500">
-              {activeCount} aktywnych · {myAds.length} łącznie
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                onClose();
-                onAddNew();
-              }}
-              className="flex h-9 items-center gap-1 rounded-full bg-coral px-3 text-[12px] font-bold text-ink shadow-coral transition-transform active:scale-95"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Dodaj
-            </button>
-            <button
-              onClick={onClose}
-              className="grid h-9 w-9 place-items-center rounded-full bg-mist text-ink hover:bg-mist-200"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
+    <div className="fixed inset-0 z-50 flex flex-col bg-mist native-screen-slide select-none">
+      <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist">
+        {/* Native Top Navigation Bar */}
+        <header className="flex h-14 items-center justify-between border-b border-mist bg-white px-4 pt-[max(env(safe-area-inset-top),8px)] shrink-0 z-20">
+          <button
+            onClick={onClose}
+            aria-label="Wróć"
+            className="flex items-center gap-1 text-[14px] font-bold text-ink active:opacity-60 transition-opacity"
+          >
+            <ChevronLeft className="h-5 w-5" />
+            <span>Wróć</span>
+          </button>
+
+          <span className="font-display text-[16px] font-bold text-ink">
+            Moje ogłoszenia
+          </span>
+
+          <button
+            onClick={() => {
+              onClose();
+              onAddNew();
+            }}
+            className="flex h-9 items-center gap-1 rounded-full bg-coral px-3 text-[12px] font-bold text-ink shadow-coral transition-transform active:scale-95"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Dodaj
+          </button>
         </header>
 
         {/* Stats summary bar */}
-        <div className="grid grid-cols-2 gap-2 bg-white px-5 pb-3">
+        <div className="grid grid-cols-2 gap-2 bg-white px-4 pb-3 border-b border-mist">
           <div className="rounded-2xl bg-mist p-2.5 text-center">
             <p className="font-display text-[18px] font-extrabold text-ink">{totalViews}</p>
             <p className="text-[11px] font-semibold text-ink-500 flex items-center justify-center gap-1">
@@ -98,7 +97,7 @@ export function MyAdsModal({
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex gap-1.5 overflow-x-auto border-y border-mist-300 bg-white px-5 py-2.5 no-scrollbar">
+        <div className="flex gap-1.5 overflow-x-auto border-b border-mist-300 bg-white px-4 py-2.5 no-scrollbar shrink-0">
           {(
             [
               { id: 'all', label: 'Wszystkie', count: myAds.length },
@@ -134,7 +133,7 @@ export function MyAdsModal({
         </div>
 
         {/* List of Ads */}
-        <div className="overflow-y-auto p-4 space-y-3">
+        <div className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-3 pb-[max(env(safe-area-inset-bottom),20px)]">
           {filteredAds.length === 0 ? (
             <div className="rounded-3xl bg-white p-8 text-center shadow-card">
               <p className="font-display text-[16px] font-bold text-ink">Brak ogłoszeń w tej kategorii</p>

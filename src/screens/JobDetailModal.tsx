@@ -1,9 +1,9 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import {
-  ArrowLeft,
   Building2,
   Check,
   CheckCircle2,
+  ChevronLeft,
   Clock,
   HeartHandshake,
   Share2,
@@ -57,29 +57,34 @@ export function JobDetailModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/75 backdrop-blur-sm sm:items-center">
-      <div className="flex max-h-[94dvh] w-full max-w-[440px] flex-col rounded-t-[36px] bg-mist shadow-float sm:rounded-[36px] overflow-hidden">
-        {/* Sticky Header */}
-        <header className="flex items-center justify-between border-b border-mist-300 bg-white px-5 py-3.5 shrink-0">
+    <div className="fixed inset-0 z-50 flex flex-col bg-mist native-screen-slide select-none">
+      <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist">
+        {/* Native Top Navigation Bar */}
+        <header className="flex h-14 items-center justify-between border-b border-mist bg-white/95 px-4 pt-[max(env(safe-area-inset-top),8px)] backdrop-blur shrink-0 z-20">
           <button
             onClick={onClose}
-            aria-label="Wróć"
-            className="grid h-10 w-10 place-items-center rounded-full bg-mist text-ink hover:bg-mist-200 transition-transform active:scale-95"
+            aria-label="Wróć do ofert"
+            className="flex items-center gap-1 text-[14px] font-bold text-ink active:opacity-60 transition-opacity"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ChevronLeft className="h-5 w-5" />
+            <span>Praca</span>
           </button>
-          <span className="font-display text-[15px] font-bold text-ink">Oferta pracy w Mińsku</span>
+
+          <span className="font-display text-[15px] font-bold text-ink truncate max-w-[170px]">
+            {job.position}
+          </span>
+
           <button
             onClick={handleShare}
             aria-label="Udostępnij ofertę"
-            className="grid h-10 w-10 place-items-center rounded-full bg-mist text-ink hover:bg-mist-200 transition-transform active:scale-95"
+            className="grid h-9 w-9 place-items-center rounded-full bg-mist text-ink hover:bg-mist-200 transition-transform active:scale-90"
           >
             {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Share2 className="h-4 w-4" />}
           </button>
         </header>
 
-        {/* Content */}
-        <div ref={scrollRef} className="overflow-y-auto p-5 space-y-4">
+        {/* Content Body */}
+        <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-4 pb-24">
           {/* Company & Role Hero Card */}
           <div className="rounded-3xl bg-white p-5 shadow-card">
             <div className="flex items-start gap-3.5">
@@ -120,7 +125,7 @@ export function JobDetailModal({
               <StreetPill street={job.address || 'Mińsk Mazowiecki'} className="bg-mist text-ink-600" />
               <span className="flex items-center gap-1 text-[11px] font-medium text-ink-400">
                 <Clock className="h-3.5 w-3.5" />
-                Opublikowano: {job.time}
+                {job.time}
               </span>
             </div>
           </div>
@@ -182,8 +187,8 @@ export function JobDetailModal({
           </div>
         </div>
 
-        {/* Footer Action */}
-        <div className="border-t border-mist-300 bg-white p-4 shrink-0">
+        {/* Pinned Bottom CTA (Native App Style) */}
+        <div className="border-t border-mist bg-white px-5 py-3 pb-[max(env(safe-area-inset-bottom),14px)] shrink-0 shadow-float">
           {hasApplied ? (
             <div className="flex h-13 w-full items-center justify-center gap-2 rounded-full bg-sky-100 text-[14.5px] font-bold text-sky-700">
               <Check className="h-5 w-5" />

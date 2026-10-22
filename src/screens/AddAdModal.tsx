@@ -10,7 +10,6 @@ import {
   MapPin,
   Receipt,
   Smartphone,
-  Sparkles,
   X,
 } from 'lucide-react';
 import { cn } from '../components/ui';
@@ -110,33 +109,30 @@ export function AddAdModal({ user, onClose, onAdCreated, onJobCreated }: AddAdMo
         onJobCreated(createdJobCache);
       }
       setStep('paid_success');
-    }, 2000);
+    }, 1800);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/75 backdrop-blur-sm sm:items-center">
-      <div className="max-h-[92dvh] w-full max-w-[440px] overflow-y-auto rounded-t-[36px] bg-white p-5 shadow-float sm:rounded-[36px]">
-        {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-mist">
+    <div className="fixed inset-0 z-50 flex flex-col bg-white native-modal-slide select-none">
+      <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-white">
+        {/* Native Modal Navigation Bar */}
+        <header className="flex h-14 items-center justify-between border-b border-mist px-4 pt-[max(env(safe-area-inset-top),8px)] shrink-0 z-20">
           <div>
-            <h2 className="font-display text-[20px] font-semibold text-ink">
+            <h2 className="font-display text-[17px] font-bold text-ink">
               {step === 'form' ? 'Nowe ogłoszenie' : 'Płatność One-Click BLIK'}
             </h2>
-            <p className="text-[12px] text-ink-500">
-              {step === 'form' ? `Dodajesz jako: ${user.name} ${user.street.as}` : 'Bezpieczna transakcja dla mińskich firm'}
-            </p>
           </div>
           <button
             onClick={onClose}
-            className="grid h-10 w-10 place-items-center rounded-full bg-mist text-ink hover:bg-mist-200"
+            className="grid h-9 w-9 place-items-center rounded-full bg-mist text-ink hover:bg-mist-200"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
-        </div>
+        </header>
 
         {/* Step: BLIK payment */}
         {step === 'blik' && (
-          <form onSubmit={handleBlikPay} className="mt-4 space-y-4">
+          <form onSubmit={handleBlikPay} className="flex-1 overflow-y-auto overscroll-contain p-5 space-y-4">
             <div className="rounded-2xl bg-sand-100 p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -216,7 +212,7 @@ export function AddAdModal({ user, onClose, onAdCreated, onJobCreated }: AddAdMo
 
         {/* Step: BLIK Confirming */}
         {step === 'confirming' && (
-          <div className="py-10 text-center space-y-4">
+          <div className="flex-1 flex flex-col justify-center items-center p-6 text-center space-y-4">
             <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-sand-100 text-sand-700 animate-pulse">
               <Loader2 className="h-8 w-8 animate-spin" />
             </div>
@@ -232,7 +228,7 @@ export function AddAdModal({ user, onClose, onAdCreated, onJobCreated }: AddAdMo
 
         {/* Step: Payment Success */}
         {step === 'paid_success' && (
-          <div className="py-8 text-center space-y-4">
+          <div className="flex-1 flex flex-col justify-center items-center p-6 text-center space-y-4">
             <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-100 text-emerald-600">
               <CheckCircle2 className="h-10 w-10" />
             </div>
@@ -240,18 +236,9 @@ export function AddAdModal({ user, onClose, onAdCreated, onJobCreated }: AddAdMo
             <p className="text-[13.5px] text-ink-500">
               Twoje ogłoszenie zostało opublikowane na 14 dni. Mieszkańcy Mińska mogą już aplikować 1-kliknięciem!
             </p>
-            <div className="rounded-2xl bg-sand-100 p-3.5 text-left text-[12px] text-ink-700">
-              <span className="font-bold flex items-center gap-1">
-                <Sparkles className="h-3.5 w-3.5 text-sand-700" />
-                Powiadomienia o kandydatach
-              </span>
-              <p className="mt-0.5 text-ink-500">
-                Powiadomienia z numerami telefonów kandydatów będą trafiać bezpośrednio do Twojej skrzynki w aplikacji.
-              </p>
-            </div>
             <button
               onClick={onClose}
-              className="flex h-12 w-full items-center justify-center rounded-full bg-ink text-[14px] font-bold text-white transition-transform active:scale-95"
+              className="mt-4 flex h-12 w-full max-w-[300px] items-center justify-center rounded-full bg-ink text-[14px] font-bold text-white transition-transform active:scale-95"
             >
               Zobacz ogłoszenie na liście
             </button>
@@ -260,7 +247,7 @@ export function AddAdModal({ user, onClose, onAdCreated, onJobCreated }: AddAdMo
 
         {/* Step: Main Form */}
         {step === 'form' && (
-          <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-4 pb-[max(env(safe-area-inset-bottom),20px)]">
             {/* Type Toggle: Neighbor vs Job */}
             <div className="grid grid-cols-2 gap-1 rounded-2xl bg-mist p-1">
               <button

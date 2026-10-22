@@ -10,22 +10,28 @@
     --color-sand: #EBC999;
     --color-sky: #8CA9D3;
   }
-  html {
-    -webkit-overflow-scrolling: touch;
+  html, body, #root {
     height: 100%;
-  }
-  body {
+    height: 100dvh;
+    width: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
     background-color: var(--bg-mist);
     color: var(--color-ink);
     font-family: "Plus Jakarta Sans", system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     -webkit-tap-highlight-color: transparent;
-    min-height: 100%;
-    overflow-x: clip;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  input, textarea {
+    user-select: text;
+    -webkit-user-select: text;
   }
   button {
     cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
   }
 }
 
@@ -35,6 +41,39 @@
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Native iOS / Android Navigation Stack Transitions */
+@keyframes nativeSlideInRight {
+  from {
+    transform: translate3d(100%, 0, 0);
+    opacity: 0.95;
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes nativeSlideInBottom {
+  from {
+    transform: translate3d(0, 100%, 0);
+    opacity: 0.95;
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+.native-screen-slide {
+  animation: nativeSlideInRight 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.native-modal-slide {
+  animation: nativeSlideInBottom 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
 }
 
 @media (prefers-reduced-motion: reduce) {
