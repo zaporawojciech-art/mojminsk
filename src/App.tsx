@@ -147,21 +147,11 @@ export default function App() {
   const showChrome = !!user && !overlay;
 
   return (
-    <div className="min-h-[100dvh] w-full bg-mist md:grid md:place-items-center md:bg-[radial-gradient(circle_at_15%_20%,#FDDFDB,transparent_40%),radial-gradient(circle_at_85%_80%,#E0E8F4,transparent_45%),radial-gradient(circle_at_80%_10%,#F7ECDA,transparent_35%)] md:py-8">
+    <div className="min-h-[100dvh] w-full bg-mist">
       <div
         ref={setFrame}
-        className="relative mx-auto flex h-[100dvh] w-full max-w-[440px] flex-col overflow-hidden bg-mist [transform:translateZ(0)] md:h-[860px] md:w-[400px] md:rounded-[56px] md:border-[10px] md:border-ink md:shadow-[0_40px_80px_-30px_rgba(31,29,43,.55)]"
+        className="relative mx-auto flex min-h-[100dvh] w-full max-w-md flex-col bg-mist"
       >
-        {/* Pasek statusu — tylko w ramce desktopowej */}
-        <div className="relative hidden h-11 shrink-0 items-center justify-between px-8 text-[13px] font-bold md:flex" aria-hidden>
-          <span>21:41</span>
-          <span className="absolute left-1/2 top-2 h-7 w-28 -translate-x-1/2 rounded-full bg-ink" />
-          <span className="flex items-center gap-1">
-            <span className="h-2.5 w-4 rounded-sm bg-ink" />
-            <span className="h-2.5 w-6 rounded-[3px] border-2 border-ink" />
-          </span>
-        </div>
-
         <main key={user ? (overlay ?? tab) : 'onboarding'} className="min-h-0 flex-1 overflow-y-auto overscroll-contain no-scrollbar">
           {content}
         </main>
