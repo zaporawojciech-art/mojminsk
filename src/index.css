@@ -13,8 +13,8 @@
   html {
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
+    height: 100%;
   }
-  html,
   body {
     background-color: var(--bg-mist);
     color: var(--color-ink);
@@ -23,7 +23,7 @@
     -moz-osx-font-smoothing: grayscale;
     -webkit-tap-highlight-color: transparent;
     min-height: 100%;
-    overflow-x: hidden;
+    overflow-x: clip;
   }
   button {
     cursor: pointer;
