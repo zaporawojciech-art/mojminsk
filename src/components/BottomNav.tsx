@@ -13,8 +13,8 @@ const items: { id: TabId; label: string; icon: typeof House }[] = [
 
 export function BottomNav({ tab, onChange }: { tab: TabId; onChange: (t: TabId) => void }) {
   return (
-    <nav aria-label="Nawigacja główna" className="fixed inset-x-4 bottom-[max(env(safe-area-inset-bottom),16px)] z-40">
-      <ul className="flex items-center justify-between rounded-full bg-ink p-1.5 shadow-float">
+    <nav aria-label="Nawigacja główna" className="fixed inset-x-4 bottom-[max(env(safe-area-inset-bottom),16px)] z-40 mx-auto max-w-md pointer-events-none">
+      <ul className="pointer-events-auto flex items-center justify-between rounded-full bg-ink p-1.5 shadow-float">
         {items.map(({ id, label, icon: Icon }) => {
           const active = tab === id;
           return (

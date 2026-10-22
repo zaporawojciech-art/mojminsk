@@ -147,12 +147,12 @@ export default function App() {
   const showChrome = !!user && !overlay;
 
   return (
-    <div className="min-h-[100dvh] w-full bg-mist">
+    <div className="min-h-screen w-full bg-mist">
       <div
         ref={setFrame}
-        className="relative mx-auto flex min-h-[100dvh] w-full max-w-md flex-col bg-mist"
+        className="relative mx-auto min-h-screen w-full max-w-md bg-mist"
       >
-        <main key={user ? (overlay ?? tab) : 'onboarding'} className="min-h-0 flex-1 overflow-y-auto overscroll-contain no-scrollbar">
+        <main key={user ? (overlay ?? tab) : 'onboarding'} className="w-full">
           {content}
         </main>
 

@@ -15,25 +15,27 @@ export function CartPill({ count, total, onOpen }: { count: number; total: numbe
   const missing = Math.max(0, FREE_FROM - total);
   const progress = Math.min(100, (total / FREE_FROM) * 100);
   return (
-    <button
-      onClick={onOpen}
-      className="fixed inset-x-4 bottom-[calc(max(env(safe-area-inset-bottom),16px)+72px)] z-40 overflow-hidden rounded-3xl bg-white p-3 text-left shadow-float active:scale-[.99]"
-    >
-      <div className="flex items-center gap-3">
-        <span className="relative grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-coral text-ink">
-          <ShoppingBag className="h-5 w-5" aria-hidden />
-          <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-ink px-1 text-[10px] font-bold text-white">{count}</span>
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-[14px] font-bold text-ink">{zl(total)}</p>
-          <p className="truncate text-[11.5px] text-ink-500">{missing > 0 ? `Jeszcze ${zl(missing)} do darmowej dostawy` : 'Darmowa dostawa odblokowana'}</p>
+    <div className="fixed inset-x-4 bottom-[calc(max(env(safe-area-inset-bottom),16px)+72px)] z-40 mx-auto max-w-md pointer-events-none">
+      <button
+        onClick={onOpen}
+        className="pointer-events-auto w-full overflow-hidden rounded-3xl bg-white p-3 text-left shadow-float active:scale-[.99]"
+      >
+        <div className="flex items-center gap-3">
+          <span className="relative grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-coral text-ink">
+            <ShoppingBag className="h-5 w-5" aria-hidden />
+            <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-ink px-1 text-[10px] font-bold text-white">{count}</span>
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[14px] font-bold text-ink">{zl(total)}</p>
+            <p className="truncate text-[11.5px] text-ink-500">{missing > 0 ? `Jeszcze ${zl(missing)} do darmowej dostawy` : 'Darmowa dostawa odblokowana'}</p>
+          </div>
+          <span className="rounded-full bg-ink px-4 py-2.5 text-[13px] font-bold text-white">Koszyk</span>
         </div>
-        <span className="rounded-full bg-ink px-4 py-2.5 text-[13px] font-bold text-white">Koszyk</span>
-      </div>
-      <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-mist">
-        <div className="h-full rounded-full bg-coral transition-[width] duration-500 ease-out" style={{ width: `${progress}%` }} />
-      </div>
-    </button>
+        <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-mist">
+          <div className="h-full rounded-full bg-coral transition-[width] duration-500 ease-out" style={{ width: `${progress}%` }} />
+        </div>
+      </button>
+    </div>
   );
 }
 
