@@ -1,0 +1,395 @@
+import { useState } from 'react';
+import {
+  ArrowRight, Bell, Bus, Car, Check, Coffee, Droplets, Eye, Gauge, MapPin, Megaphone,
+  ShieldCheck, Sparkles, Sun, TriangleAlert, Umbrella, UtensilsCrossed, Wind,
+} from 'lucide-react';
+import { avatarUrl, busLines, liveAlert, news, partner, poll, weather, type LineId, type User } from '../data/mockData';
+import { Card, Img, SectionHeader, cn } from '../components/ui';
+import type { TabId } from '../components/BottomNav';
+
+const lineTone: Record<LineId, string> = { M2: 'bg-sky', M3: 'bg-sand', M4: 'bg-coral' };
+
+const greeting = () => {
+  const h = new Date().getHours();
+  return h < 12 ? 'Dzień dobry' : h < 18 ? 'Cześć' : 'Dobry wieczór';
+};
+const clock = (minsFromNow: number) => {
+  const d = new Date(Date.now() + minsFromNow * 60000);
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+};
+
+function WeatherArt() {
+  return (
+    <div className="relative h-28 w-36 shrink-0" aria-hidden>
+      <div className="absolute right-3 top-0 h-20 w-20 rounded-full bg-[radial-gradient(circle_at_30%_30%,#FFF4E0,#EBC999_55%,#D4A866)] shadow-[0_12px_30px_-6px_rgba(212,168,102,.9)]" />
+      <div className="absolute bottom-3 left-0 h-12 w-28 rounded-full bg-[linear-gradient(180deg,#fff,#E3EAF5)] shadow-[0_14px_24px_-12px_rgba(31,29,43,.45)]" />
+      <div className="absolute bottom-7 left-4 h-14 w-14 rounded-full bg-[linear-gradient(180deg,#fff,#EDF1F8)]" />
+      <div className="absolute bottom-6 left-12 h-11 w-11 rounded-full bg-[linear-gradient(180deg,#fff,#E6ECF6)]" />
+    </div>
+  );
+}
+
+function SunArc() {
+  const now = new Date();
+  const toMin = (s: string) => Number(s.slice(0, 2)) * 60 + Number(s.slice(3));
+  const t = Math.min(1, Math.max(0, (now.getHours() * 60 + now.getMinutes() - toMin(weather.sunrise)) / (toMin(weather.sunset) - toMin(weather.sunrise))));
+  const x = (1 - t) ** 2 * 12 + 2 * (1 - t) * t * 120 + t ** 2 * 228;
+  const y = (1 - t) ** 2 * 66 + 2 * (1 - t) * t * -18 + t ** 2 * 66;
+  return (
+    <div className="rounded-3xl bg-white/45 p-3">
+      <svg viewBox="0 0 240 74" className="h-16 w-full" aria-hidden>
+        <path d="M12 66 Q120 -18 228 66" fill="none" stroke="rgba(31,29,43,.35)" strokeWidth="1.5" strokeDasharray="4 5" />
+        <line x1="0" y1="66" x2="240" y2="66" stroke="rgba(31,29,43,.15)" />
+        <circle cx={x} cy={y} r="8" fill="#EBC999" stroke="#fff" strokeWidth="3" />
+      </svg>
+      <div className="flex justify-between text-[11.5px] font-semibold text-ink-700">
+        <span>Wschód {weather.sunrise}</span>
+        <span>Zachód {weather.sunset}</span>
+      </div>
+    </div>
+  );
+}
+
+function WeatherCard() {
+  const [open, setOpen] = useState(false);
+  const h = new Date().getHours();
+  const metrics = [
+    { icon: Wind, label: 'Wiatr', value: `${weather.wind} km/h` },
+    { icon: Droplets, label: 'Wilgotność', value: `${weather.humidity}%` },
+    { icon: Sun, label: 'Indeks UV', value: `${weather.uv} niski` },
+    { icon: Gauge, label: 'Ciśnienie', value: `${weather.pressure} hPa` },
+    { icon: Umbrella, label: 'Opady', value: `${weather.rain} mm` },
+    { icon: Eye, label: 'Widoczność', value: `${weather.visibility} km` },
+  ];
+  return (
+    <section className="px-5">
+      <div className="relative overflow-hidden rounded-4xl bg-sky p-5 shadow-card">
+        <div className="absolute -right-12 -top-12 h-52 w-52 rounded-full bg-white/15" aria-hidden />
+        <button onClick={() => setOpen((o) => !o)} aria-expanded={open} className="relative block w-full text-left">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="flex items-center gap-1 text-[12.5px] font-semibold text-ink/70">
+                <MapPin className="h-3.5 w-3.5" aria-hidden />
+                Mińsk Mazowiecki
+              </p>
+              <p className="mt-2 font-display text-[68px] font-semibold leading-none tracking-tighter">{weather.temp}°</p>
+              <p className="mt-1 text-[15px] font-bold">{weather.condition}</p>
+              <p className="text-[12px] font-medium text-ink/70">
+                Odczuwalna {weather.feels}° · ↑{weather.max}° ↓{weather.min}°
+              </p>
+            </div>
+            <WeatherArt />
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[12px] font-bold">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
+              Powietrze: {weather.aqi.label} · PM2.5 {weather.aqi.pm25}
+            </span>
+            <span className="inline-flex items-center rounded-full bg-white/45 px-3 py-1.5 text-[12px] font-bold">{open ? 'Zwiń' : 'Szczegóły'}</span>
+          </div>
+        </button>
+
+        {open && (
+          <div className="relative mt-4 space-y-3">
+            <div className="grid grid-cols-3 gap-2">
+              {metrics.map(({ icon: Icon, label, value }) => (
+                <div key={label} className="rounded-2xl bg-white/45 p-2.5">
+                  <Icon className="h-4 w-4 text-ink-700" aria-hidden />
+                  <p className="mt-1.5 text-[13px] font-bold leading-none">{value}</p>
+                  <p className="mt-1 text-[10.5px] font-medium text-ink/65">{label}</p>
+                </div>
+              ))}
+            </div>
+            <div className="-mx-5 flex gap-2 overflow-x-auto px-5 no-scrollbar">
+              {weather.hourly.map((t, i) => (
+                <div key={i} className={cn('w-14 shrink-0 rounded-2xl py-2.5 text-center', i === 0 ? 'bg-ink text-white' : 'bg-white/45')}>
+                  <p className="text-[10.5px] font-semibold opacity-75">{i === 0 ? 'Teraz' : `${String((h + i) % 24).padStart(2, '0')}:00`}</p>
+                  <p className="mt-1 text-[15px] font-bold">{t}°</p>
+                </div>
+              ))}
+            </div>
+            <SunArc />
+            <p className="text-[10.5px] font-medium text-ink/60">Dane: Open-Meteo · stacja GIOŚ Mińsk Mazowiecki</p>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function LiveAlert() {
+  return (
+    <div className="mx-5 flex gap-3 rounded-3xl border-l-4 border-coral bg-white p-4 shadow-card" role="status">
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-coral-100">
+        <TriangleAlert className="h-5 w-5 text-coral-700" aria-hidden />
+      </span>
+      <div className="min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 text-[10.5px] font-extrabold tracking-wider text-coral-700">
+            <span className="relative flex h-2 w-2" aria-hidden>
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-coral opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-coral" />
+            </span>
+            LIVE
+          </span>
+          <span className="text-[11px] text-ink-400">{liveAlert.time}</span>
+        </div>
+        <p className="mt-0.5 text-[14.5px] font-bold">{liveAlert.title}</p>
+        <p className="mt-0.5 text-[12.5px] leading-snug text-ink-500">{liveAlert.description}</p>
+        <p className="mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-sky-700">
+          <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
+          Zweryfikowane przez administratora
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function BusWidget({ onOpenFull }: { onOpenFull?: (lineId: LineId) => void }) {
+  const [lineId, setLineId] = useState<LineId>('M3');
+  const [stop, setStop] = useState('Spacerowa');
+  const line = busLines.find((l) => l.id === lineId)!;
+  const stopName = line.stops.includes(stop) ? stop : line.stops[0];
+  const idx = line.stops.indexOf(stopName);
+  const shift = (idx * 3) % 15;
+  const dirs = [
+    { to: line.stops[line.stops.length - 1], mins: line.offsets.map((o) => o + shift) },
+    { to: line.stops[0], mins: line.offsets.map((o) => o + ((shift + 8) % 15)) },
+  ].filter((d) => d.to !== stopName);
+
+  return (
+    <Card className="mx-5 p-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="grid h-10 w-10 place-items-center rounded-2xl bg-ink text-white">
+            <Bus className="h-5 w-5" aria-hidden />
+          </span>
+          <div>
+            <p className="font-display text-[17px] font-semibold leading-tight">Autobusy miejskie</p>
+            <p className="text-[11.5px] text-ink-400">ZDiTM Mińsk Mazowiecki · bezpłatne</p>
+          </div>
+        </div>
+        {onOpenFull && (
+          <button
+            onClick={() => onOpenFull(lineId)}
+            className="rounded-full bg-sand px-3 py-1.5 text-[11px] font-bold text-ink hover:bg-sand-200 transition-colors"
+          >
+            Pełny rozkład
+          </button>
+        )}
+      </div>
+
+      <div role="tablist" aria-label="Linia" className="mt-4 grid grid-cols-3 gap-1 rounded-2xl bg-mist p-1">
+        {busLines.map((l) => (
+          <button
+            key={l.id}
+            role="tab"
+            aria-selected={lineId === l.id}
+            onClick={() => setLineId(l.id)}
+            className={cn('flex h-10 items-center justify-center rounded-xl transition-all', lineId === l.id ? 'bg-white shadow-card' : 'opacity-60 hover:opacity-100')}
+          >
+            <span className={cn('rounded-lg px-2.5 py-0.5 text-[13px] font-extrabold', lineTone[l.id])}>{l.id}</span>
+          </button>
+        ))}
+      </div>
+      <p className="mt-3 text-[12px] font-medium text-ink-500">{line.route}</p>
+
+      <div className="-mx-4 mt-2 flex gap-1.5 overflow-x-auto px-4 pb-1 no-scrollbar" aria-label="Przystanek">
+        {line.stops.map((s) => (
+          <button
+            key={s}
+            onClick={() => setStop(s)}
+            aria-pressed={s === stopName}
+            className={cn('h-8 shrink-0 rounded-full px-3 text-[12px] font-semibold transition-colors', s === stopName ? 'bg-ink text-white' : 'bg-mist text-ink-700')}
+          >
+            {s}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-3 space-y-2">
+        {dirs.map((d) => (
+          <div key={d.to} className="flex items-center justify-between gap-3 rounded-2xl bg-mist/70 px-4 py-3">
+            <div className="min-w-0">
+              <p className="text-[10.5px] font-bold uppercase tracking-wider text-ink-400">Kierunek</p>
+              <p className="truncate text-[14px] font-bold">{d.to}</p>
+            </div>
+            <div className="text-right">
+              <p className="font-display text-[24px] font-semibold leading-none">
+                {d.mins[0]}
+                <span className="font-sans text-[12px] font-semibold text-ink-500"> min</span>
+              </p>
+              <p className="mt-1 text-[11px] text-ink-400">
+                potem {clock(d.mins[1])}, {clock(d.mins[2])}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {onOpenFull && (
+        <button
+          onClick={() => onOpenFull(lineId)}
+          className="mt-3 flex h-10 w-full items-center justify-center gap-1.5 rounded-full bg-mist text-[12px] font-bold text-ink hover:bg-mist-200 transition-colors"
+        >
+          <MapPin className="h-4 w-4 text-sky-700" />
+          Otwórz pełny rozkład & mapę ZDiTM
+        </button>
+      )}
+    </Card>
+  );
+}
+
+function Poll() {
+  const [voted, setVoted] = useState<string | null>(null);
+  const total = poll.total + (voted ? 1 : 0);
+  return (
+    <div className="mx-5 rounded-4xl bg-sand-100 p-5">
+      <div className="flex items-center justify-between">
+        <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-sand-700">
+          <Sparkles className="h-3.5 w-3.5" aria-hidden />
+          Ankieta tygodnia
+        </span>
+        <span className="text-[12px] font-medium text-ink-500">
+          {total} głosów · {poll.daysLeft} dni
+        </span>
+      </div>
+      <h3 className="mt-3 font-display text-[21px] font-semibold leading-snug">{poll.title}</h3>
+      <div className="mt-4 space-y-2">
+        {poll.options.map((o) => {
+          const votes = o.votes + (voted === o.id ? 1 : 0);
+          const pct = Math.round((votes / total) * 100);
+          const mine = voted === o.id;
+          return (
+            <button
+              key={o.id}
+              disabled={!!voted}
+              onClick={() => setVoted(o.id)}
+              className="relative w-full overflow-hidden rounded-2xl bg-white px-4 py-3 text-left transition-transform active:scale-[.99] disabled:active:scale-100"
+            >
+              <span
+                className={cn('absolute inset-y-0 left-0 transition-[width] duration-700 ease-out', mine ? 'bg-coral-200' : 'bg-sand-200')}
+                style={{ width: voted ? `${pct}%` : '0%' }}
+                aria-hidden
+              />
+              <span className="relative flex items-center justify-between text-[14px] font-semibold">
+                <span className="flex items-center gap-2">
+                  {mine && <Check className="h-4 w-4" aria-hidden />}
+                  {o.name}
+                </span>
+                {voted && <span className="font-bold tabular-nums">{pct}%</span>}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <p className="mt-3 text-[11.5px] text-ink-500">
+        {voted ? 'Dzięki! 1 głos na zweryfikowane konto.' : 'Głosują tylko zweryfikowani mieszkańcy.'}
+      </p>
+    </div>
+  );
+}
+
+interface HomeScreenProps {
+  user: User;
+  onTab: (t: TabId) => void;
+  onProfile: () => void;
+  onPartner: () => void;
+  onZditm?: (line?: LineId) => void;
+  onMotylek?: () => void;
+}
+
+export function HomeScreen({
+  user,
+  onTab,
+  onProfile,
+  onPartner,
+  onZditm,
+  onMotylek,
+}: HomeScreenProps) {
+  const quick = [
+    { label: 'Motylek', icon: UtensilsCrossed, cls: 'bg-sand text-ink', onClick: () => (onMotylek ? onMotylek() : onTab('kitchen')) },
+    { label: 'Rozkład', icon: Bus, cls: 'bg-sky-100 text-ink', onClick: () => (onZditm ? onZditm('M2') : onTab('home')) },
+    { label: 'Przejazd', icon: Car, cls: 'bg-coral-100 text-ink', onClick: () => onTab('rides') },
+    { label: 'Ogłoszenia', icon: Megaphone, cls: 'bg-white text-ink', onClick: () => onTab('ads') },
+  ];
+
+  return (
+    <div className="space-y-7 pb-36">
+      <header className="flex items-center justify-between px-5 pt-[max(env(safe-area-inset-top),16px)]">
+        <button onClick={onProfile} className="flex items-center gap-3 text-left">
+          <img src={avatarUrl(user.seed)} alt="Twój profil" className="h-12 w-12 rounded-2xl" />
+          <div>
+            <p className="text-[13px] font-medium text-ink-500">{greeting()},</p>
+            <p className="font-display text-[19px] font-semibold leading-tight">
+              {user.name} {user.street.as}
+            </p>
+          </div>
+        </button>
+        <button aria-label="Powiadomienia (3 nowe)" className="relative grid h-11 w-11 place-items-center rounded-full bg-white shadow-card">
+          <Bell className="h-5 w-5" aria-hidden />
+          <span className="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full bg-coral ring-2 ring-white" aria-hidden />
+        </button>
+      </header>
+
+      <WeatherCard />
+
+      <div className="grid grid-cols-4 gap-2.5 px-5">
+        {quick.map(({ label, icon: Icon, cls, onClick }) => (
+          <button key={label} onClick={onClick} className="flex flex-col items-center gap-1.5 active:scale-95">
+            <span className={cn('grid h-16 w-full place-items-center rounded-3xl shadow-card', cls)}>
+              <Icon className="h-6 w-6" aria-hidden />
+            </span>
+            <span className="text-[12px] font-semibold text-ink-700">{label}</span>
+          </button>
+        ))}
+      </div>
+
+      <LiveAlert />
+      <BusWidget onOpenFull={onZditm} />
+
+      <section>
+        <SectionHeader title="Co słychać w Mińsku" action="Wszystkie" />
+        <div className="flex gap-3 overflow-x-auto px-5 pb-1 no-scrollbar">
+          {news.map((n) => (
+            <article key={n.id} className="w-[250px] shrink-0 overflow-hidden rounded-3xl bg-white shadow-card">
+              <div className="relative">
+                <Img src={n.image} alt="" className="h-32 w-full" />
+                <span className="absolute left-3 top-3 rounded-full bg-white px-2.5 py-1 text-[10.5px] font-bold">{n.tag}</span>
+              </div>
+              <div className="p-3.5">
+                <p className="line-clamp-2 text-[14px] font-bold leading-snug">{n.title}</p>
+                <p className="mt-1.5 text-[11.5px] text-ink-400">
+                  {n.source} · {n.time}
+                </p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <Poll />
+
+      <button onClick={onPartner} className="relative mx-5 block w-[calc(100%-2.5rem)] overflow-hidden rounded-4xl bg-ink p-5 text-left">
+        <Img src={partner.hero} alt="" className="absolute inset-y-0 right-0 h-full w-1/2 opacity-90 [mask-image:linear-gradient(to_left,black_40%,transparent)]" />
+        <span className="relative text-[10.5px] font-bold uppercase tracking-[.16em] text-sand">Strefa Partnera</span>
+        <p className="relative mt-1.5 max-w-[60%] font-display text-[23px] font-semibold leading-tight text-white">{partner.name}</p>
+        <p className="relative mt-1 max-w-[55%] text-[12.5px] text-white/70">−15% na biżuterię dla sąsiadów z mójMińsk</p>
+        <span className="relative mt-4 inline-flex items-center gap-1 rounded-full bg-sand px-3.5 py-2 text-[12.5px] font-bold text-ink">
+          Zobacz kolekcję <ArrowRight className="h-4 w-4" aria-hidden />
+        </span>
+      </button>
+
+      <Card className="mx-5 flex items-center gap-3 p-4">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-coral-100">
+          <Coffee className="h-5 w-5 text-coral-700" aria-hidden />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[14px] font-bold">Postaw kawę mójMińsk</p>
+          <p className="text-[12px] text-ink-500">Niezależna aplikacja bez polityki i hejtu</p>
+        </div>
+        <button className="rounded-full bg-ink px-4 py-2.5 text-[12.5px] font-bold text-white">BLIK</button>
+      </Card>
+    </div>
+  );
+}

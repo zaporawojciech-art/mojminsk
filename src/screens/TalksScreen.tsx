@@ -1,0 +1,128 @@
+import { Fragment, useState } from 'react';
+import { BadgeCheck, BarChart2, Heart, ImageIcon, MessageCircle, Repeat2 } from 'lucide-react';
+import { avatarUrl, posts as seedPosts, talkTags, type Post, type User } from '../data/mockData';
+import { Chip, Img, ScreenHeader, cn } from '../components/ui';
+
+const MAX = 280;
+
+function RichText({ text }: { text: string }) {
+  const parts = text.split(/(#[\p{L}\d_]+)/u);
+  return (
+    <>
+      {parts.map((p, i) =>
+        p.startsWith('#') ? (
+          <span key={i} className="font-semibold text-sky-700">
+            {p}
+          </span>
+        ) : (
+          <Fragment key={i}>{p}</Fragment>
+        ),
+      )}
+    </>
+  );
+}
+
+export function TalksScreen({ user }: { user: User }) {
+  const [list, setList] = useState<Post[]>(seedPosts);
+  const [text, setText] = useState('');
+  const [tag, setTag] = useState('Wszystko');
+  const [liked, setLiked] = useState<Record<string, boolean>>({});
+
+  const visible = tag === 'Wszystko' ? list : list.filter((p) => p.content.includes(tag));
+  const left = MAX - text.length;
+
+  const publish = () => {
+    if (!text.trim()) return;
+    setList((l) => [
+      { id: `new-${Date.now()}`, author: user.name, authorAs: user.street.as, time: 'teraz', content: text.trim(), likes: 0, replies: 0, reposts: 0, views: 1 },
+      ...l,
+    ]);
+    setText('');
+  };
+
+  return (
+    <div className="pb-36">
+      <ScreenHeader title="Rozmowy" subtitle="Piszą tylko zweryfikowani mieszkańcy" />
+
+      <div className="mx-5 rounded-4xl bg-white p-4 shadow-card">
+        <div className="flex gap-3">
+          <img src={avatarUrl(user.seed)} alt="" className="h-10 w-10 shrink-0 rounded-2xl" />
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value.slice(0, MAX))}
+            rows={2}
+            placeholder={`Co słychać ${user.street.as.replace(/^ze? /, 'na ')}?`}
+            aria-label="Treść wpisu"
+            className="min-h-[52px] flex-1 resize-none bg-transparent pt-2 text-[15px] outline-none placeholder:text-ink-400"
+          />
+        </div>
+        <div className="mt-2 flex items-center justify-between border-t border-mist pt-3">
+          <button aria-label="Dodaj zdjęcie" className="grid h-9 w-9 place-items-center rounded-full bg-mist">
+            <ImageIcon className="h-4 w-4" aria-hidden />
+          </button>
+          <div className="flex items-center gap-3">
+            <span className={cn('text-[12px] font-semibold tabular-nums', left < 20 ? 'text-coral-700' : 'text-ink-400')}>{left}</span>
+            <button onClick={publish} disabled={!text.trim()} className="h-10 rounded-full bg-coral px-5 text-[13.5px] font-bold text-ink disabled:opacity-40">
+              Opublikuj
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 flex gap-2 overflow-x-auto px-5 pb-1 no-scrollbar">
+        {talkTags.map((t) => (
+          <Chip key={t} active={tag === t} onClick={() => setTag(t)}>
+            {t}
+          </Chip>
+        ))}
+      </div>
+
+      <div className="mx-5 mt-4 divide-y divide-mist overflow-hidden rounded-4xl bg-white shadow-card">
+        {visible.map((p) => {
+          const isLiked = !!liked[p.id];
+          return (
+            <article key={p.id} className="flex gap-3 p-4">
+              <img src={avatarUrl(p.author)} alt="" className="h-11 w-11 shrink-0 rounded-2xl" />
+              <div className="min-w-0 flex-1">
+                <p className="flex flex-wrap items-center gap-x-1 text-[14px]">
+                  <b>
+                    {p.author} {p.authorAs}
+                  </b>
+                  <BadgeCheck className="h-4 w-4 fill-sky text-white" aria-label="Zweryfikowany" />
+                  <span className="text-ink-400">· {p.time}</span>
+                </p>
+                <p className="mt-1 text-[14.5px] leading-relaxed text-ink-700">
+                  <RichText text={p.content} />
+                </p>
+                {p.image && <Img src={p.image} alt="" className="mt-3 h-44 w-full rounded-3xl" />}
+                <div className="mt-3 flex items-center justify-between pr-2 text-[12.5px] text-ink-400">
+                  <button className="flex items-center gap-1.5 hover:text-ink" aria-label="Odpowiedz">
+                    <MessageCircle className="h-[18px] w-[18px]" aria-hidden />
+                    {p.replies}
+                  </button>
+                  <button className="flex items-center gap-1.5 hover:text-ink" aria-label="Udostępnij dalej">
+                    <Repeat2 className="h-[18px] w-[18px]" aria-hidden />
+                    {p.reposts}
+                  </button>
+                  <button
+                    onClick={() => setLiked((l) => ({ ...l, [p.id]: !l[p.id] }))}
+                    aria-pressed={isLiked}
+                    aria-label="Polub"
+                    className={cn('flex items-center gap-1.5 transition-transform active:scale-90', isLiked ? 'font-bold text-coral-700' : 'hover:text-ink')}
+                  >
+                    <Heart className={cn('h-[18px] w-[18px]', isLiked && 'fill-coral text-coral')} aria-hidden />
+                    {p.likes + (isLiked ? 1 : 0)}
+                  </button>
+                  <span className="flex items-center gap-1.5">
+                    <BarChart2 className="h-[18px] w-[18px]" aria-hidden />
+                    {p.views}
+                  </span>
+                </div>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
