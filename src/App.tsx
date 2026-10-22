@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { BottomNav, type TabId } from './components/BottomNav';
 import { ProductSheet } from './components/ProductSheet';
 import { CartPill, CartSheet, type CartLine } from './components/Cart';
@@ -25,6 +25,11 @@ import { MotylekScreen } from './screens/MotylekScreen';
 import { ZditmScreen } from './screens/ZditmScreen';
 import { AddAdModal } from './screens/AddAdModal';
 import { ChatModal } from './screens/ChatModal';
+import { AdDetailModal } from './screens/AdDetailModal';
+import { JobDetailModal } from './screens/JobDetailModal';
+import { JobApplyModal } from './screens/JobApplyModal';
+import { MyAdsModal } from './screens/MyAdsModal';
+import { ReportAdModal } from './screens/ReportAdModal';
 
 type Overlay = null | 'profile' | 'partner' | 'checkout' | 'motylek' | 'zditm';
 
@@ -41,10 +46,66 @@ export default function App() {
   // Dynamic ads & jobs lists
   const [adsList, setAdsList] = useState<Ad[]>(initialAds);
   const [jobsList, setJobsList] = useState<Job[]>(initialJobs);
+  const [likedAds, setLikedAds] = useState<Record<string, boolean>>({});
+  const [appliedJobs, setAppliedJobs] = useState<Record<string, boolean>>({});
 
-  // Modals for Ads & Chat
+  // Modals for Ads logic
   const [addAdOpen, setAddAdOpen] = useState(false);
   const [chatAd, setChatAd] = useState<Ad | null>(null);
+  const [selectedAd, setSelectedAd] = useState<Ad | null>(null);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [applyJob, setApplyJob] = useState<Job | null>(null);
+  const [myAdsOpen, setMyAdsOpen] = useState(false);
+  const [reportAd, setReportAd] = useState<Ad | null>(null);
+
+  // 1. Reset window and document scroll immediately upon navigating between tabs or overlays
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [tab, overlay]);
+
+  // 2. Prevent browser from retaining scroll offsets on SPA page changes
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+  }, []);
+
+  // 3. Lock background scroll while any modal or sheet is open
+  const isAnyModalOpen = Boolean(
+    addAdOpen || chatAd || selectedAd || selectedJob || applyJob || myAdsOpen || reportAd || sheet || cartOpen
+  );
+
+  useEffect(() => {
+    if (isAnyModalOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isAnyModalOpen]);
+
+  const handleToggleLike = useCallback((adId: string) => {
+    setLikedAds((prev) => ({ ...prev, [adId]: !prev[adId] }));
+  }, []);
+
+  const handleStatusChange = useCallback((adId: string, status: 'active' | 'reserved' | 'sold') => {
+    setAdsList((prev) =>
+      prev.map((a) => (a.id === adId ? { ...a, status } : a)),
+    );
+    setSelectedAd((prev) => (prev && prev.id === adId ? { ...prev, status } : prev));
+  }, []);
+
+  const handleDeleteAd = useCallback((adId: string) => {
+    setAdsList((prev) => prev.filter((a) => a.id !== adId));
+    setSelectedAd((prev) => (prev && prev.id === adId ? null : prev));
+  }, []);
+
+  const handleJobApplied = useCallback((jobId: string) => {
+    setAppliedJobs((prev) => ({ ...prev, [jobId]: true }));
+  }, []);
 
   const add = useCallback((p: Product, qty = 1) => setCart((c) => ({ ...c, [p.id]: (c[p.id] ?? 0) + qty })), []);
   const setQty = useCallback(
@@ -65,6 +126,12 @@ export default function App() {
 
   const count = lines.reduce((s, l) => s + l.qty, 0);
   const total = lines.reduce((s, l) => s + l.qty * l.product.price, 0);
+
+  const userActiveAdsCount = user
+    ? adsList
+        .filter((a) => a.isOwner || a.author.toLowerCase().includes(user.name.toLowerCase()))
+        .filter((a) => (a.status ?? 'active') === 'active').length
+    : 0;
 
   let content;
   if (!user) {
@@ -102,6 +169,8 @@ export default function App() {
         onBack={() => setOverlay(null)}
         onUpdate={setUser}
         onPartner={() => setOverlay('partner')}
+        onMyAds={() => setMyAdsOpen(true)}
+        myAdsCount={userActiveAdsCount}
       />
     );
   } else if (overlay === 'partner') {
@@ -134,8 +203,15 @@ export default function App() {
       <AdsScreen
         adsList={adsList}
         jobsList={jobsList}
+        likedAds={likedAds}
+        appliedJobs={appliedJobs}
+        onToggleLike={handleToggleLike}
+        onAdClick={(ad) => setSelectedAd(ad)}
+        onJobClick={(job) => setSelectedJob(job)}
+        onApplyJob={(job) => setApplyJob(job)}
         onAddClick={() => setAddAdOpen(true)}
         onChatClick={(ad) => setChatAd(ad)}
+        onMyAdsClick={() => setMyAdsOpen(true)}
       />
     );
   } else if (tab === 'rides') {
@@ -172,13 +248,74 @@ export default function App() {
           container={frame}
         />
 
-        {/* Add Ad Modal */}
+        {/* Add Ad Modal with BLIK payment flow */}
         {user && addAdOpen && (
           <AddAdModal
             user={user}
             onClose={() => setAddAdOpen(false)}
             onAdCreated={(newAd) => setAdsList((prev) => [newAd, ...prev])}
             onJobCreated={(newJob) => setJobsList((prev) => [newJob, ...prev])}
+          />
+        )}
+
+        {/* Ad Detail Modal */}
+        {user && selectedAd && (
+          <AdDetailModal
+            ad={selectedAd}
+            user={user}
+            isLiked={!!likedAds[selectedAd.id]}
+            onClose={() => setSelectedAd(null)}
+            onToggleLike={handleToggleLike}
+            onChatClick={(ad) => setChatAd(ad)}
+            onReportClick={(ad) => setReportAd(ad)}
+            onStatusChange={handleStatusChange}
+            onDelete={handleDeleteAd}
+          />
+        )}
+
+        {/* Job Detail Modal */}
+        {user && selectedJob && (
+          <JobDetailModal
+            job={selectedJob}
+            user={user}
+            hasApplied={!!appliedJobs[selectedJob.id]}
+            onClose={() => setSelectedJob(null)}
+            onApplyClick={(job) => {
+              setSelectedJob(null);
+              setApplyJob(job);
+            }}
+          />
+        )}
+
+        {/* 1-Click Job Apply Modal */}
+        {user && applyJob && (
+          <JobApplyModal
+            job={applyJob}
+            user={user}
+            onClose={() => setApplyJob(null)}
+            onSuccess={handleJobApplied}
+          />
+        )}
+
+        {/* My Ads Modal */}
+        {user && myAdsOpen && (
+          <MyAdsModal
+            user={user}
+            ads={adsList}
+            jobs={jobsList}
+            onClose={() => setMyAdsOpen(false)}
+            onOpenAd={(ad) => setSelectedAd(ad)}
+            onAddNew={() => setAddAdOpen(true)}
+            onStatusChange={handleStatusChange}
+            onDeleteAd={handleDeleteAd}
+          />
+        )}
+
+        {/* Report Ad Modal */}
+        {user && reportAd && (
+          <ReportAdModal
+            ad={reportAd}
+            onClose={() => setReportAd(null)}
           />
         )}
 

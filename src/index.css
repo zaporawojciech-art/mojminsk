@@ -11,7 +11,6 @@
     --color-sky: #8CA9D3;
   }
   html {
-    scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
     height: 100%;
   }

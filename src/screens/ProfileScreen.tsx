@@ -3,12 +3,26 @@ import { BadgeCheck, ChevronRight, Coffee, Dices, Gem, Lock, Mail, Megaphone, Re
 import { avatarUrl, type User } from '../data/mockData';
 import { BackHeader, StreetPill, cn } from '../components/ui';
 
-export function ProfileScreen({ user, onBack, onUpdate, onPartner }: { user: User; onBack: () => void; onUpdate: (u: User) => void; onPartner: () => void }) {
+export function ProfileScreen({
+  user,
+  onBack,
+  onUpdate,
+  onPartner,
+  onMyAds,
+  myAdsCount = 1,
+}: {
+  user: User;
+  onBack: () => void;
+  onUpdate: (u: User) => void;
+  onPartner: () => void;
+  onMyAds?: () => void;
+  myAdsCount?: number;
+}) {
   const [pin, setPin] = useState('');
 
   const menu = [
     { icon: ReceiptText, label: 'Moje zamówienia', meta: '2 w tym miesiącu', tone: 'bg-coral-100' },
-    { icon: Megaphone, label: 'Moje ogłoszenia', meta: '1 aktywne', tone: 'bg-sand-100' },
+    { icon: Megaphone, label: 'Moje ogłoszenia', meta: `${myAdsCount} aktywne`, tone: 'bg-sand-100', onClick: onMyAds },
     { icon: Car, label: 'Moje przejazdy', meta: '5 przejazdów', tone: 'bg-sky-100' },
     { icon: Vote, label: 'Utwórz ankietę sąsiedzką', meta: '1 / miesiąc', tone: 'bg-sand-100' },
     { icon: Gem, label: 'Strefa Partnera', meta: 'Złota Nić −15%', tone: 'bg-coral-100', onClick: onPartner },

@@ -417,15 +417,99 @@ export interface Ad {
   street: string;
   time: string;
   image: string;
+  description?: string;
+  category?: string;
+  status?: 'active' | 'reserved' | 'sold';
+  views?: number;
+  isOwner?: boolean;
 }
 
 export const ads: Ad[] = [
-  { id: 'a1', title: 'Rower dziecięcy 16", stan bardzo dobry', price: 150, kind: 'sell', author: 'Ania', street: 'Kościuszki', time: '2 godz.', image: img('photo-1485965120184-e220f721d03e', 400) },
-  { id: 'a2', title: 'Sofa 3-osobowa — do odbioru własnego', price: null, kind: 'free', author: 'Marek', street: 'Siennicka', time: '4 godz.', image: img('photo-1555041469-a586c61ea9bc', 400) },
-  { id: 'a3', title: 'Biurko dębowe 120×60', price: 220, kind: 'sell', author: 'Wojtek', street: 'Spacerowa', time: '6 godz.', image: img('photo-1518455027359-f3f8164ba6bd', 400) },
-  { id: 'a4', title: 'Zaginął pies Bruno — okolice Serbinowa', price: null, kind: 'lost', author: 'Ola', street: 'Dąbrówki', time: '1 godz.', image: img('photo-1543466835-00a7907e9de1', 400) },
-  { id: 'a5', title: 'Klocki LEGO City, komplet 4 zestawów', price: 90, kind: 'sell', author: 'Piotr', street: 'Sosnkowskiego', time: 'wczoraj', image: img('photo-1587654780291-39c9404d746b', 400) },
-  { id: 'a6', title: 'Monstera 120 cm z doniczką', price: 40, kind: 'sell', author: 'Kasia', street: 'Mickiewicza', time: 'wczoraj', image: img('photo-1485955900006-10f4d324d411', 400) },
+  {
+    id: 'a1',
+    title: 'Rower dziecięcy 16", stan bardzo dobry',
+    price: 150,
+    kind: 'sell',
+    author: 'Ania',
+    street: 'Kościuszki',
+    time: '2 godz.',
+    image: img('photo-1485965120184-e220f721d03e', 600),
+    description: 'Rower po jednym dziecku, 100% sprawny technicznie. Nowy dzwonek, hamulce wyregulowane, opony bez zużycia. Gratis dorzucam kask w rozmiarze S. Odbiór osobisty przy ul. Kościuszki, niedaleko SP nr 1.',
+    category: 'Sport & Rowery',
+    status: 'active',
+    views: 42,
+  },
+  {
+    id: 'a2',
+    title: 'Sofa 3-osobowa — do odbioru własnego',
+    price: null,
+    kind: 'free',
+    author: 'Marek',
+    street: 'Siennicka',
+    time: '4 godz.',
+    image: img('photo-1555041469-a586c61ea9bc', 600),
+    description: 'Oddam za darmo rozkładaną sofę w kolorze szarym. Czysta, bez plam, drobne przetarcie z tyłu oparcia. 2. piętro bez windy, potrzebne 2 osoby do zniesienia. Chcę zwolnić miejsce do piątku.',
+    category: 'Meble & Dom',
+    status: 'active',
+    views: 89,
+  },
+  {
+    id: 'a3',
+    title: 'Biurko dębowe 120×60 cm',
+    price: 220,
+    kind: 'sell',
+    author: 'Wojtek',
+    street: 'Spacerowa',
+    time: '6 godz.',
+    image: img('photo-1518455027359-f3f8164ba6bd', 600),
+    description: 'Solidne biurko wykonane z klejonki dębowej z czarnymi nogami w stylu loft. Idealne do pracy z laptopem lub nauki. Używane przez rok, stan gabinetowy. Odbiór ul. Spacerowa (pomogę znieść do auta).',
+    category: 'Meble & Dom',
+    status: 'active',
+    views: 67,
+    isOwner: true,
+  },
+  {
+    id: 'a4',
+    title: 'Zaginął pies Bruno — okolice Serbinowa',
+    price: null,
+    kind: 'lost',
+    author: 'Ola',
+    street: 'Dąbrówki',
+    time: '1 godz.',
+    image: img('photo-1543466835-00a7907e9de1', 600),
+    description: 'Dziś około godz. 8:30 w rejonie ul. Dąbrówki i osiedla Serbinów wystraszył się klaksonu i uciekł. Ma czerwoną obrożę z adresatką i chip. Bardzo przyjazny dla ludzi. Dla znalazcy przewidziana nagroda!',
+    category: 'Zgubiłem / Znalazłem',
+    status: 'active',
+    views: 154,
+  },
+  {
+    id: 'a5',
+    title: 'Klocki LEGO City, komplet 4 zestawów',
+    price: 90,
+    kind: 'sell',
+    author: 'Piotr',
+    street: 'Sosnkowskiego',
+    time: 'wczoraj',
+    image: img('photo-1587654780291-39c9404d746b', 600),
+    description: 'Zestawy policja, straż i 2 małe pojazdy. Kompletne w 100%, z papierowymi instrukcjami w bardzo dobrym stanie. Zapakowane w woreczki strunowe. Świetny prezent dla dziecka.',
+    category: 'Dziecięce',
+    status: 'active',
+    views: 33,
+  },
+  {
+    id: 'a6',
+    title: 'Monstera Deliciosa 120 cm z doniczką',
+    price: 40,
+    kind: 'sell',
+    author: 'Kasia',
+    street: 'Mickiewicza',
+    time: 'wczoraj',
+    image: img('photo-1485955900006-10f4d324d411', 600),
+    description: 'Zdrowa roślina z 7 dużymi liśćmi z dziurami, regularnie nawożona biohumusem. Sprzedaję wraz z nową doniczką ceramiczną i podstawkiem, bo po remoncie zabrakło dla niej miejsca.',
+    category: 'Ogród & Narzędzia',
+    status: 'active',
+    views: 51,
+  },
 ];
 
 export interface Job {
@@ -437,12 +521,85 @@ export interface Job {
   tags: string[];
   time: string;
   tone: Tone;
+  description?: string;
+  requirements?: string[];
+  benefits?: string[];
+  address?: string;
+  isOwner?: boolean;
 }
 
 export const jobs: Job[] = [
-  { id: 'j1', company: 'Motylek Market', position: 'Kasjer / sprzedawca', salary: '4 900 – 5 600 zł', period: 'brutto / mies.', tags: ['Pełny etat', 'Umowa o pracę', 'ul. Siennicka'], time: 'Dziś', tone: 'sand' },
-  { id: 'j2', company: 'mójMińsk', position: 'Kurier rowerowy', salary: 'od 28 zł', period: 'brutto / godz.', tags: ['Elastyczne godziny', 'Student mile widziany'], time: 'Dziś', tone: 'coral' },
-  { id: 'j3', company: 'SolarTech Mińsk', position: 'Monter instalacji PV', salary: '6 000 – 8 000 zł', period: 'brutto / mies.', tags: ['Pełny etat', 'Prawo jazdy B'], time: '2 dni', tone: 'sky' },
+  {
+    id: 'j1',
+    company: 'Motylek Market',
+    position: 'Kasjer / sprzedawca',
+    salary: '4 900 – 5 600 zł',
+    period: 'brutto / mies.',
+    tags: ['Pełny etat', 'Umowa o pracę', 'ul. Siennicka'],
+    time: 'Dziś',
+    tone: 'sand',
+    description: 'Dołącz do zgranego zespołu najpopularniejszego lokalnego marketu w Mińsku Mazowieckim! Szukamy osoby uśmiechniętej, punktualnej i zorientowanej na życzliwą obsługę sąsiadów.',
+    requirements: [
+      'Książeczka do celów sanitarno-epidemiologicznych (lub chęć jej wyrobienia)',
+      'Uczciwość, punktualność i życzliwość wobec klientów',
+      'Doświadczenie na kasie fiskalnej mile widziane, ale wszystkiego nauczymy!',
+    ],
+    benefits: [
+      'Stabilna Umowa o Pracę bez pośredników',
+      'Karta rabatowa 15% na zakupy spożywcze w Motylek Market',
+      'Premia miesięczna od obrotu sklepu',
+      'Elastyczny grafik dopasowany do dojazdów lub rodziny',
+    ],
+    address: 'ul. Siennicka 24, Mińsk Mazowiecki',
+  },
+  {
+    id: 'j2',
+    company: 'mójMińsk',
+    position: 'Kurier rowerowy / car delivery',
+    salary: 'od 28 zł',
+    period: 'brutto / godz.',
+    tags: ['Elastyczne godziny', 'Student mile widziany', 'Centrum'],
+    time: 'Dziś',
+    tone: 'coral',
+    description: 'Realizuj szybkie dostawy z restauracji Strefy Kuchni oraz zamówień z Motylek Market do mieszkańców Mińska. Pracujesz we własnym mieście, na własnym rowerze lub aucie.',
+    requirements: [
+      'Własny sprawny rower, skuter lub samochód',
+      'Smartfon z aplikacją mójMińsk',
+      'Dobra znajomość topografii ulic Mińska Mazowieckiego',
+      'Ukończone 18 lat',
+    ],
+    benefits: [
+      'Wypłaty co tydzień w każdy piątek',
+      'Sam decydujesz, w które dni i godziny chcesz jeździć',
+      '100% napiwków od mieszkańców trafia do Twojej kieszeni',
+      'Termos i torba termiczna w pakiecie powitalnym',
+    ],
+    address: 'Baza: ul. Spacerowa / Centrum, Mińsk Mazowiecki',
+  },
+  {
+    id: 'j3',
+    company: 'SolarTech Mińsk',
+    position: 'Monter instalacji PV & pomp ciepła',
+    salary: '6 000 – 8 000 zł',
+    period: 'brutto / mies.',
+    tags: ['Pełny etat', 'Prawo jazdy B', 'ul. Warszawska'],
+    time: '2 dni',
+    tone: 'sky',
+    description: 'Lokalna mińska firma instalacyjna poszukuje monterów paneli fotowoltaicznych i pomp ciepła do realizacji inwestycji na terenie powiatu mińskiego.',
+    requirements: [
+      'Brak lęku wysokości (praca na dachach budynków)',
+      'Prawo jazdy kat. B',
+      'Uprawnienia SEP do 1kV mile widziane',
+      'Sumienność i dbałość o estetykę montażu',
+    ],
+    benefits: [
+      'Umowa o pracę na pełny etat',
+      'Nowy sprzęt i odzież robocza renomowanych marek',
+      'Płatne nadgodziny i premie za zrealizowane obiekty',
+      'Szkolenia certyfikujące SEP i UDT',
+    ],
+    address: 'ul. Warszawska 180, Mińsk Mazowiecki',
+  },
 ];
 
 /* ---------------- Przejazdy ---------------- */
