@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F26659" />
+      <stop offset="100%" stop-color="#E04E41" />
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="512" height="512" rx="128" fill="url(#bg)" />
+  <!-- Inner circular decorative elements matching our palette -->
+  <circle cx="420" cy="90" r="80" fill="#EBC999" opacity="0.6" />
+  <circle cx="440" cy="200" r="50" fill="#8CA9D3" opacity="0.5" />
+  <circle cx="80" cy="440" r="60" fill="#F0EFF4" opacity="0.4" />
+  
+  <!-- "mM" monogram -->
+  <text x="256" y="320" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="220" font-weight="800" text-anchor="middle" fill="#1F1D2B">
+    mM
+  </text>
+  <!-- Dot accent -->
+  <circle cx="410" cy="305" r="22" fill="#F0EFF4" />
+</svg>
