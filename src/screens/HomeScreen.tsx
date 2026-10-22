@@ -322,7 +322,7 @@ export function HomeScreen({
           <div>
             <p className="text-[13px] font-medium text-ink-500">{greeting()},</p>
             <p className="font-display text-[19px] font-semibold leading-tight">
-              {user.name} {user.street.as}
+              {user.name} 👋
             </p>
           </div>
         </button>
