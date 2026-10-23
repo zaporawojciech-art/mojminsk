@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { RotateCcw, Smartphone } from 'lucide-react';
 import { BottomNav, type TabId } from './components/BottomNav';
 import { ProductSheet } from './components/ProductSheet';
 import { CartPill, CartSheet, type CartLine } from './components/Cart';
@@ -72,6 +73,37 @@ export default function App() {
     if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
       window.history.scrollRestoration = 'manual';
     }
+  }, []);
+
+  // 3. Lock device in portrait orientation on supported browsers/PWAs
+  useEffect(() => {
+    const lockPortrait = async () => {
+      try {
+        const orientation = (screen.orientation ||
+          (screen as unknown as { mozOrientation?: unknown }).mozOrientation ||
+          (screen as unknown as { msOrientation?: unknown }).msOrientation) as
+          | { lock?: (o: string) => Promise<void> }
+          | undefined;
+
+        if (orientation && typeof orientation.lock === 'function') {
+          await orientation.lock('portrait-primary').catch(async () => {
+            if (orientation.lock) {
+              await orientation.lock('portrait').catch(() => {});
+            }
+          });
+        }
+      } catch {
+        // Ignored if browser / OS restricts orientation lock (e.g. mobile Safari)
+      }
+    };
+
+    lockPortrait();
+    window.addEventListener('click', lockPortrait, { passive: true });
+    window.addEventListener('touchstart', lockPortrait, { passive: true });
+    return () => {
+      window.removeEventListener('click', lockPortrait);
+      window.removeEventListener('touchstart', lockPortrait);
+    };
   }, []);
 
   const isChildScreenActive = Boolean(
@@ -395,6 +427,26 @@ export default function App() {
             onClose={() => setChatAd(null)}
           />
         )}
+
+        {/* Mobile Landscape Orientation Barrier */}
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="landscape-barrier fixed inset-0 z-[9999] hidden flex-col items-center justify-center bg-ink/95 px-6 text-center text-white backdrop-blur-md select-none"
+        >
+          <div className="relative mb-4">
+            <div className="grid h-16 w-16 place-items-center rounded-3xl bg-sand text-ink shadow-lg animate-pulse">
+              <Smartphone className="h-9 w-9 rotate-90" aria-hidden />
+            </div>
+            <div className="absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full bg-coral text-ink shadow">
+              <RotateCcw className="h-4 w-4" aria-hidden />
+            </div>
+          </div>
+          <h2 className="font-display text-[20px] font-bold tracking-tight">Obróć telefon pionowo</h2>
+          <p className="mt-1.5 max-w-xs text-[13px] leading-relaxed text-white/75">
+            Aplikacja mójMińsk została zaprojektowana wyłącznie do pracy w widoku pionowym.
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -76,6 +76,13 @@
   will-change: transform, opacity;
 }
 
+/* Landscape rotation barrier for mobile screens (phones held sideways) */
+@media screen and (orientation: landscape) and (max-height: 540px) {
+  .landscape-barrier {
+    display: flex !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
