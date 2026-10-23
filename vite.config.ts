@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icons/*.png'],
+      includeAssets: ['apple-touch-icon.png', 'icons/*.png', 'icons/*.svg'],
       manifest: {
         name: 'mójMińsk - Aplikacja Mieszkańców',
         short_name: 'mójMińsk',
@@ -15,7 +15,7 @@ export default defineConfig({
         theme_color: '#F0EFF4',
         background_color: '#F0EFF4',
         display: 'fullscreen',
-        display_override: ['fullscreen', 'standalone'],
+        display_override: ['fullscreen', 'standalone', 'window-controls-overlay'],
         orientation: 'portrait-primary',
         start_url: '/',
         scope: '/',
@@ -23,12 +23,25 @@ export default defineConfig({
           {
             src: '/icons/icon-192.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
             src: '/icons/icon-512.png',
             sizes: '512x512',
             type: 'image/png',
+            purpose: 'any maskable'
+          },
+          {
+            src: '/icons/icon-192.svg',
+            sizes: '192x192',
+            type: 'image/svg+xml',
+            purpose: 'any'
+          },
+          {
+            src: '/icons/icon-512.svg',
+            sizes: '512x512',
+            type: 'image/svg+xml',
             purpose: 'any maskable'
           }
         ]
