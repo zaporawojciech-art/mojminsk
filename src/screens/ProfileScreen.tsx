@@ -54,7 +54,7 @@ export function ProfileScreen({
           Wylosuj nowy awatar ({user.rerolls})
         </button>
         <h1 className="mt-4 font-display text-[28px] font-semibold leading-tight">
-          {user.name} {user.street.as}
+          {user.name}
         </h1>
         <div className="mt-2 flex justify-center">
           <StreetPill street={`ul. ${user.street.name} · ${user.street.neighbors} sąsiadów`} className="bg-white text-[12px]" />

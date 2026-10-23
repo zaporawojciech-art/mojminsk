@@ -10,9 +10,8 @@ import {
   MapPin,
   Receipt,
   Smartphone,
-  X,
 } from 'lucide-react';
-import { cn } from '../components/ui';
+import { NativeHeader, cn } from '../components/ui';
 import type { Ad, Job, User } from '../data/mockData';
 
 interface AddAdModalProps {
@@ -116,19 +115,11 @@ export function AddAdModal({ user, onClose, onAdCreated, onJobCreated }: AddAdMo
     <div className="fixed inset-0 z-50 flex flex-col bg-white native-modal-slide select-none">
       <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-white">
         {/* Native Modal Navigation Bar */}
-        <header className="flex h-14 items-center justify-between border-b border-mist px-4 pt-[max(env(safe-area-inset-top),8px)] shrink-0 z-20">
-          <div>
-            <h2 className="font-display text-[17px] font-bold text-ink">
-              {step === 'form' ? 'Nowe ogłoszenie' : 'Płatność One-Click BLIK'}
-            </h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="grid h-9 w-9 place-items-center rounded-full bg-mist text-ink hover:bg-mist-200"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </header>
+        <NativeHeader
+          title={step === 'form' ? 'Nowe ogłoszenie' : 'Płatność BLIK'}
+          backLabel="Anuluj"
+          onBack={onClose}
+        />
 
         {/* Step: BLIK payment */}
         {step === 'blik' && (

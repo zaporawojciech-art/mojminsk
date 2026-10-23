@@ -78,6 +78,70 @@ export default function App() {
     overlay || selectedAd || selectedJob || applyJob || myAdsOpen || reportAd || addAdOpen || chatAd
   );
 
+  // Navigation stack: layers ordered from the topmost (closed first) to the bottom one
+  const layers = [
+    { active: !!reportAd, close: () => setReportAd(null) },
+    { active: !!chatAd, close: () => setChatAd(null) },
+    { active: !!applyJob, close: () => setApplyJob(null) },
+    { active: !!selectedJob, close: () => setSelectedJob(null) },
+    { active: !!selectedAd, close: () => setSelectedAd(null) },
+    { active: addAdOpen, close: () => setAddAdOpen(false) },
+    { active: myAdsOpen, close: () => setMyAdsOpen(false) },
+    { active: !!overlay, close: () => setOverlay(null) },
+  ];
+  const depth = layers.filter((l) => l.active).length;
+  const layersRef = useRef(layers);
+  layersRef.current = layers;
+  const prevDepth = useRef(0);
+  const closedByPop = useRef(false);
+  const ignorePops = useRef(0);
+
+  // Keep browser history in sync with the screen stack, so the system back
+  // button / gesture closes the top screen instead of leaving the app.
+  useEffect(() => {
+    const diff = depth - prevDepth.current;
+    if (diff > 0) {
+      for (let i = 0; i < diff; i++) window.history.pushState({ layer: true }, '');
+    } else if (diff < 0) {
+      if (closedByPop.current) closedByPop.current = false;
+      else {
+        ignorePops.current += 1;
+        window.history.go(diff);
+      }
+    }
+    prevDepth.current = depth;
+  }, [depth]);
+
+  useEffect(() => {
+    const onPop = () => {
+      if (ignorePops.current > 0) {
+        ignorePops.current -= 1;
+        return;
+      }
+      const top = layersRef.current.find((l) => l.active);
+      if (top) {
+        closedByPop.current = true;
+        top.close();
+      }
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+
+  // Swipe from the left screen edge = back
+  const swipeStart = useRef<{ x: number; y: number } | null>(null);
+  const onEdgeTouchStart = (e: React.TouchEvent) => {
+    swipeStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  };
+  const onEdgeTouchEnd = (e: React.TouchEvent) => {
+    const s = swipeStart.current;
+    swipeStart.current = null;
+    if (!s) return;
+    const dx = e.changedTouches[0].clientX - s.x;
+    const dy = Math.abs(e.changedTouches[0].clientY - s.y);
+    if (dx > 70 && dy < 60) window.history.back();
+  };
+
   const handleToggleLike = useCallback((adId: string) => {
     setLikedAds((prev) => ({ ...prev, [adId]: !prev[adId] }));
   }, []);
@@ -231,6 +295,15 @@ export default function App() {
           <CartPill count={count} total={total} onOpen={() => setCartOpen(true)} />
         )}
         {showChrome && !isChildScreenActive && <BottomNav tab={tab} onChange={setTab} />}
+
+        {depth > 0 && (
+          <div
+            aria-hidden
+            onTouchStart={onEdgeTouchStart}
+            onTouchEnd={onEdgeTouchEnd}
+            className="fixed inset-y-0 left-0 z-[60] w-4"
+          />
+        )}
 
         <ProductSheet product={sheet} onClose={() => setSheet(null)} onAdd={add} container={frame} />
         <CartSheet

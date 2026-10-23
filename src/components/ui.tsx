@@ -113,6 +113,66 @@ export function BackHeader({ title, onBack, right, dark }: { title?: string; onB
   );
 }
 
+/** Icon-only button: 44x44 touch target and a mandatory accessible name. */
+export function IconButton({
+  label,
+  onClick,
+  children,
+  className,
+}: {
+  label: string;
+  onClick?: () => void;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className={cn('grid h-11 w-11 shrink-0 place-items-center rounded-full bg-mist text-ink transition-colors active:bg-mist-300', className)}
+    >
+      {children}
+    </button>
+  );
+}
+
+/**
+ * Header for full-screen (pushed) views.
+ * The safe-area inset is padding of the container; the 56px row below it is fixed,
+ * so the controls never slide under the camera cut-out or the status bar.
+ * Layout: [ back (label) ] [ centered title ] [ right actions ]
+ */
+export function NativeHeader({
+  title,
+  backLabel = 'Wróć',
+  onBack,
+  right,
+}: {
+  title?: string;
+  backLabel?: string;
+  onBack: () => void;
+  right?: ReactNode;
+}) {
+  return (
+    <header className="z-20 shrink-0 border-b border-mist-300 bg-white pt-[max(env(safe-area-inset-top),12px)]">
+      <div className="flex h-14 items-center gap-1 px-2">
+        <button
+          type="button"
+          onClick={onBack}
+          aria-label={`Wróć do: ${backLabel}`}
+          className="flex h-11 min-w-11 shrink-0 items-center gap-0.5 rounded-full pl-1 pr-3 text-[15px] font-semibold text-ink transition-colors active:bg-mist"
+        >
+          <ChevronLeft className="h-6 w-6" aria-hidden />
+          <span className="max-w-[88px] truncate">{backLabel}</span>
+        </button>
+        <h1 className="min-w-0 flex-1 truncate px-1 text-center font-display text-[16px] font-bold text-ink">{title}</h1>
+        <div className="flex shrink-0 items-center gap-1">{right}</div>
+      </div>
+    </header>
+  );
+}
+
 export function SearchField({ placeholder, value, onChange }: { placeholder: string; value?: string; onChange?: (v: string) => void }) {
   return (
     <label className="flex h-12 items-center gap-2.5 rounded-full bg-white pl-4 pr-2 shadow-card focus-within:ring-2 focus-within:ring-ink">

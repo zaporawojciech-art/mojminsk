@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { CheckCircle2, ChevronLeft, ShieldAlert } from 'lucide-react';
-import { cn } from '../components/ui';
+import { CheckCircle2, ShieldAlert } from 'lucide-react';
+import { NativeHeader, cn } from '../components/ui';
 import type { Ad } from '../data/mockData';
 
 interface ReportAdModalProps {
@@ -30,18 +30,7 @@ export function ReportAdModal({ ad, onClose }: ReportAdModalProps) {
     <div className="fixed inset-0 z-50 flex flex-col bg-white native-screen-slide select-none">
       <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-white">
         {/* Native Top Navigation Bar */}
-        <header className="flex h-14 items-center justify-between border-b border-mist px-4 pt-[max(env(safe-area-inset-top),8px)] shrink-0 z-20">
-          <button
-            onClick={onClose}
-            aria-label="Wróć"
-            className="flex items-center gap-1 text-[14px] font-bold text-ink active:opacity-60 transition-opacity"
-          >
-            <ChevronLeft className="h-5 w-5" />
-            <span>Wróć</span>
-          </button>
-          <h2 className="font-display text-[15px] font-bold text-ink">Zgłoś ogłoszenie</h2>
-          <div className="w-12" />
-        </header>
+        <NativeHeader title="Zgłoś ogłoszenie" backLabel="Wróć" onBack={onClose} />
 
         {isSubmitted ? (
           <div className="flex-1 flex flex-col justify-center items-center p-6 text-center space-y-4">

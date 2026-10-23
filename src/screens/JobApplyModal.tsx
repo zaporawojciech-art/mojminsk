@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   CheckCircle2,
-  ChevronLeft,
   Clock,
   MapPin,
   Phone,
@@ -11,6 +10,7 @@ import {
   Zap,
 } from 'lucide-react';
 import type { Job, User } from '../data/mockData';
+import { NativeHeader } from '../components/ui';
 
 interface JobApplyModalProps {
   job: Job;
@@ -39,22 +39,7 @@ export function JobApplyModal({ job, user, onClose, onSuccess }: JobApplyModalPr
     <div className="fixed inset-0 z-50 flex flex-col bg-white native-screen-slide select-none">
       <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-white">
         {/* Native Top Navigation Bar */}
-        <header className="flex h-14 items-center justify-between border-b border-mist bg-white px-4 pt-[max(env(safe-area-inset-top),8px)] shrink-0 z-20">
-          <button
-            onClick={onClose}
-            aria-label="Wróć do oferty"
-            className="flex items-center gap-1 text-[14px] font-bold text-ink active:opacity-60 transition-opacity"
-          >
-            <ChevronLeft className="h-5 w-5" />
-            <span>Oferta</span>
-          </button>
-          <div>
-            <p className="font-display text-[15px] font-bold text-ink truncate max-w-[200px] text-center">
-              Aplikuj 1-Click
-            </p>
-          </div>
-          <div className="w-12" />
-        </header>
+        <NativeHeader title="Aplikuj 1-Click" backLabel="Oferta" onBack={onClose} />
 
         {isDone ? (
           /* Success Screen */

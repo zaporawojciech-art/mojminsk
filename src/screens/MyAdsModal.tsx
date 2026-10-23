@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   CheckCircle,
-  ChevronLeft,
   Clock,
   Eye,
   Heart,
@@ -10,7 +9,7 @@ import {
   RefreshCw,
   Trash2,
 } from 'lucide-react';
-import { Img, cn, zl } from '../components/ui';
+import { Img, NativeHeader, cn, zl } from '../components/ui';
 import type { Ad, Job, User } from '../data/mockData';
 
 interface MyAdsModalProps {
@@ -54,31 +53,25 @@ export function MyAdsModal({
     <div className="fixed inset-0 z-50 flex flex-col bg-mist native-screen-slide select-none">
       <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist">
         {/* Native Top Navigation Bar */}
-        <header className="flex h-14 items-center justify-between border-b border-mist bg-white px-4 pt-[max(env(safe-area-inset-top),8px)] shrink-0 z-20">
-          <button
-            onClick={onClose}
-            aria-label="Wróć"
-            className="flex items-center gap-1 text-[14px] font-bold text-ink active:opacity-60 transition-opacity"
-          >
-            <ChevronLeft className="h-5 w-5" />
-            <span>Wróć</span>
-          </button>
-
-          <span className="font-display text-[16px] font-bold text-ink">
-            Moje ogłoszenia
-          </span>
-
-          <button
-            onClick={() => {
-              onClose();
-              onAddNew();
-            }}
-            className="flex h-9 items-center gap-1 rounded-full bg-coral px-3 text-[12px] font-bold text-ink shadow-coral transition-transform active:scale-95"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Dodaj
-          </button>
-        </header>
+        <NativeHeader
+          title="Moje ogłoszenia"
+          backLabel="Profil"
+          onBack={onClose}
+          right={
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onAddNew();
+              }}
+              aria-label="Dodaj ogłoszenie"
+              className="mr-1 flex h-11 items-center gap-1 rounded-full bg-coral px-4 text-[13px] font-bold text-ink shadow-coral transition-transform active:scale-95"
+            >
+              <Plus className="h-4 w-4" aria-hidden />
+              Dodaj
+            </button>
+          }
+        />
 
         {/* Stats summary bar */}
         <div className="grid grid-cols-2 gap-2 bg-white px-4 pb-3 border-b border-mist">
@@ -118,7 +111,7 @@ export function MyAdsModal({
               key={tab.id}
               onClick={() => setFilter(tab.id)}
               className={cn(
-                'flex items-center gap-1 rounded-full px-3 py-1.5 text-[12px] font-bold transition-colors whitespace-nowrap',
+                'flex items-center gap-1 min-h-11 rounded-full px-4 text-[12px] font-bold transition-colors whitespace-nowrap',
                 filter === tab.id
                   ? 'bg-ink text-white'
                   : 'bg-mist text-ink-500 hover:text-ink',
@@ -220,7 +213,7 @@ export function MyAdsModal({
                       {status !== 'active' && (
                         <button
                           onClick={() => onStatusChange(ad.id, 'active')}
-                          className="flex items-center gap-1 rounded-full bg-mist px-2.5 py-1 text-[11px] font-bold text-ink hover:bg-mist-200"
+                          className="flex items-center gap-1 rounded-full bg-mist min-h-11 px-3 text-[11px] font-bold text-ink hover:bg-mist-200"
                         >
                           <RefreshCw className="h-3 w-3" />
                           Aktywuj
@@ -229,7 +222,7 @@ export function MyAdsModal({
                       {status !== 'reserved' && (
                         <button
                           onClick={() => onStatusChange(ad.id, 'reserved')}
-                          className="flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-bold text-amber-900 hover:bg-amber-200"
+                          className="flex items-center gap-1 rounded-full bg-amber-100 min-h-11 px-3 text-[11px] font-bold text-amber-900 hover:bg-amber-200"
                         >
                           Rezerwacja
                         </button>
@@ -237,7 +230,7 @@ export function MyAdsModal({
                       {status !== 'sold' && (
                         <button
                           onClick={() => onStatusChange(ad.id, 'sold')}
-                          className="flex items-center gap-1 rounded-full bg-mist-300 px-2.5 py-1 text-[11px] font-bold text-ink hover:bg-mist-200"
+                          className="flex items-center gap-1 rounded-full bg-mist-300 min-h-11 px-3 text-[11px] font-bold text-ink hover:bg-mist-200"
                         >
                           <CheckCircle className="h-3 w-3" />
                           Sprzedane
@@ -251,7 +244,7 @@ export function MyAdsModal({
                           onClose();
                           onOpenAd(ad);
                         }}
-                        className="rounded-full px-2.5 py-1 text-[11px] font-bold text-ink-700 hover:bg-mist"
+                        className="rounded-full min-h-11 px-3 text-[11px] font-bold text-ink-700 hover:bg-mist"
                       >
                         Podgląd
                       </button>
@@ -261,8 +254,8 @@ export function MyAdsModal({
                             onDeleteAd(ad.id);
                           }
                         }}
-                        className="grid h-7 w-7 place-items-center rounded-full text-coral hover:bg-coral-50"
-                        title="Usuń"
+                        className="grid h-11 w-11 place-items-center rounded-full text-coral active:bg-coral-50"
+                        aria-label="Usuń ogłoszenie"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>

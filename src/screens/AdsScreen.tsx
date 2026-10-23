@@ -209,7 +209,7 @@ export function AdsScreen({
                           }}
                           aria-label="Obserwuj"
                           aria-pressed={isItemLiked}
-                          className="absolute right-2 top-2 grid h-9 w-9 place-items-center rounded-full bg-white/90 backdrop-blur shadow-sm transition-transform active:scale-90"
+                          className="absolute right-2 top-2 grid h-11 w-11 place-items-center rounded-full bg-white/90 backdrop-blur shadow-sm transition-transform active:scale-90"
                         >
                           <Heart
                             className={cn('h-4 w-4 transition-colors', isItemLiked && 'fill-coral text-coral')}

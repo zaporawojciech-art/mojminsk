@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { ChevronLeft, CheckCheck, Send, ShieldCheck } from 'lucide-react';
-import { Img, cn, zl } from '../components/ui';
+import { CheckCheck, Send, ShieldCheck } from 'lucide-react';
+import { Img, NativeHeader, cn, zl } from '../components/ui';
 import type { Ad, User } from '../data/mockData';
 
 interface ChatModalProps {
@@ -74,29 +74,17 @@ export function ChatModal({ ad, user, onClose }: ChatModalProps) {
     <div className="fixed inset-0 z-50 flex flex-col bg-mist native-screen-slide select-none">
       <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist">
         {/* Native Top Header */}
-        <header className="flex h-16 items-center justify-between border-b border-mist-300 bg-white px-4 pt-[max(env(safe-area-inset-top),8px)] shrink-0 z-20">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={onClose}
-              aria-label="Wróć"
-              className="flex items-center gap-1 text-[14px] font-bold text-ink active:opacity-60 transition-opacity pr-1"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-            <div className="flex items-center gap-2.5">
-              <div className="grid h-10 w-10 place-items-center rounded-2xl bg-coral font-bold text-ink text-[15px]">
-                {ad.author.charAt(0)}
-              </div>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <p className="font-display text-[15px] font-bold text-ink leading-none">{ad.author}</p>
-                  <ShieldCheck className="h-3.5 w-3.5 text-sky-700" />
-                </div>
-                <p className="text-[11px] text-ink-500 mt-0.5">ul. {ad.street} · Aktywny dzisiaj</p>
-              </div>
-            </div>
-          </div>
-        </header>
+        <NativeHeader
+          title={ad.author}
+          backLabel="Wróć"
+          onBack={onClose}
+          right={
+            <span className="mr-2 flex items-center gap-1 rounded-full bg-sky-100 px-2.5 py-1 text-[11px] font-bold text-sky-700">
+              <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
+              Weryfikowany
+            </span>
+          }
+        />
 
         {/* Ad Context Bar */}
         <div className="flex items-center gap-3 border-b border-mist-300 bg-white/90 px-4 py-2 backdrop-blur shrink-0">

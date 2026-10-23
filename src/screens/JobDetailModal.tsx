@@ -3,14 +3,13 @@ import {
   Building2,
   Check,
   CheckCircle2,
-  ChevronLeft,
   Clock,
   HeartHandshake,
   Share2,
   Sparkles,
   Zap,
 } from 'lucide-react';
-import { StreetPill, cn, toneBg } from '../components/ui';
+import { IconButton, NativeHeader, StreetPill, cn, toneBg } from '../components/ui';
 import type { Job, User } from '../data/mockData';
 
 interface JobDetailModalProps {
@@ -60,28 +59,16 @@ export function JobDetailModal({
     <div className="fixed inset-0 z-50 flex flex-col bg-mist native-screen-slide select-none">
       <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist">
         {/* Native Top Navigation Bar */}
-        <header className="flex h-14 items-center justify-between border-b border-mist bg-white/95 px-4 pt-[max(env(safe-area-inset-top),8px)] backdrop-blur shrink-0 z-20">
-          <button
-            onClick={onClose}
-            aria-label="Wróć do ofert"
-            className="flex items-center gap-1 text-[14px] font-bold text-ink active:opacity-60 transition-opacity"
-          >
-            <ChevronLeft className="h-5 w-5" />
-            <span>Praca</span>
-          </button>
-
-          <span className="font-display text-[15px] font-bold text-ink truncate max-w-[170px]">
-            {job.position}
-          </span>
-
-          <button
-            onClick={handleShare}
-            aria-label="Udostępnij ofertę"
-            className="grid h-9 w-9 place-items-center rounded-full bg-mist text-ink hover:bg-mist-200 transition-transform active:scale-90"
-          >
-            {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Share2 className="h-4 w-4" />}
-          </button>
-        </header>
+        <NativeHeader
+          title={job.position}
+          backLabel="Praca"
+          onBack={onClose}
+          right={
+            <IconButton label="Udostępnij ofertę" onClick={handleShare}>
+              {copied ? <Check className="h-5 w-5 text-emerald-600" aria-hidden /> : <Share2 className="h-5 w-5" aria-hidden />}
+            </IconButton>
+          }
+        />
 
         {/* Content Body */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-4 pb-24">

@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import {
-  ChevronLeft,
   Check,
+  ChevronLeft,
   Eye,
   Heart,
   MapPin,
@@ -69,48 +69,38 @@ export function AdDetailModal({
     }
   };
 
+  const floatBtn =
+    'grid h-11 w-11 place-items-center rounded-full bg-white/90 text-ink shadow-md backdrop-blur transition-transform active:scale-90';
+
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-mist native-screen-slide select-none">
-      <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist">
-        {/* Native Top Navigation Bar */}
-        <header className="flex h-14 items-center justify-between border-b border-mist bg-white/95 px-4 pt-[max(env(safe-area-inset-top),8px)] backdrop-blur shrink-0 z-20">
-          <button
-            onClick={onClose}
-            aria-label="Wróć do ogłoszeń"
-            className="flex items-center gap-1 text-[14px] font-bold text-ink active:opacity-60 transition-opacity"
-          >
-            <ChevronLeft className="h-5 w-5" />
-            <span>Ogłoszenia</span>
+      <div className="relative mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist">
+        {/* Floating controls over the full-bleed photo (stay visible while scrolling) */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between px-4 pt-[max(env(safe-area-inset-top),12px)]">
+          <button type="button" onClick={onClose} aria-label="Wróć do ogłoszeń" className={cn(floatBtn, 'pointer-events-auto')}>
+            <ChevronLeft className="h-6 w-6" aria-hidden />
           </button>
-
-          <span className="font-display text-[15px] font-bold text-ink truncate max-w-[160px]">
-            {ad.title}
-          </span>
-
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={handleShare}
-              aria-label="Udostępnij"
-              className="grid h-9 w-9 place-items-center rounded-full bg-mist text-ink hover:bg-mist-200 transition-transform active:scale-90"
-            >
-              {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Share2 className="h-4 w-4" />}
+          <div className="pointer-events-auto flex items-center gap-2">
+            <button type="button" onClick={handleShare} aria-label="Udostępnij" className={floatBtn}>
+              {copied ? <Check className="h-5 w-5 text-emerald-600" aria-hidden /> : <Share2 className="h-5 w-5" aria-hidden />}
             </button>
             <button
+              type="button"
               onClick={() => onToggleLike?.(ad.id)}
-              aria-label="Obserwuj"
-              className="grid h-9 w-9 place-items-center rounded-full bg-mist text-ink hover:bg-mist-200 transition-transform active:scale-90"
+              aria-label={isLiked ? 'Usuń z obserwowanych' : 'Obserwuj'}
+              className={floatBtn}
             >
-              <Heart className={cn('h-4 w-4 transition-colors', isLiked && 'fill-coral text-coral')} />
+              <Heart className={cn('h-5 w-5 transition-colors', isLiked && 'fill-coral text-coral')} aria-hidden />
             </button>
           </div>
-        </header>
+        </div>
 
         {/* Scrollable Screen Content */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain pb-24">
-          {/* Hero Image */}
-          <div className="relative aspect-[4/3] w-full bg-mist-200">
+          {/* Hero Image: edge to edge, starts at the very top of the screen */}
+          <div className="relative aspect-[4/5] w-full bg-mist-200">
             <Img src={ad.image} alt={ad.title} className="h-full w-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-transparent to-black/45" />
 
             {/* Badges on Image */}
             <div className="absolute bottom-3 left-4 flex flex-wrap items-center gap-2">
