@@ -80,6 +80,13 @@ export const demoUser: User = {
 };
 
 /* ---------------- Pogoda ---------------- */
+export interface HourlyWeather {
+  temp: number;
+  condition: string;
+  icon: 'sun' | 'partly-cloudy' | 'cloudy' | 'rain' | 'moon';
+  rainChance?: number;
+}
+
 export const weather = {
   temp: 14,
   feels: 12,
@@ -95,7 +102,16 @@ export const weather = {
   visibility: 11,
   sunrise: '06:14',
   sunset: '16:35',
-  hourly: [14, 15, 15, 13, 12, 10, 9, 8],
+  hourly: [
+    { temp: 14, condition: 'Przejaśnienia', icon: 'partly-cloudy', rainChance: 10 },
+    { temp: 15, condition: 'Słonecznie', icon: 'sun', rainChance: 0 },
+    { temp: 15, condition: 'Częściowo słonecznie', icon: 'partly-cloudy', rainChance: 5 },
+    { temp: 13, condition: 'Pochmurno', icon: 'cloudy', rainChance: 25 },
+    { temp: 12, condition: 'Przelotny deszcz', icon: 'rain', rainChance: 65 },
+    { temp: 10, condition: 'Lekki deszcz', icon: 'rain', rainChance: 45 },
+    { temp: 9, condition: 'Przejaśnienia', icon: 'moon', rainChance: 15 },
+    { temp: 8, condition: 'Pogodna noc', icon: 'moon', rainChance: 0 },
+  ] as HourlyWeather[],
 };
 
 export interface BusDirection {

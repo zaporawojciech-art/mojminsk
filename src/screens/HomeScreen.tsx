@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
-  ArrowRight, Bell, Bus, Car, Check, Coffee, Droplets, Eye, Gauge, MapPin, Megaphone,
-  ShieldCheck, Sparkles, Sun, TriangleAlert, Umbrella, UtensilsCrossed, Wind,
+  ArrowRight, Bus, Car, Check, Cloud, CloudMoon, CloudRain, CloudSun, Coffee, Droplets, Eye, Gauge, MapPin, Megaphone,
+  Moon, ShieldCheck, Sparkles, Sun, TriangleAlert, Umbrella, UtensilsCrossed, Wind, X,
 } from 'lucide-react';
 import { busLines, liveAlert, news, partner, poll, weather, type LineId, type User } from '../data/mockData';
 import { Card, Img, ProfileAvatarButton, SectionHeader, cn } from '../components/ui';
@@ -48,6 +48,27 @@ function SunArc() {
       </div>
     </div>
   );
+}
+
+function HourlyWeatherIcon({ icon, isDay }: { icon: string; isDay: boolean }) {
+  switch (icon) {
+    case 'sun':
+      return <Sun className="h-4 w-4 text-amber-500" aria-hidden />;
+    case 'partly-cloudy':
+      return isDay ? (
+        <CloudSun className="h-4 w-4 text-amber-500" aria-hidden />
+      ) : (
+        <CloudMoon className="h-4 w-4 text-sky-300" aria-hidden />
+      );
+    case 'cloudy':
+      return <Cloud className="h-4 w-4 text-ink-600" aria-hidden />;
+    case 'rain':
+      return <CloudRain className="h-4 w-4 text-sky-600" aria-hidden />;
+    case 'moon':
+      return <Moon className="h-4 w-4 text-sky-300" aria-hidden />;
+    default:
+      return <Sun className="h-4 w-4 text-amber-500" aria-hidden />;
+  }
 }
 
 function WeatherCard() {
@@ -100,13 +121,38 @@ function WeatherCard() {
                 </div>
               ))}
             </div>
-            <div className="-mx-5 flex gap-2 overflow-x-auto px-5 no-scrollbar">
-              {weather.hourly.map((t, i) => (
-                <div key={i} className={cn('w-14 shrink-0 rounded-2xl py-2.5 text-center', i === 0 ? 'bg-ink text-white' : 'bg-white/45')}>
-                  <p className="text-[10.5px] font-semibold opacity-75">{i === 0 ? 'Teraz' : `${String((h + i) % 24).padStart(2, '0')}:00`}</p>
-                  <p className="mt-1 text-[15px] font-bold">{t}°</p>
-                </div>
-              ))}
+            <div className="-mx-5 flex gap-2.5 overflow-x-auto px-5 pb-1 no-scrollbar">
+              {weather.hourly.map((item, i) => {
+                const hourNum = (h + i) % 24;
+                const isDay = hourNum >= 6 && hourNum < 20;
+                return (
+                  <div
+                    key={i}
+                    className={cn(
+                      'flex w-[72px] shrink-0 flex-col items-center justify-between rounded-2xl p-2.5 text-center transition-all shadow-sm',
+                      i === 0 ? 'bg-ink text-white shadow-card' : 'bg-white/60 text-ink',
+                    )}
+                  >
+                    <p className={cn('text-[10px] font-semibold', i === 0 ? 'text-white/75' : 'text-ink-500')}>
+                      {i === 0 ? 'Teraz' : `${String(hourNum).padStart(2, '0')}:00`}
+                    </p>
+
+                    <div className="my-1.5 flex flex-col items-center gap-0.5">
+                      <HourlyWeatherIcon icon={item.icon} isDay={isDay} />
+                      {item.rainChance && item.rainChance >= 20 ? (
+                        <span className={cn('text-[9px] font-extrabold', i === 0 ? 'text-sky-300' : 'text-sky-700')}>
+                          {item.rainChance}%
+                        </span>
+                      ) : null}
+                    </div>
+
+                    <p className="font-display text-[15px] font-bold leading-none">{item.temp}°</p>
+                    <p className={cn('mt-1 line-clamp-1 text-[9.5px] font-medium leading-tight', i === 0 ? 'text-white/70' : 'text-ink-500')}>
+                      {item.condition}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
             <SunArc />
             <p className="text-[10.5px] font-medium text-ink/60">Dane: Open-Meteo · stacja GIOŚ Mińsk Mazowiecki</p>
@@ -118,12 +164,16 @@ function WeatherCard() {
 }
 
 function LiveAlert() {
+  const [dismissed, setDismissed] = useState(false);
+
+  if (dismissed) return null;
+
   return (
-    <div className="mx-5 flex gap-3 rounded-3xl border-l-4 border-coral bg-white p-4 shadow-card" role="status">
+    <div className="relative mx-5 flex gap-3 rounded-3xl border-l-4 border-coral bg-white p-4 shadow-card" role="status">
       <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-coral-100">
         <TriangleAlert className="h-5 w-5 text-coral-700" aria-hidden />
       </span>
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1 pr-6">
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1.5 text-[10.5px] font-extrabold tracking-wider text-coral-700">
             <span className="relative flex h-2 w-2" aria-hidden>
@@ -141,6 +191,15 @@ function LiveAlert() {
           Zweryfikowane przez administratora
         </p>
       </div>
+
+      <button
+        type="button"
+        onClick={() => setDismissed(true)}
+        aria-label="Zamknij alert"
+        className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-mist text-ink-400 hover:text-ink transition-transform active:scale-95"
+      >
+        <X className="h-4 w-4" />
+      </button>
     </div>
   );
 }
@@ -323,17 +382,7 @@ export function HomeScreen({
             {user.name} 👋
           </p>
         </button>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onProfile}
-            aria-label="Powiadomienia (3 nowe)"
-            className="relative grid h-11 w-11 place-items-center rounded-full bg-white shadow-card transition-transform active:scale-95"
-          >
-            <Bell className="h-5 w-5" aria-hidden />
-            <span className="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full bg-coral ring-2 ring-white" aria-hidden />
-          </button>
-          <ProfileAvatarButton user={user} onClick={onProfile} />
-        </div>
+        <ProfileAvatarButton user={user} onClick={onProfile} />
       </header>
 
       <WeatherCard />
