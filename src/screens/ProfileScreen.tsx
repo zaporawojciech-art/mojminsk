@@ -9,7 +9,6 @@ import {
   Coffee,
   Dices,
   Eye,
-  EyeOff,
   Gem,
   Lock,
   Mail,
@@ -312,29 +311,7 @@ export function ProfileScreen({
         </div>
       )}
 
-      {/* 3. Numeric Community Counters (Decision #6) */}
-      <div className="mx-5 mt-4 grid grid-cols-3 gap-2.5">
-        {[
-          ['12', 'Wpisów'],
-          ['148', 'Polubień'],
-          ['5', 'Przejazdów'],
-        ].map(([v, l]) => (
-          <div key={l} className="relative rounded-3xl bg-white p-3 text-center shadow-card">
-            {!privacy.showStats && (
-              <span
-                className="absolute right-2.5 top-2.5 text-ink-300"
-                title="Ukryte na wizytówce publicznej"
-              >
-                <EyeOff className="h-3 w-3" aria-hidden />
-              </span>
-            )}
-            <p className="font-display text-[22px] font-semibold text-ink">{v}</p>
-            <p className="text-[11.5px] font-medium text-ink-500">{l}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* 4. Moje Sprawy Sąsiedzkie — iOS Grouped List (Decision #2 + Subagent Views) */}
+      {/* Moje Sprawy Sąsiedzkie — iOS Grouped List (Decision #2 + Subagent Views) */}
       <div className="mx-5 mt-6">
         <p className="mb-2 px-3 text-[11.5px] font-extrabold uppercase tracking-wider text-ink-400">
           Moja aktywność i ogłoszenia
@@ -594,18 +571,6 @@ export function ProfileScreen({
           )}
         </div>
         <ul className="overflow-hidden rounded-4xl bg-white shadow-card">
-          <li className="flex items-center justify-between gap-3 border-b border-mist px-4 py-3.5">
-            <div className="min-w-0">
-              <p className="text-[14px] font-semibold text-ink">Pokazuj liczniki aktywności i opinie</p>
-              <p className="text-[11.5px] text-ink-400">Widoczne dla sąsiadów na Twojej karcie</p>
-            </div>
-            <IosToggle
-              label="Pokazuj liczniki aktywności"
-              checked={privacy.showStats}
-              onChange={(v) => handleTogglePrivacy('showStats', v)}
-            />
-          </li>
-
           <li className="flex items-center justify-between gap-3 px-4 py-3.5">
             <div className="min-w-0">
               <p className="text-[14px] font-semibold text-ink">Pokazuj archiwalne (sprzedane) ogłoszenia</p>
