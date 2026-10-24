@@ -1,15 +1,12 @@
 import {
-  Car,
   CheckCircle2,
   Clock,
   Eye,
   EyeOff,
-  Heart,
   MapPin,
   MessageCircle,
   ShieldCheck,
   Sparkles,
-  Star,
 } from 'lucide-react';
 import { Img, NativeHeader, cn, zl } from '../components/ui';
 import { avatarUrl, type Ad, type User } from '../data/mockData';
@@ -49,51 +46,19 @@ export function SellerProfileModal({
 
   const activeAds = sellerAds.filter((a) => (a.status ?? 'active') === 'active');
   const pastAds = sellerAds.filter((a) => (a.status ?? 'active') !== 'active');
-  const hasSuperNeighborAd = sellerAds.some((a) => a.promoted || a.price === null || a.kind === 'free');
-
   const isVerified = isSelf ? currentUser.verified : true;
   const avatarSeed = isSelf ? currentUser.seed : `${sellerName}-${sellerStreet}`;
 
   const showStats = isSelf ? (currentUser.privacy?.showStats ?? true) : true;
   const showPastAds = isSelf ? (currentUser.privacy?.showPastAds ?? true) : true;
-  const showRides = isSelf ? (currentUser.privacy?.showRides ?? true) : true;
 
   const badges = [
     {
       id: 'verified',
-      label: isVerified ? 'Zweryfikowany sąsiad' : 'W trakcie weryfikacji',
+      label: isVerified ? 'Zweryfikowany mieszkaniec' : 'W trakcie weryfikacji adresu',
       icon: isVerified ? ShieldCheck : Clock,
       active: isVerified,
       tone: isVerified ? 'bg-sky-100 text-sky-900 border-sky-200' : 'bg-amber-100 text-amber-900 border-amber-200',
-    },
-    ...(hasSuperNeighborAd
-      ? [
-          {
-            id: 'super',
-            label: 'SuperSąsiad',
-            icon: Sparkles,
-            active: true,
-            tone: 'bg-amber-100 text-amber-900 border-amber-300',
-          },
-        ]
-      : []),
-    ...(showRides
-      ? [
-          {
-            id: 'driver',
-            label: 'Kierowca 5.0',
-            icon: Car,
-            active: true,
-            tone: 'bg-sand-100 text-ink border-sand-300',
-          },
-        ]
-      : []),
-    {
-      id: 'helpful',
-      label: 'Pomocny sąsiad',
-      icon: Heart,
-      active: true,
-      tone: 'bg-coral-100 text-coral-900 border-coral-200',
     },
   ];
 
@@ -172,23 +137,16 @@ export function SellerProfileModal({
               ))}
             </div>
 
-            {/* Quick trust metrics (Decision #6 & #8) */}
+            {/* Quick trust metrics */}
             {showStats ? (
-              <div className="mt-5 grid grid-cols-3 gap-2 border-t border-mist pt-4">
-                <div className="rounded-2xl bg-mist/60 p-2 text-center">
-                  <p className="font-display text-[17px] font-extrabold text-ink">{sellerAds.length}</p>
-                  <p className="text-[10.5px] font-semibold text-ink-500">Wystawionych</p>
+              <div className="mt-5 grid grid-cols-2 gap-2 border-t border-mist pt-4">
+                <div className="rounded-2xl bg-mist/60 p-2.5 text-center">
+                  <p className="font-display text-[18px] font-extrabold text-ink">{sellerAds.length}</p>
+                  <p className="text-[11px] font-semibold text-ink-500">Ogłoszenia sąsiada</p>
                 </div>
-                <div className="rounded-2xl bg-mist/60 p-2 text-center">
-                  <p className="font-display text-[17px] font-extrabold text-ink flex items-center justify-center gap-0.5 text-amber-600">
-                    <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
-                    5.0
-                  </p>
-                  <p className="text-[10.5px] font-semibold text-ink-500">Opinie (14)</p>
-                </div>
-                <div className="rounded-2xl bg-mist/60 p-2 text-center">
-                  <p className="font-display text-[17px] font-extrabold text-ink">~15m</p>
-                  <p className="text-[10.5px] font-semibold text-ink-500">Odpisuje</p>
+                <div className="rounded-2xl bg-mist/60 p-2.5 text-center">
+                  <p className="font-display text-[18px] font-extrabold text-ink">~15m</p>
+                  <p className="text-[11px] font-semibold text-ink-500">Średni czas odpowiedzi</p>
                 </div>
               </div>
             ) : (

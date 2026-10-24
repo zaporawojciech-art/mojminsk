@@ -59,7 +59,7 @@ const plans: Plan[] = [
   },
   {
     id: 'vip',
-    name: 'Pakiet SuperSąsiad',
+    name: 'Pakiet Max 14 dni',
     price: 15,
     badge: 'Maksymalny zasięg',
     duration: '14 dni',

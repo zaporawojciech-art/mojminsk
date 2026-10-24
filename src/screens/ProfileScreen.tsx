@@ -11,7 +11,6 @@ import {
   Eye,
   EyeOff,
   Gem,
-  Heart,
   Lock,
   Mail,
   Megaphone,
@@ -91,7 +90,7 @@ export function ProfileScreen({
   onPromoteFirstAd,
   onOpenRides,
   onInstallApp,
-  userAds = [],
+  userAds: _userAds = [],
   isClosing = false,
 }: ProfileScreenProps) {
   const [pin, setPin] = useState('');
@@ -116,41 +115,15 @@ export function ProfileScreen({
     showRides: true,
   };
 
-  const hasSuperNeighbor =
-    myPromotedAdsCount > 0 || userAds.some((a) => a.promoted || a.price === null || a.kind === 'free');
-
   const badges = [
     {
       id: 'verified',
-      label: user.verified ? 'Zweryfikowany sąsiad' : 'Weryfikacja w toku',
+      label: user.verified ? 'Zweryfikowany mieszkaniec' : 'Weryfikacja w toku (list)',
       icon: user.verified ? ShieldCheck : Clock,
-      unlocked: user.verified,
+      unlocked: true,
       tone: user.verified
         ? 'bg-sky-100 text-sky-900 border-sky-200'
-        : 'bg-mist text-ink-400 border-mist-300',
-    },
-    {
-      id: 'super',
-      label: 'SuperSąsiad',
-      icon: Sparkles,
-      unlocked: hasSuperNeighbor,
-      tone: hasSuperNeighbor
-        ? 'bg-amber-100 text-amber-900 border-amber-300'
-        : 'bg-mist text-ink-400 border-mist-300',
-    },
-    {
-      id: 'driver',
-      label: 'Kierowca 5.0',
-      icon: Car,
-      unlocked: true,
-      tone: 'bg-sand-100 text-ink border-sand-300',
-    },
-    {
-      id: 'helpful',
-      label: 'Pomocny sąsiad',
-      icon: Heart,
-      unlocked: true,
-      tone: 'bg-coral-100 text-coral-900 border-coral-200',
+        : 'bg-amber-100 text-amber-900 border-amber-200',
     },
   ];
 
@@ -422,8 +395,8 @@ export function ProfileScreen({
                   <Sparkles className="h-[18px] w-[18px]" aria-hidden />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[14.5px] font-semibold text-ink">Pakiet SuperSąsiad & Promowanie</p>
-                  <p className="text-[11.5px] text-ink-400">Wyróżnij ofertę na górze listy (One-Click BLIK)</p>
+                  <p className="text-[14.5px] font-semibold text-ink">Promowanie i wyróżnianie ofert (BLIK)</p>
+                  <p className="text-[11.5px] text-ink-400">Wyróżnij ofertę na górze listy ogłoszeń</p>
                 </div>
                 <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-extrabold text-amber-900">
                   od 4 zł
@@ -633,7 +606,7 @@ export function ProfileScreen({
             />
           </li>
 
-          <li className="flex items-center justify-between gap-3 border-b border-mist px-4 py-3.5">
+          <li className="flex items-center justify-between gap-3 px-4 py-3.5">
             <div className="min-w-0">
               <p className="text-[14px] font-semibold text-ink">Pokazuj archiwalne (sprzedane) ogłoszenia</p>
               <p className="text-[11.5px] text-ink-400">Buduje wiarygodność przy kolejnych ofertach</p>
@@ -642,18 +615,6 @@ export function ProfileScreen({
               label="Pokazuj archiwalne ogłoszenia"
               checked={privacy.showPastAds}
               onChange={(v) => handleTogglePrivacy('showPastAds', v)}
-            />
-          </li>
-
-          <li className="flex items-center justify-between gap-3 px-4 py-3.5">
-            <div className="min-w-0">
-              <p className="text-[14px] font-semibold text-ink">Pokazuj odznakę kierowcy carpoolingu</p>
-              <p className="text-[11.5px] text-ink-400">Oznaczenie Kierowca 5.0 na wizytówce</p>
-            </div>
-            <IosToggle
-              label="Pokazuj odznakę kierowcy"
-              checked={privacy.showRides}
-              onChange={(v) => handleTogglePrivacy('showRides', v)}
             />
           </li>
         </ul>
