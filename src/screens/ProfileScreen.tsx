@@ -276,7 +276,7 @@ export function ProfileScreen({
         )}
 
         <h1 className="mt-3.5 font-display text-[26px] font-semibold leading-tight text-ink">
-          {user.name} <span className="font-normal text-ink-500">{user.street.as}</span>
+          {user.name}
         </h1>
         <div className="mt-1.5 flex justify-center">
           <StreetPill

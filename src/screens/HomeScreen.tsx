@@ -320,7 +320,7 @@ export function HomeScreen({
         <button onClick={onProfile} className="text-left">
           <p className="text-[13px] font-medium text-ink-500">{greeting()},</p>
           <p className="font-display text-[21px] font-semibold leading-tight text-ink">
-            {user.name} <span className="text-[15px] font-normal text-ink-400">{user.street.as}</span> 👋
+            {user.name} 👋
           </p>
         </button>
         <div className="flex items-center gap-2">
