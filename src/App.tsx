@@ -778,8 +778,6 @@ export default function App() {
           <AddFavoriteBusModal
             onClose={closeAddFavBus}
             isClosing={!!exitingScreens['addFavBus']}
-            initialLineId={selectedZditmLine}
-            initialStopName={selectedZditmStop}
             onSave={handleAddFavoriteBus}
           />
         )}

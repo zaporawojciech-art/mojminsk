@@ -126,6 +126,49 @@ export interface FavoriteBusStop {
 
 export const FAVORITE_BUS_STOPS_KEY = 'mojminsk_favorite_bus_stops';
 
+export interface AvailableStopRoute {
+  lineId: LineId;
+  directionIdx: 0 | 1;
+  directionName: string;
+  destination: string;
+}
+
+export interface CityBusStop {
+  name: string;
+  zone: string;
+  isTransfer?: boolean;
+  routes: AvailableStopRoute[];
+}
+
+export function getAllBusStopsList(): CityBusStop[] {
+  const map = new Map<string, CityBusStop>();
+
+  for (const line of busLines) {
+    for (const st of line.stopsDetails) {
+      if (!map.has(st.name)) {
+        map.set(st.name, {
+          name: st.name,
+          zone: st.zone,
+          isTransfer: st.isTransfer,
+          routes: [],
+        });
+      }
+      const item = map.get(st.name)!;
+      line.directions.forEach((dir, dirIdx) => {
+        if (dir.destination.toLowerCase() === st.name.toLowerCase()) return;
+        item.routes.push({
+          lineId: line.id,
+          directionIdx: dirIdx as 0 | 1,
+          directionName: dir.name,
+          destination: dir.destination,
+        });
+      });
+    }
+  }
+
+  return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name, 'pl'));
+}
+
 export function getUpcomingDepartures(lineId: LineId, stopName: string, directionIdx: 0 | 1): number[] {
   const line = busLines.find((l) => l.id === lineId);
   if (!line) return [4, 19, 34];
