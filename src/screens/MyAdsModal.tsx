@@ -2,11 +2,13 @@ import { useState } from 'react';
 import {
   CheckCircle,
   Clock,
+  Edit3,
   Eye,
   Heart,
   MessageCircle,
   Plus,
   RefreshCw,
+  Sparkles,
   Trash2,
 } from 'lucide-react';
 import { Img, NativeHeader, cn, zl } from '../components/ui';
@@ -21,6 +23,8 @@ interface MyAdsModalProps {
   onAddNew: () => void;
   onStatusChange: (adId: string, status: 'active' | 'reserved' | 'sold') => void;
   onDeleteAd: (adId: string) => void;
+  onEditAd?: (ad: Ad) => void;
+  onPromoteAd?: (ad: Ad) => void;
 }
 
 export function MyAdsModal({
@@ -32,6 +36,8 @@ export function MyAdsModal({
   onAddNew,
   onStatusChange,
   onDeleteAd,
+  onEditAd,
+  onPromoteAd,
 }: MyAdsModalProps) {
   const [filter, setFilter] = useState<'all' | 'active' | 'reserved' | 'sold'>('all');
 
@@ -207,8 +213,34 @@ export function MyAdsModal({
                     </div>
                   </div>
 
+                  {/* Owner Action Buttons: Edit & Promote */}
+                  <div className="mt-2.5 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onClose();
+                        onEditAd?.(ad);
+                      }}
+                      className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl bg-mist text-[12px] font-bold text-ink hover:bg-mist-200 transition-colors"
+                    >
+                      <Edit3 className="h-3.5 w-3.5 text-ink-600" />
+                      Edytuj
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onClose();
+                        onPromoteAd?.(ad);
+                      }}
+                      className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl bg-amber-100 text-[12px] font-bold text-amber-900 hover:bg-amber-200 transition-colors"
+                    >
+                      <Sparkles className="h-3.5 w-3.5 text-amber-600" />
+                      Wyróżnij (BLIK)
+                    </button>
+                  </div>
+
                   {/* Quick Action Controls */}
-                  <div className="mt-3 flex items-center justify-between border-t border-mist pt-2.5">
+                  <div className="mt-2.5 flex items-center justify-between border-t border-mist pt-2">
                     <div className="flex items-center gap-1.5">
                       {status !== 'active' && (
                         <button

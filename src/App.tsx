@@ -31,6 +31,13 @@ import { JobDetailModal } from './screens/JobDetailModal';
 import { JobApplyModal } from './screens/JobApplyModal';
 import { MyAdsModal } from './screens/MyAdsModal';
 import { ReportAdModal } from './screens/ReportAdModal';
+import { EditAdModal } from './screens/EditAdModal';
+import { PromoteAdModal } from './screens/PromoteAdModal';
+import { AdConversationsModal } from './screens/AdConversationsModal';
+import { SellerProfileModal } from './screens/SellerProfileModal';
+import { AdFiltersModal, type AdFilterState } from './screens/AdFiltersModal';
+import { ReserveAdModal } from './screens/ReserveAdModal';
+import { initialAdConversations, type AdConversation } from './data/mockData';
 
 type Overlay = null | 'profile' | 'partner' | 'checkout' | 'motylek' | 'zditm';
 
@@ -59,6 +66,24 @@ export default function App() {
   const [applyJob, setApplyJob] = useState<Job | null>(null);
   const [myAdsOpen, setMyAdsOpen] = useState(false);
   const [reportAd, setReportAd] = useState<Ad | null>(null);
+
+  // Extended Classifieds Views State
+  const [conversations, setConversations] = useState<AdConversation[]>(initialAdConversations);
+  const [conversationsOpen, setConversationsOpen] = useState(false);
+  const [editAd, setEditAd] = useState<Ad | null>(null);
+  const [promoteAd, setPromoteAd] = useState<Ad | null>(null);
+  const [sellerProfile, setSellerProfile] = useState<{ name: string; street: string } | null>(null);
+  const [reserveAd, setReserveAd] = useState<Ad | null>(null);
+  const [filtersModalOpen, setFiltersModalOpen] = useState(false);
+  const [adFilters, setAdFilters] = useState<AdFilterState>({
+    sortBy: 'newest',
+    minPrice: '',
+    maxPrice: '',
+    selectedCategory: 'Wszystkie',
+    selectedStreet: 'all',
+    onlyFree: false,
+    onlyPromoted: false,
+  });
 
   // 1. Reset main container scroll immediately upon navigating between tabs or overlays
   useLayoutEffect(() => {
@@ -107,14 +132,33 @@ export default function App() {
   }, []);
 
   const isChildScreenActive = Boolean(
-    overlay || selectedAd || selectedJob || applyJob || myAdsOpen || reportAd || addAdOpen || chatAd
+    overlay ||
+      selectedAd ||
+      selectedJob ||
+      applyJob ||
+      myAdsOpen ||
+      reportAd ||
+      addAdOpen ||
+      chatAd ||
+      conversationsOpen ||
+      editAd ||
+      promoteAd ||
+      sellerProfile ||
+      reserveAd ||
+      filtersModalOpen
   );
 
   // Navigation stack: layers ordered from the topmost (closed first) to the bottom one
   const layers = [
+    { active: !!reserveAd, close: () => setReserveAd(null) },
+    { active: filtersModalOpen, close: () => setFiltersModalOpen(false) },
     { active: !!reportAd, close: () => setReportAd(null) },
     { active: !!chatAd, close: () => setChatAd(null) },
     { active: !!applyJob, close: () => setApplyJob(null) },
+    { active: !!promoteAd, close: () => setPromoteAd(null) },
+    { active: !!editAd, close: () => setEditAd(null) },
+    { active: !!sellerProfile, close: () => setSellerProfile(null) },
+    { active: conversationsOpen, close: () => setConversationsOpen(false) },
     { active: !!selectedJob, close: () => setSelectedJob(null) },
     { active: !!selectedAd, close: () => setSelectedAd(null) },
     { active: addAdOpen, close: () => setAddAdOpen(false) },
@@ -189,6 +233,61 @@ export default function App() {
     setAdsList((prev) => prev.filter((a) => a.id !== adId));
     setSelectedAd((prev) => (prev && prev.id === adId ? null : prev));
   }, []);
+
+  const handleAdUpdated = useCallback((updatedAd: Ad) => {
+    setAdsList((prev) => prev.map((a) => (a.id === updatedAd.id ? updatedAd : a)));
+    setSelectedAd((prev) => (prev && prev.id === updatedAd.id ? updatedAd : prev));
+  }, []);
+
+  const handleAdPromoted = useCallback((adId: string, plan: 'boost' | 'highlight' | 'vip') => {
+    setAdsList((prev) =>
+      prev.map((a) => (a.id === adId ? { ...a, promoted: true, promotedPlan: plan } : a)),
+    );
+    setSelectedAd((prev) =>
+      prev && prev.id === adId ? { ...prev, promoted: true, promotedPlan: plan } : prev,
+    );
+  }, []);
+
+  const handleReservationSuccess = useCallback(
+    (ad: Ad, details: { spot: string; time: string; phone: string; note: string }) => {
+      // Mark ad as reserved
+      handleStatusChange(ad.id, 'reserved');
+
+      // Add to conversations
+      const newConv: AdConversation = {
+        id: `conv_${Date.now()}`,
+        adId: ad.id,
+        adTitle: ad.title,
+        adPrice: ad.price,
+        adImage: ad.image,
+        adStreet: ad.street,
+        otherUser: {
+          name: ad.author,
+          street: ad.street,
+        },
+        role: 'buyer',
+        lastMessage: `Rezerwacja: odbiór ${details.spot}, termin: ${details.time}`,
+        lastMessageTime: 'Przed chwilą',
+        unreadCount: 0,
+      };
+
+      setConversations((prev) => [newConv, ...prev.filter((c) => c.adId !== ad.id)]);
+      setReserveAd(null);
+      setChatAd(ad);
+    },
+    [handleStatusChange],
+  );
+
+  const activeFiltersCount =
+    (adFilters.sortBy !== 'newest' ? 1 : 0) +
+    (adFilters.minPrice ? 1 : 0) +
+    (adFilters.maxPrice ? 1 : 0) +
+    (adFilters.selectedCategory !== 'Wszystkie' ? 1 : 0) +
+    (adFilters.selectedStreet !== 'all' ? 1 : 0) +
+    (adFilters.onlyFree ? 1 : 0) +
+    (adFilters.onlyPromoted ? 1 : 0);
+
+  const unreadConversationsCount = conversations.reduce((acc, c) => acc + c.unreadCount, 0);
 
   const handleJobApplied = useCallback((jobId: string) => {
     setAppliedJobs((prev) => ({ ...prev, [jobId]: true }));
@@ -299,6 +398,11 @@ export default function App() {
         onAddClick={() => setAddAdOpen(true)}
         onChatClick={(ad) => setChatAd(ad)}
         onMyAdsClick={() => setMyAdsOpen(true)}
+        onOpenFilters={() => setFiltersModalOpen(true)}
+        activeFiltersCount={activeFiltersCount}
+        onOpenConversations={() => setConversationsOpen(true)}
+        conversationsUnreadCount={unreadConversationsCount}
+        filtersState={adFilters}
       />
     );
   } else if (tab === 'rides') {
@@ -370,6 +474,10 @@ export default function App() {
             onReportClick={(ad) => setReportAd(ad)}
             onStatusChange={handleStatusChange}
             onDelete={handleDeleteAd}
+            onSellerClick={(name, street) => setSellerProfile({ name, street })}
+            onEditClick={(ad) => setEditAd(ad)}
+            onPromoteClick={(ad) => setPromoteAd(ad)}
+            onReserveClick={(ad) => setReserveAd(ad)}
           />
         )}
 
@@ -408,6 +516,92 @@ export default function App() {
             onAddNew={() => setAddAdOpen(true)}
             onStatusChange={handleStatusChange}
             onDeleteAd={handleDeleteAd}
+            onEditAd={(ad) => setEditAd(ad)}
+            onPromoteAd={(ad) => setPromoteAd(ad)}
+          />
+        )}
+
+        {/* Edit Ad Modal */}
+        {user && editAd && (
+          <EditAdModal
+            ad={editAd}
+            user={user}
+            onClose={() => setEditAd(null)}
+            onAdUpdated={handleAdUpdated}
+          />
+        )}
+
+        {/* Promote Ad Modal (BLIK) */}
+        {user && promoteAd && (
+          <PromoteAdModal
+            ad={promoteAd}
+            user={user}
+            onClose={() => setPromoteAd(null)}
+            onPromoted={handleAdPromoted}
+          />
+        )}
+
+        {/* Ad Conversations Modal (Inbox) */}
+        {user && conversationsOpen && (
+          <AdConversationsModal
+            user={user}
+            conversations={conversations}
+            ads={adsList}
+            onClose={() => setConversationsOpen(false)}
+            onOpenChat={(ad) => {
+              setConversationsOpen(false);
+              setChatAd(ad);
+            }}
+          />
+        )}
+
+        {/* Seller Profile Modal */}
+        {user && sellerProfile && (
+          <SellerProfileModal
+            sellerName={sellerProfile.name}
+            sellerStreet={sellerProfile.street}
+            currentUser={user}
+            allAds={adsList}
+            onClose={() => setSellerProfile(null)}
+            onOpenAd={(ad) => {
+              setSellerProfile(null);
+              setSelectedAd(ad);
+            }}
+            onStartChat={(ad) => {
+              setSellerProfile(null);
+              setChatAd(ad);
+            }}
+          />
+        )}
+
+        {/* Ad Filters & Sort Modal */}
+        {user && filtersModalOpen && (
+          <AdFiltersModal
+            currentFilters={adFilters}
+            totalMatching={adsList.length}
+            onClose={() => setFiltersModalOpen(false)}
+            onApply={(f) => setAdFilters(f)}
+            onReset={() =>
+              setAdFilters({
+                sortBy: 'newest',
+                minPrice: '',
+                maxPrice: '',
+                selectedCategory: 'Wszystkie',
+                selectedStreet: 'all',
+                onlyFree: false,
+                onlyPromoted: false,
+              })
+            }
+          />
+        )}
+
+        {/* Reserve Ad Modal */}
+        {user && reserveAd && (
+          <ReserveAdModal
+            ad={reserveAd}
+            user={user}
+            onClose={() => setReserveAd(null)}
+            onSuccess={handleReservationSuccess}
           />
         )}
 

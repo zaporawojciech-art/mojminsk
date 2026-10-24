@@ -422,6 +422,27 @@ export interface Ad {
   status?: 'active' | 'reserved' | 'sold';
   views?: number;
   isOwner?: boolean;
+  promoted?: boolean;
+  promotedPlan?: 'boost' | 'highlight' | 'vip';
+  negotiable?: boolean;
+}
+
+export interface AdConversation {
+  id: string;
+  adId: string;
+  adTitle: string;
+  adPrice: number | null;
+  adImage: string;
+  adStreet: string;
+  otherUser: {
+    name: string;
+    street: string;
+    avatarSeed?: string;
+  };
+  role: 'buyer' | 'seller';
+  lastMessage: string;
+  lastMessageTime: string;
+  unreadCount: number;
 }
 
 export const ads: Ad[] = [
@@ -509,6 +530,60 @@ export const ads: Ad[] = [
     category: 'Ogród & Narzędzia',
     status: 'active',
     views: 51,
+  },
+];
+
+export const initialAdConversations: AdConversation[] = [
+  {
+    id: 'conv_1',
+    adId: 'a3',
+    adTitle: 'Biurko dębowe 120×60 cm',
+    adPrice: 220,
+    adImage: img('photo-1518455027359-f3f8164ba6bd', 300),
+    adStreet: 'Spacerowa',
+    otherUser: {
+      name: 'Tomasz',
+      street: 'Sosnkowskiego',
+      avatarSeed: 'Tomasz-1',
+    },
+    role: 'seller',
+    lastMessage: 'Dzień dobry, czy biurko zmieści się do bagażnika kombi? Byłbym chętny dziś po 18:00.',
+    lastMessageTime: '15 min temu',
+    unreadCount: 1,
+  },
+  {
+    id: 'conv_2',
+    adId: 'a1',
+    adTitle: 'Rower dziecięcy 16", stan bardzo dobry',
+    adPrice: 150,
+    adImage: img('photo-1485965120184-e220f721d03e', 300),
+    adStreet: 'Kościuszki',
+    otherUser: {
+      name: 'Ania',
+      street: 'Kościuszki',
+      avatarSeed: 'Ania-2',
+    },
+    role: 'buyer',
+    lastMessage: 'Super, możemy się umówić! Dziś po 17:30 będę w domu. Podaję klatkę B.',
+    lastMessageTime: '1 godz. temu',
+    unreadCount: 0,
+  },
+  {
+    id: 'conv_3',
+    adId: 'a2',
+    adTitle: 'Sofa 3-osobowa — do odbioru własnego',
+    adPrice: null,
+    adImage: img('photo-1555041469-a586c61ea9bc', 300),
+    adStreet: 'Siennicka',
+    otherUser: {
+      name: 'Marek',
+      street: 'Siennicka',
+      avatarSeed: 'Marek-3',
+    },
+    role: 'buyer',
+    lastMessage: 'Dzięki sąsiedzie za kontakt. Sofa czeka, pomogę przy znoszeniu!',
+    lastMessageTime: 'Wczoraj',
+    unreadCount: 0,
   },
 ];
 

@@ -1,7 +1,18 @@
 import { useState } from 'react';
-import { Briefcase, Check, Heart, Megaphone, MessageCircle, Plus, Sparkles } from 'lucide-react';
+import {
+  Briefcase,
+  Check,
+  Heart,
+  Megaphone,
+  MessageCircle,
+  MessagesSquare,
+  Plus,
+  SlidersHorizontal,
+  Sparkles,
+} from 'lucide-react';
 import { ads as initialAds, jobs as initialJobs, type Ad, type Job } from '../data/mockData';
 import { Chip, Img, ScreenHeader, SearchField, Segmented, StreetPill, cn, toneBg, zl } from '../components/ui';
+import type { AdFilterState } from './AdFiltersModal';
 
 const filters = [
   { id: 'all', label: 'Wszystkie' },
@@ -23,6 +34,11 @@ interface AdsScreenProps {
   onAddClick?: () => void;
   onChatClick?: (ad: Ad) => void;
   onMyAdsClick?: () => void;
+  onOpenFilters?: () => void;
+  activeFiltersCount?: number;
+  onOpenConversations?: () => void;
+  conversationsUnreadCount?: number;
+  filtersState?: AdFilterState;
 }
 
 export function AdsScreen({
@@ -37,6 +53,11 @@ export function AdsScreen({
   onAddClick,
   onChatClick,
   onMyAdsClick,
+  onOpenFilters,
+  activeFiltersCount = 0,
+  onOpenConversations,
+  conversationsUnreadCount = 0,
+  filtersState,
 }: AdsScreenProps) {
   const [mode, setMode] = useState<'c2c' | 'jobs'>('c2c');
   const [filter, setFilter] = useState<(typeof filters)[number]['id']>('all');
@@ -46,12 +67,22 @@ export function AdsScreen({
   const likedCount = adsList.filter((a) => !!likedAds[a.id]).length;
 
   // Filter and search logic for c2c ads
-  const filteredAds = adsList.filter((a) => {
+  let filteredAds = adsList.filter((a) => {
     // Kind / Saved filter
     if (filter === 'saved') {
       if (!likedAds[a.id]) return false;
     } else if (filter !== 'all') {
       if (a.kind !== filter) return false;
+    }
+
+    // Modal Filters
+    if (filtersState) {
+      if (filtersState.onlyPromoted && !a.promoted) return false;
+      if (filtersState.onlyFree && a.kind !== 'free' && (a.price !== 0 && a.price !== null)) return false;
+      if (filtersState.minPrice && (a.price === null || a.price < parseFloat(filtersState.minPrice))) return false;
+      if (filtersState.maxPrice && (a.price === null || a.price > parseFloat(filtersState.maxPrice))) return false;
+      if (filtersState.selectedCategory !== 'Wszystkie' && a.category !== filtersState.selectedCategory) return false;
+      if (filtersState.selectedStreet !== 'all' && a.street.toLowerCase() !== filtersState.selectedStreet.toLowerCase()) return false;
     }
 
     // Search query
@@ -65,6 +96,27 @@ export function AdsScreen({
     }
 
     return true;
+  });
+
+  // Sorting
+  filteredAds = [...filteredAds].sort((x, y) => {
+    if (filtersState?.sortBy === 'price_asc') {
+      const px = x.price ?? 0;
+      const py = y.price ?? 0;
+      return px - py;
+    }
+    if (filtersState?.sortBy === 'price_desc') {
+      const px = x.price ?? 0;
+      const py = y.price ?? 0;
+      return py - px;
+    }
+    if (filtersState?.sortBy === 'popular') {
+      return (y.views ?? 0) - (x.views ?? 0);
+    }
+    // Default: promoted first
+    if (x.promoted && !y.promoted) return -1;
+    if (!x.promoted && y.promoted) return 1;
+    return 0;
   });
 
   // Filter and search logic for jobs
@@ -97,14 +149,29 @@ export function AdsScreen({
         title="Ogłoszenia"
         subtitle="Od sąsiadów i mińskich firm"
         right={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            {onOpenConversations && (
+              <button
+                type="button"
+                onClick={onOpenConversations}
+                className="relative grid h-11 w-11 place-items-center rounded-full bg-white text-ink shadow-card transition-transform active:scale-95"
+                title="Wiadomości o ogłoszeniach"
+              >
+                <MessagesSquare className="h-4 w-4 text-ink-700" />
+                {conversationsUnreadCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-coral px-1 text-[9.5px] font-extrabold text-ink shadow">
+                    {conversationsUnreadCount}
+                  </span>
+                )}
+              </button>
+            )}
             {onMyAdsClick && (
               <button
                 onClick={onMyAdsClick}
-                className="flex h-11 items-center gap-1.5 rounded-full bg-white px-3.5 text-[13px] font-bold text-ink shadow-card transition-transform active:scale-95"
+                className="flex h-11 items-center gap-1 rounded-full bg-white px-3 text-[13px] font-bold text-ink shadow-card transition-transform active:scale-95"
                 title="Moje ogłoszenia"
               >
-                <Megaphone className="h-4 w-4 text-ink-700" />
+                <Megaphone className="h-3.5 w-3.5 text-ink-700" />
                 Moje
               </button>
             )}
@@ -119,7 +186,7 @@ export function AdsScreen({
         }
       />
 
-      <div className="space-y-4 px-5">
+      <div className="space-y-3 px-5">
         <Segmented
           value={mode}
           onChange={handleModeChange}
@@ -128,11 +195,33 @@ export function AdsScreen({
             { id: 'jobs', label: 'Praca', badge: jobsList.length },
           ]}
         />
-        <SearchField
-          value={searchQuery}
-          onChange={setSearchQuery}
-          placeholder={mode === 'c2c' ? 'Szukaj: rower, sofa, klocki, ulica…' : 'Stanowisko, firma, np. Motylek…'}
-        />
+        <div className="flex items-center gap-2">
+          <div className="flex-1">
+            <SearchField
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder={mode === 'c2c' ? 'Szukaj: rower, sofa, ulica…' : 'Stanowisko, firma, np. Motylek…'}
+            />
+          </div>
+          {mode === 'c2c' && onOpenFilters && (
+            <button
+              type="button"
+              onClick={onOpenFilters}
+              aria-label="Filtry i sortowanie"
+              className={cn(
+                'relative grid h-12 w-12 shrink-0 place-items-center rounded-2xl transition-all shadow-card active:scale-95',
+                activeFiltersCount > 0 ? 'bg-ink text-white' : 'bg-white text-ink-700 hover:bg-mist-200',
+              )}
+            >
+              <SlidersHorizontal className="h-5 w-5" />
+              {activeFiltersCount > 0 && (
+                <span className="absolute -top-1 -right-1 grid h-5 w-5 place-items-center rounded-full bg-coral text-[10.5px] font-extrabold text-ink shadow">
+                  {activeFiltersCount}
+                </span>
+              )}
+            </button>
+          )}
+        </div>
       </div>
 
       {mode === 'c2c' ? (
@@ -188,7 +277,12 @@ export function AdsScreen({
                 return (
                   <article
                     key={a.id}
-                    className="group relative flex flex-col justify-between rounded-3xl bg-white p-2.5 shadow-card transition-shadow hover:shadow-float"
+                    className={cn(
+                      'group relative flex flex-col justify-between rounded-3xl p-2.5 shadow-card transition-shadow hover:shadow-float',
+                      a.promoted
+                        ? 'bg-gradient-to-b from-amber-50/70 to-white border-2 border-amber-300 ring-1 ring-amber-200'
+                        : 'bg-white',
+                    )}
                   >
                     <div>
                       {/* Thumbnail Container */}
@@ -217,19 +311,28 @@ export function AdsScreen({
                           />
                         </button>
 
+                        {/* Promoted Golden Badge */}
+                        {a.promoted && (
+                          <span className="absolute left-2 top-2 z-10 flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 px-2 py-0.5 text-[9.5px] font-extrabold text-ink shadow">
+                            <Sparkles className="h-3 w-3" />
+                            Wyróżnione
+                          </span>
+                        )}
+
                         {/* Status / Kind Badge */}
                         {a.status === 'reserved' ? (
-                          <span className="absolute left-2 top-2 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold text-ink shadow">
+                          <span className={cn('absolute left-2 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold text-ink shadow', a.promoted ? 'top-8' : 'top-2')}>
                             Zarezerwowane
                           </span>
                         ) : a.status === 'sold' ? (
-                          <span className="absolute left-2 top-2 rounded-full bg-ink px-2 py-0.5 text-[10px] font-bold text-white shadow">
+                          <span className={cn('absolute left-2 rounded-full bg-ink px-2 py-0.5 text-[10px] font-bold text-white shadow', a.promoted ? 'top-8' : 'top-2')}>
                             Sprzedane
                           </span>
                         ) : a.kind !== 'sell' ? (
                           <span
                             className={cn(
-                              'absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10.5px] font-bold shadow',
+                              'absolute left-2 rounded-full px-2 py-0.5 text-[10.5px] font-bold shadow',
+                              a.promoted ? 'top-8' : 'top-2',
                               a.kind === 'free' ? 'bg-sky text-ink' : 'bg-coral text-ink',
                             )}
                           >

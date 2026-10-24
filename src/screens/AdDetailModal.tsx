@@ -2,16 +2,20 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import {
   Check,
   ChevronLeft,
+  ChevronRight,
+  Clock,
+  Edit3,
   Eye,
   Heart,
+  HeartHandshake,
   MapPin,
   MessageCircle,
   Share2,
   ShieldAlert,
   ShieldCheck,
+  Sparkles,
   Tag,
   Trash2,
-  Clock,
 } from 'lucide-react';
 import { Img, StreetPill, cn, zl } from '../components/ui';
 import type { Ad, User } from '../data/mockData';
@@ -26,6 +30,10 @@ interface AdDetailModalProps {
   onReportClick?: (ad: Ad) => void;
   onStatusChange?: (adId: string, status: 'active' | 'reserved' | 'sold') => void;
   onDelete?: (adId: string) => void;
+  onSellerClick?: (sellerName: string, sellerStreet: string) => void;
+  onEditClick?: (ad: Ad) => void;
+  onPromoteClick?: (ad: Ad) => void;
+  onReserveClick?: (ad: Ad) => void;
 }
 
 export function AdDetailModal({
@@ -38,6 +46,10 @@ export function AdDetailModal({
   onReportClick,
   onStatusChange,
   onDelete,
+  onSellerClick,
+  onEditClick,
+  onPromoteClick,
+  onReserveClick,
 }: AdDetailModalProps) {
   const [copied, setCopied] = useState(false);
   const isOwner = ad.isOwner || ad.author.toLowerCase().includes(user.name.toLowerCase());
@@ -104,6 +116,12 @@ export function AdDetailModal({
 
             {/* Badges on Image */}
             <div className="absolute bottom-3 left-4 flex flex-wrap items-center gap-2">
+              {ad.promoted && (
+                <span className="flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 px-3 py-1 text-[11px] font-extrabold text-ink shadow-md">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Wyróżnione
+                </span>
+              )}
               {currentStatus === 'reserved' && (
                 <span className="rounded-full bg-amber-400 px-3 py-1 text-[11px] font-bold text-ink shadow">
                   Zarezerwowane
@@ -166,8 +184,17 @@ export function AdDetailModal({
             </div>
 
             {/* Neighbor Profile Card */}
-            <div className="rounded-3xl bg-white p-4 shadow-card">
-              <h3 className="text-[12px] font-bold uppercase tracking-wider text-ink-400">Sprzedający sąsiad</h3>
+            <div
+              onClick={() => onSellerClick?.(ad.author, ad.street)}
+              className="group cursor-pointer rounded-3xl bg-white p-4 shadow-card transition-all hover:shadow-float active:scale-[0.99]"
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="text-[12px] font-bold uppercase tracking-wider text-ink-400">Sprzedający sąsiad</h3>
+                <span className="flex items-center gap-1 text-[11.5px] font-bold text-coral group-hover:underline">
+                  Profil sąsiada
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </span>
+              </div>
               <div className="mt-3 flex items-center gap-3">
                 <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-coral font-display text-[18px] font-bold text-ink">
                   {ad.author.charAt(0)}
@@ -200,11 +227,32 @@ export function AdDetailModal({
 
             {/* Owner Management Controls */}
             {isOwner && (
-              <div className="space-y-2 rounded-3xl bg-white p-4 shadow-card">
+              <div className="space-y-3 rounded-3xl bg-white p-4 shadow-card">
                 <h3 className="text-[12px] font-bold uppercase tracking-wider text-ink-400">
                   Zarządzaj swoim ogłoszeniem
                 </h3>
-                <div className="grid grid-cols-2 gap-2 pt-1">
+
+                {/* Edit & Promote Buttons */}
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onEditClick?.(ad)}
+                    className="flex h-11 items-center justify-center gap-1.5 rounded-2xl bg-mist px-3 text-[13px] font-bold text-ink hover:bg-mist-200 transition-all active:scale-95"
+                  >
+                    <Edit3 className="h-4 w-4" />
+                    Edytuj treść
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onPromoteClick?.(ad)}
+                    className="flex h-11 items-center justify-center gap-1.5 rounded-2xl bg-amber-100 px-3 text-[13px] font-bold text-amber-900 hover:bg-amber-200 transition-all active:scale-95"
+                  >
+                    <Sparkles className="h-4 w-4 text-amber-600" />
+                    Wyróżnij (BLIK)
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 border-t border-mist pt-2">
                   {currentStatus !== 'active' && (
                     <button
                       onClick={() => onStatusChange?.(ad.id, 'active')}
@@ -216,7 +264,7 @@ export function AdDetailModal({
                   {currentStatus !== 'reserved' && (
                     <button
                       onClick={() => onStatusChange?.(ad.id, 'reserved')}
-                      className="rounded-2xl bg-amber-100 py-2.5 text-[12.5px] font-bold text-amber-900 active:scale-95"
+                      className="rounded-2xl bg-amber-50 py-2.5 text-[12.5px] font-bold text-amber-900 border border-amber-200 active:scale-95"
                     >
                       Oznacz jako zarezerwowane
                     </button>
@@ -251,20 +299,36 @@ export function AdDetailModal({
 
         {/* Pinned Bottom Action Bar (Native App Style) */}
         {!isOwner && (
-          <div className="border-t border-mist bg-white px-5 py-3 pb-[max(env(safe-area-inset-bottom),14px)] shrink-0 shadow-float">
-            <button
-              onClick={() => {
-                onClose();
-                onChatClick?.(ad);
-              }}
-              className="flex h-13 w-full items-center justify-center gap-2 rounded-full bg-coral text-[15px] font-bold text-ink shadow-coral transition-transform active:scale-95"
-            >
-              <MessageCircle className="h-5 w-5" />
-              Napisz do {ad.author} na czacie
-            </button>
+          <div className="border-t border-mist bg-white px-5 py-3 pb-[max(env(safe-area-inset-bottom),14px)] shrink-0 shadow-float space-y-2">
+            <div className="flex items-center gap-2">
+              {currentStatus !== 'sold' && (
+                <button
+                  onClick={() => onReserveClick?.(ad)}
+                  className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-coral text-[14px] font-bold text-ink shadow-coral transition-transform active:scale-95"
+                >
+                  <HeartHandshake className="h-4 w-4" />
+                  Zarezerwuj & Odbiór
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  onClose();
+                  onChatClick?.(ad);
+                }}
+                className={cn(
+                  'flex h-12 items-center justify-center gap-1.5 rounded-full text-[14px] font-bold transition-transform active:scale-95',
+                  currentStatus === 'sold'
+                    ? 'w-full bg-mist text-ink-600'
+                    : 'flex-1 bg-ink text-white',
+                )}
+              >
+                <MessageCircle className="h-4 w-4" />
+                Czat
+              </button>
+            </div>
             <button
               onClick={() => onReportClick?.(ad)}
-              className="mt-2 flex w-full items-center justify-center gap-1.5 text-[11px] font-semibold text-ink-400 hover:text-ink-600"
+              className="flex w-full items-center justify-center gap-1.5 text-[11px] font-semibold text-ink-400 hover:text-ink-600"
             >
               <ShieldAlert className="h-3 w-3" />
               Zgłoś nieaktualne lub naruszenie
