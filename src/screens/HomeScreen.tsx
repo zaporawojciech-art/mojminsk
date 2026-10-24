@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import {
   ArrowRight, Bus, Car, Check, Cloud, CloudMoon, CloudRain, CloudSun, Coffee, Droplets, Eye, Gauge, MapPin, Megaphone,
-  Moon, ShieldCheck, Sparkles, Sun, TriangleAlert, Umbrella, UtensilsCrossed, Wind, X,
+  Moon, Plus, ShieldCheck, Sparkles, Star, Sun, Trash2, TriangleAlert, Umbrella, UtensilsCrossed, Wind, X,
 } from 'lucide-react';
-import { busLines, liveAlert, news, partner, poll, weather, type LineId, type User } from '../data/mockData';
+import {
+  busLines, getUpcomingDepartures, liveAlert, news, partner, poll, weather,
+  type FavoriteBusStop, type LineId, type User,
+} from '../data/mockData';
 import { Card, Img, ProfileAvatarButton, SectionHeader, cn } from '../components/ui';
 import type { TabId } from '../components/BottomNav';
 
@@ -204,7 +207,20 @@ function LiveAlert() {
   );
 }
 
-function BusWidget({ onOpenFull }: { onOpenFull?: (lineId: LineId) => void }) {
+interface BusWidgetProps {
+  favoriteBuses: FavoriteBusStop[];
+  onOpenFull?: (lineId?: LineId, stopName?: string) => void;
+  onAddFavorite?: () => void;
+  onRemoveFavorite?: (id: string) => void;
+}
+
+function BusWidget({
+  favoriteBuses,
+  onOpenFull,
+  onAddFavorite,
+  onRemoveFavorite,
+}: BusWidgetProps) {
+  const [showBrowse, setShowBrowse] = useState(false);
   const [lineId, setLineId] = useState<LineId>('M3');
   const [stop, setStop] = useState('Spacerowa');
   const line = busLines.find((l) => l.id === lineId)!;
@@ -216,6 +232,67 @@ function BusWidget({ onOpenFull }: { onOpenFull?: (lineId: LineId) => void }) {
     { to: line.stops[0], mins: line.offsets.map((o) => o + ((shift + 8) % 15)) },
   ].filter((d) => d.to !== stopName);
 
+  // If user has NO favorite bus stops: Empty State (Decision Q3)
+  if (favoriteBuses.length === 0 && !showBrowse) {
+    return (
+      <Card className="mx-5 p-5 bg-gradient-to-br from-white to-sand-50/70 border border-sand-200/80 shadow-card">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="grid h-10 w-10 place-items-center rounded-2xl bg-ink text-white">
+              <Bus className="h-5 w-5" aria-hidden />
+            </span>
+            <div>
+              <p className="font-display text-[17px] font-semibold leading-tight">Autobusy miejskie</p>
+              <p className="text-[11.5px] text-ink-400">ZDiTM Mińsk Mazowiecki · 100% bezpłatne</p>
+            </div>
+          </div>
+          {onOpenFull && (
+            <button
+              onClick={() => onOpenFull()}
+              className="rounded-full bg-sand px-3 py-1.5 text-[11px] font-bold text-ink hover:bg-sand-200 transition-colors"
+            >
+              Rozkład ZDiTM
+            </button>
+          )}
+        </div>
+
+        {/* Empty State Card */}
+        <div className="mt-4 rounded-3xl bg-white p-5 text-center border border-sand-200/70 shadow-sm">
+          <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-sand-100 text-sand-800">
+            <Star className="h-6 w-6 fill-sand text-sand-700" />
+          </div>
+          <h4 className="mt-3 font-display text-[17px] font-bold text-ink">
+            Obserwuj swoje codzienne odjazdy
+          </h4>
+          <p className="mt-1.5 text-[12.5px] text-ink-500 max-w-[280px] mx-auto leading-relaxed">
+            Dodaj przystanek i kierunek, którym codziennie dojeżdżasz, aby mieć odjazdy na żywo zawsze pod ręką.
+          </p>
+
+          {onAddFavorite && (
+            <button
+              type="button"
+              onClick={onAddFavorite}
+              className="mt-4 inline-flex items-center justify-center gap-2 rounded-2xl bg-ink px-5 py-3 text-[13px] font-bold text-white shadow-card transition-transform active:scale-95 hover:bg-ink-800"
+            >
+              <Plus className="h-4 w-4" />
+              Dodaj swój codzienny przystanek
+            </button>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setShowBrowse(true)}
+          className="mt-3 flex h-10 w-full items-center justify-center gap-1.5 rounded-full bg-mist text-[12px] font-bold text-ink hover:bg-mist-200 transition-colors"
+        >
+          <MapPin className="h-4 w-4 text-sky-700" />
+          Przeglądaj wszystkie linie (M2, M3, M4)
+        </button>
+      </Card>
+    );
+  }
+
+  // Active Favorites View (Decision Q1 & Q2)
   return (
     <Card className="mx-5 p-4">
       <div className="flex items-center justify-between">
@@ -224,71 +301,206 @@ function BusWidget({ onOpenFull }: { onOpenFull?: (lineId: LineId) => void }) {
             <Bus className="h-5 w-5" aria-hidden />
           </span>
           <div>
-            <p className="font-display text-[17px] font-semibold leading-tight">Autobusy miejskie</p>
-            <p className="text-[11.5px] text-ink-400">ZDiTM Mińsk Mazowiecki · bezpłatne</p>
+            <div className="flex items-center gap-2">
+              <p className="font-display text-[17px] font-semibold leading-tight">Autobusy miejskie</p>
+              {favoriteBuses.length > 0 && (
+                <span className="rounded-full bg-sand px-2 py-0.5 text-[10.5px] font-extrabold text-ink">
+                  {favoriteBuses.length}
+                </span>
+              )}
+            </div>
+            <p className="text-[11.5px] text-ink-400">
+              {showBrowse ? 'Pełny podgląd linii ZDiTM' : 'Twoje obserwowane przystanki na żywo'}
+            </p>
           </div>
         </div>
-        {onOpenFull && (
-          <button
-            onClick={() => onOpenFull(lineId)}
-            className="rounded-full bg-sand px-3 py-1.5 text-[11px] font-bold text-ink hover:bg-sand-200 transition-colors"
-          >
-            Pełny rozkład
-          </button>
-        )}
+
+        <div className="flex items-center gap-1.5">
+          {favoriteBuses.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowBrowse((prev) => !prev)}
+              className={cn(
+                'rounded-full px-2.5 py-1 text-[11px] font-bold transition-colors',
+                showBrowse ? 'bg-ink text-white' : 'bg-mist text-ink hover:bg-mist-200',
+              )}
+            >
+              {showBrowse ? 'Moje przystanki' : 'Wszystkie linie'}
+            </button>
+          )}
+          {onOpenFull && (
+            <button
+              onClick={() => onOpenFull(lineId)}
+              className="rounded-full bg-sand px-3 py-1.5 text-[11px] font-bold text-ink hover:bg-sand-200 transition-colors"
+            >
+              Rozkład
+            </button>
+          )}
+        </div>
       </div>
 
-      <div role="tablist" aria-label="Linia" className="mt-4 grid grid-cols-3 gap-1 rounded-2xl bg-mist p-1">
-        {busLines.map((l) => (
-          <button
-            key={l.id}
-            role="tab"
-            aria-selected={lineId === l.id}
-            onClick={() => setLineId(l.id)}
-            className={cn('flex h-10 items-center justify-center rounded-xl transition-all', lineId === l.id ? 'bg-white shadow-card' : 'opacity-60 hover:opacity-100')}
-          >
-            <span className={cn('rounded-lg px-2.5 py-0.5 text-[13px] font-extrabold', lineTone[l.id])}>{l.id}</span>
-          </button>
-        ))}
-      </div>
-      <p className="mt-3 text-[12px] font-medium text-ink-500">{line.route}</p>
+      {!showBrowse && favoriteBuses.length > 0 ? (
+        <>
+          {/* Karuzela obserwowanych połączeń */}
+          <div className="-mx-4 mt-3 flex gap-3 overflow-x-auto px-4 pb-1 no-scrollbar">
+            {favoriteBuses.map((fav) => {
+              const upcoming = getUpcomingDepartures(fav.lineId, fav.stopName, fav.directionIdx);
+              return (
+                <div
+                  key={fav.id}
+                  onClick={() => onOpenFull?.(fav.lineId, fav.stopName)}
+                  className="flex w-[265px] shrink-0 cursor-pointer flex-col justify-between rounded-3xl bg-mist/60 border border-mist-300 p-4 transition-all hover:bg-mist hover:shadow-card active:scale-[.99]"
+                >
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className={cn('rounded-lg px-2 py-0.5 text-[12px] font-extrabold', lineTone[fav.lineId])}>
+                          {fav.lineId}
+                        </span>
+                        {fav.customLabel && (
+                          <span className="rounded-full bg-white px-2 py-0.5 text-[10.5px] font-bold text-ink shadow-xs">
+                            {fav.customLabel}
+                          </span>
+                        )}
+                      </div>
+                      {onRemoveFavorite && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onRemoveFavorite(fav.id);
+                          }}
+                          aria-label="Usuń z obserwowanych"
+                          className="grid h-7 w-7 place-items-center rounded-full bg-white text-ink-400 hover:text-coral transition-colors"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
 
-      <div className="-mx-4 mt-2 flex gap-1.5 overflow-x-auto px-4 pb-1 no-scrollbar" aria-label="Przystanek">
-        {line.stops.map((s) => (
-          <button
-            key={s}
-            onClick={() => setStop(s)}
-            aria-pressed={s === stopName}
-            className={cn('h-8 shrink-0 rounded-full px-3 text-[12px] font-semibold transition-colors', s === stopName ? 'bg-ink text-white' : 'bg-mist text-ink-700')}
-          >
-            {s}
-          </button>
-        ))}
-      </div>
+                    <div className="mt-2.5">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400">Przystanek</p>
+                      <p className="font-display text-[17px] font-bold text-ink leading-snug truncate">
+                        {fav.stopName}
+                      </p>
+                      <p className="mt-0.5 truncate text-[12px] font-semibold text-ink-600">
+                        ➔ {fav.destination}
+                      </p>
+                    </div>
+                  </div>
 
-      <div className="mt-3 space-y-2">
-        {dirs.map((d) => (
-          <div key={d.to} className="flex items-center justify-between gap-3 rounded-2xl bg-mist/70 px-4 py-3">
-            <div className="min-w-0">
-              <p className="text-[10.5px] font-bold uppercase tracking-wider text-ink-400">Kierunek</p>
-              <p className="truncate text-[14px] font-bold">{d.to}</p>
-            </div>
-            <div className="text-right">
-              <p className="font-display text-[24px] font-semibold leading-none">
-                {d.mins[0]}
-                <span className="font-sans text-[12px] font-semibold text-ink-500"> min</span>
-              </p>
-              <p className="mt-1 text-[11px] text-ink-400">
-                potem {clock(d.mins[1])}, {clock(d.mins[2])}
-              </p>
-            </div>
+                  <div className="mt-3.5 border-t border-mist-300 pt-3 flex items-end justify-between">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-coral-700">Najbliższy</p>
+                      <p className="font-display text-[22px] font-extrabold leading-none text-coral-700">
+                        za {upcoming[0]}
+                        <span className="font-sans text-[12px] font-semibold text-ink-500"> min</span>
+                      </p>
+                      <p className="mt-1 text-[10.5px] text-ink-400">
+                        potem {clock(upcoming[1])}, {clock(upcoming[2])}
+                      </p>
+                    </div>
+
+                    <span className="rounded-xl bg-white px-2.5 py-1.5 text-[11px] font-bold text-ink shadow-xs">
+                      Trasa ➔
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Kafelek Dodaj kolejny */}
+            {onAddFavorite && (
+              <button
+                type="button"
+                onClick={onAddFavorite}
+                className="flex w-[140px] shrink-0 flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-sand-300 bg-sand-50/50 p-4 text-center transition-all hover:bg-sand-100 active:scale-95"
+              >
+                <span className="grid h-10 w-10 place-items-center rounded-full bg-white text-sand-800 shadow-xs">
+                  <Plus className="h-5 w-5" />
+                </span>
+                <span className="text-[12px] font-bold text-ink leading-tight">
+                  + Dodaj kolejny
+                </span>
+              </button>
+            )}
           </div>
-        ))}
-      </div>
+        </>
+      ) : (
+        <>
+          {/* Widok przeglądania linii */}
+          <div role="tablist" aria-label="Linia" className="mt-4 grid grid-cols-3 gap-1 rounded-2xl bg-mist p-1">
+            {busLines.map((l) => (
+              <button
+                key={l.id}
+                role="tab"
+                aria-selected={lineId === l.id}
+                onClick={() => setLineId(l.id)}
+                className={cn(
+                  'flex h-10 items-center justify-center rounded-xl transition-all',
+                  lineId === l.id ? 'bg-white shadow-card' : 'opacity-60 hover:opacity-100',
+                )}
+              >
+                <span className={cn('rounded-lg px-2.5 py-0.5 text-[13px] font-extrabold', lineTone[l.id])}>
+                  {l.id}
+                </span>
+              </button>
+            ))}
+          </div>
+          <p className="mt-3 text-[12px] font-medium text-ink-500">{line.route}</p>
+
+          <div className="-mx-4 mt-2 flex gap-1.5 overflow-x-auto px-4 pb-1 no-scrollbar" aria-label="Przystanek">
+            {line.stops.map((s) => (
+              <button
+                key={s}
+                onClick={() => setStop(s)}
+                aria-pressed={s === stopName}
+                className={cn(
+                  'h-8 shrink-0 rounded-full px-3 text-[12px] font-semibold transition-colors',
+                  s === stopName ? 'bg-ink text-white' : 'bg-mist text-ink-700',
+                )}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-3 space-y-2">
+            {dirs.map((d) => (
+              <div key={d.to} className="flex items-center justify-between gap-3 rounded-2xl bg-mist/70 px-4 py-3">
+                <div className="min-w-0">
+                  <p className="text-[10.5px] font-bold uppercase tracking-wider text-ink-400">Kierunek</p>
+                  <p className="truncate text-[14px] font-bold">{d.to}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-display text-[24px] font-semibold leading-none">
+                    {d.mins[0]}
+                    <span className="font-sans text-[12px] font-semibold text-ink-500"> min</span>
+                  </p>
+                  <p className="mt-1 text-[11px] text-ink-400">
+                    potem {clock(d.mins[1])}, {clock(d.mins[2])}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {onAddFavorite && (
+            <button
+              type="button"
+              onClick={onAddFavorite}
+              className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-2xl bg-sand/80 text-[12px] font-bold text-ink hover:bg-sand transition-colors"
+            >
+              <Star className="h-4 w-4 fill-sand text-ink" />
+              Dodaj przystanek do obserwowanych
+            </button>
+          )}
+        </>
+      )}
 
       {onOpenFull && (
         <button
-          onClick={() => onOpenFull(lineId)}
+          onClick={() => onOpenFull(lineId, stopName)}
           className="mt-3 flex h-10 w-full items-center justify-center gap-1.5 rounded-full bg-mist text-[12px] font-bold text-ink hover:bg-mist-200 transition-colors"
         >
           <MapPin className="h-4 w-4 text-sky-700" />
@@ -354,8 +566,11 @@ interface HomeScreenProps {
   onTab: (t: TabId) => void;
   onProfile: () => void;
   onPartner: () => void;
-  onZditm?: (line?: LineId) => void;
+  onZditm?: (line?: LineId, stopName?: string) => void;
   onMotylek?: () => void;
+  favoriteBuses?: FavoriteBusStop[];
+  onAddFavoriteBus?: () => void;
+  onRemoveFavoriteBus?: (id: string) => void;
 }
 
 export function HomeScreen({
@@ -365,6 +580,9 @@ export function HomeScreen({
   onPartner,
   onZditm,
   onMotylek,
+  favoriteBuses = [],
+  onAddFavoriteBus,
+  onRemoveFavoriteBus,
 }: HomeScreenProps) {
   const quick = [
     { label: 'Motylek', icon: UtensilsCrossed, cls: 'bg-sand text-ink', onClick: () => (onMotylek ? onMotylek() : onTab('kitchen')) },
@@ -399,7 +617,12 @@ export function HomeScreen({
       </div>
 
       <LiveAlert />
-      <BusWidget onOpenFull={onZditm} />
+      <BusWidget
+        favoriteBuses={favoriteBuses}
+        onOpenFull={onZditm}
+        onAddFavorite={onAddFavoriteBus}
+        onRemoveFavorite={onRemoveFavoriteBus}
+      />
 
       <section>
         <SectionHeader title="Co słychać w Mińsku" action="Wszystkie" />

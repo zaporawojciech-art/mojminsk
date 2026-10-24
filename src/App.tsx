@@ -38,7 +38,13 @@ import { SellerProfileModal } from './screens/SellerProfileModal';
 import { AdFiltersModal, type AdFilterState } from './screens/AdFiltersModal';
 import { ReserveAdModal } from './screens/ReserveAdModal';
 import { InstallAppModal } from './screens/InstallAppModal';
-import { initialAdConversations, type AdConversation } from './data/mockData';
+import { AddFavoriteBusModal } from './screens/AddFavoriteBusModal';
+import {
+  initialAdConversations,
+  type AdConversation,
+  type FavoriteBusStop,
+  FAVORITE_BUS_STOPS_KEY,
+} from './data/mockData';
 
 type Overlay = null | 'profile' | 'partner' | 'checkout' | 'motylek' | 'zditm';
 
@@ -47,6 +53,19 @@ export default function App() {
   const [tab, setTab] = useState<TabId>('home');
   const [overlay, setOverlay] = useState<Overlay>(null);
   const [selectedZditmLine, setSelectedZditmLine] = useState<LineId>('M2');
+  const [selectedZditmStop, setSelectedZditmStop] = useState<string | undefined>(undefined);
+  const [favoriteBuses, setFavoriteBuses] = useState<FavoriteBusStop[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem(FAVORITE_BUS_STOPS_KEY);
+        if (stored) return JSON.parse(stored);
+      } catch {
+        // fallback
+      }
+    }
+    return [];
+  });
+  const [addFavBusOpen, setAddFavBusOpen] = useState(false);
   const [cart, setCart] = useState<Record<string, number>>({});
   const [sheet, setSheet] = useState<Product | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
@@ -86,6 +105,42 @@ export default function App() {
     onlyFree: false,
     onlyPromoted: false,
   });
+
+  const handleAddFavoriteBus = (newFav: Omit<FavoriteBusStop, 'id'>) => {
+    const id = `${newFav.lineId}_${newFav.stopName}_${newFav.directionIdx}`;
+    setFavoriteBuses((prev) => {
+      const filtered = prev.filter((f) => f.id !== id);
+      const updated = [...filtered, { ...newFav, id }];
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(FAVORITE_BUS_STOPS_KEY, JSON.stringify(updated));
+        } catch {}
+      }
+      return updated;
+    });
+  };
+
+  const handleRemoveFavoriteBus = (id: string) => {
+    setFavoriteBuses((prev) => {
+      const updated = prev.filter((f) => f.id !== id);
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(FAVORITE_BUS_STOPS_KEY, JSON.stringify(updated));
+        } catch {}
+      }
+      return updated;
+    });
+  };
+
+  const handleToggleFavoriteBus = (fav: Omit<FavoriteBusStop, 'id'>) => {
+    const id = `${fav.lineId}_${fav.stopName}_${fav.directionIdx}`;
+    const exists = favoriteBuses.some((f) => f.id === id);
+    if (exists) {
+      handleRemoveFavoriteBus(id);
+    } else {
+      handleAddFavoriteBus(fav);
+    }
+  };
 
   // 1. Reset main container scroll immediately upon navigating between tabs or overlays
   useLayoutEffect(() => {
@@ -148,7 +203,8 @@ export default function App() {
       sellerProfile ||
       reserveAd ||
       filtersModalOpen ||
-      installModalOpen
+      installModalOpen ||
+      addFavBusOpen
   );
 
   const [exitingScreens, setExitingScreens] = useState<Record<string, boolean>>({});
@@ -166,6 +222,7 @@ export default function App() {
   }, []);
 
   const closeInstallModal = useCallback(() => setInstallModalOpen(false), []);
+  const closeAddFavBus = useCallback(() => closeWithAnimation('addFavBus', () => setAddFavBusOpen(false)), [closeWithAnimation]);
   const closeReserveAd = useCallback(() => closeWithAnimation('reserveAd', () => setReserveAd(null)), [closeWithAnimation]);
   const closeFiltersModal = useCallback(() => closeWithAnimation('filtersModal', () => setFiltersModalOpen(false)), [closeWithAnimation]);
   const closeReportAd = useCallback(() => closeWithAnimation('reportAd', () => setReportAd(null)), [closeWithAnimation]);
@@ -184,6 +241,7 @@ export default function App() {
   // Navigation stack: layers ordered from the topmost (closed first) to the bottom one
   const layers = [
     { active: installModalOpen, close: closeInstallModal },
+    { active: addFavBusOpen, close: closeAddFavBus },
     { active: !!reserveAd, close: closeReserveAd },
     { active: filtersModalOpen, close: closeFiltersModal },
     { active: !!reportAd, close: closeReportAd },
@@ -365,11 +423,15 @@ export default function App() {
         onTab={setTab}
         onProfile={() => setOverlay('profile')}
         onPartner={() => setOverlay('partner')}
-        onZditm={(line) => {
+        onZditm={(line, stopName) => {
           setSelectedZditmLine(line ?? 'M2');
+          setSelectedZditmStop(stopName);
           setOverlay('zditm');
         }}
         onMotylek={() => setOverlay('motylek')}
+        favoriteBuses={favoriteBuses}
+        onAddFavoriteBus={() => setAddFavBusOpen(true)}
+        onRemoveFavoriteBus={handleRemoveFavoriteBus}
       />
     );
   } else if (tab === 'kitchen') {
@@ -506,6 +568,10 @@ export default function App() {
         {user && overlay === 'zditm' && (
           <ZditmScreen
             initialLine={selectedZditmLine}
+            initialStopName={selectedZditmStop}
+            favoriteBuses={favoriteBuses}
+            onToggleFavorite={handleToggleFavoriteBus}
+            onRemoveFavorite={handleRemoveFavoriteBus}
             onBack={closeOverlay}
             isClosing={!!exitingScreens['overlay']}
           />
@@ -704,6 +770,17 @@ export default function App() {
             user={user}
             onClose={closeChatAd}
             isClosing={!!exitingScreens['chatAd']}
+          />
+        )}
+
+        {/* Add Favorite Bus Stop Modal */}
+        {user && addFavBusOpen && (
+          <AddFavoriteBusModal
+            onClose={closeAddFavBus}
+            isClosing={!!exitingScreens['addFavBus']}
+            initialLineId={selectedZditmLine}
+            initialStopName={selectedZditmStop}
+            onSave={handleAddFavoriteBus}
           />
         )}
 

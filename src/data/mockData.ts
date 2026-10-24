@@ -114,6 +114,26 @@ export const weather = {
   ] as HourlyWeather[],
 };
 
+export interface FavoriteBusStop {
+  id: string; // `${lineId}_${stopName}_${directionIdx}`
+  lineId: LineId;
+  stopName: string;
+  directionIdx: 0 | 1;
+  directionName: string;
+  destination: string;
+  customLabel?: string; // np. "Dom", "Praca / Szkoła", "Dworzec PKP"
+}
+
+export const FAVORITE_BUS_STOPS_KEY = 'mojminsk_favorite_bus_stops';
+
+export function getUpcomingDepartures(lineId: LineId, stopName: string, directionIdx: 0 | 1): number[] {
+  const line = busLines.find((l) => l.id === lineId);
+  if (!line) return [4, 19, 34];
+  const idx = Math.max(0, line.stops.indexOf(stopName));
+  const shift = directionIdx === 0 ? (idx * 3) % 15 : ((idx * 3) + 8) % 15;
+  return line.offsets.map((o) => (o + shift) % 60).sort((a, b) => a - b);
+}
+
 export interface BusDirection {
   name: string;
   destination: string;

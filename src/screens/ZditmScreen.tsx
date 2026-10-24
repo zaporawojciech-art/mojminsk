@@ -8,26 +8,66 @@ import {
   Info,
   MapPin,
   Phone,
+  Star,
 } from 'lucide-react';
 import { cn } from '../components/ui';
-import { type LineId, busLines } from '../data/mockData';
+import { type LineId, type FavoriteBusStop, busLines } from '../data/mockData';
 
 interface ZditmScreenProps {
   onBack: () => void;
   initialLine?: LineId;
+  initialStopName?: string;
   isClosing?: boolean;
+  favoriteBuses?: FavoriteBusStop[];
+  onToggleFavorite?: (fav: Omit<FavoriteBusStop, 'id'>) => void;
+  onRemoveFavorite?: (id: string) => void;
 }
 
-export function ZditmScreen({ onBack, initialLine = 'M2', isClosing = false }: ZditmScreenProps) {
+export function ZditmScreen({
+  onBack,
+  initialLine = 'M2',
+  initialStopName,
+  isClosing = false,
+  favoriteBuses = [],
+  onToggleFavorite,
+  onRemoveFavorite,
+}: ZditmScreenProps) {
   const [lineId, setLineId] = useState<LineId>(initialLine);
   const [directionIdx, setDirectionIdx] = useState<0 | 1>(0);
   const [dayType, setDayType] = useState<'weekday' | 'saturday' | 'sunday'>('weekday');
-  const [selectedStopIdx, setSelectedStopIdx] = useState<number>(0);
+  const [selectedStopIdx, setSelectedStopIdx] = useState<number>(() => {
+    if (initialStopName) {
+      const l = busLines.find((x) => x.id === initialLine);
+      const idx = l?.stops.indexOf(initialStopName);
+      if (idx !== undefined && idx >= 0) return idx;
+    }
+    return 0;
+  });
 
   const line = busLines.find((l) => l.id === lineId)!;
   const currentDirection = line.directions[directionIdx];
   const stops = line.stopsDetails;
   const selectedStop = stops[selectedStopIdx] ?? stops[0];
+
+  const matchingFav = favoriteBuses.find(
+    (f) => f.lineId === lineId && f.stopName === selectedStop.name && f.directionIdx === directionIdx,
+  );
+  const isFav = !!matchingFav;
+
+  const handleToggleFav = () => {
+    if (isFav && matchingFav) {
+      onRemoveFavorite?.(matchingFav.id);
+    } else {
+      onToggleFavorite?.({
+        lineId,
+        stopName: selectedStop.name,
+        directionIdx,
+        directionName: currentDirection.name,
+        destination: currentDirection.destination,
+        customLabel: selectedStop.name === 'Spacerowa' ? 'Dom' : undefined,
+      });
+    }
+  };
 
   // Colors for line badges
   const lineBadgeColors: Record<LineId, string> = {
@@ -74,6 +114,41 @@ export function ZditmScreen({ onBack, initialLine = 'M2', isClosing = false }: Z
           </div>
         </div>
       </header>
+
+      {/* Szybki skok do obserwowanych przystanków */}
+      {favoriteBuses.length > 0 && (
+        <div className="bg-sand-50/90 border-b border-sand-200 px-5 py-2.5">
+          <p className="text-[10.5px] font-extrabold uppercase tracking-wider text-sand-800">
+            Twoje obserwowane przystanki:
+          </p>
+          <div className="-mx-5 mt-1.5 flex gap-1.5 overflow-x-auto px-5 pb-0.5 no-scrollbar">
+            {favoriteBuses.map((fav) => {
+              const isCurrent =
+                fav.lineId === lineId && fav.stopName === selectedStop.name && fav.directionIdx === directionIdx;
+              return (
+                <button
+                  key={fav.id}
+                  type="button"
+                  onClick={() => {
+                    setLineId(fav.lineId);
+                    setDirectionIdx(fav.directionIdx);
+                    const targetLine = busLines.find((l) => l.id === fav.lineId)!;
+                    const idx = targetLine.stops.indexOf(fav.stopName);
+                    if (idx >= 0) setSelectedStopIdx(idx);
+                  }}
+                  className={cn(
+                    'flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold transition-all active:scale-95',
+                    isCurrent ? 'bg-ink text-white shadow-sm' : 'bg-white text-ink shadow-xs hover:bg-sand-100',
+                  )}
+                >
+                  <Star className="h-3 w-3 fill-sand text-sand" />
+                  <span>{fav.customLabel ? `${fav.customLabel} (${fav.lineId})` : `${fav.lineId} · ${fav.stopName}`}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="space-y-4 p-5">
         {/* Line Tabs */}
@@ -304,6 +379,25 @@ export function ZditmScreen({ onBack, initialLine = 'M2', isClosing = false }: Z
               ))}
             </div>
           </div>
+
+          {/* Przycisk Obserwuj / Gwiazdka */}
+          <button
+            type="button"
+            onClick={handleToggleFav}
+            className={cn(
+              'mt-3 flex w-full items-center justify-center gap-2 rounded-2xl py-3 px-4 text-[13px] font-bold transition-all active:scale-98 shadow-sm',
+              isFav
+                ? 'bg-sand-100 text-sand-900 border border-sand-300'
+                : 'bg-ink text-white hover:bg-ink-800',
+            )}
+          >
+            <Star className={cn('h-4 w-4', isFav ? 'fill-sand text-sand-700' : 'fill-sand text-sand')} />
+            <span>
+              {isFav
+                ? `Obserwujesz ten przystanek i kierunek ${matchingFav?.customLabel ? `(Etykieta: ${matchingFav.customLabel})` : ''} · Kliknij, aby usunąć`
+                : `Obserwuj ten kierunek (➔ ${currentDirection.destination})`}
+            </span>
+          </button>
 
           {/* Full Schedule Hours Matrix */}
           <div className="mt-4 border-t border-mist pt-4">
