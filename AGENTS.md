@@ -759,3 +759,21 @@ Poniżej zestawiono finalne wytyczne UX/UI wynikające z Twoich 20 odpowiedzi:
   2. *Rozkłady autobusów M2/M3/M4, jedzenie i zakupy z Motylek Market w 35 min.*
   3. *Odbierz fizyczny list z kodem i 5 kuponami rabatowymi od lokalnych firm!*
 - **Kupony Rabatowe:** Zgodnie z decyzją biznesową kupony funkcjonują **wyłącznie w formie tradycyjnych voucherów papierowych w liście weryfikacyjnym**, co gwarantuje fizyczne otwarcie przesyłki i realne odwiedzenie mińskich sklepów stacjonarnych.
+
+### 6.6. Asynchroniczne Ładowanie Widoków i Skeleton Screens (Na Każdym Widoku)
+- **Zasada globalna (Obowiązkowa dla każdego ekranu):** Każdy widok w aplikacji — zarówno główne zakładki (`Start`, `Kuchnia`, `Ogłoszenia`, `Przejazdy`, `Rozmowy`), jak i wszystkie widoki podstron, profilu oraz modali (`Mój profil`, `Szczegóły ogłoszenia`, `Moje ogłoszenia`, `Motylek Market`, `ZDiTM`, `Strefa Partnera`, `Kasa / Checkout`, `Wizytówka sąsiada`, `Wiadomości`, `Czat 1:1`, formularze dodawania/edycji/filtrów) — **musi być ładowany asynchronicznie (`React.lazy` + `Suspense`) oraz poprzedzony dedykowanym Skeleton Screenem (`TabSkeleton` / `AsyncViewBoundary`)**.
+- **Cel wydajnościowy (Zero Lag / 60–120 FPS):**
+  1. Animacje nawigacji dolnej (`BottomNav`) oraz animacje wjazdu ekranów (`native-screen-slide`, `native-modal-slide`) operują wyłącznie na właściwościach GPU (`transform: translate3d`, `opacity`) bez wywoływania przeliczeń layoutu (Zero Layout Reflow).
+  2. W momencie przejścia na dowolny widok natychmiast wyświetlany jest dopasowany geometrycznie **Skeleton Screen** z płynnym efektem fali (`skeleton-shimmer`), a ciężki komponent docelowy montuje się asynchronicznie i płynnie pojawia w miejscu szkieletu (`tab-view-enter` / `async-view-ready`).
+
+### 6.7. Dodatkowe Wytyczne Produktowe i Prywatności (Aktualizacja UX)
+- **Prywatność i Anonimowość Sąsiedzka:**
+  - Brak publicznych ocen gwiazdkowych i odznak typu „SuperSąsiad”, „Kierowca 5.0”, „Pomocny sąsiad” oraz brak liczników aktywności w profilu.
+  - Wizytówka sąsiada (`SellerProfileModal`) potwierdza wyłącznie fizyczną weryfikację adresu zamieszkania bez eksponowania katalogu sprzedawanych ani historycznych przedmiotów.
+  - Komunikat o przesyłce weryfikacyjnej informuje neutralnie o wysyłce na adres zamieszkania bez eksponowania nazwy ulicy w treści powiadomienia.
+  - Brak limitów zmian / losowań awatara 3D podczas rejestracji oraz w profilu mieszkańca.
+- **Standard Ogłoszeń (Inspiracja OLX Mobile):**
+  - Widok szczegółów oferty (`AdDetailModal`) prezentuje na górze karuzelę wielu zdjęć (`images[]`) z obsługą pełnoekranowego podglądu (Lightbox z zoomem i miniaturami), a biały kontener z ceną, tytułem i ulicą nachodzi zaokrąglonymi górnymi rogami (`-mt-7 rounded-t-[28px]`) bezpośrednio na zdjęcie.
+  - Widok „Moje ogłoszenia” (`MyAdsModal`) w profilu prezentuje kompaktową listę tekstową bez dużych zdjęć z bezpośrednim przejściem (`Oferta ›`) do widoku szczegółów ogłoszenia.
+- **Komunikacja Miejska ZDiTM na HOME:**
+  - Kompaktowy widżet spersonalizowanych przystanków („Moje przystanki”) z szybkim dodawaniem obserwowanego przystanku i kierunku z alfabetycznej listy przystanków Mińska Mazowieckiego.

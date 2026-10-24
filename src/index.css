@@ -126,6 +126,12 @@
   will-change: transform, opacity;
 }
 
+/* When a view has already slid in via its Skeleton Screen, replace the second slide with a smooth in-place fade */
+.async-view-ready .native-screen-slide,
+.async-view-ready .native-modal-slide {
+  animation: tabViewEnter 0.18s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
+}
+
 @keyframes skeletonWave {
   0% {
     transform: translate3d(-100%, 0, 0);
