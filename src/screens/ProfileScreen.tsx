@@ -8,7 +8,6 @@ import {
   Clock,
   Coffee,
   Dices,
-  Eye,
   Gem,
   Lock,
   Mail,
@@ -85,7 +84,7 @@ export function ProfileScreen({
   myPromotedAdsCount = 0,
   onOpenConversations,
   unreadConversationsCount = 0,
-  onPreviewPublic,
+  onPreviewPublic: _onPreviewPublic,
   onPromoteFirstAd,
   onOpenRides,
   onInstallApp,
@@ -106,12 +105,6 @@ export function ProfileScreen({
     alerts: true,
     chats: true,
     orders: true,
-  };
-
-  const privacy = user.privacy ?? {
-    showStats: true,
-    showPastAds: true,
-    showRides: true,
   };
 
   const badges = [
@@ -136,16 +129,6 @@ export function ProfileScreen({
     });
   };
 
-  const handleTogglePrivacy = (key: keyof typeof privacy, val: boolean) => {
-    onUpdate({
-      ...user,
-      privacy: {
-        ...privacy,
-        [key]: val,
-      },
-    });
-  };
-
   const adsMetaLabel = [
     `${myAdsCount} aktywne`,
     myReservedAdsCount > 0 ? `${myReservedAdsCount} zarez.` : null,
@@ -162,24 +145,10 @@ export function ProfileScreen({
       )}
     >
       <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist">
-        {/* Native Top Bar with Public Card Preview button (Decision #1) */}
         <NativeHeader
           title="Mój profil"
           backLabel="Wróć"
           onBack={onBack}
-          right={
-            onPreviewPublic && (
-              <button
-                type="button"
-                onClick={onPreviewPublic}
-                className="mr-1 flex h-10 items-center gap-1.5 rounded-full bg-mist px-3.5 text-[12.5px] font-bold text-ink transition-colors hover:bg-mist-200 active:scale-95"
-                title="Zobacz, jak Twój profil widzą inni mieszkańcy"
-              >
-                <Eye className="h-4 w-4 text-ink-700" aria-hidden />
-                <span>Wizytówka</span>
-              </button>
-            )
-          }
         />
 
         <div className="flex-1 overflow-y-auto overscroll-contain pb-24">
@@ -555,37 +524,7 @@ export function ProfileScreen({
         </ul>
       </div>
 
-      {/* 6. Prywatność i Widoczność w Profilu Publicznym (Decision #8) */}
-      <div className="mx-5 mt-6">
-        <div className="mb-2 flex items-center justify-between px-3">
-          <p className="text-[11.5px] font-extrabold uppercase tracking-wider text-ink-400">
-            Prywatność Twojej wizytówki
-          </p>
-          {onPreviewPublic && (
-            <button
-              onClick={onPreviewPublic}
-              className="text-[11.5px] font-bold text-ink underline decoration-ink/40"
-            >
-              Sprawdź podgląd
-            </button>
-          )}
-        </div>
-        <ul className="overflow-hidden rounded-4xl bg-white shadow-card">
-          <li className="flex items-center justify-between gap-3 px-4 py-3.5">
-            <div className="min-w-0">
-              <p className="text-[14px] font-semibold text-ink">Pokazuj archiwalne (sprzedane) ogłoszenia</p>
-              <p className="text-[11.5px] text-ink-400">Buduje wiarygodność przy kolejnych ofertach</p>
-            </div>
-            <IosToggle
-              label="Pokazuj archiwalne ogłoszenia"
-              checked={privacy.showPastAds}
-              onChange={(v) => handleTogglePrivacy('showPastAds', v)}
-            />
-          </li>
-        </ul>
-      </div>
-
-      {/* 7. Partnerzy i Wsparcie (Styl iOS Settings) */}
+      {/* Partnerzy i Wsparcie (Styl iOS Settings) */}
       <div className="mx-5 mt-6">
         <p className="mb-2 px-3 text-[11.5px] font-extrabold uppercase tracking-wider text-ink-400">
           Społeczność i partnerzy

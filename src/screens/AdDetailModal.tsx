@@ -197,8 +197,8 @@ export function AdDetailModal({
             >
               <div className="flex items-center justify-between">
                 <h3 className="text-[12px] font-bold uppercase tracking-wider text-ink-400">Sprzedający sąsiad</h3>
-                <span className="flex items-center gap-1 text-[11.5px] font-bold text-coral group-hover:underline">
-                  Profil sąsiada
+                <span className="flex items-center gap-1 text-[11.5px] font-bold text-ink-500 group-hover:text-coral transition-colors">
+                  Weryfikacja adresu
                   <ChevronRight className="h-3.5 w-3.5" />
                 </span>
               </div>
