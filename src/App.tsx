@@ -590,6 +590,23 @@ export default function App() {
           />
         )}
 
+        {/* My Ads Modal */}
+        {user && myAdsOpen && (
+          <MyAdsModal
+            user={user}
+            ads={adsList}
+            jobs={jobsList}
+            onClose={closeMyAds}
+            isClosing={!!exitingScreens['myAds']}
+            onOpenAd={(ad) => setSelectedAd(ad)}
+            onAddNew={() => setAddAdOpen(true)}
+            onStatusChange={handleStatusChange}
+            onDeleteAd={handleDeleteAd}
+            onEditAd={(ad) => setEditAd(ad)}
+            onPromoteAd={(ad) => setPromoteAd(ad)}
+          />
+        )}
+
         {/* Add Ad Modal with BLIK payment flow */}
         {user && addAdOpen && (
           <AddAdModal
@@ -644,23 +661,6 @@ export default function App() {
             onClose={closeApplyJob}
             isClosing={!!exitingScreens['applyJob']}
             onSuccess={handleJobApplied}
-          />
-        )}
-
-        {/* My Ads Modal */}
-        {user && myAdsOpen && (
-          <MyAdsModal
-            user={user}
-            ads={adsList}
-            jobs={jobsList}
-            onClose={closeMyAds}
-            isClosing={!!exitingScreens['myAds']}
-            onOpenAd={(ad) => setSelectedAd(ad)}
-            onAddNew={() => setAddAdOpen(true)}
-            onStatusChange={handleStatusChange}
-            onDeleteAd={handleDeleteAd}
-            onEditAd={(ad) => setEditAd(ad)}
-            onPromoteAd={(ad) => setPromoteAd(ad)}
           />
         )}
 
