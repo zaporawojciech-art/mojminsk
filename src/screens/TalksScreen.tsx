@@ -1,7 +1,7 @@
 import { Fragment, useState } from 'react';
 import { BadgeCheck, BarChart2, Heart, ImageIcon, MessageCircle, Repeat2 } from 'lucide-react';
-import { avatarUrl, posts as seedPosts, talkTags, type Post, type User } from '../data/mockData';
-import { Chip, Img, ScreenHeader, cn } from '../components/ui';
+import { avatarUrl, posts as seedPosts, streets, talkTags, type Post, type User } from '../data/mockData';
+import { Chip, Img, ProfileAvatarButton, ScreenHeader, cn } from '../components/ui';
 
 const MAX = 280;
 
@@ -22,7 +22,15 @@ function RichText({ text }: { text: string }) {
   );
 }
 
-export function TalksScreen({ user }: { user: User }) {
+export function TalksScreen({
+  user,
+  onProfile,
+  onNeighborClick,
+}: {
+  user: User;
+  onProfile?: () => void;
+  onNeighborClick?: (name: string, street: string) => void;
+}) {
   const [list, setList] = useState<Post[]>(seedPosts);
   const [text, setText] = useState('');
   const [tag, setTag] = useState('Wszystko');
@@ -42,7 +50,11 @@ export function TalksScreen({ user }: { user: User }) {
 
   return (
     <div className="pb-36">
-      <ScreenHeader title="Rozmowy" subtitle="Piszą tylko zweryfikowani mieszkańcy" />
+      <ScreenHeader
+        title="Rozmowy"
+        subtitle="Piszą tylko zweryfikowani mieszkańcy"
+        right={onProfile ? <ProfileAvatarButton user={user} onClick={onProfile} /> : undefined}
+      />
 
       <div className="mx-5 rounded-4xl bg-white p-4 shadow-card">
         <div className="flex gap-3">
@@ -80,17 +92,29 @@ export function TalksScreen({ user }: { user: User }) {
       <div className="mx-5 mt-4 divide-y divide-mist overflow-hidden rounded-4xl bg-white shadow-card">
         {visible.map((p) => {
           const isLiked = !!liked[p.id];
+          const matchedStreet = streets.find((s) => s.as === p.authorAs)?.name ?? p.authorAs.replace(/^ze?\s+/i, '');
           return (
             <article key={p.id} className="flex gap-3 p-4">
-              <img src={avatarUrl(p.author)} alt="" className="h-11 w-11 shrink-0 rounded-2xl" />
+              <button
+                type="button"
+                onClick={() => onNeighborClick?.(p.author, matchedStreet)}
+                className="shrink-0 self-start transition-transform active:scale-95"
+                title={`Zobacz profil: ${p.author}`}
+              >
+                <img src={avatarUrl(p.author)} alt="" className="h-11 w-11 rounded-2xl" />
+              </button>
               <div className="min-w-0 flex-1">
-                <p className="flex flex-wrap items-center gap-x-1 text-[14px]">
+                <button
+                  type="button"
+                  onClick={() => onNeighborClick?.(p.author, matchedStreet)}
+                  className="flex flex-wrap items-center gap-x-1 text-left text-[14px] hover:underline"
+                >
                   <b>
                     {p.author} {p.authorAs}
                   </b>
                   <BadgeCheck className="h-4 w-4 fill-sky text-white" aria-label="Zweryfikowany" />
                   <span className="text-ink-400">· {p.time}</span>
-                </p>
+                </button>
                 <p className="mt-1 text-[14.5px] leading-relaxed text-ink-700">
                   <RichText text={p.content} />
                 </p>

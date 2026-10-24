@@ -313,11 +313,13 @@ export default function App() {
   const count = lines.reduce((s, l) => s + l.qty, 0);
   const total = lines.reduce((s, l) => s + l.qty * l.product.price, 0);
 
-  const userActiveAdsCount = user
-    ? adsList
-        .filter((a) => a.isOwner || a.author.toLowerCase().includes(user.name.toLowerCase()))
-        .filter((a) => (a.status ?? 'active') === 'active').length
-    : 0;
+  const userAds = user
+    ? adsList.filter((a) => a.isOwner || a.author.toLowerCase().includes(user.name.toLowerCase()))
+    : [];
+  const userActiveAdsCount = userAds.filter((a) => (a.status ?? 'active') === 'active').length;
+  const userReservedAdsCount = userAds.filter((a) => a.status === 'reserved').length;
+  const userPromotedAdsCount = userAds.filter((a) => !!a.promoted).length;
+  const firstActiveUserAd = userAds.find((a) => (a.status ?? 'active') === 'active') ?? userAds[0] ?? adsList[0];
 
   let content;
   if (!user) {
@@ -357,6 +359,17 @@ export default function App() {
         onPartner={() => setOverlay('partner')}
         onMyAds={() => setMyAdsOpen(true)}
         myAdsCount={userActiveAdsCount}
+        myReservedAdsCount={userReservedAdsCount}
+        myPromotedAdsCount={userPromotedAdsCount}
+        onOpenConversations={() => setConversationsOpen(true)}
+        unreadConversationsCount={unreadConversationsCount}
+        onPreviewPublic={() => setSellerProfile({ name: user.name, street: user.street.name })}
+        onPromoteFirstAd={firstActiveUserAd ? () => setPromoteAd(firstActiveUserAd) : undefined}
+        onOpenRides={() => {
+          setOverlay(null);
+          setTab('rides');
+        }}
+        userAds={userAds}
       />
     );
   } else if (overlay === 'partner') {
@@ -378,6 +391,8 @@ export default function App() {
   } else if (tab === 'kitchen') {
     content = (
       <KitchenScreen
+        user={user}
+        onProfile={() => setOverlay('profile')}
         onOpen={setSheet}
         onAdd={(p) => add(p)}
         qtyOf={(id) => cart[id] ?? 0}
@@ -387,6 +402,8 @@ export default function App() {
   } else if (tab === 'ads') {
     content = (
       <AdsScreen
+        user={user}
+        onProfile={() => setOverlay('profile')}
         adsList={adsList}
         jobsList={jobsList}
         likedAds={likedAds}
@@ -406,9 +423,15 @@ export default function App() {
       />
     );
   } else if (tab === 'rides') {
-    content = <RidesScreen />;
+    content = <RidesScreen user={user} onProfile={() => setOverlay('profile')} />;
   } else {
-    content = <TalksScreen user={user} />;
+    content = (
+      <TalksScreen
+        user={user}
+        onProfile={() => setOverlay('profile')}
+        onNeighborClick={(name, street) => setSellerProfile({ name, street })}
+      />
+    );
   }
 
   const showChrome = !!user && !overlay;
@@ -421,10 +444,11 @@ export default function App() {
       >
         <main
           ref={mainRef}
-          key={user ? (overlay ?? tab) : 'onboarding'}
           className="h-full w-full flex-1 overflow-y-auto overscroll-contain"
         >
-          {content}
+          <div key={user ? (overlay ?? tab) : 'onboarding'} className="tab-view-enter min-h-full">
+            {content}
+          </div>
         </main>
 
         {showChrome && !isChildScreenActive && count > 0 && (tab === 'kitchen' || tab === 'home') && (

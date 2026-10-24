@@ -10,8 +10,8 @@ import {
   SlidersHorizontal,
   Sparkles,
 } from 'lucide-react';
-import { ads as initialAds, jobs as initialJobs, type Ad, type Job } from '../data/mockData';
-import { Chip, Img, ScreenHeader, SearchField, Segmented, StreetPill, cn, toneBg, zl } from '../components/ui';
+import { ads as initialAds, jobs as initialJobs, type Ad, type Job, type User } from '../data/mockData';
+import { Chip, Img, ProfileAvatarButton, ScreenHeader, SearchField, Segmented, StreetPill, cn, toneBg, zl } from '../components/ui';
 import type { AdFilterState } from './AdFiltersModal';
 
 const filters = [
@@ -23,6 +23,8 @@ const filters = [
 ] as const;
 
 interface AdsScreenProps {
+  user?: User;
+  onProfile?: () => void;
   adsList?: Ad[];
   jobsList?: Job[];
   likedAds?: Record<string, boolean>;
@@ -42,6 +44,8 @@ interface AdsScreenProps {
 }
 
 export function AdsScreen({
+  user,
+  onProfile,
   adsList = initialAds,
   jobsList = initialJobs,
   likedAds = {},
@@ -177,11 +181,12 @@ export function AdsScreen({
             )}
             <button
               onClick={onAddClick}
-              className="flex h-11 items-center gap-1.5 rounded-full bg-coral px-4 text-[13.5px] font-bold text-ink shadow-coral transition-transform active:scale-95"
+              className="flex h-11 items-center gap-1 rounded-full bg-coral px-3.5 text-[13px] font-bold text-ink shadow-coral transition-transform active:scale-95"
             >
               <Plus className="h-4 w-4" aria-hidden />
               Dodaj
             </button>
+            {user && onProfile && <ProfileAvatarButton user={user} onClick={onProfile} />}
           </div>
         }
       />

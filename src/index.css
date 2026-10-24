@@ -76,6 +76,22 @@
   will-change: transform, opacity;
 }
 
+@keyframes tabViewEnter {
+  from {
+    opacity: 0.65;
+    transform: translate3d(0, 6px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.tab-view-enter {
+  animation: tabViewEnter 0.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  will-change: transform, opacity;
+}
+
 /* Landscape rotation barrier for mobile screens (phones held sideways) */
 @media screen and (orientation: landscape) and (max-height: 540px) {
   .landscape-barrier {

@@ -3,8 +3,8 @@ import {
   ArrowRight, Bell, Bus, Car, Check, Coffee, Droplets, Eye, Gauge, MapPin, Megaphone,
   ShieldCheck, Sparkles, Sun, TriangleAlert, Umbrella, UtensilsCrossed, Wind,
 } from 'lucide-react';
-import { avatarUrl, busLines, liveAlert, news, partner, poll, weather, type LineId, type User } from '../data/mockData';
-import { Card, Img, SectionHeader, cn } from '../components/ui';
+import { busLines, liveAlert, news, partner, poll, weather, type LineId, type User } from '../data/mockData';
+import { Card, Img, ProfileAvatarButton, SectionHeader, cn } from '../components/ui';
 import type { TabId } from '../components/BottomNav';
 
 const lineTone: Record<LineId, string> = { M2: 'bg-sky', M3: 'bg-sand', M4: 'bg-coral' };
@@ -317,19 +317,23 @@ export function HomeScreen({
   return (
     <div className="space-y-7 pb-36">
       <header className="flex items-center justify-between px-5 pt-[max(env(safe-area-inset-top),16px)]">
-        <button onClick={onProfile} className="flex items-center gap-3 text-left">
-          <img src={avatarUrl(user.seed)} alt="Twój profil" className="h-12 w-12 rounded-2xl" />
-          <div>
-            <p className="text-[13px] font-medium text-ink-500">{greeting()},</p>
-            <p className="font-display text-[19px] font-semibold leading-tight">
-              {user.name} 👋
-            </p>
-          </div>
+        <button onClick={onProfile} className="text-left">
+          <p className="text-[13px] font-medium text-ink-500">{greeting()},</p>
+          <p className="font-display text-[21px] font-semibold leading-tight text-ink">
+            {user.name} <span className="text-[15px] font-normal text-ink-400">{user.street.as}</span> 👋
+          </p>
         </button>
-        <button aria-label="Powiadomienia (3 nowe)" className="relative grid h-11 w-11 place-items-center rounded-full bg-white shadow-card">
-          <Bell className="h-5 w-5" aria-hidden />
-          <span className="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full bg-coral ring-2 ring-white" aria-hidden />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onProfile}
+            aria-label="Powiadomienia (3 nowe)"
+            className="relative grid h-11 w-11 place-items-center rounded-full bg-white shadow-card transition-transform active:scale-95"
+          >
+            <Bell className="h-5 w-5" aria-hidden />
+            <span className="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full bg-coral ring-2 ring-white" aria-hidden />
+          </button>
+          <ProfileAvatarButton user={user} onClick={onProfile} />
+        </div>
       </header>
 
       <WeatherCard />

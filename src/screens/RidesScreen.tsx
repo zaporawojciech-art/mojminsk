@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { ArrowUpDown, Check, Phone, Star, Users } from 'lucide-react';
-import { avatarUrl, rides } from '../data/mockData';
-import { Chip, ScreenHeader, Segmented, cn } from '../components/ui';
+import { avatarUrl, rides, type User } from '../data/mockData';
+import { Chip, ProfileAvatarButton, ScreenHeader, Segmented, cn } from '../components/ui';
 
 const dests = ['Wszystkie', 'Warszawa', 'Halinów', 'Sulejówek'];
 
-export function RidesScreen() {
+export function RidesScreen({ user, onProfile }: { user?: User; onProfile?: () => void }) {
   const [mode, setMode] = useState<'find' | 'offer'>('find');
   const [dest, setDest] = useState('Wszystkie');
   const [day, setDay] = useState<'today' | 'tomorrow'>('tomorrow');
@@ -15,7 +15,11 @@ export function RidesScreen() {
 
   return (
     <div className="pb-36">
-      <ScreenHeader title="Przejazdy" subtitle="Sąsiedzki carpooling i taxi" />
+      <ScreenHeader
+        title="Przejazdy"
+        subtitle="Sąsiedzki carpooling i taxi"
+        right={user && onProfile ? <ProfileAvatarButton user={user} onClick={onProfile} /> : undefined}
+      />
 
       <div className="mx-5 relative overflow-hidden rounded-4xl bg-ink p-5 text-white">
         <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-sand/20" aria-hidden />

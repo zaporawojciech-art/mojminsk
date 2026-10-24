@@ -14,6 +14,18 @@ export interface Street {
   neighbors: number;
 }
 
+export interface UserPrivacy {
+  showStats: boolean;
+  showPastAds: boolean;
+  showRides: boolean;
+}
+
+export interface UserNotifications {
+  alerts: boolean;
+  chats: boolean;
+  orders: boolean;
+}
+
 export interface User {
   name: string;
   street: Street;
@@ -21,6 +33,8 @@ export interface User {
   rerolls: number;
   verified: boolean;
   trialDaysLeft: number;
+  privacy?: UserPrivacy;
+  notifications?: UserNotifications;
 }
 
 export const streets: Street[] = [
@@ -53,6 +67,16 @@ export const demoUser: User = {
   rerolls: 3,
   verified: false,
   trialDaysLeft: 9,
+  privacy: {
+    showStats: true,
+    showPastAds: true,
+    showRides: true,
+  },
+  notifications: {
+    alerts: true,
+    chats: true,
+    orders: true,
+  },
 };
 
 /* ---------------- Pogoda ---------------- */

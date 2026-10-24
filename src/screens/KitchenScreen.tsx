@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ChevronDown, Heart, MessageCircle, Phone, Plus, Star } from 'lucide-react';
-import { avatarUrl, dishes, groceries, groceryHero, kitchenCats, restaurants, type Product } from '../data/mockData';
-import { Img, SearchField, SectionHeader, cn, toneBg, zl } from '../components/ui';
+import { avatarUrl, dishes, groceries, groceryHero, kitchenCats, restaurants, type Product, type User } from '../data/mockData';
+import { Img, ProfileAvatarButton, SearchField, SectionHeader, cn, toneBg, zl } from '../components/ui';
 
 const steps = ['Przyjęte', 'W kuchni', 'W drodze', 'U Ciebie'];
 
@@ -53,11 +53,15 @@ function AddButton({ qty, onClick, label }: { qty: number; onClick: () => void; 
 }
 
 export function KitchenScreen({
+  user,
+  onProfile,
   onOpen,
   onAdd,
   qtyOf,
   onOpenMotylek,
 }: {
+  user?: User;
+  onProfile?: () => void;
   onOpen: (p: Product) => void;
   onAdd: (p: Product) => void;
   qtyOf: (id: string) => number;
@@ -72,10 +76,15 @@ export function KitchenScreen({
   return (
     <div className="space-y-7 pb-56">
       <header className="px-5 pt-[max(env(safe-area-inset-top),16px)]">
-        <p className="text-[12px] font-semibold text-ink-400">Dostawa na</p>
-        <button className="flex items-center gap-1 font-display text-[22px] font-semibold">
-          ul. Spacerowa 14 <ChevronDown className="h-5 w-5" aria-hidden />
-        </button>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[12px] font-semibold text-ink-400">Dostawa na</p>
+            <button className="flex items-center gap-1 font-display text-[22px] font-semibold">
+              ul. {user ? user.street.name : 'Spacerowa'} <ChevronDown className="h-5 w-5" aria-hidden />
+            </button>
+          </div>
+          {user && onProfile && <ProfileAvatarButton user={user} onClick={onProfile} />}
+        </div>
         <div className="mt-4">
           <SearchField placeholder="Pizza, chleb, sushi, mleko…" />
         </div>
