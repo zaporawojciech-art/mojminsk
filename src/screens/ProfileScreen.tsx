@@ -281,7 +281,7 @@ export function ProfileScreen({
                 </span>
               </div>
               <p className="mt-0.5 text-[12px] text-ink-500">
-                List z 6-cyfrowym kodem PIN i papierową książeczką kuponów idzie na ul. {user.street.name}
+                Przesyłka z 6-cyfrowym kodem PIN i książeczką kuponów przyjdzie na Twój adres zamieszkania.
               </p>
             </div>
           </div>
