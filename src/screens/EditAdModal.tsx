@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {
-  Check,
   CheckCircle2,
   DollarSign,
   Gift,
@@ -26,17 +25,28 @@ export function EditAdModal({ ad, user: _user, onClose, onAdUpdated, isClosing =
   const [description, setDescription] = useState(ad.description ?? '');
   const [category, setCategory] = useState(ad.category ?? 'Meble & Dom');
   const [status, setStatus] = useState<'active' | 'reserved' | 'sold'>(ad.status ?? 'active');
-  const [selectedImage, setSelectedImage] = useState(ad.image);
+  const initialPhotos = ad.images && ad.images.length > 0 ? ad.images : [ad.image];
+  const [selectedImages, setSelectedImages] = useState<string[]>(initialPhotos);
   const [isSaved, setIsSaved] = useState(false);
 
-  const sampleImages = [
-    ad.image,
-    'https://images.unsplash.com/photo-1532298229144-0ec0c57515c7?auto=format&fit=crop&w=600&q=80', // bike
-    'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=600&q=80', // sofa
-    'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=600&q=80', // book
-    'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=600&q=80', // pet
-    'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=600&q=80', // toys
+  const rawPool = [
+    ...initialPhotos,
+    'https://images.unsplash.com/photo-1532298229144-0ec0c57515c7?auto=format&fit=crop&w=900&q=80', // bike
+    'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=900&q=80', // sofa
+    'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=900&q=80', // book
+    'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=900&q=80', // pet
+    'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=900&q=80', // toys
   ];
+  const sampleImages = Array.from(new Set(rawPool)).slice(0, 6);
+
+  const toggleImage = (imgUrl: string) => {
+    setSelectedImages((prev) => {
+      if (prev.includes(imgUrl)) {
+        return prev.length > 1 ? prev.filter((item) => item !== imgUrl) : prev;
+      }
+      return [...prev, imgUrl];
+    });
+  };
 
   const categories = [
     'Meble & Dom',
@@ -52,6 +62,7 @@ export function EditAdModal({ ad, user: _user, onClose, onAdUpdated, isClosing =
     e.preventDefault();
     if (!title.trim()) return;
 
+    const photos = selectedImages.length > 0 ? selectedImages : [ad.image];
     const updatedAd: Ad = {
       ...ad,
       title: title.trim(),
@@ -61,7 +72,8 @@ export function EditAdModal({ ad, user: _user, onClose, onAdUpdated, isClosing =
       description: description.trim() || undefined,
       category,
       status,
-      image: selectedImage,
+      image: photos[0],
+      images: photos,
     };
 
     setIsSaved(true);
@@ -250,16 +262,17 @@ export function EditAdModal({ ad, user: _user, onClose, onAdUpdated, isClosing =
               {/* Photo Selector */}
               <div className="rounded-3xl bg-white p-4 shadow-card">
                 <label className="text-[12px] font-bold uppercase tracking-wider text-ink-400 flex items-center justify-between">
-                  <span>Zdjęcie główne</span>
-                  <span className="text-[11px] font-normal text-ink-500">Wybierz miniaturę</span>
+                  <span>Zdjęcia w ofercie ({selectedImages.length})</span>
+                  <span className="text-[11px] font-normal text-ink-500">Kliknij, aby dodać / usunąć</span>
                 </label>
                 <div className="mt-2.5 grid grid-cols-3 gap-2">
                   {sampleImages.map((imgUrl, i) => {
-                    const isSelected = selectedImage === imgUrl;
+                    const orderIdx = selectedImages.indexOf(imgUrl);
+                    const isSelected = orderIdx !== -1;
                     return (
                       <div
                         key={i}
-                        onClick={() => setSelectedImage(imgUrl)}
+                        onClick={() => toggleImage(imgUrl)}
                         className={cn(
                           'relative aspect-square cursor-pointer overflow-hidden rounded-2xl border-2 transition-all',
                           isSelected ? 'border-coral ring-2 ring-coral/40' : 'border-transparent opacity-70 hover:opacity-100',
@@ -267,9 +280,16 @@ export function EditAdModal({ ad, user: _user, onClose, onAdUpdated, isClosing =
                       >
                         <img src={imgUrl} alt="" className="h-full w-full object-cover" />
                         {isSelected && (
-                          <div className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-coral text-ink shadow">
-                            <Check className="h-3 w-3 stroke-[3]" />
-                          </div>
+                          <>
+                            <div className="absolute right-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full bg-coral text-ink text-[10.5px] font-extrabold shadow">
+                              {orderIdx + 1}
+                            </div>
+                            {orderIdx === 0 && (
+                              <span className="absolute inset-x-1 bottom-1 rounded-lg bg-black/70 py-0.5 text-center text-[9.5px] font-bold text-white backdrop-blur-xs">
+                                Główne
+                              </span>
+                            )}
+                          </>
                         )}
                       </div>
                     );

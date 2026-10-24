@@ -520,6 +520,7 @@ export interface Ad {
   street: string;
   time: string;
   image: string;
+  images?: string[];
   description?: string;
   category?: string;
   status?: 'active' | 'reserved' | 'sold';
@@ -557,7 +558,13 @@ export const ads: Ad[] = [
     author: 'Ania',
     street: 'Kościuszki',
     time: '2 godz.',
-    image: img('photo-1485965120184-e220f721d03e', 600),
+    image: img('photo-1485965120184-e220f721d03e', 800),
+    images: [
+      img('photo-1485965120184-e220f721d03e', 1000),
+      img('photo-1532298229144-0ec0c57515c7', 1000),
+      img('photo-1507035895480-2b3156c31fc8', 1000),
+      img('photo-1571068316344-75bc76f77890', 1000),
+    ],
     description: 'Rower po jednym dziecku, 100% sprawny technicznie. Nowy dzwonek, hamulce wyregulowane, opony bez zużycia. Gratis dorzucam kask w rozmiarze S. Odbiór osobisty przy ul. Kościuszki, niedaleko SP nr 1.',
     category: 'Sport & Rowery',
     status: 'active',
@@ -571,7 +578,12 @@ export const ads: Ad[] = [
     author: 'Marek',
     street: 'Siennicka',
     time: '4 godz.',
-    image: img('photo-1555041469-a586c61ea9bc', 600),
+    image: img('photo-1555041469-a586c61ea9bc', 800),
+    images: [
+      img('photo-1555041469-a586c61ea9bc', 1000),
+      img('photo-1493663284031-b7e3aefcae8e', 1000),
+      img('photo-1540574163026-643ea20ade25', 1000),
+    ],
     description: 'Oddam za darmo rozkładaną sofę w kolorze szarym. Czysta, bez plam, drobne przetarcie z tyłu oparcia. 2. piętro bez windy, potrzebne 2 osoby do zniesienia. Chcę zwolnić miejsce do piątku.',
     category: 'Meble & Dom',
     status: 'active',
@@ -585,7 +597,13 @@ export const ads: Ad[] = [
     author: 'Wojtek',
     street: 'Spacerowa',
     time: '6 godz.',
-    image: img('photo-1518455027359-f3f8164ba6bd', 600),
+    image: img('photo-1518455027359-f3f8164ba6bd', 800),
+    images: [
+      img('photo-1518455027359-f3f8164ba6bd', 1000),
+      img('photo-1593062096033-9a26b09da705', 1000),
+      img('photo-1524758631624-e2822e304c36', 1000),
+      img('photo-1505843490538-5133c6c7d0e1', 1000),
+    ],
     description: 'Solidne biurko wykonane z klejonki dębowej z czarnymi nogami w stylu loft. Idealne do pracy z laptopem lub nauki. Używane przez rok, stan gabinetowy. Odbiór ul. Spacerowa (pomogę znieść do auta).',
     category: 'Meble & Dom',
     status: 'active',
@@ -600,7 +618,12 @@ export const ads: Ad[] = [
     author: 'Ola',
     street: 'Dąbrówki',
     time: '1 godz.',
-    image: img('photo-1543466835-00a7907e9de1', 600),
+    image: img('photo-1543466835-00a7907e9de1', 800),
+    images: [
+      img('photo-1543466835-00a7907e9de1', 1000),
+      img('photo-1583511655857-d19b40a7a54e', 1000),
+      img('photo-1537151608828-ea2b11777ee8', 1000),
+    ],
     description: 'Dziś około godz. 8:30 w rejonie ul. Dąbrówki i osiedla Serbinów wystraszył się klaksonu i uciekł. Ma czerwoną obrożę z adresatką i chip. Bardzo przyjazny dla ludzi. Dla znalazcy przewidziana nagroda!',
     category: 'Zgubiłem / Znalazłem',
     status: 'active',
@@ -614,7 +637,12 @@ export const ads: Ad[] = [
     author: 'Piotr',
     street: 'Sosnkowskiego',
     time: 'wczoraj',
-    image: img('photo-1587654780291-39c9404d746b', 600),
+    image: img('photo-1587654780291-39c9404d746b', 800),
+    images: [
+      img('photo-1587654780291-39c9404d746b', 1000),
+      img('photo-1560961911-ba7ef651a56c', 1000),
+      img('photo-1585366119957-e9730b6d0f60', 1000),
+    ],
     description: 'Zestawy policja, straż i 2 małe pojazdy. Kompletne w 100%, z papierowymi instrukcjami w bardzo dobrym stanie. Zapakowane w woreczki strunowe. Świetny prezent dla dziecka.',
     category: 'Dziecięce',
     status: 'active',
@@ -628,7 +656,12 @@ export const ads: Ad[] = [
     author: 'Kasia',
     street: 'Mickiewicza',
     time: 'wczoraj',
-    image: img('photo-1485955900006-10f4d324d411', 600),
+    image: img('photo-1485955900006-10f4d324d411', 800),
+    images: [
+      img('photo-1485955900006-10f4d324d411', 1000),
+      img('photo-1614594975525-e45190c55d0b', 1000),
+      img('photo-1459411552884-841db9b3cc2a', 1000),
+    ],
     description: 'Zdrowa roślina z 7 dużymi liśćmi z dziurami, regularnie nawożona biohumusem. Sprzedaję wraz z nową doniczką ceramiczną i podstawkiem, bo po remoncie zabrakło dla niej miejsca.',
     category: 'Ogród & Narzędzia',
     status: 'active',

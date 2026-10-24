@@ -38,20 +38,34 @@ export function AddAdModal({
   const [category, setCategory] = useState('Meble & Dom');
   const [companyName, setCompanyName] = useState('');
   const [salary, setSalary] = useState('');
-  const [imageIndex, setImageIndex] = useState(0);
+  const sampleImages = [
+    'https://images.unsplash.com/photo-1532298229144-0ec0c57515c7?auto=format&fit=crop&w=900&q=80', // bike
+    'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=900&q=80', // sofa
+    'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?auto=format&fit=crop&w=900&q=80', // desk
+    'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=900&q=80', // book
+    'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=900&q=80', // dog
+    'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=900&q=80', // lego
+  ];
+
+  const [selectedImages, setSelectedImages] = useState<string[]>([
+    sampleImages[0],
+    sampleImages[1],
+  ]);
+
+  const toggleSampleImage = (src: string) => {
+    setSelectedImages((prev) => {
+      if (prev.includes(src)) {
+        return prev.length > 1 ? prev.filter((item) => item !== src) : prev;
+      }
+      return [...prev, src];
+    });
+  };
 
   // BLIK state
   const [blikCode, setBlikCode] = useState('');
   const [needInvoice, setNeedInvoice] = useState(false);
   const [nip, setNip] = useState('');
   const [createdJobCache, setCreatedJobCache] = useState<Job | null>(null);
-
-  const sampleImages = [
-    'https://images.unsplash.com/photo-1532298229144-0ec0c57515c7?auto=format&fit=crop&w=600&q=80', // bike
-    'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=600&q=80', // sofa
-    'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=600&q=80', // book
-    'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=600&q=80', // dog
-  ];
 
   const categories = [
     'Meble & Dom',
@@ -68,6 +82,7 @@ export function AddAdModal({
     if (!title.trim()) return;
 
     if (type === 'neighbor') {
+      const photos = selectedImages.length > 0 ? selectedImages : [sampleImages[0]];
       const newAd: Ad = {
         id: `ad_${Date.now()}`,
         title: title.trim(),
@@ -75,7 +90,8 @@ export function AddAdModal({
         kind,
         street: user.street.name,
         time: 'Przed chwilą',
-        image: sampleImages[imageIndex],
+        image: photos[0],
+        images: photos,
         author: `${user.name} ${user.street.as}`,
         description: description.trim() || undefined,
         category,
@@ -378,28 +394,46 @@ export function AddAdModal({
                   />
                 </label>
 
-                {/* Photo Selector */}
+                {/* Photo Selector (Multiple Photos) */}
                 <div>
-                  <span className="text-[12px] font-bold text-ink">Zdjęcie przedmiotu</span>
-                  <div className="mt-2 grid grid-cols-4 gap-2">
-                    {sampleImages.map((src, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => setImageIndex(i)}
-                        className={cn(
-                          'relative aspect-square overflow-hidden rounded-2xl border-2 transition-all',
-                          imageIndex === i ? 'border-coral ring-2 ring-coral' : 'border-transparent opacity-60',
-                        )}
-                      >
-                        <img src={src} alt="Podgląd" className="h-full w-full object-cover" />
-                        {imageIndex === i && (
-                          <span className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-coral text-ink text-[10px] font-bold">
-                            ✓
-                          </span>
-                        )}
-                      </button>
-                    ))}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[12px] font-bold text-ink">
+                      Zdjęcia w ofercie ({selectedImages.length})
+                    </span>
+                    <span className="text-[11px] font-medium text-ink-400">
+                      Klikaj, aby dodać więcej zdjęć do karuzeli
+                    </span>
+                  </div>
+                  <div className="mt-2 grid grid-cols-3 gap-2">
+                    {sampleImages.map((src, i) => {
+                      const orderIdx = selectedImages.indexOf(src);
+                      const isSelected = orderIdx !== -1;
+                      return (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => toggleSampleImage(src)}
+                          className={cn(
+                            'relative aspect-square overflow-hidden rounded-2xl border-2 transition-all',
+                            isSelected ? 'border-coral ring-2 ring-coral/40' : 'border-transparent opacity-60 hover:opacity-90',
+                          )}
+                        >
+                          <img src={src} alt="Podgląd" className="h-full w-full object-cover" />
+                          {isSelected && (
+                            <>
+                              <span className="absolute right-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full bg-coral text-ink text-[10.5px] font-extrabold shadow">
+                                {orderIdx + 1}
+                              </span>
+                              {orderIdx === 0 && (
+                                <span className="absolute inset-x-1 bottom-1 rounded-lg bg-black/70 py-0.5 text-center text-[9.5px] font-bold text-white backdrop-blur-xs">
+                                  Główne
+                                </span>
+                              )}
+                            </>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </>

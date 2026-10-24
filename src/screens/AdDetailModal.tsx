@@ -9,6 +9,7 @@ import {
   Heart,
   HeartHandshake,
   MapPin,
+  Maximize2,
   MessageCircle,
   Share2,
   ShieldAlert,
@@ -16,6 +17,9 @@ import {
   Sparkles,
   Tag,
   Trash2,
+  X,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react';
 import { Img, StreetPill, cn, zl } from '../components/ui';
 import type { Ad, User } from '../data/mockData';
@@ -54,15 +58,47 @@ export function AdDetailModal({
   isClosing = false,
 }: AdDetailModalProps) {
   const [copied, setCopied] = useState(false);
+  const [activePhotoIdx, setActivePhotoIdx] = useState(0);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [isZoomed, setIsZoomed] = useState(false);
+
   const isOwner = ad.isOwner || ad.author.toLowerCase().includes(user.name.toLowerCase());
   const currentStatus = ad.status ?? 'active';
   const scrollRef = useRef<HTMLDivElement>(null);
+  const carouselRef = useRef<HTMLDivElement>(null);
+
+  const photos = ad.images && ad.images.length > 0 ? ad.images : [ad.image];
 
   useLayoutEffect(() => {
+    setActivePhotoIdx(0);
+    setIsLightboxOpen(false);
+    setIsZoomed(false);
     if (scrollRef.current) {
       scrollRef.current.scrollTop = 0;
     }
+    if (carouselRef.current) {
+      carouselRef.current.scrollLeft = 0;
+    }
   }, [ad.id]);
+
+  const scrollToPhoto = (idx: number) => {
+    const clamped = Math.max(0, Math.min(photos.length - 1, idx));
+    setActivePhotoIdx(clamped);
+    if (carouselRef.current) {
+      const width = carouselRef.current.clientWidth;
+      carouselRef.current.scrollTo({ left: width * clamped, behavior: 'smooth' });
+    }
+  };
+
+  const handleCarouselScroll = () => {
+    if (!carouselRef.current) return;
+    const { scrollLeft, clientWidth } = carouselRef.current;
+    if (clientWidth === 0) return;
+    const idx = Math.round(scrollLeft / clientWidth);
+    if (idx !== activePhotoIdx && idx >= 0 && idx < photos.length) {
+      setActivePhotoIdx(idx);
+    }
+  };
 
   const handleShare = async () => {
     const shareData = {
@@ -84,7 +120,7 @@ export function AdDetailModal({
   };
 
   const floatBtn =
-    'grid h-11 w-11 place-items-center rounded-full bg-white/90 text-ink shadow-md backdrop-blur transition-transform active:scale-90';
+    'grid h-10 w-10 place-items-center rounded-full bg-white/90 text-ink shadow-md backdrop-blur transition-transform active:scale-90';
 
   return (
     <div
@@ -95,13 +131,22 @@ export function AdDetailModal({
     >
       <div className="relative mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist">
         {/* Floating controls over the full-bleed photo (stay visible while scrolling) */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between px-4 pt-[max(env(safe-area-inset-top),12px)]">
-          <button type="button" onClick={onClose} aria-label="Wróć do ogłoszeń" className={cn(floatBtn, 'pointer-events-auto')}>
-            <ChevronLeft className="h-6 w-6" aria-hidden />
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-center justify-between px-4 pt-[max(env(safe-area-inset-top),12px)]">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Wróć do ogłoszeń"
+            className={cn(floatBtn, 'pointer-events-auto')}
+          >
+            <ChevronLeft className="h-5 w-5" aria-hidden />
           </button>
           <div className="pointer-events-auto flex items-center gap-2">
             <button type="button" onClick={handleShare} aria-label="Udostępnij" className={floatBtn}>
-              {copied ? <Check className="h-5 w-5 text-emerald-600" aria-hidden /> : <Share2 className="h-5 w-5" aria-hidden />}
+              {copied ? (
+                <Check className="h-4 w-4 text-emerald-600" aria-hidden />
+              ) : (
+                <Share2 className="h-4 w-4" aria-hidden />
+              )}
             </button>
             <button
               type="button"
@@ -109,78 +154,215 @@ export function AdDetailModal({
               aria-label={isLiked ? 'Usuń z obserwowanych' : 'Obserwuj'}
               className={floatBtn}
             >
-              <Heart className={cn('h-5 w-5 transition-colors', isLiked && 'fill-coral text-coral')} aria-hidden />
+              <Heart
+                className={cn('h-4 w-4 transition-colors', isLiked && 'fill-coral text-coral')}
+                aria-hidden
+              />
             </button>
           </div>
         </div>
 
         {/* Scrollable Screen Content */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain pb-24">
-          {/* Hero Image: edge to edge, starts at the very top of the screen */}
-          <div className="relative aspect-[4/5] w-full bg-mist-200">
-            <Img src={ad.image} alt={ad.title} className="h-full w-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-transparent to-black/45" />
+          {/* OLX-Style Hero Carousel */}
+          <div className="relative aspect-[4/4.3] w-full bg-ink-900 overflow-hidden">
+            <div
+              ref={carouselRef}
+              onScroll={handleCarouselScroll}
+              className="flex h-full w-full snap-x snap-mandatory overflow-x-auto scrollbar-none"
+            >
+              {photos.map((photoUrl, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => {
+                    setIsZoomed(false);
+                    setIsLightboxOpen(true);
+                  }}
+                  className="relative h-full w-full shrink-0 snap-center cursor-zoom-in"
+                >
+                  <Img
+                    src={photoUrl}
+                    alt={`${ad.title} — zdjęcie ${idx + 1}`}
+                    className="h-full w-full object-cover"
+                  />
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/50" />
+                </div>
+              ))}
+            </div>
 
-            {/* Badges on Image */}
-            <div className="absolute bottom-3 left-4 flex flex-wrap items-center gap-2">
-              {ad.promoted && (
-                <span className="flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 px-3 py-1 text-[11px] font-extrabold text-ink shadow-md">
-                  <Sparkles className="h-3.5 w-3.5" />
-                  Wyróżnione
+            {/* Prev / Next Carousel Arrows (when multiple photos) */}
+            {photos.length > 1 && (
+              <>
+                {activePhotoIdx > 0 && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      scrollToPhoto(activePhotoIdx - 1);
+                    }}
+                    aria-label="Poprzednie zdjęcie"
+                    className="absolute left-3 top-1/2 z-20 -translate-y-1/2 grid h-9 w-9 place-items-center rounded-full bg-black/45 text-white backdrop-blur-xs transition-transform active:scale-90 hover:bg-black/65"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                )}
+                {activePhotoIdx < photos.length - 1 && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      scrollToPhoto(activePhotoIdx + 1);
+                    }}
+                    aria-label="Następne zdjęcie"
+                    className="absolute right-3 top-1/2 z-20 -translate-y-1/2 grid h-9 w-9 place-items-center rounded-full bg-black/45 text-white backdrop-blur-xs transition-transform active:scale-90 hover:bg-black/65"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                )}
+              </>
+            )}
+
+            {/* Badges & Photo Counter Bar (positioned above the -mt-7 rounded sheet overlap) */}
+            <div className="pointer-events-none absolute inset-x-4 bottom-10 z-20 flex items-end justify-between gap-2">
+              <div className="flex flex-wrap items-center gap-1.5">
+                {ad.promoted && (
+                  <span className="flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 px-2.5 py-1 text-[10.5px] font-extrabold text-ink shadow-md">
+                    <Sparkles className="h-3 w-3" />
+                    Wyróżnione
+                  </span>
+                )}
+                {currentStatus === 'reserved' && (
+                  <span className="rounded-full bg-amber-400 px-2.5 py-1 text-[10.5px] font-bold text-ink shadow">
+                    Zarezerwowane
+                  </span>
+                )}
+                {currentStatus === 'sold' && (
+                  <span className="rounded-full bg-ink-800/90 backdrop-blur-xs px-2.5 py-1 text-[10.5px] font-bold text-white shadow">
+                    Zakończone / Sprzedane
+                  </span>
+                )}
+                {ad.kind === 'free' && (
+                  <span className="rounded-full bg-sky px-2.5 py-1 text-[10.5px] font-bold text-ink shadow">
+                    Oddam za darmo
+                  </span>
+                )}
+                {ad.kind === 'lost' && (
+                  <span className="rounded-full bg-coral px-2.5 py-1 text-[10.5px] font-bold text-ink shadow">
+                    Zaginął / Pomóż
+                  </span>
+                )}
+              </div>
+
+              {/* OLX-style Photo Counter + Fullscreen Trigger */}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsZoomed(false);
+                  setIsLightboxOpen(true);
+                }}
+                className="pointer-events-auto flex shrink-0 items-center gap-1.5 rounded-full bg-black/65 px-3 py-1 text-[11.5px] font-bold text-white backdrop-blur-md shadow transition-transform active:scale-95"
+              >
+                <span>
+                  {activePhotoIdx + 1} / {photos.length}
                 </span>
-              )}
-              {currentStatus === 'reserved' && (
-                <span className="rounded-full bg-amber-400 px-3 py-1 text-[11px] font-bold text-ink shadow">
-                  Zarezerwowane
-                </span>
-              )}
-              {currentStatus === 'sold' && (
-                <span className="rounded-full bg-ink-700 px-3 py-1 text-[11px] font-bold text-white shadow">
-                  Zakończone / Sprzedane
-                </span>
-              )}
-              {ad.kind === 'free' && (
-                <span className="rounded-full bg-sky px-3 py-1 text-[11px] font-bold text-ink shadow">
-                  Oddam za darmo
-                </span>
-              )}
-              {ad.kind === 'lost' && (
-                <span className="rounded-full bg-coral px-3 py-1 text-[11px] font-bold text-ink shadow">
-                  Zaginął / Pomóż
-                </span>
-              )}
+                <Maximize2 className="h-3 w-3 opacity-85" />
+              </button>
+            </div>
+
+            {/* Carousel Pagination Dots */}
+            {photos.length > 1 && (
+              <div className="pointer-events-none absolute inset-x-0 bottom-9 z-10 flex justify-center gap-1.5">
+                {photos.map((_, idx) => (
+                  <span
+                    key={idx}
+                    className={cn(
+                      'h-1.5 rounded-full transition-all',
+                      idx === activePhotoIdx ? 'w-4 bg-white shadow-xs' : 'w-1.5 bg-white/50',
+                    )}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* OLX-Style Overlapping Sheet: slides with rounded top corners directly onto the photo */}
+          <div className="relative z-20 -mt-7 rounded-t-[28px] bg-white px-5 pb-5 pt-3.5 shadow-[0_-8px_24px_rgba(17,22,29,0.1)]">
+            {/* Subtle sheet handle */}
+            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-mist-300" />
+
+            {/* Thumbnail Strip (if multiple photos) */}
+            {photos.length > 1 && (
+              <div className="mb-3.5 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                {photos.map((thumb, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => scrollToPhoto(idx)}
+                    className={cn(
+                      'relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border-2 transition-all',
+                      idx === activePhotoIdx
+                        ? 'border-coral ring-2 ring-coral/30 scale-[1.03]'
+                        : 'border-transparent opacity-65 hover:opacity-100',
+                    )}
+                  >
+                    <Img src={thumb} alt="" className="h-full w-full object-cover" />
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsZoomed(false);
+                    setIsLightboxOpen(true);
+                  }}
+                  className="flex h-12 shrink-0 items-center gap-1 rounded-xl bg-mist px-3 text-[11px] font-bold text-ink-600 active:scale-95"
+                >
+                  <Maximize2 className="h-3.5 w-3.5" />
+                  Pełny ekran
+                </button>
+              </div>
+            )}
+
+            {/* Timestamp & Category Row */}
+            <div className="flex items-center justify-between gap-2 text-[11.5px] text-ink-400">
+              <span className="flex items-center gap-1 font-medium">
+                <Clock className="h-3.5 w-3.5" />
+                Dodano: {ad.time}
+              </span>
               {ad.category && (
-                <span className="flex items-center gap-1 rounded-full bg-white/90 backdrop-blur px-2.5 py-1 text-[11px] font-bold text-ink shadow">
-                  <Tag className="h-3 w-3" />
+                <span className="flex items-center gap-1 rounded-full bg-mist px-2.5 py-0.5 text-[11px] font-bold text-ink-600">
+                  <Tag className="h-3 w-3 text-ink-400" />
                   {ad.category}
                 </span>
               )}
             </div>
-          </div>
 
-          {/* Details Body */}
-          <div className="space-y-4 p-4">
-            {/* Price & Meta Card */}
-            <div className="rounded-3xl bg-white p-4 shadow-card">
-              <div className="flex items-baseline justify-between gap-2">
-                <span className="font-display text-[28px] font-extrabold leading-none text-ink">
-                  {ad.price ? zl(ad.price) : ad.kind === 'free' ? 'Za darmo' : 'Zgłoszenie'}
+            {/* Title (OLX places title & big price prominently in the top sheet) */}
+            <h1 className="mt-1.5 text-[18px] font-bold leading-snug text-ink">{ad.title}</h1>
+
+            {/* Price & Negotiable Badge */}
+            <div className="mt-2 flex flex-wrap items-baseline gap-2.5">
+              <span className="font-display text-[28px] font-extrabold leading-none text-ink">
+                {ad.price ? zl(ad.price) : ad.kind === 'free' ? 'Za darmo' : 'Zgłoszenie'}
+              </span>
+              {ad.negotiable && (
+                <span className="rounded-lg bg-sand-100 px-2 py-0.5 text-[11px] font-bold text-sand-900">
+                  Do negocjacji
                 </span>
-                <span className="flex items-center gap-1 text-[11.5px] text-ink-400">
-                  <Clock className="h-3.5 w-3.5" />
-                  {ad.time}
-                </span>
-              </div>
-              <h1 className="mt-2 text-[17px] font-bold leading-snug text-ink">{ad.title}</h1>
-              <div className="mt-3 flex items-center justify-between border-t border-mist pt-3">
-                <StreetPill street={`ul. ${ad.street}`} className="bg-sand-100 text-ink-700 text-[12px]" />
-                <span className="flex items-center gap-1 text-[11.5px] font-medium text-ink-400">
-                  <Eye className="h-3.5 w-3.5" />
-                  {ad.views ?? 38} wyświetleń
-                </span>
-              </div>
+              )}
             </div>
 
+            {/* Street & Views Footer inside Top Sheet */}
+            <div className="mt-4 flex items-center justify-between border-t border-mist pt-3">
+              <StreetPill street={`ul. ${ad.street}`} className="bg-sand-100 text-ink-700 text-[12px]" />
+              <span className="flex items-center gap-1 text-[11.5px] font-medium text-ink-400">
+                <Eye className="h-3.5 w-3.5" />
+                {ad.views ?? 38} wyświetleń
+              </span>
+            </div>
+          </div>
+
+          {/* Remaining Details Body */}
+          <div className="space-y-3.5 p-4">
             {/* Description */}
             <div className="rounded-3xl bg-white p-4 shadow-card">
               <h3 className="text-[12px] font-bold uppercase tracking-wider text-ink-400">Opis ogłoszenia</h3>
@@ -340,6 +522,112 @@ export function AdDetailModal({
               <ShieldAlert className="h-3 w-3" />
               Zgłoś nieaktualne lub naruszenie
             </button>
+          </div>
+        )}
+
+        {/* Full-Screen Photo Lightbox (OLX Style Full Display) */}
+        {isLightboxOpen && (
+          <div className="fixed inset-0 z-[80] flex flex-col bg-black/95 backdrop-blur-md">
+            <div className="mx-auto flex h-full w-full max-w-md flex-col justify-between overflow-hidden">
+              {/* Top Lightbox Bar */}
+              <div className="flex items-center justify-between px-4 pt-[max(env(safe-area-inset-top),14px)] pb-3 text-white">
+                <span className="rounded-full bg-white/15 px-3 py-1 text-[13px] font-bold">
+                  {activePhotoIdx + 1} / {photos.length}
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsZoomed((z) => !z)}
+                    aria-label={isZoomed ? 'Pomniejsz zdjęcie' : 'Powiększ zdjęcie'}
+                    className="grid h-10 w-10 place-items-center rounded-full bg-white/15 text-white transition-transform active:scale-90 hover:bg-white/25"
+                  >
+                    {isZoomed ? <ZoomOut className="h-5 w-5" /> : <ZoomIn className="h-5 w-5" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsZoomed(false);
+                      setIsLightboxOpen(false);
+                    }}
+                    aria-label="Zamknij podgląd zdjęcia"
+                    className="grid h-10 w-10 place-items-center rounded-full bg-white/15 text-white transition-transform active:scale-90 hover:bg-white/25"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Main Full-Screen Image Stage */}
+              <div className="relative flex flex-1 items-center justify-center overflow-auto px-2">
+                <img
+                  src={photos[activePhotoIdx]}
+                  alt={`${ad.title} — pełny ekran ${activePhotoIdx + 1}`}
+                  onClick={() => setIsZoomed((z) => !z)}
+                  className={cn(
+                    'max-h-full max-w-full object-contain transition-transform duration-200 select-none',
+                    isZoomed ? 'scale-150 cursor-zoom-out' : 'scale-100 cursor-zoom-in',
+                  )}
+                />
+
+                {photos.length > 1 && !isZoomed && (
+                  <>
+                    {activePhotoIdx > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => scrollToPhoto(activePhotoIdx - 1)}
+                        aria-label="Poprzednie zdjęcie"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 grid h-11 w-11 place-items-center rounded-full bg-white/20 text-white backdrop-blur-xs transition-transform active:scale-90 hover:bg-white/30"
+                      >
+                        <ChevronLeft className="h-6 w-6" />
+                      </button>
+                    )}
+                    {activePhotoIdx < photos.length - 1 && (
+                      <button
+                        type="button"
+                        onClick={() => scrollToPhoto(activePhotoIdx + 1)}
+                        aria-label="Następne zdjęcie"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 grid h-11 w-11 place-items-center rounded-full bg-white/20 text-white backdrop-blur-xs transition-transform active:scale-90 hover:bg-white/30"
+                      >
+                        <ChevronRight className="h-6 w-6" />
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+
+              {/* Bottom Lightbox Thumbnails & Caption */}
+              <div className="space-y-3 bg-gradient-to-t from-black via-black/90 to-transparent px-4 pt-3 pb-[max(env(safe-area-inset-bottom),16px)]">
+                <div className="flex items-baseline justify-between gap-2 text-white">
+                  <p className="truncate text-[14px] font-bold">{ad.title}</p>
+                  <span className="shrink-0 font-display text-[16px] font-extrabold text-coral">
+                    {ad.price ? zl(ad.price) : ad.kind === 'free' ? 'Za darmo' : ''}
+                  </span>
+                </div>
+
+                {photos.length > 1 && (
+                  <div className="flex items-center justify-center gap-2 overflow-x-auto py-1 scrollbar-none">
+                    {photos.map((thumb, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                          setIsZoomed(false);
+                          scrollToPhoto(idx);
+                        }}
+                        className={cn(
+                          'relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border-2 transition-all',
+                          idx === activePhotoIdx
+                            ? 'border-coral scale-105 opacity-100'
+                            : 'border-white/20 opacity-50 hover:opacity-80',
+                        )}
+                      >
+                        <img src={thumb} alt="" className="h-full w-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>
