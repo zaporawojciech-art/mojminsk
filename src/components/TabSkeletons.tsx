@@ -21,13 +21,16 @@ function HeaderSkeleton({ hasSearch = false }: { hasSearch?: boolean }) {
   );
 }
 
+/** Dokładny odpowiednik wymiarowy komponentu NativeHeader (h-14 + safe-area-inset-top) */
 function NativeBarSkeleton() {
   return (
-    <div className="flex items-center justify-between border-b border-mist bg-white/90 px-4 pt-[max(env(safe-area-inset-top),12px)] pb-3">
-      <Bone className="h-9 w-20 rounded-full" />
-      <Bone className="h-5 w-36 rounded-lg" />
-      <div className="w-20" />
-    </div>
+    <header className="z-20 shrink-0 border-b border-mist-300 bg-white pt-[max(env(safe-area-inset-top),12px)]">
+      <div className="flex h-14 items-center justify-between px-3">
+        <Bone className="h-8 w-16 rounded-full" />
+        <Bone className="h-5 w-32 rounded-lg" />
+        <div className="w-16" />
+      </div>
+    </header>
   );
 }
 
@@ -42,20 +45,7 @@ export function HomeSkeleton() {
 
       {/* Weather Card Skeleton */}
       <div className="px-5">
-        <div className="rounded-4xl bg-white p-5 shadow-card space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-2.5">
-              <Bone className="h-3 w-28 rounded-full" />
-              <Bone className="h-12 w-24 rounded-2xl" />
-              <Bone className="h-4 w-36 rounded-full" />
-            </div>
-            <Bone className="h-24 w-28 rounded-3xl" />
-          </div>
-          <div className="flex gap-2 pt-1">
-            <Bone className="h-8 flex-1 rounded-full" />
-            <Bone className="h-8 flex-1 rounded-full" />
-          </div>
-        </div>
+        <Bone className="h-44 w-full rounded-4xl" />
       </div>
 
       {/* Bus Module Skeleton */}
@@ -64,29 +54,13 @@ export function HomeSkeleton() {
           <Bone className="h-5 w-40 rounded-lg" />
           <Bone className="h-7 w-24 rounded-full" />
         </div>
-        <div className="rounded-3xl bg-white p-4 shadow-card space-y-2.5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <Bone className="h-8 w-11 rounded-xl" />
-              <div className="space-y-1.5">
-                <Bone className="h-4 w-32 rounded-md" />
-                <Bone className="h-3 w-24 rounded-md" />
-              </div>
-            </div>
-            <Bone className="h-7 w-16 rounded-full" />
-          </div>
-        </div>
+        <Bone className="h-24 w-full rounded-3xl" />
       </div>
 
       {/* Poll / News Card Skeleton */}
       <div className="px-5 space-y-3">
         <Bone className="h-5 w-36 rounded-lg" />
-        <div className="rounded-4xl bg-white p-5 shadow-card space-y-3">
-          <Bone className="h-5 w-4/5 rounded-lg" />
-          <Bone className="h-10 w-full rounded-2xl" />
-          <Bone className="h-10 w-full rounded-2xl" />
-          <Bone className="h-10 w-full rounded-2xl" />
-        </div>
+        <Bone className="h-52 w-full rounded-4xl" />
       </div>
     </div>
   );
@@ -109,16 +83,7 @@ export function KitchenSkeleton() {
 
       {/* Order / Promo Banner Skeleton */}
       <div className="px-5">
-        <div className="rounded-4xl bg-white p-4 shadow-card space-y-3">
-          <div className="flex items-center justify-between gap-3">
-            <div className="space-y-2 flex-1">
-              <Bone className="h-3 w-28 rounded-full" />
-              <Bone className="h-6 w-48 rounded-lg" />
-            </div>
-            <Bone className="h-14 w-14 rounded-full shrink-0" />
-          </div>
-          <Bone className="h-10 w-full rounded-2xl" />
-        </div>
+        <Bone className="h-36 w-full rounded-4xl" />
       </div>
 
       {/* Dish / Restaurant Cards */}
@@ -126,15 +91,7 @@ export function KitchenSkeleton() {
         <Bone className="h-5 w-44 rounded-lg" />
         <div className="grid grid-cols-2 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-3xl bg-white p-3 shadow-card space-y-2.5">
-              <Bone className="aspect-[4/3] w-full rounded-2xl" />
-              <Bone className="h-4 w-4/5 rounded-md" />
-              <Bone className="h-3 w-1/2 rounded-md" />
-              <div className="flex items-center justify-between pt-1">
-                <Bone className="h-5 w-14 rounded-md" />
-                <Bone className="h-8 w-8 rounded-full" />
-              </div>
-            </div>
+            <Bone key={i} className="h-52 w-full rounded-3xl" />
           ))}
         </div>
       </div>
@@ -160,14 +117,7 @@ export function AdsSkeleton() {
       {/* 2-Column C2C Grid Skeleton */}
       <div className="grid grid-cols-2 gap-3 px-5 pt-1">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="rounded-3xl bg-white p-2.5 shadow-card space-y-2.5">
-            <Bone className="aspect-[4/3] w-full rounded-2xl" />
-            <div className="px-1 space-y-2">
-              <Bone className="h-5 w-20 rounded-md" />
-              <Bone className="h-4 w-full rounded-md" />
-              <Bone className="h-3.5 w-2/3 rounded-full" />
-            </div>
-          </div>
+          <Bone key={i} className="h-56 w-full rounded-3xl" />
         ))}
       </div>
     </div>
@@ -181,43 +131,19 @@ export function RidesSkeleton() {
 
       {/* Nova Taxi Banner Skeleton */}
       <div className="px-5">
-        <div className="rounded-4xl bg-white p-5 shadow-card space-y-3">
-          <Bone className="h-3 w-28 rounded-full" />
-          <Bone className="h-7 w-40 rounded-lg" />
-          <Bone className="h-4 w-52 rounded-md" />
-          <div className="flex gap-2 pt-2">
-            <Bone className="h-12 flex-1 rounded-full" />
-            <Bone className="h-12 w-28 rounded-full" />
-          </div>
-        </div>
+        <Bone className="h-44 w-full rounded-4xl" />
       </div>
 
       {/* Route Picker Card Skeleton */}
       <div className="px-5 space-y-3">
         <Bone className="h-11 w-full rounded-full" />
-        <div className="rounded-4xl bg-white p-4 shadow-card space-y-2.5">
-          <Bone className="h-14 w-full rounded-2xl" />
-          <Bone className="h-14 w-full rounded-2xl" />
-          <div className="flex gap-2 pt-1">
-            <Bone className="h-10 flex-1 rounded-full" />
-            <Bone className="h-10 flex-1 rounded-full" />
-            <Bone className="h-10 flex-1 rounded-full" />
-          </div>
-        </div>
+        <Bone className="h-48 w-full rounded-4xl" />
       </div>
 
       {/* Ride Listings Skeleton */}
       <div className="px-5 space-y-3">
-        {Array.from({ length: 2 }).map((_, i) => (
-          <div key={i} className="rounded-3xl bg-white p-4 shadow-card flex items-center gap-3">
-            <Bone className="h-12 w-12 shrink-0 rounded-2xl" />
-            <div className="flex-1 space-y-2">
-              <Bone className="h-4 w-36 rounded-md" />
-              <Bone className="h-3.5 w-48 rounded-md" />
-            </div>
-            <Bone className="h-9 w-20 rounded-full" />
-          </div>
-        ))}
+        <Bone className="h-20 w-full rounded-3xl" />
+        <Bone className="h-20 w-full rounded-3xl" />
       </div>
     </div>
   );
@@ -230,19 +156,7 @@ export function TalksSkeleton() {
 
       {/* Composer Box Skeleton */}
       <div className="px-5">
-        <div className="rounded-4xl bg-white p-4 shadow-card space-y-3">
-          <div className="flex gap-3">
-            <Bone className="h-10 w-10 shrink-0 rounded-2xl" />
-            <div className="flex-1 space-y-2 pt-1">
-              <Bone className="h-4 w-3/4 rounded-md" />
-              <Bone className="h-4 w-1/2 rounded-md" />
-            </div>
-          </div>
-          <div className="flex items-center justify-between border-t border-mist pt-3">
-            <Bone className="h-9 w-9 rounded-full" />
-            <Bone className="h-10 w-28 rounded-full" />
-          </div>
-        </div>
+        <Bone className="h-32 w-full rounded-4xl" />
       </div>
 
       {/* Hashtag Chips Skeleton */}
@@ -255,24 +169,7 @@ export function TalksSkeleton() {
       {/* Feed Posts Skeleton */}
       <div className="px-5 space-y-3">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="rounded-4xl bg-white p-4 shadow-card space-y-3">
-            <div className="flex items-center gap-3">
-              <Bone className="h-10 w-10 shrink-0 rounded-2xl" />
-              <div className="space-y-1.5 flex-1">
-                <Bone className="h-4 w-40 rounded-md" />
-                <Bone className="h-3 w-24 rounded-md" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Bone className="h-4 w-full rounded-md" />
-              <Bone className="h-4 w-5/6 rounded-md" />
-            </div>
-            <div className="flex justify-between pt-1">
-              <Bone className="h-6 w-14 rounded-full" />
-              <Bone className="h-6 w-14 rounded-full" />
-              <Bone className="h-6 w-14 rounded-full" />
-            </div>
-          </div>
+          <Bone key={i} className="h-36 w-full rounded-4xl" />
         ))}
       </div>
     </div>
@@ -298,47 +195,44 @@ export function TabSkeleton({ tab }: { tab: TabId }) {
  * 2. WIDOKI PODSTRON, PROFILU I MODALI (KAŻDY WIDOK W APLIKACJI)
  * ========================================================================== */
 
-/** Skeleton widoku „Mój profil” (ProfileScreen) */
+/**
+ * Skeleton widoku „Mój profil” (ProfileScreen):
+ * Dokładnie odwzorowuje układ bez białego kontenera wokół awatara (awatar leży bezpośrednio na bg-mist).
+ */
 export function ProfileSkeleton() {
   return (
     <div className="flex h-full w-full flex-col overflow-hidden bg-mist" role="status" aria-label="Ładowanie profilu">
       <NativeBarSkeleton />
-      <div className="flex-1 overflow-hidden p-5 space-y-4">
-        {/* Identity & Avatar Card */}
-        <div className="rounded-4xl bg-white p-5 shadow-card flex flex-col items-center space-y-3">
-          <Bone className="h-24 w-24 rounded-3xl" />
-          <Bone className="h-6 w-48 rounded-lg" />
-          <Bone className="h-6 w-32 rounded-full" />
-          <div className="flex gap-2 pt-1 w-full justify-center">
-            <Bone className="h-9 w-36 rounded-full" />
-            <Bone className="h-9 w-28 rounded-full" />
-          </div>
+      <div className="flex-1 overflow-hidden pb-24">
+        {/* 1. Hero Identity & 3D Avatar Section — bezpośrednio na bg-mist, bez białej karty! */}
+        <section className="px-5 pt-5 flex flex-col items-center text-center">
+          <Bone className="h-32 w-32 rounded-[40px]" />
+          <Bone className="mt-3.5 h-9 w-44 rounded-full" />
+          <Bone className="mt-3.5 h-7 w-28 rounded-xl" />
+          <Bone className="mt-1.5 h-6 w-48 rounded-full" />
+          <Bone className="mt-3.5 h-6 w-44 rounded-full" />
+        </section>
+
+        {/* 2. 14-Day Postal Verification Banner */}
+        <div className="mx-5 mt-5">
+          <Bone className="h-40 w-full rounded-4xl" />
         </div>
 
-        {/* Postal Verification Card */}
-        <div className="rounded-4xl bg-white p-5 shadow-card space-y-3">
-          <div className="flex items-center justify-between">
-            <Bone className="h-4 w-36 rounded-md" />
-            <Bone className="h-6 w-24 rounded-full" />
+        {/* 3. Moja aktywność i ogłoszenia (iOS Grouped List) */}
+        <div className="mx-5 mt-6 space-y-2">
+          <Bone className="ml-3 h-3.5 w-48 rounded-full" />
+          <div className="overflow-hidden rounded-4xl bg-white shadow-card divide-y divide-mist">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3 px-4 py-3.5">
+                <Bone className="h-10 w-10 shrink-0 rounded-2xl" />
+                <div className="flex-1 space-y-1.5">
+                  <Bone className="h-4 w-36 rounded-md" />
+                  <Bone className="h-3 w-48 rounded-md" />
+                </div>
+                <Bone className="h-6 w-16 rounded-full" />
+              </div>
+            ))}
           </div>
-          <Bone className="h-4 w-full rounded-md" />
-          <Bone className="h-4 w-4/5 rounded-md" />
-          <Bone className="h-11 w-full rounded-full" />
-        </div>
-
-        {/* My Ads & Conversations Section */}
-        <div className="rounded-4xl bg-white p-4 shadow-card space-y-3">
-          <Bone className="h-4 w-32 rounded-md" />
-          <div className="grid grid-cols-2 gap-2.5">
-            <Bone className="h-20 w-full rounded-3xl" />
-            <Bone className="h-20 w-full rounded-3xl" />
-          </div>
-        </div>
-
-        {/* Settings Rows */}
-        <div className="rounded-4xl bg-white p-4 shadow-card space-y-3">
-          <Bone className="h-11 w-full rounded-2xl" />
-          <Bone className="h-11 w-full rounded-2xl" />
         </div>
       </div>
     </div>
@@ -356,7 +250,7 @@ export function AdDetailSkeleton() {
         </div>
 
         {/* Overlapping Rounded Sheet (-mt-7 rounded-t-[28px]) */}
-        <div className="relative z-20 -mt-7 rounded-t-[28px] bg-white px-5 pb-5 pt-4 shadow-card space-y-3">
+        <div className="relative z-20 -mt-7 rounded-t-[28px] bg-white px-5 pb-5 pt-3.5 shadow-card space-y-3">
           <div className="mx-auto h-1 w-10 rounded-full bg-mist-300" />
           <div className="flex gap-2">
             <Bone className="h-12 w-12 rounded-xl" />
@@ -377,19 +271,8 @@ export function AdDetailSkeleton() {
 
         {/* Description & Seller Cards */}
         <div className="p-4 space-y-3.5">
-          <div className="rounded-3xl bg-white p-4 shadow-card space-y-2.5">
-            <Bone className="h-3.5 w-28 rounded-md" />
-            <Bone className="h-4 w-full rounded-md" />
-            <Bone className="h-4 w-5/6 rounded-md" />
-            <Bone className="h-4 w-2/3 rounded-md" />
-          </div>
-          <div className="rounded-3xl bg-white p-4 shadow-card flex items-center gap-3">
-            <Bone className="h-12 w-12 shrink-0 rounded-2xl" />
-            <div className="space-y-2 flex-1">
-              <Bone className="h-4 w-32 rounded-md" />
-              <Bone className="h-3 w-44 rounded-md" />
-            </div>
-          </div>
+          <Bone className="h-28 w-full rounded-3xl" />
+          <Bone className="h-24 w-full rounded-3xl" />
         </div>
       </div>
 
@@ -407,7 +290,7 @@ export function MyAdsSkeleton() {
   return (
     <div className="flex h-full w-full flex-col overflow-hidden bg-mist" role="status" aria-label="Ładowanie moich ogłoszeń">
       <NativeBarSkeleton />
-      <div className="bg-white px-4 pt-3 pb-3 border-b border-mist space-y-2.5">
+      <div className="bg-white px-4 pt-3 pb-3 border-b border-mist">
         <div className="grid grid-cols-4 gap-1.5">
           <Bone className="h-12 rounded-2xl" />
           <Bone className="h-12 rounded-2xl" />
@@ -416,19 +299,8 @@ export function MyAdsSkeleton() {
         </div>
       </div>
       <div className="flex-1 p-3.5 space-y-2.5 overflow-hidden">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="rounded-3xl bg-white p-4 shadow-card space-y-3">
-            <div className="flex justify-between">
-              <Bone className="h-5 w-24 rounded-full" />
-              <Bone className="h-7 w-20 rounded-xl" />
-            </div>
-            <Bone className="h-5 w-3/4 rounded-md" />
-            <div className="flex justify-between">
-              <Bone className="h-6 w-24 rounded-md" />
-              <Bone className="h-4 w-32 rounded-md" />
-            </div>
-            <Bone className="h-8 w-full rounded-xl" />
-          </div>
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Bone key={i} className="h-36 w-full rounded-3xl" />
         ))}
       </div>
     </div>
@@ -449,14 +321,7 @@ export function MotylekSkeleton() {
         </div>
         <div className="grid grid-cols-2 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-3xl bg-white p-3 shadow-card space-y-2.5">
-              <Bone className="aspect-square w-full rounded-2xl" />
-              <Bone className="h-4 w-4/5 rounded-md" />
-              <div className="flex items-center justify-between">
-                <Bone className="h-5 w-16 rounded-md" />
-                <Bone className="h-8 w-8 rounded-full" />
-              </div>
-            </div>
+            <Bone key={i} className="h-48 w-full rounded-3xl" />
           ))}
         </div>
       </div>
@@ -475,40 +340,28 @@ export function ZditmSkeleton() {
           <Bone className="h-14 rounded-2xl" />
           <Bone className="h-14 rounded-2xl" />
         </div>
-        <div className="rounded-3xl bg-white p-4 shadow-card space-y-3">
-          <Bone className="h-5 w-44 rounded-md" />
-          <Bone className="h-11 w-full rounded-2xl" />
-          <div className="grid grid-cols-3 gap-2 pt-1">
-            <Bone className="h-16 rounded-2xl" />
-            <Bone className="h-16 rounded-2xl" />
-            <Bone className="h-16 rounded-2xl" />
-          </div>
-        </div>
-        <div className="rounded-3xl bg-white p-4 shadow-card space-y-2.5">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Bone key={i} className="h-10 w-full rounded-xl" />
-          ))}
-        </div>
+        <Bone className="h-40 w-full rounded-3xl" />
+        <Bone className="h-56 w-full rounded-3xl" />
       </div>
     </div>
   );
 }
 
-/** Skeleton widoku „Strefa Partnera” (PartnerScreen) */
+/** Skeleton widoku „Strefa Partnera” (PartnerScreen — ciemne tło bg-ink) */
 export function PartnerSkeleton() {
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden bg-mist" role="status" aria-label="Ładowanie Strefy Partnera">
-      <NativeBarSkeleton />
-      <div className="flex-1 overflow-hidden p-5 space-y-4">
-        <Bone className="h-44 w-full rounded-4xl" />
-        <div className="rounded-3xl bg-white p-4 shadow-card space-y-3">
-          <Bone className="h-5 w-40 rounded-md" />
-          <Bone className="h-4 w-full rounded-md" />
-          <Bone className="h-11 w-full rounded-2xl" />
+    <div className="flex h-full w-full flex-col overflow-hidden bg-ink" role="status" aria-label="Ładowanie Strefy Partnera">
+      <div className="p-5 pt-[max(env(safe-area-inset-top),16px)] space-y-5">
+        <Bone className="h-11 w-11 rounded-full opacity-25" />
+        <div className="pt-16 space-y-2.5">
+          <Bone className="h-3.5 w-28 rounded-full opacity-25" />
+          <Bone className="h-10 w-56 rounded-xl opacity-25" />
+          <Bone className="h-4 w-44 rounded-full opacity-25" />
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <Bone className="h-44 rounded-3xl" />
-          <Bone className="h-44 rounded-3xl" />
+        <Bone className="h-40 w-full rounded-4xl opacity-30" />
+        <div className="grid grid-cols-2 gap-3 pt-2">
+          <Bone className="h-48 rounded-3xl opacity-20" />
+          <Bone className="h-48 rounded-3xl opacity-20" />
         </div>
       </div>
     </div>
@@ -521,20 +374,9 @@ export function CheckoutSkeleton() {
     <div className="flex h-full w-full flex-col overflow-hidden bg-mist" role="status" aria-label="Ładowanie zamówienia">
       <NativeBarSkeleton />
       <div className="flex-1 overflow-hidden p-5 space-y-4">
-        <div className="rounded-3xl bg-white p-4 shadow-card space-y-2.5">
-          <Bone className="h-4 w-32 rounded-md" />
-          <Bone className="h-6 w-48 rounded-md" />
-          <Bone className="h-4 w-40 rounded-md" />
-        </div>
-        <div className="rounded-3xl bg-white p-4 shadow-card space-y-3">
-          <Bone className="h-4 w-36 rounded-md" />
-          <Bone className="h-12 w-full rounded-2xl" />
-          <Bone className="h-12 w-full rounded-2xl" />
-        </div>
-        <div className="rounded-3xl bg-white p-4 shadow-card space-y-3">
-          <Bone className="h-4 w-32 rounded-md" />
-          <Bone className="h-14 w-full rounded-2xl" />
-        </div>
+        <Bone className="h-28 w-full rounded-3xl" />
+        <Bone className="h-36 w-full rounded-3xl" />
+        <Bone className="h-32 w-full rounded-3xl" />
       </div>
     </div>
   );
@@ -579,13 +421,7 @@ export function ConversationsSkeleton() {
       <div className="p-4 space-y-3 flex-1 overflow-hidden">
         <Bone className="h-10 w-full rounded-2xl" />
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="rounded-3xl bg-white p-3.5 shadow-card flex items-center gap-3">
-            <Bone className="h-14 w-14 shrink-0 rounded-2xl" />
-            <div className="flex-1 space-y-2">
-              <Bone className="h-4 w-36 rounded-md" />
-              <Bone className="h-3.5 w-full rounded-md" />
-            </div>
-          </div>
+          <Bone key={i} className="h-20 w-full rounded-3xl" />
         ))}
       </div>
     </div>
@@ -598,16 +434,14 @@ export function SellerProfileSkeleton() {
     <div className="flex h-full w-full flex-col overflow-hidden bg-mist" role="status" aria-label="Ładowanie wizytówki sąsiada">
       <NativeBarSkeleton />
       <div className="p-5 space-y-4 flex-1 overflow-hidden">
-        <div className="rounded-4xl bg-white p-6 shadow-card flex flex-col items-center space-y-3">
-          <Bone className="h-20 w-20 rounded-3xl" />
-          <Bone className="h-6 w-40 rounded-lg" />
-          <Bone className="h-6 w-32 rounded-full" />
+        <div className="rounded-4xl bg-white p-6 text-center shadow-card border border-mist-300 flex flex-col items-center">
+          <Bone className="h-24 w-24 rounded-3xl" />
+          <Bone className="mt-3.5 h-6 w-36 rounded-lg" />
+          <Bone className="mt-1.5 h-4 w-44 rounded-full" />
+          <Bone className="mt-3.5 h-6 w-40 rounded-full" />
         </div>
-        <div className="rounded-3xl bg-white p-5 shadow-card space-y-2.5">
-          <Bone className="h-4 w-44 rounded-md" />
-          <Bone className="h-3.5 w-full rounded-md" />
-          <Bone className="h-3.5 w-4/5 rounded-md" />
-        </div>
+        <Bone className="h-24 w-full rounded-3xl" />
+        <Bone className="h-24 w-full rounded-3xl" />
       </div>
     </div>
   );
@@ -619,17 +453,8 @@ export function JobDetailSkeleton() {
     <div className="flex h-full w-full flex-col overflow-hidden bg-mist" role="status" aria-label="Ładowanie oferty pracy">
       <NativeBarSkeleton />
       <div className="p-4 space-y-4 flex-1 overflow-hidden">
-        <div className="rounded-3xl bg-white p-5 shadow-card space-y-3">
-          <Bone className="h-4 w-28 rounded-full" />
-          <Bone className="h-7 w-4/5 rounded-lg" />
-          <Bone className="h-8 w-44 rounded-xl" />
-        </div>
-        <div className="rounded-3xl bg-white p-5 shadow-card space-y-2.5">
-          <Bone className="h-4 w-32 rounded-md" />
-          <Bone className="h-4 w-full rounded-md" />
-          <Bone className="h-4 w-5/6 rounded-md" />
-          <Bone className="h-4 w-3/4 rounded-md" />
-        </div>
+        <Bone className="h-36 w-full rounded-3xl" />
+        <Bone className="h-44 w-full rounded-3xl" />
       </div>
       <div className="border-t border-mist bg-white px-5 py-3">
         <Bone className="h-12 w-full rounded-full" />
@@ -645,20 +470,8 @@ export function ModalFormSkeleton() {
       <NativeBarSkeleton />
       <div className="flex-1 overflow-hidden p-5 space-y-4">
         <Bone className="h-11 w-full rounded-2xl" />
-        <div className="rounded-3xl bg-white p-4 shadow-card space-y-3">
-          <Bone className="h-4 w-28 rounded-md" />
-          <Bone className="h-12 w-full rounded-2xl" />
-          <Bone className="h-4 w-24 rounded-md" />
-          <Bone className="h-12 w-full rounded-2xl" />
-        </div>
-        <div className="rounded-3xl bg-white p-4 shadow-card space-y-3">
-          <Bone className="h-4 w-36 rounded-md" />
-          <div className="grid grid-cols-3 gap-2">
-            <Bone className="aspect-square rounded-2xl" />
-            <Bone className="aspect-square rounded-2xl" />
-            <Bone className="aspect-square rounded-2xl" />
-          </div>
-        </div>
+        <Bone className="h-44 w-full rounded-3xl" />
+        <Bone className="h-36 w-full rounded-3xl" />
       </div>
       <div className="border-t border-mist bg-white px-5 py-3">
         <Bone className="h-12 w-full rounded-full" />
