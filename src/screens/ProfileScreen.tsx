@@ -95,7 +95,6 @@ export function ProfileScreen({
   isClosing = false,
 }: ProfileScreenProps) {
   const [pin, setPin] = useState('');
-  const [showRerollQuest, setShowRerollQuest] = useState(false);
   const [showOrdersDrawer, setShowOrdersDrawer] = useState(false);
   const [showPollCreator, setShowPollCreator] = useState(false);
   const [pollQuestion, setPollQuestion] = useState('');
@@ -240,50 +239,20 @@ export function ProfileScreen({
           )}
         </div>
 
-        {/* 3D Avatar Reroll Logic (Decision #4) */}
-        {user.rerolls > 0 ? (
-          <button
-            onClick={() =>
-              onUpdate({
-                ...user,
-                seed: `${user.name}-${Date.now()}`,
-                rerolls: user.rerolls - 1,
-              })
-            }
-            className="mt-3.5 inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-2 text-[12px] font-bold text-ink shadow-card transition-transform active:scale-95"
-          >
-            <Dices className="h-4 w-4 text-coral-700" aria-hidden />
-            Wylosuj nowy awatar ({user.rerolls}/3)
-          </button>
-        ) : (
-          <div className="mt-3.5">
-            <button
-              onClick={() => setShowRerollQuest((s) => !s)}
-              className="inline-flex items-center gap-1.5 rounded-full bg-sand-100 px-3.5 py-2 text-[11.5px] font-bold text-ink-700 shadow-card transition-transform active:scale-95"
-            >
-              <Lock className="h-3.5 w-3.5 text-sand-700" aria-hidden />
-              Wykorzystano 3/3 losowań · Odblokuj za aktywność
-            </button>
-            {showRerollQuest && (
-              <div className="mx-auto mt-2.5 max-w-xs rounded-3xl bg-white p-3.5 text-left text-[12px] shadow-card">
-                <p className="font-bold text-ink">Jak zdobyć dodatkowe losowanie awatara?</p>
-                <p className="mt-1 text-ink-500">
-                  Pomóż sąsiadom: oddaj 1 przedmiot za darmo, zrealizuj 3 przejazdy carpoolingowe lub wyróżnij ofertę.
-                </p>
-                <button
-                  onClick={() => {
-                    onUpdate({ ...user, rerolls: 1 });
-                    setShowRerollQuest(false);
-                  }}
-                  className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-full bg-ink py-2 text-[11.5px] font-bold text-white"
-                >
-                  <Sparkles className="h-3.5 w-3.5 text-sand" />
-                  Odbierz +1 losowanie za aktywne przejazdy (5/3)
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+        {/* 3D Avatar Reroll - Bez limitów */}
+        <button
+          type="button"
+          onClick={() =>
+            onUpdate({
+              ...user,
+              seed: `${user.name}-${Date.now()}`,
+            })
+          }
+          className="mt-3.5 inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-[12.5px] font-bold text-ink shadow-card transition-transform active:scale-95 hover:bg-mist"
+        >
+          <Dices className="h-4 w-4 text-coral-700" aria-hidden />
+          <span>Wylosuj inny awatar</span>
+        </button>
 
         <h1 className="mt-3.5 font-display text-[26px] font-semibold leading-tight text-ink">
           {user.name}

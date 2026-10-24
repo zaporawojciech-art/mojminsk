@@ -9,7 +9,6 @@ export function OnboardingScreen({ onDone }: { onDone: (u: User) => void }) {
   const [street, setStreet] = useState<Street | null>(null);
   const [query, setQuery] = useState('');
   const [seedN, setSeedN] = useState(1);
-  const [rerolls, setRerolls] = useState(3);
   const [house, setHouse] = useState('');
   const [surname, setSurname] = useState('');
 
@@ -43,15 +42,12 @@ export function OnboardingScreen({ onDone }: { onDone: (u: User) => void }) {
                 {displayName} {street.as}
               </p>
               <button
-                disabled={rerolls === 0}
-                onClick={() => {
-                  setSeedN((n) => n + 1);
-                  setRerolls((r) => r - 1);
-                }}
-                className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-mist px-3 py-1.5 text-[12px] font-bold disabled:opacity-40"
+                type="button"
+                onClick={() => setSeedN((n) => n + 1)}
+                className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-mist px-3.5 py-1.5 text-[12px] font-bold text-ink transition-transform active:scale-95 hover:bg-mist-200"
               >
-                <Dices className="h-3.5 w-3.5" aria-hidden />
-                Losuj awatar ({rerolls})
+                <Dices className="h-3.5 w-3.5 text-coral-700" aria-hidden />
+                Losuj inny awatar
               </button>
             </div>
           </div>
@@ -82,7 +78,7 @@ export function OnboardingScreen({ onDone }: { onDone: (u: User) => void }) {
 
           <button
             disabled={!house.trim() || !surname.trim()}
-            onClick={() => onDone({ ...demoUser, name: displayName, street, seed, rerolls, trialDaysLeft: 14 })}
+            onClick={() => onDone({ ...demoUser, name: displayName, street, seed, rerolls: 999, trialDaysLeft: 14 })}
             className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-full bg-coral text-[16px] font-bold text-ink shadow-coral transition-transform active:scale-[.98] disabled:opacity-40 disabled:shadow-none"
           >
             Wyślij list i wejdź
