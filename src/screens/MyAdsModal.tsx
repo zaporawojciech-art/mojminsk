@@ -9,9 +9,10 @@ import {
   MessageCircle,
   Plus,
   Sparkles,
+  Tag,
   Trash2,
 } from 'lucide-react';
-import { Img, NativeHeader, cn, zl } from '../components/ui';
+import { NativeHeader, cn, zl } from '../components/ui';
 import type { Ad, Job, User } from '../data/mockData';
 
 interface MyAdsModalProps {
@@ -66,6 +67,24 @@ export function MyAdsModal({
     { id: 'reserved', label: 'Rezerwacje', count: reservedCount },
     { id: 'sold', label: 'Sprzedane', count: soldCount },
   ] as const;
+
+  const statusMeta = {
+    active: {
+      label: 'Aktywne',
+      cls: 'bg-emerald-100 text-emerald-900',
+      dot: 'bg-emerald-600',
+    },
+    reserved: {
+      label: 'Zarezerwowane',
+      cls: 'bg-amber-100 text-amber-900',
+      dot: 'bg-amber-500',
+    },
+    sold: {
+      label: 'Sprzedane',
+      cls: 'bg-mist-300 text-ink-700',
+      dot: 'bg-ink-500',
+    },
+  } as const;
 
   return (
     <div
@@ -141,12 +160,12 @@ export function MyAdsModal({
           </div>
         </div>
 
-        {/* Scrollable List of User Ads */}
-        <div className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-3.5 pb-28">
+        {/* Clean List of User Ads (No bloated photos) */}
+        <div className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-2.5 pb-28">
           {filteredAds.length === 0 ? (
             <div className="mt-4 rounded-3xl bg-white p-7 text-center shadow-card">
               <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-sand-100 text-ink">
-                <Plus className="h-6 w-6" />
+                <Tag className="h-5 w-5" />
               </div>
               <p className="mt-3 font-display text-[16px] font-bold text-ink">
                 Brak ogłoszeń w tej zakładce
@@ -166,6 +185,7 @@ export function MyAdsModal({
           ) : (
             filteredAds.map((ad) => {
               const status = ad.status ?? 'active';
+              const meta = statusMeta[status];
               const isConfirmingDelete = confirmDeleteId === ad.id;
 
               return (
@@ -176,60 +196,50 @@ export function MyAdsModal({
                     ad.promoted ? 'border-amber-300 ring-1 ring-amber-200/60' : 'border-transparent',
                   )}
                 >
-                  {/* Top Promoted Banner if active */}
-                  {ad.promoted && (
-                    <div className="flex items-center justify-between bg-amber-50/90 px-3.5 py-1.5 border-b border-amber-200/60">
-                      <span className="inline-flex items-center gap-1 text-[10.5px] font-extrabold text-amber-900">
-                        <Sparkles className="h-3 w-3 text-amber-600" />
-                        Ogłoszenie wyróżnione w Mińsku
-                      </span>
-                      <span className="text-[10px] font-semibold text-amber-700">Na górze listy</span>
-                    </div>
-                  )}
-
-                  {/* Main Tappable Card Body -> Opens Preview */}
-                  <div
+                  {/* Main List Item Row -> Tapping opens Offer View */}
+                  <button
+                    type="button"
                     onClick={() => onOpenAd(ad)}
-                    className="flex gap-3.5 p-3.5 cursor-pointer active:bg-mist/40 transition-colors"
+                    className="flex w-full items-center justify-between gap-3 p-4 text-left transition-colors hover:bg-mist/30 active:bg-mist/50"
                   >
-                    <div className="relative h-21 w-21 shrink-0 overflow-hidden rounded-2xl bg-mist">
-                      <Img src={ad.image} alt={ad.title} className="h-full w-full object-cover" />
-                      {status === 'reserved' && (
-                        <div className="absolute inset-0 bg-amber-500/80 backdrop-blur-[1px] flex items-center justify-center p-1 text-center">
-                          <span className="text-[9.5px] font-extrabold uppercase tracking-wider text-white">
-                            Rezerwacja
-                          </span>
-                        </div>
-                      )}
-                      {status === 'sold' && (
-                        <div className="absolute inset-0 bg-ink/75 backdrop-blur-[1px] flex items-center justify-center p-1 text-center">
-                          <span className="text-[9.5px] font-extrabold uppercase tracking-wider text-white">
-                            Sprzedane
-                          </span>
-                        </div>
-                      )}
-                    </div>
+                    <div className="min-w-0 flex-1">
+                      {/* Top badges: Status + Promoted + Time */}
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span
+                          className={cn(
+                            'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-extrabold',
+                            meta.cls,
+                          )}
+                        >
+                          <span className={cn('h-1.5 w-1.5 rounded-full', meta.dot)} />
+                          {meta.label}
+                        </span>
 
-                    <div className="min-w-0 flex-1 flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="font-display text-[16.5px] font-extrabold text-ink leading-tight">
-                            {ad.price ? zl(ad.price) : ad.kind === 'free' ? 'Za darmo' : 'Zgubiono'}
+                        {ad.promoted && (
+                          <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-extrabold text-amber-900">
+                            <Sparkles className="h-2.5 w-2.5 text-amber-600" />
+                            Wyróżnione
                           </span>
-                          <span className="flex items-center gap-0.5 text-[10.5px] font-medium text-ink-400 shrink-0">
-                            <Clock className="h-3 w-3" />
-                            {ad.time}
-                          </span>
-                        </div>
+                        )}
 
-                        <p className="mt-0.5 text-[13.5px] font-bold text-ink-800 line-clamp-1">
-                          {ad.title}
-                        </p>
+                        <span className="flex items-center gap-0.5 text-[10.5px] font-medium text-ink-400">
+                          <Clock className="h-3 w-3" />
+                          {ad.time}
+                        </span>
                       </div>
 
-                      {/* Metrics & Preview Chevron */}
-                      <div className="mt-2 flex items-center justify-between">
-                        <div className="flex items-center gap-3 text-[11px] font-semibold text-ink-500">
+                      {/* Title */}
+                      <p className="mt-1.5 truncate font-display text-[15.5px] font-bold text-ink">
+                        {ad.title}
+                      </p>
+
+                      {/* Price & Counters */}
+                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <span className="text-[13.5px] font-extrabold text-coral-700">
+                          {ad.price ? zl(ad.price) : ad.kind === 'free' ? 'Za darmo' : 'Zgłoszenie'}
+                        </span>
+                        <span className="text-mist-300">•</span>
+                        <div className="flex items-center gap-2.5 text-[11px] font-semibold text-ink-500">
                           <span className="flex items-center gap-1">
                             <Eye className="h-3.5 w-3.5 text-ink-400" /> {ad.views ?? 35}
                           </span>
@@ -240,17 +250,18 @@ export function MyAdsModal({
                             <MessageCircle className="h-3.5 w-3.5 text-sky-700" /> 2
                           </span>
                         </div>
-
-                        <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-ink-400">
-                          Podgląd
-                          <ChevronRight className="h-3.5 w-3.5" />
-                        </span>
                       </div>
                     </div>
-                  </div>
+
+                    {/* Right Arrow CTA -> Go to Offer View */}
+                    <div className="flex shrink-0 items-center gap-1 rounded-2xl bg-mist px-3 py-2 text-[11.5px] font-bold text-ink">
+                      <span>Oferta</span>
+                      <ChevronRight className="h-4 w-4 text-ink-500" />
+                    </div>
+                  </button>
 
                   {/* 1-Tap Mobile Status Switcher */}
-                  <div className="px-3.5 pb-2.5">
+                  <div className="px-4 pb-2.5">
                     <div className="grid grid-cols-3 gap-1 rounded-xl bg-mist p-1">
                       <button
                         type="button"
@@ -303,7 +314,7 @@ export function MyAdsModal({
 
                   {/* Bottom Action Bar or Inline Delete Confirmation */}
                   {isConfirmingDelete ? (
-                    <div className="flex items-center justify-between gap-2 border-t border-coral-100 bg-coral-50/70 px-3.5 py-2.5">
+                    <div className="flex items-center justify-between gap-2 border-t border-coral-100 bg-coral-50/70 px-4 py-2.5">
                       <span className="text-[12px] font-bold text-coral-900">
                         Na pewno usunąć ofertę?
                       </span>
@@ -328,11 +339,11 @@ export function MyAdsModal({
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2 border-t border-mist px-3.5 py-2.5">
+                    <div className="flex items-center gap-2 border-t border-mist px-4 py-2.5">
                       <button
                         type="button"
                         onClick={() => onEditAd?.(ad)}
-                        className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl bg-mist text-[12px] font-bold text-ink active:scale-95 transition-transform hover:bg-mist-200"
+                        className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl bg-mist text-[11.5px] font-bold text-ink active:scale-95 transition-transform hover:bg-mist-200"
                       >
                         <Edit3 className="h-3.5 w-3.5 text-ink-600" />
                         Edytuj
@@ -342,7 +353,7 @@ export function MyAdsModal({
                         type="button"
                         onClick={() => onPromoteAd?.(ad)}
                         className={cn(
-                          'flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl text-[12px] font-bold active:scale-95 transition-transform',
+                          'flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl text-[11.5px] font-bold active:scale-95 transition-transform',
                           ad.promoted
                             ? 'bg-amber-50 text-amber-800 border border-amber-200'
                             : 'bg-amber-100 text-amber-900 hover:bg-amber-200',
