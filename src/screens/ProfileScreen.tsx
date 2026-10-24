@@ -19,6 +19,7 @@ import {
   ReceiptText,
   ShieldCheck,
   ShoppingBag,
+  Smartphone,
   Sparkles,
   Vote,
 } from 'lucide-react';
@@ -39,6 +40,7 @@ interface ProfileScreenProps {
   onPreviewPublic?: () => void;
   onPromoteFirstAd?: () => void;
   onOpenRides?: () => void;
+  onInstallApp?: () => void;
   userAds?: Ad[];
 }
 
@@ -87,6 +89,7 @@ export function ProfileScreen({
   onPreviewPublic,
   onPromoteFirstAd,
   onOpenRides,
+  onInstallApp,
   userAds = [],
 }: ProfileScreenProps) {
   const [pin, setPin] = useState('');
@@ -683,6 +686,27 @@ export function ProfileScreen({
           Społeczność i partnerzy
         </p>
         <ul className="overflow-hidden rounded-4xl bg-white shadow-card">
+          {onInstallApp && (
+            <li className="border-b border-mist">
+              <button
+                onClick={onInstallApp}
+                className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-mist/50 active:bg-mist"
+              >
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-sky-100 text-sky-900">
+                  <Smartphone className="h-[18px] w-[18px]" aria-hidden />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[14.5px] font-semibold text-ink">Zainstaluj mójMińsk na telefonie</p>
+                  <p className="text-[11.5px] text-ink-400">Ekran początkowy bez pasków · tryb offline</p>
+                </div>
+                <span className="rounded-full bg-sky-100 px-2.5 py-0.5 text-[11px] font-extrabold text-sky-900">
+                  PWA
+                </span>
+                <ChevronRight className="h-4 w-4 text-ink-300" aria-hidden />
+              </button>
+            </li>
+          )}
+
           <li className="border-b border-mist">
             <button
               onClick={onPartner}

@@ -37,6 +37,7 @@ import { AdConversationsModal } from './screens/AdConversationsModal';
 import { SellerProfileModal } from './screens/SellerProfileModal';
 import { AdFiltersModal, type AdFilterState } from './screens/AdFiltersModal';
 import { ReserveAdModal } from './screens/ReserveAdModal';
+import { InstallAppModal } from './screens/InstallAppModal';
 import { initialAdConversations, type AdConversation } from './data/mockData';
 
 type Overlay = null | 'profile' | 'partner' | 'checkout' | 'motylek' | 'zditm';
@@ -75,6 +76,7 @@ export default function App() {
   const [sellerProfile, setSellerProfile] = useState<{ name: string; street: string } | null>(null);
   const [reserveAd, setReserveAd] = useState<Ad | null>(null);
   const [filtersModalOpen, setFiltersModalOpen] = useState(false);
+  const [installModalOpen, setInstallModalOpen] = useState(false);
   const [adFilters, setAdFilters] = useState<AdFilterState>({
     sortBy: 'newest',
     minPrice: '',
@@ -145,11 +147,13 @@ export default function App() {
       promoteAd ||
       sellerProfile ||
       reserveAd ||
-      filtersModalOpen
+      filtersModalOpen ||
+      installModalOpen
   );
 
   // Navigation stack: layers ordered from the topmost (closed first) to the bottom one
   const layers = [
+    { active: installModalOpen, close: () => setInstallModalOpen(false) },
     { active: !!reserveAd, close: () => setReserveAd(null) },
     { active: filtersModalOpen, close: () => setFiltersModalOpen(false) },
     { active: !!reportAd, close: () => setReportAd(null) },
@@ -369,6 +373,7 @@ export default function App() {
           setOverlay(null);
           setTab('rides');
         }}
+        onInstallApp={() => setInstallModalOpen(true)}
         userAds={userAds}
       />
     );
@@ -645,6 +650,13 @@ export default function App() {
             onClose={() => setChatAd(null)}
           />
         )}
+
+        {/* PWA Install Modal (iOS Safari & Android Chrome) */}
+        <InstallAppModal
+          open={installModalOpen}
+          onOpenChange={setInstallModalOpen}
+          container={frame}
+        />
 
         {/* Mobile Landscape Orientation Barrier */}
         <div
