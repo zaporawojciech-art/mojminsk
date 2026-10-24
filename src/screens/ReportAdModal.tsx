@@ -6,6 +6,7 @@ import type { Ad } from '../data/mockData';
 interface ReportAdModalProps {
   ad: Ad;
   onClose: () => void;
+  isClosing?: boolean;
 }
 
 const reportReasons = [
@@ -16,7 +17,7 @@ const reportReasons = [
   'Brak kontaktu ze sprzedającym',
 ];
 
-export function ReportAdModal({ ad, onClose }: ReportAdModalProps) {
+export function ReportAdModal({ ad, onClose, isClosing = false }: ReportAdModalProps) {
   const [selectedReason, setSelectedReason] = useState(reportReasons[0]);
   const [details, setDetails] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -27,7 +28,12 @@ export function ReportAdModal({ ad, onClose }: ReportAdModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-white native-screen-slide select-none">
+    <div
+      className={cn(
+        'fixed inset-0 z-50 flex flex-col bg-white select-none',
+        isClosing ? 'native-screen-exit' : 'native-screen-slide',
+      )}
+    >
       <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-white">
         {/* Native Top Navigation Bar */}
         <NativeHeader title="Zgłoś ogłoszenie" backLabel="Wróć" onBack={onClose} />

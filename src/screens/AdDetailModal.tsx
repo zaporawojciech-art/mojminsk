@@ -34,6 +34,7 @@ interface AdDetailModalProps {
   onEditClick?: (ad: Ad) => void;
   onPromoteClick?: (ad: Ad) => void;
   onReserveClick?: (ad: Ad) => void;
+  isClosing?: boolean;
 }
 
 export function AdDetailModal({
@@ -50,6 +51,7 @@ export function AdDetailModal({
   onEditClick,
   onPromoteClick,
   onReserveClick,
+  isClosing = false,
 }: AdDetailModalProps) {
   const [copied, setCopied] = useState(false);
   const isOwner = ad.isOwner || ad.author.toLowerCase().includes(user.name.toLowerCase());
@@ -85,7 +87,12 @@ export function AdDetailModal({
     'grid h-11 w-11 place-items-center rounded-full bg-white/90 text-ink shadow-md backdrop-blur transition-transform active:scale-90';
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-mist native-screen-slide select-none">
+    <div
+      className={cn(
+        'fixed inset-0 z-50 flex flex-col bg-mist select-none',
+        isClosing ? 'native-screen-exit' : 'native-screen-slide',
+      )}
+    >
       <div className="relative mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist">
         {/* Floating controls over the full-bleed photo (stay visible while scrolling) */}
         <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between px-4 pt-[max(env(safe-area-inset-top),12px)]">

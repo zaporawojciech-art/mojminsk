@@ -18,6 +18,7 @@ interface PromoteAdModalProps {
   user: User;
   onClose: () => void;
   onPromoted: (adId: string, plan: 'boost' | 'highlight' | 'vip') => void;
+  isClosing?: boolean;
 }
 
 interface Plan {
@@ -72,7 +73,13 @@ const plans: Plan[] = [
   },
 ];
 
-export function PromoteAdModal({ ad, user: _user, onClose, onPromoted }: PromoteAdModalProps) {
+export function PromoteAdModal({
+  ad,
+  user: _user,
+  onClose,
+  onPromoted,
+  isClosing = false,
+}: PromoteAdModalProps) {
   const [selectedPlanId, setSelectedPlanId] = useState<'boost' | 'highlight' | 'vip'>('highlight');
   const [step, setStep] = useState<'plans' | 'blik' | 'confirming' | 'success'>('plans');
   const [blikCode, setBlikCode] = useState('');
@@ -107,7 +114,12 @@ export function PromoteAdModal({ ad, user: _user, onClose, onPromoted }: Promote
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-mist native-screen-slide select-none">
+    <div
+      className={cn(
+        'fixed inset-0 z-50 flex flex-col bg-mist select-none',
+        isClosing ? 'native-screen-exit' : 'native-screen-slide',
+      )}
+    >
       <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist">
         {/* Top Native Header */}
         <NativeHeader

@@ -19,9 +19,16 @@ interface AddAdModalProps {
   onClose: () => void;
   onAdCreated: (ad: Ad) => void;
   onJobCreated?: (job: Job) => void;
+  isClosing?: boolean;
 }
 
-export function AddAdModal({ user, onClose, onAdCreated, onJobCreated }: AddAdModalProps) {
+export function AddAdModal({
+  user,
+  onClose,
+  onAdCreated,
+  onJobCreated,
+  isClosing = false,
+}: AddAdModalProps) {
   const [step, setStep] = useState<'form' | 'blik' | 'confirming' | 'paid_success'>('form');
   const [type, setType] = useState<'neighbor' | 'job'>('neighbor');
   const [kind, setKind] = useState<'sell' | 'free' | 'lost'>('sell');
@@ -112,7 +119,12 @@ export function AddAdModal({ user, onClose, onAdCreated, onJobCreated }: AddAdMo
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-white native-modal-slide select-none">
+    <div
+      className={cn(
+        'fixed inset-0 z-50 flex flex-col bg-white select-none',
+        isClosing ? 'native-modal-exit' : 'native-modal-slide',
+      )}
+    >
       <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-white">
         {/* Native Modal Navigation Bar */}
         <NativeHeader

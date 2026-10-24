@@ -1,15 +1,21 @@
 import { useState } from 'react';
 import { Check, Copy, MapPin } from 'lucide-react';
 import { partner } from '../data/mockData';
-import { BackHeader, Img, zl } from '../components/ui';
+import { BackHeader, Img, cn, zl } from '../components/ui';
 
-export function PartnerScreen({ onBack }: { onBack: () => void }) {
+export function PartnerScreen({ onBack, isClosing = false }: { onBack: () => void; isClosing?: boolean }) {
   const [copied, setCopied] = useState(false);
   const [reserved, setReserved] = useState<Record<string, boolean>>({});
 
   return (
-    <div className="min-h-full bg-ink pb-16 text-white">
-      <div className="relative">
+    <div
+      className={cn(
+        'fixed inset-0 z-50 flex flex-col bg-ink select-none',
+        isClosing ? 'native-screen-exit' : 'native-screen-slide',
+      )}
+    >
+      <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-y-auto overscroll-contain pb-16 text-white">
+        <div className="relative">
         <Img src={partner.hero} alt="" className="absolute inset-0 h-80 w-full opacity-70 [mask-image:linear-gradient(to_bottom,black_40%,transparent)]" />
         <div className="relative">
           <BackHeader onBack={onBack} dark />
@@ -65,5 +71,6 @@ export function PartnerScreen({ onBack }: { onBack: () => void }) {
         ))}
       </div>
     </div>
-  );
+  </div>
+);
 }

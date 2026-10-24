@@ -19,6 +19,7 @@ interface AdFiltersModalProps {
   onClose: () => void;
   onApply: (filters: AdFilterState) => void;
   onReset: () => void;
+  isClosing?: boolean;
 }
 
 const sortOptions = [
@@ -45,6 +46,7 @@ export function AdFiltersModal({
   onClose,
   onApply,
   onReset,
+  isClosing = false,
 }: AdFiltersModalProps) {
   const [filters, setFilters] = useState<AdFilterState>(currentFilters);
 
@@ -58,7 +60,12 @@ export function AdFiltersModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-mist native-screen-slide select-none">
+    <div
+      className={cn(
+        'fixed inset-0 z-50 flex flex-col bg-mist select-none',
+        isClosing ? 'native-screen-exit' : 'native-screen-slide',
+      )}
+    >
       <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist">
         {/* Top Header */}
         <NativeHeader

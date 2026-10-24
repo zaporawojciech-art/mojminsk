@@ -24,9 +24,10 @@ interface CheckoutScreenProps {
   user: User;
   onBack: () => void;
   onSuccess: () => void;
+  isClosing?: boolean;
 }
 
-export function CheckoutScreen({ lines, user, onBack, onSuccess }: CheckoutScreenProps) {
+export function CheckoutScreen({ lines, user, onBack, onSuccess, isClosing = false }: CheckoutScreenProps) {
   // Steps: 'form' -> 'blik_pending' -> 'tracking'
   const [step, setStep] = useState<'form' | 'blik_pending' | 'tracking'>('form');
   const [deliveryMethod, setDeliveryMethod] = useState<'courier' | 'pickup'>('courier');
@@ -78,8 +79,14 @@ export function CheckoutScreen({ lines, user, onBack, onSuccess }: CheckoutScree
 
   if (step === 'tracking') {
     return (
-      <div className="min-h-full bg-mist pb-12">
-        {/* Header */}
+      <div
+        className={cn(
+          'fixed inset-0 z-50 flex flex-col bg-mist select-none',
+          isClosing ? 'native-screen-exit' : 'native-screen-slide',
+        )}
+      >
+        <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-y-auto overscroll-contain bg-mist pb-12">
+          {/* Header */}
         <header className="sticky top-0 z-20 flex items-center justify-between border-b border-mist-300 bg-white/95 px-5 py-3.5 backdrop-blur">
           <div className="flex items-center gap-3">
             <span className="grid h-10 w-10 place-items-center rounded-2xl bg-coral-100 text-coral-700">
@@ -226,12 +233,19 @@ export function CheckoutScreen({ lines, user, onBack, onSuccess }: CheckoutScree
           </div>
         </div>
       </div>
-    );
+    </div>
+  );
   }
 
   return (
-    <div className="min-h-full bg-mist pb-12">
-      {/* Header */}
+    <div
+      className={cn(
+        'fixed inset-0 z-50 flex flex-col bg-mist select-none',
+        isClosing ? 'native-screen-exit' : 'native-screen-slide',
+      )}
+    >
+      <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-y-auto overscroll-contain bg-mist pb-12">
+        {/* Header */}
       <header className="sticky top-0 z-20 flex items-center justify-between border-b border-mist-300 bg-white/95 px-5 py-3.5 backdrop-blur">
         <button
           onClick={onBack}
@@ -565,5 +579,6 @@ export function CheckoutScreen({ lines, user, onBack, onSuccess }: CheckoutScree
         </div>
       )}
     </div>
-  );
+  </div>
+);
 }

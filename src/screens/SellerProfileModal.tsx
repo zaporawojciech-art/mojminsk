@@ -22,6 +22,7 @@ interface SellerProfileModalProps {
   onClose: () => void;
   onOpenAd: (ad: Ad) => void;
   onStartChat: (ad: Ad) => void;
+  isClosing?: boolean;
 }
 
 export function SellerProfileModal({
@@ -32,6 +33,7 @@ export function SellerProfileModal({
   onClose,
   onOpenAd,
   onStartChat,
+  isClosing = false,
 }: SellerProfileModalProps) {
   const isSelf =
     sellerName.toLowerCase() === currentUser.name.toLowerCase() &&
@@ -96,7 +98,12 @@ export function SellerProfileModal({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-mist native-screen-slide select-none">
+    <div
+      className={cn(
+        'fixed inset-0 z-50 flex flex-col bg-mist select-none',
+        isClosing ? 'native-screen-exit' : 'native-screen-slide',
+      )}
+    >
       <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist">
         {/* Native Top Header */}
         <NativeHeader

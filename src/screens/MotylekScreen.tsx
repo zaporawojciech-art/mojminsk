@@ -22,6 +22,7 @@ interface MotylekScreenProps {
   onAdd: (p: Product) => void;
   qtyOf: (id: string) => number;
   totalCartValue: number;
+  isClosing?: boolean;
 }
 
 export function MotylekScreen({
@@ -30,6 +31,7 @@ export function MotylekScreen({
   onAdd,
   qtyOf,
   totalCartValue,
+  isClosing = false,
 }: MotylekScreenProps) {
   const [selectedAisle, setSelectedAisle] = useState<MotylekAisle>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -46,8 +48,14 @@ export function MotylekScreen({
   const missingForFreeDelivery = Math.max(0, 120 - totalCartValue);
 
   return (
-    <div className="min-h-full bg-mist pb-28">
-      {/* Header with store brand */}
+    <div
+      className={cn(
+        'fixed inset-0 z-50 flex flex-col bg-mist select-none',
+        isClosing ? 'native-screen-exit' : 'native-screen-slide',
+      )}
+    >
+      <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-y-auto overscroll-contain bg-mist pb-28">
+        {/* Header with store brand */}
       <header className="sticky top-0 z-20 border-b border-mist-300 bg-white/95 px-5 py-3 backdrop-blur">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -289,5 +297,6 @@ export function MotylekScreen({
         </section>
       </div>
     </div>
-  );
+  </div>
+);
 }

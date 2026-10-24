@@ -15,9 +15,10 @@ interface EditAdModalProps {
   user: User;
   onClose: () => void;
   onAdUpdated: (ad: Ad) => void;
+  isClosing?: boolean;
 }
 
-export function EditAdModal({ ad, user: _user, onClose, onAdUpdated }: EditAdModalProps) {
+export function EditAdModal({ ad, user: _user, onClose, onAdUpdated, isClosing = false }: EditAdModalProps) {
   const [kind, setKind] = useState<'sell' | 'free' | 'lost'>(ad.kind);
   const [title, setTitle] = useState(ad.title);
   const [price, setPrice] = useState(ad.price !== null ? String(ad.price) : '');
@@ -71,7 +72,12 @@ export function EditAdModal({ ad, user: _user, onClose, onAdUpdated }: EditAdMod
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-mist native-screen-slide select-none">
+    <div
+      className={cn(
+        'fixed inset-0 z-50 flex flex-col bg-mist select-none',
+        isClosing ? 'native-screen-exit' : 'native-screen-slide',
+      )}
+    >
       <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist">
         {/* Top Native Header */}
         <NativeHeader

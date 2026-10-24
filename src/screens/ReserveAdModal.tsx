@@ -16,6 +16,7 @@ interface ReserveAdModalProps {
   user: User;
   onClose: () => void;
   onSuccess: (ad: Ad, reservationDetails: { spot: string; time: string; phone: string; note: string }) => void;
+  isClosing?: boolean;
 }
 
 const pickupSpots = [
@@ -32,7 +33,7 @@ const timeOptions = [
   'W ten weekend (sobota/niedziela)',
 ];
 
-export function ReserveAdModal({ ad, user: _user, onClose, onSuccess }: ReserveAdModalProps) {
+export function ReserveAdModal({ ad, user: _user, onClose, onSuccess, isClosing = false }: ReserveAdModalProps) {
   const [selectedSpot, setSelectedSpot] = useState(pickupSpots[0].id);
   const [selectedTime, setSelectedTime] = useState(timeOptions[0]);
   const [phone, setPhone] = useState('501 234 567');
@@ -59,7 +60,12 @@ export function ReserveAdModal({ ad, user: _user, onClose, onSuccess }: ReserveA
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-mist native-screen-slide select-none">
+    <div
+      className={cn(
+        'fixed inset-0 z-50 flex flex-col bg-mist select-none',
+        isClosing ? 'native-screen-exit' : 'native-screen-slide',
+      )}
+    >
       <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist">
         {/* Top Header */}
         <NativeHeader

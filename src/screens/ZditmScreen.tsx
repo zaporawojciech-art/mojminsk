@@ -15,9 +15,10 @@ import { type LineId, busLines } from '../data/mockData';
 interface ZditmScreenProps {
   onBack: () => void;
   initialLine?: LineId;
+  isClosing?: boolean;
 }
 
-export function ZditmScreen({ onBack, initialLine = 'M2' }: ZditmScreenProps) {
+export function ZditmScreen({ onBack, initialLine = 'M2', isClosing = false }: ZditmScreenProps) {
   const [lineId, setLineId] = useState<LineId>(initialLine);
   const [directionIdx, setDirectionIdx] = useState<0 | 1>(0);
   const [dayType, setDayType] = useState<'weekday' | 'saturday' | 'sunday'>('weekday');
@@ -45,8 +46,14 @@ export function ZditmScreen({ onBack, initialLine = 'M2' }: ZditmScreenProps) {
   const liveOffsets = line.offsets.map((o) => (o + shift) % 60);
 
   return (
-    <div className="min-h-full bg-mist pb-24">
-      {/* Header */}
+    <div
+      className={cn(
+        'fixed inset-0 z-50 flex flex-col bg-mist select-none',
+        isClosing ? 'native-screen-exit' : 'native-screen-slide',
+      )}
+    >
+      <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-y-auto overscroll-contain bg-mist pb-24">
+        {/* Header */}
       <header className="sticky top-0 z-20 border-b border-mist-300 bg-white/95 px-5 py-3 backdrop-blur">
         <div className="flex items-center gap-3">
           <button
@@ -336,5 +343,6 @@ export function ZditmScreen({ onBack, initialLine = 'M2' }: ZditmScreenProps) {
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 }

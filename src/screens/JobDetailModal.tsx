@@ -18,6 +18,7 @@ interface JobDetailModalProps {
   hasApplied?: boolean;
   onClose: () => void;
   onApplyClick: (job: Job) => void;
+  isClosing?: boolean;
 }
 
 export function JobDetailModal({
@@ -26,6 +27,7 @@ export function JobDetailModal({
   hasApplied = false,
   onClose,
   onApplyClick,
+  isClosing = false,
 }: JobDetailModalProps) {
   const [copied, setCopied] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -56,7 +58,12 @@ export function JobDetailModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-mist native-screen-slide select-none">
+    <div
+      className={cn(
+        'fixed inset-0 z-50 flex flex-col bg-mist select-none',
+        isClosing ? 'native-screen-exit' : 'native-screen-slide',
+      )}
+    >
       <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist">
         {/* Native Top Navigation Bar */}
         <NativeHeader

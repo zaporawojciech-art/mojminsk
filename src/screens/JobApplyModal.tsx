@@ -10,16 +10,17 @@ import {
   Zap,
 } from 'lucide-react';
 import type { Job, User } from '../data/mockData';
-import { NativeHeader } from '../components/ui';
+import { NativeHeader, cn } from '../components/ui';
 
 interface JobApplyModalProps {
   job: Job;
   user: User;
   onClose: () => void;
   onSuccess: (jobId: string) => void;
+  isClosing?: boolean;
 }
 
-export function JobApplyModal({ job, user, onClose, onSuccess }: JobApplyModalProps) {
+export function JobApplyModal({ job, user, onClose, onSuccess, isClosing = false }: JobApplyModalProps) {
   const [phone, setPhone] = useState('501 234 567');
   const [note, setNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,7 +37,12 @@ export function JobApplyModal({ job, user, onClose, onSuccess }: JobApplyModalPr
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-white native-screen-slide select-none">
+    <div
+      className={cn(
+        'fixed inset-0 z-50 flex flex-col bg-white select-none',
+        isClosing ? 'native-screen-exit' : 'native-screen-slide',
+      )}
+    >
       <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-white">
         {/* Native Top Navigation Bar */}
         <NativeHeader title="Aplikuj 1-Click" backLabel="Oferta" onBack={onClose} />

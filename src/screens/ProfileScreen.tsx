@@ -42,6 +42,7 @@ interface ProfileScreenProps {
   onOpenRides?: () => void;
   onInstallApp?: () => void;
   userAds?: Ad[];
+  isClosing?: boolean;
 }
 
 function IosToggle({
@@ -91,6 +92,7 @@ export function ProfileScreen({
   onOpenRides,
   onInstallApp,
   userAds = [],
+  isClosing = false,
 }: ProfileScreenProps) {
   const [pin, setPin] = useState('');
   const [showRerollQuest, setShowRerollQuest] = useState(false);
@@ -182,26 +184,34 @@ export function ProfileScreen({
     .join(' · ');
 
   return (
-    <div className="min-h-full bg-mist pb-20 select-none">
-      {/* Native Top Bar with Public Card Preview button (Decision #1) */}
-      <NativeHeader
-        title="Mój profil"
-        backLabel="Wróć"
-        onBack={onBack}
-        right={
-          onPreviewPublic && (
-            <button
-              type="button"
-              onClick={onPreviewPublic}
-              className="mr-1 flex h-10 items-center gap-1.5 rounded-full bg-mist px-3.5 text-[12.5px] font-bold text-ink transition-colors hover:bg-mist-200 active:scale-95"
-              title="Zobacz, jak Twój profil widzą inni mieszkańcy"
-            >
-              <Eye className="h-4 w-4 text-ink-700" aria-hidden />
-              <span>Wizytówka</span>
-            </button>
-          )
-        }
-      />
+    <div
+      className={cn(
+        'fixed inset-0 z-50 flex flex-col bg-mist select-none',
+        isClosing ? 'native-screen-exit' : 'native-screen-slide',
+      )}
+    >
+      <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist">
+        {/* Native Top Bar with Public Card Preview button (Decision #1) */}
+        <NativeHeader
+          title="Mój profil"
+          backLabel="Wróć"
+          onBack={onBack}
+          right={
+            onPreviewPublic && (
+              <button
+                type="button"
+                onClick={onPreviewPublic}
+                className="mr-1 flex h-10 items-center gap-1.5 rounded-full bg-mist px-3.5 text-[12.5px] font-bold text-ink transition-colors hover:bg-mist-200 active:scale-95"
+                title="Zobacz, jak Twój profil widzą inni mieszkańcy"
+              >
+                <Eye className="h-4 w-4 text-ink-700" aria-hidden />
+                <span>Wizytówka</span>
+              </button>
+            )
+          }
+        />
+
+        <div className="flex-1 overflow-y-auto overscroll-contain pb-24">
 
       {/* 1. Hero Identity & 3D Avatar Section */}
       <section className="px-5 pt-5 text-center">
@@ -791,13 +801,15 @@ export function ProfileScreen({
         </ul>
       </div>
 
-      {/* 8. RODO & Security Footer */}
-      <p className="mx-8 mt-6 flex items-start justify-center gap-2 text-center text-[11.5px] leading-snug text-ink-400">
-        <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-ink-400" aria-hidden />
-        <span>
-          Pełny adres (nr domu i lokalu) jest zaszyfrowany (AES-256) i widoczny wyłącznie dla administratora. Sąsiedzi widzą tylko: <strong className="font-semibold text-ink-700">{user.name} {user.street.as}</strong>.
-        </span>
-      </p>
+        {/* 8. RODO & Security Footer */}
+        <p className="mx-8 mt-6 flex items-start justify-center gap-2 text-center text-[11.5px] leading-snug text-ink-400">
+          <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-ink-400" aria-hidden />
+          <span>
+            Pełny adres (nr domu i lokalu) jest zaszyfrowany (AES-256) i widoczny wyłącznie dla administratora. Sąsiedzi widzą tylko: <strong className="font-semibold text-ink-700">{user.name}</strong>.
+          </span>
+        </p>
+      </div>
     </div>
-  );
+  </div>
+);
 }

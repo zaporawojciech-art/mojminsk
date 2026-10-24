@@ -151,23 +151,53 @@ export default function App() {
       installModalOpen
   );
 
+  const [exitingScreens, setExitingScreens] = useState<Record<string, boolean>>({});
+
+  const closeWithAnimation = useCallback((key: string, closeFn: () => void) => {
+    setExitingScreens((prev) => ({ ...prev, [key]: true }));
+    setTimeout(() => {
+      closeFn();
+      setExitingScreens((prev) => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+    }, 220);
+  }, []);
+
+  const closeInstallModal = useCallback(() => setInstallModalOpen(false), []);
+  const closeReserveAd = useCallback(() => closeWithAnimation('reserveAd', () => setReserveAd(null)), [closeWithAnimation]);
+  const closeFiltersModal = useCallback(() => closeWithAnimation('filtersModal', () => setFiltersModalOpen(false)), [closeWithAnimation]);
+  const closeReportAd = useCallback(() => closeWithAnimation('reportAd', () => setReportAd(null)), [closeWithAnimation]);
+  const closeChatAd = useCallback(() => closeWithAnimation('chatAd', () => setChatAd(null)), [closeWithAnimation]);
+  const closeApplyJob = useCallback(() => closeWithAnimation('applyJob', () => setApplyJob(null)), [closeWithAnimation]);
+  const closePromoteAd = useCallback(() => closeWithAnimation('promoteAd', () => setPromoteAd(null)), [closeWithAnimation]);
+  const closeEditAd = useCallback(() => closeWithAnimation('editAd', () => setEditAd(null)), [closeWithAnimation]);
+  const closeSellerProfile = useCallback(() => closeWithAnimation('sellerProfile', () => setSellerProfile(null)), [closeWithAnimation]);
+  const closeConversations = useCallback(() => closeWithAnimation('conversations', () => setConversationsOpen(false)), [closeWithAnimation]);
+  const closeSelectedJob = useCallback(() => closeWithAnimation('selectedJob', () => setSelectedJob(null)), [closeWithAnimation]);
+  const closeSelectedAd = useCallback(() => closeWithAnimation('selectedAd', () => setSelectedAd(null)), [closeWithAnimation]);
+  const closeAddAd = useCallback(() => closeWithAnimation('addAd', () => setAddAdOpen(false)), [closeWithAnimation]);
+  const closeMyAds = useCallback(() => closeWithAnimation('myAds', () => setMyAdsOpen(false)), [closeWithAnimation]);
+  const closeOverlay = useCallback(() => closeWithAnimation('overlay', () => setOverlay(null)), [closeWithAnimation]);
+
   // Navigation stack: layers ordered from the topmost (closed first) to the bottom one
   const layers = [
-    { active: installModalOpen, close: () => setInstallModalOpen(false) },
-    { active: !!reserveAd, close: () => setReserveAd(null) },
-    { active: filtersModalOpen, close: () => setFiltersModalOpen(false) },
-    { active: !!reportAd, close: () => setReportAd(null) },
-    { active: !!chatAd, close: () => setChatAd(null) },
-    { active: !!applyJob, close: () => setApplyJob(null) },
-    { active: !!promoteAd, close: () => setPromoteAd(null) },
-    { active: !!editAd, close: () => setEditAd(null) },
-    { active: !!sellerProfile, close: () => setSellerProfile(null) },
-    { active: conversationsOpen, close: () => setConversationsOpen(false) },
-    { active: !!selectedJob, close: () => setSelectedJob(null) },
-    { active: !!selectedAd, close: () => setSelectedAd(null) },
-    { active: addAdOpen, close: () => setAddAdOpen(false) },
-    { active: myAdsOpen, close: () => setMyAdsOpen(false) },
-    { active: !!overlay, close: () => setOverlay(null) },
+    { active: installModalOpen, close: closeInstallModal },
+    { active: !!reserveAd, close: closeReserveAd },
+    { active: filtersModalOpen, close: closeFiltersModal },
+    { active: !!reportAd, close: closeReportAd },
+    { active: !!chatAd, close: closeChatAd },
+    { active: !!applyJob, close: closeApplyJob },
+    { active: !!promoteAd, close: closePromoteAd },
+    { active: !!editAd, close: closeEditAd },
+    { active: !!sellerProfile, close: closeSellerProfile },
+    { active: conversationsOpen, close: closeConversations },
+    { active: !!selectedJob, close: closeSelectedJob },
+    { active: !!selectedAd, close: closeSelectedAd },
+    { active: addAdOpen, close: closeAddAd },
+    { active: myAdsOpen, close: closeMyAds },
+    { active: !!overlay, close: closeOverlay },
   ];
   const depth = layers.filter((l) => l.active).length;
   const layersRef = useRef(layers);
@@ -325,62 +355,11 @@ export default function App() {
   const userPromotedAdsCount = userAds.filter((a) => !!a.promoted).length;
   const firstActiveUserAd = userAds.find((a) => (a.status ?? 'active') === 'active') ?? userAds[0] ?? adsList[0];
 
-  let content;
+  let tabContent;
   if (!user) {
-    content = <OnboardingScreen onDone={setUser} />;
-  } else if (overlay === 'checkout') {
-    content = (
-      <CheckoutScreen
-        lines={lines}
-        user={user}
-        onBack={() => setOverlay(null)}
-        onSuccess={() => setCart({})}
-      />
-    );
-  } else if (overlay === 'motylek') {
-    content = (
-      <MotylekScreen
-        onBack={() => setOverlay(null)}
-        onOpenProduct={setSheet}
-        onAdd={(p) => add(p)}
-        qtyOf={(id) => cart[id] ?? 0}
-        totalCartValue={total}
-      />
-    );
-  } else if (overlay === 'zditm') {
-    content = (
-      <ZditmScreen
-        initialLine={selectedZditmLine}
-        onBack={() => setOverlay(null)}
-      />
-    );
-  } else if (overlay === 'profile') {
-    content = (
-      <ProfileScreen
-        user={user}
-        onBack={() => setOverlay(null)}
-        onUpdate={setUser}
-        onPartner={() => setOverlay('partner')}
-        onMyAds={() => setMyAdsOpen(true)}
-        myAdsCount={userActiveAdsCount}
-        myReservedAdsCount={userReservedAdsCount}
-        myPromotedAdsCount={userPromotedAdsCount}
-        onOpenConversations={() => setConversationsOpen(true)}
-        unreadConversationsCount={unreadConversationsCount}
-        onPreviewPublic={() => setSellerProfile({ name: user.name, street: user.street.name })}
-        onPromoteFirstAd={firstActiveUserAd ? () => setPromoteAd(firstActiveUserAd) : undefined}
-        onOpenRides={() => {
-          setOverlay(null);
-          setTab('rides');
-        }}
-        onInstallApp={() => setInstallModalOpen(true)}
-        userAds={userAds}
-      />
-    );
-  } else if (overlay === 'partner') {
-    content = <PartnerScreen onBack={() => setOverlay(null)} />;
+    tabContent = <OnboardingScreen onDone={setUser} />;
   } else if (tab === 'home') {
-    content = (
+    tabContent = (
       <HomeScreen
         user={user}
         onTab={setTab}
@@ -394,7 +373,7 @@ export default function App() {
       />
     );
   } else if (tab === 'kitchen') {
-    content = (
+    tabContent = (
       <KitchenScreen
         user={user}
         onProfile={() => setOverlay('profile')}
@@ -405,7 +384,7 @@ export default function App() {
       />
     );
   } else if (tab === 'ads') {
-    content = (
+    tabContent = (
       <AdsScreen
         user={user}
         onProfile={() => setOverlay('profile')}
@@ -428,9 +407,9 @@ export default function App() {
       />
     );
   } else if (tab === 'rides') {
-    content = <RidesScreen user={user} onProfile={() => setOverlay('profile')} />;
+    tabContent = <RidesScreen user={user} onProfile={() => setOverlay('profile')} />;
   } else {
-    content = (
+    tabContent = (
       <TalksScreen
         user={user}
         onProfile={() => setOverlay('profile')}
@@ -439,7 +418,7 @@ export default function App() {
     );
   }
 
-  const showChrome = !!user && !overlay;
+  const showChrome = !overlay;
 
   return (
     <div className="h-full h-[100dvh] w-full overflow-hidden bg-mist select-none">
@@ -451,8 +430,8 @@ export default function App() {
           ref={mainRef}
           className="h-full w-full flex-1 overflow-y-auto overscroll-contain"
         >
-          <div key={user ? (overlay ?? tab) : 'onboarding'} className="tab-view-enter min-h-full">
-            {content}
+          <div key={user ? tab : 'onboarding'} className="tab-view-enter min-h-full">
+            {tabContent}
           </div>
         </main>
 
@@ -481,11 +460,76 @@ export default function App() {
           container={frame}
         />
 
+        {/* Overlays rendered as smooth pushed screens with exit animation */}
+        {user && overlay === 'profile' && (
+          <ProfileScreen
+            user={user}
+            onBack={closeOverlay}
+            isClosing={!!exitingScreens['overlay']}
+            onUpdate={setUser}
+            onPartner={() => setOverlay('partner')}
+            onMyAds={() => setMyAdsOpen(true)}
+            myAdsCount={userActiveAdsCount}
+            myReservedAdsCount={userReservedAdsCount}
+            myPromotedAdsCount={userPromotedAdsCount}
+            onOpenConversations={() => setConversationsOpen(true)}
+            unreadConversationsCount={unreadConversationsCount}
+            onPreviewPublic={() => setSellerProfile({ name: user.name, street: user.street.name })}
+            onPromoteFirstAd={firstActiveUserAd ? () => setPromoteAd(firstActiveUserAd) : undefined}
+            onOpenRides={() => {
+              closeOverlay();
+              setTab('rides');
+            }}
+            onInstallApp={() => setInstallModalOpen(true)}
+            userAds={userAds}
+          />
+        )}
+
+        {user && overlay === 'partner' && (
+          <PartnerScreen
+            onBack={closeOverlay}
+            isClosing={!!exitingScreens['overlay']}
+          />
+        )}
+
+        {user && overlay === 'motylek' && (
+          <MotylekScreen
+            onBack={closeOverlay}
+            isClosing={!!exitingScreens['overlay']}
+            onOpenProduct={setSheet}
+            onAdd={(p) => add(p)}
+            qtyOf={(id) => cart[id] ?? 0}
+            totalCartValue={total}
+          />
+        )}
+
+        {user && overlay === 'zditm' && (
+          <ZditmScreen
+            initialLine={selectedZditmLine}
+            onBack={closeOverlay}
+            isClosing={!!exitingScreens['overlay']}
+          />
+        )}
+
+        {user && overlay === 'checkout' && (
+          <CheckoutScreen
+            lines={lines}
+            user={user}
+            onBack={closeOverlay}
+            isClosing={!!exitingScreens['overlay']}
+            onSuccess={() => {
+              setCart({});
+              closeOverlay();
+            }}
+          />
+        )}
+
         {/* Add Ad Modal with BLIK payment flow */}
         {user && addAdOpen && (
           <AddAdModal
             user={user}
-            onClose={() => setAddAdOpen(false)}
+            onClose={closeAddAd}
+            isClosing={!!exitingScreens['addAd']}
             onAdCreated={(newAd) => setAdsList((prev) => [newAd, ...prev])}
             onJobCreated={(newJob) => setJobsList((prev) => [newJob, ...prev])}
           />
@@ -497,7 +541,8 @@ export default function App() {
             ad={selectedAd}
             user={user}
             isLiked={!!likedAds[selectedAd.id]}
-            onClose={() => setSelectedAd(null)}
+            onClose={closeSelectedAd}
+            isClosing={!!exitingScreens['selectedAd']}
             onToggleLike={handleToggleLike}
             onChatClick={(ad) => setChatAd(ad)}
             onReportClick={(ad) => setReportAd(ad)}
@@ -516,9 +561,10 @@ export default function App() {
             job={selectedJob}
             user={user}
             hasApplied={!!appliedJobs[selectedJob.id]}
-            onClose={() => setSelectedJob(null)}
+            onClose={closeSelectedJob}
+            isClosing={!!exitingScreens['selectedJob']}
             onApplyClick={(job) => {
-              setSelectedJob(null);
+              closeSelectedJob();
               setApplyJob(job);
             }}
           />
@@ -529,7 +575,8 @@ export default function App() {
           <JobApplyModal
             job={applyJob}
             user={user}
-            onClose={() => setApplyJob(null)}
+            onClose={closeApplyJob}
+            isClosing={!!exitingScreens['applyJob']}
             onSuccess={handleJobApplied}
           />
         )}
@@ -540,7 +587,8 @@ export default function App() {
             user={user}
             ads={adsList}
             jobs={jobsList}
-            onClose={() => setMyAdsOpen(false)}
+            onClose={closeMyAds}
+            isClosing={!!exitingScreens['myAds']}
             onOpenAd={(ad) => setSelectedAd(ad)}
             onAddNew={() => setAddAdOpen(true)}
             onStatusChange={handleStatusChange}
@@ -555,7 +603,8 @@ export default function App() {
           <EditAdModal
             ad={editAd}
             user={user}
-            onClose={() => setEditAd(null)}
+            onClose={closeEditAd}
+            isClosing={!!exitingScreens['editAd']}
             onAdUpdated={handleAdUpdated}
           />
         )}
@@ -565,7 +614,8 @@ export default function App() {
           <PromoteAdModal
             ad={promoteAd}
             user={user}
-            onClose={() => setPromoteAd(null)}
+            onClose={closePromoteAd}
+            isClosing={!!exitingScreens['promoteAd']}
             onPromoted={handleAdPromoted}
           />
         )}
@@ -576,9 +626,10 @@ export default function App() {
             user={user}
             conversations={conversations}
             ads={adsList}
-            onClose={() => setConversationsOpen(false)}
+            onClose={closeConversations}
+            isClosing={!!exitingScreens['conversations']}
             onOpenChat={(ad) => {
-              setConversationsOpen(false);
+              closeConversations();
               setChatAd(ad);
             }}
           />
@@ -591,13 +642,14 @@ export default function App() {
             sellerStreet={sellerProfile.street}
             currentUser={user}
             allAds={adsList}
-            onClose={() => setSellerProfile(null)}
+            onClose={closeSellerProfile}
+            isClosing={!!exitingScreens['sellerProfile']}
             onOpenAd={(ad) => {
-              setSellerProfile(null);
+              closeSellerProfile();
               setSelectedAd(ad);
             }}
             onStartChat={(ad) => {
-              setSellerProfile(null);
+              closeSellerProfile();
               setChatAd(ad);
             }}
           />
@@ -608,7 +660,8 @@ export default function App() {
           <AdFiltersModal
             currentFilters={adFilters}
             totalMatching={adsList.length}
-            onClose={() => setFiltersModalOpen(false)}
+            onClose={closeFiltersModal}
+            isClosing={!!exitingScreens['filtersModal']}
             onApply={(f) => setAdFilters(f)}
             onReset={() =>
               setAdFilters({
@@ -629,7 +682,8 @@ export default function App() {
           <ReserveAdModal
             ad={reserveAd}
             user={user}
-            onClose={() => setReserveAd(null)}
+            onClose={closeReserveAd}
+            isClosing={!!exitingScreens['reserveAd']}
             onSuccess={handleReservationSuccess}
           />
         )}
@@ -638,7 +692,8 @@ export default function App() {
         {user && reportAd && (
           <ReportAdModal
             ad={reportAd}
-            onClose={() => setReportAd(null)}
+            onClose={closeReportAd}
+            isClosing={!!exitingScreens['reportAd']}
           />
         )}
 
@@ -647,7 +702,8 @@ export default function App() {
           <ChatModal
             ad={chatAd}
             user={user}
-            onClose={() => setChatAd(null)}
+            onClose={closeChatAd}
+            isClosing={!!exitingScreens['chatAd']}
           />
         )}
 

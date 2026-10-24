@@ -13,6 +13,7 @@ interface AdConversationsModalProps {
   ads: Ad[];
   onClose: () => void;
   onOpenChat: (ad: Ad, conversation?: AdConversation) => void;
+  isClosing?: boolean;
 }
 
 export function AdConversationsModal({
@@ -21,6 +22,7 @@ export function AdConversationsModal({
   ads,
   onClose,
   onOpenChat,
+  isClosing = false,
 }: AdConversationsModalProps) {
   const [tab, setTab] = useState<'all' | 'seller' | 'buyer'>('all');
   const [search, setSearch] = useState('');
@@ -61,7 +63,12 @@ export function AdConversationsModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-mist native-screen-slide select-none">
+    <div
+      className={cn(
+        'fixed inset-0 z-50 flex flex-col bg-mist select-none',
+        isClosing ? 'native-screen-exit' : 'native-screen-slide',
+      )}
+    >
       <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist">
         {/* Top Native Header */}
         <NativeHeader

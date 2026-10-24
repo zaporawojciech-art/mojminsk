@@ -25,6 +25,7 @@ interface MyAdsModalProps {
   onDeleteAd: (adId: string) => void;
   onEditAd?: (ad: Ad) => void;
   onPromoteAd?: (ad: Ad) => void;
+  isClosing?: boolean;
 }
 
 export function MyAdsModal({
@@ -38,6 +39,7 @@ export function MyAdsModal({
   onDeleteAd,
   onEditAd,
   onPromoteAd,
+  isClosing = false,
 }: MyAdsModalProps) {
   const [filter, setFilter] = useState<'all' | 'active' | 'reserved' | 'sold'>('all');
 
@@ -56,7 +58,12 @@ export function MyAdsModal({
   const activeCount = myAds.filter((a) => (a.status ?? 'active') === 'active').length;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-mist native-screen-slide select-none">
+    <div
+      className={cn(
+        'fixed inset-0 z-50 flex flex-col bg-mist select-none',
+        isClosing ? 'native-screen-exit' : 'native-screen-slide',
+      )}
+    >
       <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist">
         {/* Native Top Navigation Bar */}
         <NativeHeader

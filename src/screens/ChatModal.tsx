@@ -7,6 +7,7 @@ interface ChatModalProps {
   ad: Ad;
   user: User;
   onClose: () => void;
+  isClosing?: boolean;
 }
 
 interface Message {
@@ -16,7 +17,7 @@ interface Message {
   time: string;
 }
 
-export function ChatModal({ ad, user, onClose }: ChatModalProps) {
+export function ChatModal({ ad, user, onClose, isClosing = false }: ChatModalProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'm1',
@@ -71,7 +72,12 @@ export function ChatModal({ ad, user, onClose }: ChatModalProps) {
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-mist native-screen-slide select-none">
+    <div
+      className={cn(
+        'fixed inset-0 z-50 flex flex-col bg-mist select-none',
+        isClosing ? 'native-screen-exit' : 'native-screen-slide',
+      )}
+    >
       <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist">
         {/* Native Top Header */}
         <NativeHeader
