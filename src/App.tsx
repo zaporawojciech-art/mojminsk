@@ -443,18 +443,38 @@ export default function App() {
       }
       setTab(nextTab);
       setIsTabLoading(true);
-      // Allow the BottomNav GPU capsule animation to run completely unblocked while showing the Skeleton Screen,
-      // then mount the target tab view asynchronously.
       tabTimerRef.current = window.setTimeout(() => {
         tabTimerRef.current = null;
         setIsTabLoading(false);
-      }, 220);
+      }, 160);
     },
     [tab],
   );
 
+  // Preload async screen chunks in background so transitions never suffer a cold-chunk layout swap
   useEffect(() => {
+    const id = window.setTimeout(() => {
+      void import('./screens/HomeScreen');
+      void import('./screens/KitchenScreen');
+      void import('./screens/AdsScreen');
+      void import('./screens/RidesScreen');
+      void import('./screens/TalksScreen');
+      void import('./screens/ProfileScreen');
+      void import('./screens/AdDetailModal');
+      void import('./screens/MyAdsModal');
+      void import('./screens/MotylekScreen');
+      void import('./screens/ZditmScreen');
+      void import('./screens/PartnerScreen');
+      void import('./screens/CheckoutScreen');
+      void import('./screens/AddAdModal');
+      void import('./screens/EditAdModal');
+      void import('./screens/PromoteAdModal');
+      void import('./screens/AdConversationsModal');
+      void import('./screens/SellerProfileModal');
+      void import('./screens/ChatModal');
+    }, 100);
     return () => {
+      window.clearTimeout(id);
       if (tabTimerRef.current !== null) {
         window.clearTimeout(tabTimerRef.current);
       }
@@ -464,8 +484,6 @@ export default function App() {
   let tabContent;
   if (!user) {
     tabContent = <OnboardingScreen onDone={setUser} />;
-  } else if (isTabLoading) {
-    tabContent = <TabSkeleton tab={tab} />;
   } else if (tab === 'home') {
     tabContent = (
       <HomeScreen
@@ -544,8 +562,8 @@ export default function App() {
         >
           <Suspense fallback={<TabSkeleton tab={tab} />}>
             <div
-              key={user ? `${tab}-${isTabLoading ? 'skeleton' : 'ready'}` : 'onboarding'}
-              className="tab-view-enter min-h-full"
+              key={user ? tab : 'onboarding'}
+              className={`min-h-full ${user && isTabLoading ? 'skeleton-in-place' : 'skeleton-revealed'}`}
             >
               {tabContent}
             </div>

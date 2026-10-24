@@ -112,24 +112,15 @@
 
 @keyframes tabViewEnter {
   from {
-    opacity: 0;
-    transform: translate3d(0, 4px, 0);
+    opacity: 0.92;
   }
   to {
     opacity: 1;
-    transform: translate3d(0, 0, 0);
   }
 }
 
 .tab-view-enter {
-  animation: tabViewEnter 0.18s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  will-change: transform, opacity;
-}
-
-/* When a view has already slid in via its Skeleton Screen, replace the second slide with a smooth in-place fade */
-.async-view-ready .native-screen-slide,
-.async-view-ready .native-modal-slide {
-  animation: tabViewEnter 0.18s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
+  animation: tabViewEnter 0.14s ease-out forwards;
 }
 
 @keyframes skeletonWave {
@@ -160,6 +151,64 @@
   );
   animation: skeletonWave 1.15s infinite ease-in-out;
   will-change: transform;
+}
+
+@keyframes skeletonBgShimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+/* ============================================================================
+ * IN-PLACE SKELETON MASK (ZERO LAYOUT SHIFT / 0px JUMP)
+ * Widok montuje się tylko raz w swoich docelowych wymiarach (1:1).
+ * W fazie .skeleton-in-place elementy prezentują animowane kości szkieletu
+ * dokładnie w swoim docelowym miejscu, a po przejściu do .skeleton-revealed
+ * płynnie odsłaniają treść bez żadnego przeskoku layoutu (0px CLS).
+ * ========================================================================== */
+.skeleton-in-place :where(.rounded-4xl, .rounded-3xl, .rounded-t-\[28px\]):not(header):not(header *) {
+  background-color: #FFFFFF !important;
+  background-image: none !important;
+  border-color: transparent !important;
+}
+
+.skeleton-in-place :where(
+  .rounded-\[40px\],
+  .rounded-\[36px\],
+  .rounded-2xl,
+  .rounded-xl,
+  .rounded-full,
+  h1,
+  h2,
+  h3,
+  p
+):not(header):not(header *) {
+  background: linear-gradient(90deg, #E4E2ED 25%, #F1F0F7 50%, #E4E2ED 75%) !important;
+  background-size: 200% 100% !important;
+  animation: skeletonBgShimmer 1.05s infinite linear !important;
+  color: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.skeleton-in-place :where(h1, h2, h3, p):not(header):not(header *) {
+  border-radius: 8px;
+}
+
+.skeleton-in-place :where(img, svg, input, textarea):not(header):not(header *) {
+  opacity: 0 !important;
+}
+
+.skeleton-in-place :where(.rounded-full, .rounded-2xl, .rounded-xl, h1, h2, h3, p):not(header):not(header *) * {
+  opacity: 0 !important;
+  color: transparent !important;
+}
+
+.skeleton-revealed :where(img, svg, p, h1, h2, h3, span, input, textarea, button, a):not(header):not(header *) {
+  transition: opacity 0.18s ease-out, color 0.18s ease-out, background-color 0.18s ease-out;
 }
 
 /* Landscape rotation barrier for mobile screens (phones held sideways) */

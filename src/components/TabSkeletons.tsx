@@ -485,17 +485,18 @@ export function OverlaySkeleton() {
 }
 
 /**
- * Kontener asynchronicznego widoku:
- * Podczas otwierania dowolnego ekranu/modalu (oraz zmiany viewKey) natychmiast wyświetla
- * dopasowany Skeleton Screen na warstwie GPU (bez blokowania animacji wjazdu), a następnie
- * płynnie podmienia go na docelowy widok.
+ * Kontener asynchronicznego widoku (In-Place Geometry-Locked Skeleton):
+ * Widok montuje się od razu w docelowych wymiarach (1:1) w stanie .skeleton-in-place
+ * (kości szkieletu dokładnie na miejscu rzeczywistych elementów), a po zakończeniu fazy
+ * ładowania przełącza klasę na .skeleton-revealed bez odmontowywania DOM i bez
+ * jakiegokolwiek przeskoku layoutu (0px CLS).
  */
 export function AsyncViewBoundary({
   viewKey,
   mode = 'screen',
   isClosing = false,
   skeleton,
-  durationMs = 210,
+  durationMs = 170,
   children,
 }: {
   viewKey: string;
@@ -515,7 +516,7 @@ export function AsyncViewBoundary({
     return () => window.clearTimeout(timer);
   }, [viewKey, durationMs]);
 
-  const isReady = readyKey === viewKey;
+  const isReady = readyKey === viewKey || isClosing;
 
   const shellSkeleton = (
     <div
@@ -536,13 +537,11 @@ export function AsyncViewBoundary({
     </div>
   );
 
-  if (!isReady && !isClosing) {
-    return shellSkeleton;
-  }
-
   return (
-    <div className="async-view-ready">
-      <Suspense fallback={shellSkeleton}>{children}</Suspense>
-    </div>
+    <Suspense fallback={shellSkeleton}>
+      <div className={isReady ? 'skeleton-revealed' : 'skeleton-in-place'}>
+        {children}
+      </div>
+    </Suspense>
   );
 }
