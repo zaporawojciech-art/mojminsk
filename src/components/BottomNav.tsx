@@ -1,4 +1,4 @@
-import { startTransition, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Car, House, Megaphone, MessagesSquare, UtensilsCrossed } from 'lucide-react';
 import { cn } from './ui';
 
@@ -13,20 +13,22 @@ const items: { id: TabId; label: string; icon: typeof House }[] = [
 ];
 
 const NAV_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)';
-const NAV_DURATION = '360ms';
+const NAV_DURATION = '320ms';
 
 export function BottomNav({ tab, onChange }: { tab: TabId; onChange: (t: TabId) => void }) {
   // Optimistic local tab state so the capsule animation starts on the very first frame
-  // without waiting for heavy screen components to mount.
+  // on the GPU compositor thread before the parent screen transition begins.
   const [visualTab, setVisualTab] = useState<TabId>(tab);
   const listRef = useRef<HTMLUListElement>(null);
   const labelRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  const rafSwitchRef = useRef<number | null>(null);
+
   const [metrics, setMetrics] = useState<{
     innerWidth: number;
     labelWidths: number[];
     ready: boolean;
   }>({
-    innerWidth: 0,
+    innerWidth: 340,
     labelWidths: [34, 54, 72, 64, 60],
     ready: false,
   });
@@ -35,12 +37,20 @@ export function BottomNav({ tab, onChange }: { tab: TabId; onChange: (t: TabId) 
     setVisualTab(tab);
   }, [tab]);
 
+  useEffect(() => {
+    return () => {
+      if (rafSwitchRef.current !== null) {
+        cancelAnimationFrame(rafSwitchRef.current);
+      }
+    };
+  }, []);
+
   useLayoutEffect(() => {
     const ul = listRef.current;
     if (!ul) return;
 
     const measure = () => {
-      const innerWidth = Math.max(0, ul.clientWidth - 12); // p-1.5 = 6px * 2
+      const innerWidth = Math.max(0, ul.clientWidth - 12); // 6px padding left & right
       const labelWidths = items.map((_, i) => {
         const el = labelRefs.current[i];
         return el ? Math.ceil(el.scrollWidth) : 48;
@@ -53,7 +63,6 @@ export function BottomNav({ tab, onChange }: { tab: TabId; onChange: (t: TabId) 
     };
 
     measure();
-    // Enable smooth CSS transitions after initial geometry is committed
     const raf = requestAnimationFrame(() => {
       setMetrics((prev) => (prev.ready ? prev : { ...prev, ready: true }));
     });
@@ -72,15 +81,24 @@ export function BottomNav({ tab, onChange }: { tab: TabId; onChange: (t: TabId) 
 
   const handleSelect = (id: TabId) => {
     if (id === visualTab && id === tab) return;
+    // 1. Update local capsule state immediately so the GPU transition starts on frame 0
     setVisualTab(id);
+
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
       try {
-        navigator.vibrate(10);
+        navigator.vibrate(8);
       } catch {
         // ignore
       }
     }
-    startTransition(() => {
+
+    // 2. Schedule the screen switch on the next animation frame so the pill glide
+    // is already committed to the compositor thread with zero main-thread contention.
+    if (rafSwitchRef.current !== null) {
+      cancelAnimationFrame(rafSwitchRef.current);
+    }
+    rafSwitchRef.current = requestAnimationFrame(() => {
+      rafSwitchRef.current = null;
       onChange(id);
     });
   };
@@ -91,19 +109,19 @@ export function BottomNav({ tab, onChange }: { tab: TabId; onChange: (t: TabId) 
   );
 
   const activeLabelW = metrics.labelWidths[activeIndex] ?? 48;
-  // 32px (px-4) + 20px (icon) + 6px (gap) + labelWidth
+  // 32px (16px left + 16px right) + 20px (icon) + 6px (gap) + labelWidth
   const activeButtonW = 32 + 20 + 6 + activeLabelW;
   const inactiveButtonW =
     metrics.innerWidth > 0
       ? Math.min(48, Math.max(40, Math.floor((metrics.innerWidth - activeButtonW) / (items.length - 1))))
-      : 48;
+      : 46;
   const totalButtonsW = (items.length - 1) * inactiveButtonW + activeButtonW;
   const gap =
     metrics.innerWidth > totalButtonsW ? (metrics.innerWidth - totalButtonsW) / (items.length - 1) : 0;
   const pillX = 6 + activeIndex * (inactiveButtonW + gap);
 
-  const transitionStyle = metrics.ready
-    ? `transform ${NAV_DURATION} ${NAV_EASING}, width ${NAV_DURATION} ${NAV_EASING}, margin ${NAV_DURATION} ${NAV_EASING}, opacity 220ms ease-out, color 220ms ease-out`
+  const gpuTransition = metrics.ready
+    ? `transform ${NAV_DURATION} ${NAV_EASING}, opacity 180ms ease-out, color 180ms ease-out`
     : 'none';
 
   return (
@@ -113,7 +131,7 @@ export function BottomNav({ tab, onChange }: { tab: TabId; onChange: (t: TabId) 
     >
       <ul
         ref={listRef}
-        className="relative pointer-events-auto flex items-center justify-between rounded-full bg-ink p-1.5 shadow-float transform-gpu"
+        className="relative pointer-events-auto h-[60px] w-full rounded-full bg-ink p-1.5 shadow-float transform-gpu overflow-hidden"
       >
         {/* Sliding Coral Capsule Indicator */}
         <span
@@ -124,6 +142,7 @@ export function BottomNav({ tab, onChange }: { tab: TabId; onChange: (t: TabId) 
             transition: metrics.ready
               ? `transform ${NAV_DURATION} ${NAV_EASING}, width ${NAV_DURATION} ${NAV_EASING}`
               : 'none',
+            contain: 'layout paint style',
           }}
           className="pointer-events-none absolute top-1.5 bottom-1.5 left-0 z-0 rounded-full bg-coral shadow-coral will-change-[transform,width]"
         />
@@ -131,50 +150,69 @@ export function BottomNav({ tab, onChange }: { tab: TabId; onChange: (t: TabId) 
         {items.map(({ id, label, icon: Icon }, idx) => {
           const active = visualTab === id;
           const labelW = metrics.labelWidths[idx] ?? 48;
-          const buttonW = active ? 32 + 20 + 6 + labelW : inactiveButtonW;
+          const itemActiveW = 32 + 20 + 6 + labelW;
+
+          // Pure X coordinate calculation — buttons never animate width/margin, eliminating layout reflow
+          const itemX =
+            idx <= activeIndex
+              ? 6 + idx * (inactiveButtonW + gap)
+              : 6 + (idx - 1) * (inactiveButtonW + gap) + activeButtonW + gap;
+
+          const iconX = active ? 16 : Math.round((inactiveButtonW - 20) / 2);
 
           return (
-            <li key={id} className="relative z-10">
+            <li
+              key={id}
+              style={{
+                width: `${itemActiveW}px`,
+                transform: `translate3d(${itemX}px, 0, 0)`,
+                transition: gpuTransition,
+                pointerEvents: 'none',
+              }}
+              className="absolute top-1.5 bottom-1.5 left-0 z-10 will-change-transform"
+            >
               <button
                 type="button"
                 onClick={() => handleSelect(id)}
                 aria-label={label}
                 aria-current={active ? 'page' : undefined}
                 style={{
-                  width: `${buttonW}px`,
-                  transition: transitionStyle,
+                  width: `${active ? itemActiveW : inactiveButtonW}px`,
+                  pointerEvents: 'auto',
                 }}
                 className={cn(
-                  'group flex h-12 items-center justify-center rounded-full select-none active:scale-[0.94] will-change-[width]',
+                  'group relative h-12 rounded-full select-none active:scale-[0.94] transition-colors duration-150',
                   active ? 'text-ink' : 'text-white/55 hover:text-white',
                 )}
               >
-                <Icon
-                  className={cn(
-                    'h-5 w-5 shrink-0 transition-transform duration-300 ease-out',
-                    active ? 'scale-100' : 'scale-95 group-hover:scale-100',
-                  )}
-                  strokeWidth={active ? 2.4 : 2}
-                  aria-hidden
-                />
                 <span
                   style={{
-                    width: active ? `${labelW}px` : '0px',
-                    marginLeft: active ? '6px' : '0px',
-                    opacity: active ? 1 : 0,
-                    transform: active ? 'translate3d(0, 0, 0)' : 'translate3d(-4px, 0, 0)',
-                    transition: transitionStyle,
+                    transform: `translate3d(${iconX}px, -50%, 0) scale(${active ? 1 : 0.94})`,
+                    transition: gpuTransition,
                   }}
-                  className="overflow-hidden whitespace-nowrap text-left"
+                  className="pointer-events-none absolute left-0 top-1/2 grid h-5 w-5 place-items-center will-change-transform"
                 >
-                  <span
-                    ref={(el) => {
-                      labelRefs.current[idx] = el;
-                    }}
-                    className="inline-block text-[13px] font-bold leading-none"
-                  >
-                    {label}
-                  </span>
+                  <Icon
+                    className="h-5 w-5 shrink-0"
+                    strokeWidth={active ? 2.4 : 2}
+                    aria-hidden
+                  />
+                </span>
+
+                <span
+                  ref={(el) => {
+                    labelRefs.current[idx] = el;
+                  }}
+                  style={{
+                    transform: active
+                      ? 'translate3d(42px, -50%, 0)'
+                      : 'translate3d(34px, -50%, 0)',
+                    opacity: active ? 1 : 0,
+                    transition: gpuTransition,
+                  }}
+                  className="pointer-events-none absolute left-0 top-1/2 whitespace-nowrap text-[13px] font-bold leading-none will-change-[transform,opacity]"
+                >
+                  {label}
                 </span>
               </button>
             </li>

@@ -112,8 +112,8 @@
 
 @keyframes tabViewEnter {
   from {
-    opacity: 0.65;
-    transform: translate3d(0, 6px, 0);
+    opacity: 0;
+    transform: translate3d(0, 4px, 0);
   }
   to {
     opacity: 1;
@@ -122,8 +122,38 @@
 }
 
 .tab-view-enter {
-  animation: tabViewEnter 0.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: tabViewEnter 0.18s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   will-change: transform, opacity;
+}
+
+@keyframes skeletonWave {
+  0% {
+    transform: translate3d(-100%, 0, 0);
+  }
+  100% {
+    transform: translate3d(100%, 0, 0);
+  }
+}
+
+.skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+  background-color: #E3E1EC;
+}
+
+.skeleton-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translate3d(-100%, 0, 0);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.55) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: skeletonWave 1.15s infinite ease-in-out;
+  will-change: transform;
 }
 
 /* Landscape rotation barrier for mobile screens (phones held sideways) */

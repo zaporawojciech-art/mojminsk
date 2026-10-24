@@ -1,56 +1,62 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { RotateCcw, Smartphone } from 'lucide-react';
 import { BottomNav, type TabId } from './components/BottomNav';
+import { OverlaySkeleton, TabSkeleton } from './components/TabSkeletons';
 import { ProductSheet } from './components/ProductSheet';
 import { CartPill, CartSheet, type CartLine } from './components/Cart';
 import {
   allProducts,
   ads as initialAds,
   jobs as initialJobs,
+  initialAdConversations,
   type Ad,
+  type AdConversation,
+  type FavoriteBusStop,
+  FAVORITE_BUS_STOPS_KEY,
   type Job,
   type LineId,
   type Product,
   type User,
 } from './data/mockData';
 import { OnboardingScreen } from './screens/OnboardingScreen';
-import { HomeScreen } from './screens/HomeScreen';
-import { KitchenScreen } from './screens/KitchenScreen';
-import { AdsScreen } from './screens/AdsScreen';
-import { RidesScreen } from './screens/RidesScreen';
-import { TalksScreen } from './screens/TalksScreen';
-import { ProfileScreen } from './screens/ProfileScreen';
-import { PartnerScreen } from './screens/PartnerScreen';
-import { CheckoutScreen } from './screens/CheckoutScreen';
-import { MotylekScreen } from './screens/MotylekScreen';
-import { ZditmScreen } from './screens/ZditmScreen';
-import { AddAdModal } from './screens/AddAdModal';
-import { ChatModal } from './screens/ChatModal';
-import { AdDetailModal } from './screens/AdDetailModal';
-import { JobDetailModal } from './screens/JobDetailModal';
-import { JobApplyModal } from './screens/JobApplyModal';
-import { MyAdsModal } from './screens/MyAdsModal';
-import { ReportAdModal } from './screens/ReportAdModal';
-import { EditAdModal } from './screens/EditAdModal';
-import { PromoteAdModal } from './screens/PromoteAdModal';
-import { AdConversationsModal } from './screens/AdConversationsModal';
-import { SellerProfileModal } from './screens/SellerProfileModal';
-import { AdFiltersModal, type AdFilterState } from './screens/AdFiltersModal';
-import { ReserveAdModal } from './screens/ReserveAdModal';
-import { InstallAppModal } from './screens/InstallAppModal';
-import { AddFavoriteBusModal } from './screens/AddFavoriteBusModal';
-import {
-  initialAdConversations,
-  type AdConversation,
-  type FavoriteBusStop,
-  FAVORITE_BUS_STOPS_KEY,
-} from './data/mockData';
+import type { AdFilterState } from './screens/AdFiltersModal';
+
+// Asynchronicznie ładowane widoki zakładek (Code-Splitting + Skeleton Screen)
+const HomeScreen = lazy(() => import('./screens/HomeScreen').then((m) => ({ default: m.HomeScreen })));
+const KitchenScreen = lazy(() => import('./screens/KitchenScreen').then((m) => ({ default: m.KitchenScreen })));
+const AdsScreen = lazy(() => import('./screens/AdsScreen').then((m) => ({ default: m.AdsScreen })));
+const RidesScreen = lazy(() => import('./screens/RidesScreen').then((m) => ({ default: m.RidesScreen })));
+const TalksScreen = lazy(() => import('./screens/TalksScreen').then((m) => ({ default: m.TalksScreen })));
+
+// Asynchronicznie ładowane widoki podstron i modali
+const ProfileScreen = lazy(() => import('./screens/ProfileScreen').then((m) => ({ default: m.ProfileScreen })));
+const PartnerScreen = lazy(() => import('./screens/PartnerScreen').then((m) => ({ default: m.PartnerScreen })));
+const CheckoutScreen = lazy(() => import('./screens/CheckoutScreen').then((m) => ({ default: m.CheckoutScreen })));
+const MotylekScreen = lazy(() => import('./screens/MotylekScreen').then((m) => ({ default: m.MotylekScreen })));
+const ZditmScreen = lazy(() => import('./screens/ZditmScreen').then((m) => ({ default: m.ZditmScreen })));
+const AddAdModal = lazy(() => import('./screens/AddAdModal').then((m) => ({ default: m.AddAdModal })));
+const ChatModal = lazy(() => import('./screens/ChatModal').then((m) => ({ default: m.ChatModal })));
+const AdDetailModal = lazy(() => import('./screens/AdDetailModal').then((m) => ({ default: m.AdDetailModal })));
+const JobDetailModal = lazy(() => import('./screens/JobDetailModal').then((m) => ({ default: m.JobDetailModal })));
+const JobApplyModal = lazy(() => import('./screens/JobApplyModal').then((m) => ({ default: m.JobApplyModal })));
+const MyAdsModal = lazy(() => import('./screens/MyAdsModal').then((m) => ({ default: m.MyAdsModal })));
+const ReportAdModal = lazy(() => import('./screens/ReportAdModal').then((m) => ({ default: m.ReportAdModal })));
+const EditAdModal = lazy(() => import('./screens/EditAdModal').then((m) => ({ default: m.EditAdModal })));
+const PromoteAdModal = lazy(() => import('./screens/PromoteAdModal').then((m) => ({ default: m.PromoteAdModal })));
+const AdConversationsModal = lazy(() => import('./screens/AdConversationsModal').then((m) => ({ default: m.AdConversationsModal })));
+const SellerProfileModal = lazy(() => import('./screens/SellerProfileModal').then((m) => ({ default: m.SellerProfileModal })));
+const AdFiltersModal = lazy(() => import('./screens/AdFiltersModal').then((m) => ({ default: m.AdFiltersModal })));
+const ReserveAdModal = lazy(() => import('./screens/ReserveAdModal').then((m) => ({ default: m.ReserveAdModal })));
+const InstallAppModal = lazy(() => import('./screens/InstallAppModal').then((m) => ({ default: m.InstallAppModal })));
+const AddFavoriteBusModal = lazy(() => import('./screens/AddFavoriteBusModal').then((m) => ({ default: m.AddFavoriteBusModal })));
 
 type Overlay = null | 'profile' | 'partner' | 'checkout' | 'motylek' | 'zditm';
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [tab, setTab] = useState<TabId>('home');
+  const [isTabLoading, setIsTabLoading] = useState(false);
+  const tabTimerRef = useRef<number | null>(null);
   const [overlay, setOverlay] = useState<Overlay>(null);
   const [selectedZditmLine, setSelectedZditmLine] = useState<LineId>('M2');
   const [selectedZditmStop, setSelectedZditmStop] = useState<string | undefined>(undefined);
@@ -413,14 +419,42 @@ export default function App() {
   const userPromotedAdsCount = userAds.filter((a) => !!a.promoted).length;
   const firstActiveUserAd = userAds.find((a) => (a.status ?? 'active') === 'active') ?? userAds[0] ?? adsList[0];
 
+  const handleTabChange = useCallback(
+    (nextTab: TabId) => {
+      if (nextTab === tab) return;
+      if (tabTimerRef.current !== null) {
+        window.clearTimeout(tabTimerRef.current);
+      }
+      setTab(nextTab);
+      setIsTabLoading(true);
+      // Allow the BottomNav GPU capsule animation to run completely unblocked while showing the Skeleton Screen,
+      // then mount the target tab view asynchronously.
+      tabTimerRef.current = window.setTimeout(() => {
+        tabTimerRef.current = null;
+        setIsTabLoading(false);
+      }, 220);
+    },
+    [tab],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (tabTimerRef.current !== null) {
+        window.clearTimeout(tabTimerRef.current);
+      }
+    };
+  }, []);
+
   let tabContent;
   if (!user) {
     tabContent = <OnboardingScreen onDone={setUser} />;
+  } else if (isTabLoading) {
+    tabContent = <TabSkeleton tab={tab} />;
   } else if (tab === 'home') {
     tabContent = (
       <HomeScreen
         user={user}
-        onTab={setTab}
+        onTab={handleTabChange}
         onProfile={() => setOverlay('profile')}
         onPartner={() => setOverlay('partner')}
         onZditm={(line, stopName) => {
@@ -492,15 +526,20 @@ export default function App() {
           ref={mainRef}
           className="h-full w-full flex-1 overflow-y-auto overscroll-contain"
         >
-          <div key={user ? tab : 'onboarding'} className="tab-view-enter min-h-full">
-            {tabContent}
-          </div>
+          <Suspense fallback={<TabSkeleton tab={tab} />}>
+            <div
+              key={user ? `${tab}-${isTabLoading ? 'skeleton' : 'ready'}` : 'onboarding'}
+              className="tab-view-enter min-h-full"
+            >
+              {tabContent}
+            </div>
+          </Suspense>
         </main>
 
         {showChrome && !isChildScreenActive && count > 0 && (tab === 'kitchen' || tab === 'home') && (
           <CartPill count={count} total={total} onOpen={() => setCartOpen(true)} />
         )}
-        {showChrome && !isChildScreenActive && <BottomNav tab={tab} onChange={setTab} />}
+        {showChrome && !isChildScreenActive && <BottomNav tab={tab} onChange={handleTabChange} />}
 
         {depth > 0 && (
           <div
@@ -522,272 +561,276 @@ export default function App() {
           container={frame}
         />
 
-        {/* Overlays rendered as smooth pushed screens with exit animation */}
-        {user && overlay === 'profile' && (
-          <ProfileScreen
-            user={user}
-            onBack={closeOverlay}
-            isClosing={!!exitingScreens['overlay']}
-            onUpdate={setUser}
-            onPartner={() => setOverlay('partner')}
-            onMyAds={() => setMyAdsOpen(true)}
-            myAdsCount={userActiveAdsCount}
-            myReservedAdsCount={userReservedAdsCount}
-            myPromotedAdsCount={userPromotedAdsCount}
-            onOpenConversations={() => setConversationsOpen(true)}
-            unreadConversationsCount={unreadConversationsCount}
-            onPreviewPublic={() => setSellerProfile({ name: user.name, street: user.street.name })}
-            onPromoteFirstAd={firstActiveUserAd ? () => setPromoteAd(firstActiveUserAd) : undefined}
-            onOpenRides={() => {
-              closeOverlay();
-              setTab('rides');
-            }}
-            onInstallApp={() => setInstallModalOpen(true)}
-            userAds={userAds}
-          />
-        )}
+        <Suspense fallback={<OverlaySkeleton />}>
+          {/* Overlays rendered as smooth pushed screens with exit animation */}
+          {user && overlay === 'profile' && (
+            <ProfileScreen
+              user={user}
+              onBack={closeOverlay}
+              isClosing={!!exitingScreens['overlay']}
+              onUpdate={setUser}
+              onPartner={() => setOverlay('partner')}
+              onMyAds={() => setMyAdsOpen(true)}
+              myAdsCount={userActiveAdsCount}
+              myReservedAdsCount={userReservedAdsCount}
+              myPromotedAdsCount={userPromotedAdsCount}
+              onOpenConversations={() => setConversationsOpen(true)}
+              unreadConversationsCount={unreadConversationsCount}
+              onPreviewPublic={() => setSellerProfile({ name: user.name, street: user.street.name })}
+              onPromoteFirstAd={firstActiveUserAd ? () => setPromoteAd(firstActiveUserAd) : undefined}
+              onOpenRides={() => {
+                closeOverlay();
+                handleTabChange('rides');
+              }}
+              onInstallApp={() => setInstallModalOpen(true)}
+              userAds={userAds}
+            />
+          )}
 
-        {user && overlay === 'partner' && (
-          <PartnerScreen
-            onBack={closeOverlay}
-            isClosing={!!exitingScreens['overlay']}
-          />
-        )}
+          {user && overlay === 'partner' && (
+            <PartnerScreen
+              onBack={closeOverlay}
+              isClosing={!!exitingScreens['overlay']}
+            />
+          )}
 
-        {user && overlay === 'motylek' && (
-          <MotylekScreen
-            onBack={closeOverlay}
-            isClosing={!!exitingScreens['overlay']}
-            onOpenProduct={setSheet}
-            onAdd={(p) => add(p)}
-            qtyOf={(id) => cart[id] ?? 0}
-            totalCartValue={total}
-          />
-        )}
+          {user && overlay === 'motylek' && (
+            <MotylekScreen
+              onBack={closeOverlay}
+              isClosing={!!exitingScreens['overlay']}
+              onOpenProduct={setSheet}
+              onAdd={(p) => add(p)}
+              qtyOf={(id) => cart[id] ?? 0}
+              totalCartValue={total}
+            />
+          )}
 
-        {user && overlay === 'zditm' && (
-          <ZditmScreen
-            initialLine={selectedZditmLine}
-            initialStopName={selectedZditmStop}
-            favoriteBuses={favoriteBuses}
-            onToggleFavorite={handleToggleFavoriteBus}
-            onRemoveFavorite={handleRemoveFavoriteBus}
-            onBack={closeOverlay}
-            isClosing={!!exitingScreens['overlay']}
-          />
-        )}
+          {user && overlay === 'zditm' && (
+            <ZditmScreen
+              initialLine={selectedZditmLine}
+              initialStopName={selectedZditmStop}
+              favoriteBuses={favoriteBuses}
+              onToggleFavorite={handleToggleFavoriteBus}
+              onRemoveFavorite={handleRemoveFavoriteBus}
+              onBack={closeOverlay}
+              isClosing={!!exitingScreens['overlay']}
+            />
+          )}
 
-        {user && overlay === 'checkout' && (
-          <CheckoutScreen
-            lines={lines}
-            user={user}
-            onBack={closeOverlay}
-            isClosing={!!exitingScreens['overlay']}
-            onSuccess={() => {
-              setCart({});
-              closeOverlay();
-            }}
-          />
-        )}
+          {user && overlay === 'checkout' && (
+            <CheckoutScreen
+              lines={lines}
+              user={user}
+              onBack={closeOverlay}
+              isClosing={!!exitingScreens['overlay']}
+              onSuccess={() => {
+                setCart({});
+                closeOverlay();
+              }}
+            />
+          )}
 
-        {/* My Ads Modal */}
-        {user && myAdsOpen && (
-          <MyAdsModal
-            user={user}
-            ads={adsList}
-            jobs={jobsList}
-            onClose={closeMyAds}
-            isClosing={!!exitingScreens['myAds']}
-            onOpenAd={(ad) => setSelectedAd(ad)}
-            onAddNew={() => setAddAdOpen(true)}
-            onStatusChange={handleStatusChange}
-            onDeleteAd={handleDeleteAd}
-            onEditAd={(ad) => setEditAd(ad)}
-            onPromoteAd={(ad) => setPromoteAd(ad)}
-          />
-        )}
+          {/* My Ads Modal */}
+          {user && myAdsOpen && (
+            <MyAdsModal
+              user={user}
+              ads={adsList}
+              jobs={jobsList}
+              onClose={closeMyAds}
+              isClosing={!!exitingScreens['myAds']}
+              onOpenAd={(ad) => setSelectedAd(ad)}
+              onAddNew={() => setAddAdOpen(true)}
+              onStatusChange={handleStatusChange}
+              onDeleteAd={handleDeleteAd}
+              onEditAd={(ad) => setEditAd(ad)}
+              onPromoteAd={(ad) => setPromoteAd(ad)}
+            />
+          )}
 
-        {/* Add Ad Modal with BLIK payment flow */}
-        {user && addAdOpen && (
-          <AddAdModal
-            user={user}
-            onClose={closeAddAd}
-            isClosing={!!exitingScreens['addAd']}
-            onAdCreated={(newAd) => setAdsList((prev) => [newAd, ...prev])}
-            onJobCreated={(newJob) => setJobsList((prev) => [newJob, ...prev])}
-          />
-        )}
+          {/* Add Ad Modal with BLIK payment flow */}
+          {user && addAdOpen && (
+            <AddAdModal
+              user={user}
+              onClose={closeAddAd}
+              isClosing={!!exitingScreens['addAd']}
+              onAdCreated={(newAd) => setAdsList((prev) => [newAd, ...prev])}
+              onJobCreated={(newJob) => setJobsList((prev) => [newJob, ...prev])}
+            />
+          )}
 
-        {/* Ad Detail Modal */}
-        {user && selectedAd && (
-          <AdDetailModal
-            ad={selectedAd}
-            user={user}
-            isLiked={!!likedAds[selectedAd.id]}
-            onClose={closeSelectedAd}
-            isClosing={!!exitingScreens['selectedAd']}
-            onToggleLike={handleToggleLike}
-            onChatClick={(ad) => setChatAd(ad)}
-            onReportClick={(ad) => setReportAd(ad)}
-            onStatusChange={handleStatusChange}
-            onDelete={handleDeleteAd}
-            onSellerClick={(name, street) => setSellerProfile({ name, street })}
-            onEditClick={(ad) => setEditAd(ad)}
-            onPromoteClick={(ad) => setPromoteAd(ad)}
-            onReserveClick={(ad) => setReserveAd(ad)}
-          />
-        )}
+          {/* Ad Detail Modal */}
+          {user && selectedAd && (
+            <AdDetailModal
+              ad={selectedAd}
+              user={user}
+              isLiked={!!likedAds[selectedAd.id]}
+              onClose={closeSelectedAd}
+              isClosing={!!exitingScreens['selectedAd']}
+              onToggleLike={handleToggleLike}
+              onChatClick={(ad) => setChatAd(ad)}
+              onReportClick={(ad) => setReportAd(ad)}
+              onStatusChange={handleStatusChange}
+              onDelete={handleDeleteAd}
+              onSellerClick={(name, street) => setSellerProfile({ name, street })}
+              onEditClick={(ad) => setEditAd(ad)}
+              onPromoteClick={(ad) => setPromoteAd(ad)}
+              onReserveClick={(ad) => setReserveAd(ad)}
+            />
+          )}
 
-        {/* Job Detail Modal */}
-        {user && selectedJob && (
-          <JobDetailModal
-            job={selectedJob}
-            user={user}
-            hasApplied={!!appliedJobs[selectedJob.id]}
-            onClose={closeSelectedJob}
-            isClosing={!!exitingScreens['selectedJob']}
-            onApplyClick={(job) => {
-              closeSelectedJob();
-              setApplyJob(job);
-            }}
-          />
-        )}
+          {/* Job Detail Modal */}
+          {user && selectedJob && (
+            <JobDetailModal
+              job={selectedJob}
+              user={user}
+              hasApplied={!!appliedJobs[selectedJob.id]}
+              onClose={closeSelectedJob}
+              isClosing={!!exitingScreens['selectedJob']}
+              onApplyClick={(job) => {
+                closeSelectedJob();
+                setApplyJob(job);
+              }}
+            />
+          )}
 
-        {/* 1-Click Job Apply Modal */}
-        {user && applyJob && (
-          <JobApplyModal
-            job={applyJob}
-            user={user}
-            onClose={closeApplyJob}
-            isClosing={!!exitingScreens['applyJob']}
-            onSuccess={handleJobApplied}
-          />
-        )}
+          {/* 1-Click Job Apply Modal */}
+          {user && applyJob && (
+            <JobApplyModal
+              job={applyJob}
+              user={user}
+              onClose={closeApplyJob}
+              isClosing={!!exitingScreens['applyJob']}
+              onSuccess={handleJobApplied}
+            />
+          )}
 
-        {/* Edit Ad Modal */}
-        {user && editAd && (
-          <EditAdModal
-            ad={editAd}
-            user={user}
-            onClose={closeEditAd}
-            isClosing={!!exitingScreens['editAd']}
-            onAdUpdated={handleAdUpdated}
-          />
-        )}
+          {/* Edit Ad Modal */}
+          {user && editAd && (
+            <EditAdModal
+              ad={editAd}
+              user={user}
+              onClose={closeEditAd}
+              isClosing={!!exitingScreens['editAd']}
+              onAdUpdated={handleAdUpdated}
+            />
+          )}
 
-        {/* Promote Ad Modal (BLIK) */}
-        {user && promoteAd && (
-          <PromoteAdModal
-            ad={promoteAd}
-            user={user}
-            onClose={closePromoteAd}
-            isClosing={!!exitingScreens['promoteAd']}
-            onPromoted={handleAdPromoted}
-          />
-        )}
+          {/* Promote Ad Modal (BLIK) */}
+          {user && promoteAd && (
+            <PromoteAdModal
+              ad={promoteAd}
+              user={user}
+              onClose={closePromoteAd}
+              isClosing={!!exitingScreens['promoteAd']}
+              onPromoted={handleAdPromoted}
+            />
+          )}
 
-        {/* Ad Conversations Modal (Inbox) */}
-        {user && conversationsOpen && (
-          <AdConversationsModal
-            user={user}
-            conversations={conversations}
-            ads={adsList}
-            onClose={closeConversations}
-            isClosing={!!exitingScreens['conversations']}
-            onOpenChat={(ad) => {
-              closeConversations();
-              setChatAd(ad);
-            }}
-          />
-        )}
+          {/* Ad Conversations Modal (Inbox) */}
+          {user && conversationsOpen && (
+            <AdConversationsModal
+              user={user}
+              conversations={conversations}
+              ads={adsList}
+              onClose={closeConversations}
+              isClosing={!!exitingScreens['conversations']}
+              onOpenChat={(ad) => {
+                closeConversations();
+                setChatAd(ad);
+              }}
+            />
+          )}
 
-        {/* Seller Profile Modal */}
-        {user && sellerProfile && (
-          <SellerProfileModal
-            sellerName={sellerProfile.name}
-            sellerStreet={sellerProfile.street}
-            currentUser={user}
-            allAds={adsList}
-            onClose={closeSellerProfile}
-            isClosing={!!exitingScreens['sellerProfile']}
-            onOpenAd={(ad) => {
-              closeSellerProfile();
-              setSelectedAd(ad);
-            }}
-            onStartChat={(ad) => {
-              closeSellerProfile();
-              setChatAd(ad);
-            }}
-          />
-        )}
+          {/* Seller Profile Modal */}
+          {user && sellerProfile && (
+            <SellerProfileModal
+              sellerName={sellerProfile.name}
+              sellerStreet={sellerProfile.street}
+              currentUser={user}
+              allAds={adsList}
+              onClose={closeSellerProfile}
+              isClosing={!!exitingScreens['sellerProfile']}
+              onOpenAd={(ad) => {
+                closeSellerProfile();
+                setSelectedAd(ad);
+              }}
+              onStartChat={(ad) => {
+                closeSellerProfile();
+                setChatAd(ad);
+              }}
+            />
+          )}
 
-        {/* Ad Filters & Sort Modal */}
-        {user && filtersModalOpen && (
-          <AdFiltersModal
-            currentFilters={adFilters}
-            totalMatching={adsList.length}
-            onClose={closeFiltersModal}
-            isClosing={!!exitingScreens['filtersModal']}
-            onApply={(f) => setAdFilters(f)}
-            onReset={() =>
-              setAdFilters({
-                sortBy: 'newest',
-                minPrice: '',
-                maxPrice: '',
-                selectedCategory: 'Wszystkie',
-                selectedStreet: 'all',
-                onlyFree: false,
-                onlyPromoted: false,
-              })
-            }
-          />
-        )}
+          {/* Ad Filters & Sort Modal */}
+          {user && filtersModalOpen && (
+            <AdFiltersModal
+              currentFilters={adFilters}
+              totalMatching={adsList.length}
+              onClose={closeFiltersModal}
+              isClosing={!!exitingScreens['filtersModal']}
+              onApply={(f) => setAdFilters(f)}
+              onReset={() =>
+                setAdFilters({
+                  sortBy: 'newest',
+                  minPrice: '',
+                  maxPrice: '',
+                  selectedCategory: 'Wszystkie',
+                  selectedStreet: 'all',
+                  onlyFree: false,
+                  onlyPromoted: false,
+                })
+              }
+            />
+          )}
 
-        {/* Reserve Ad Modal */}
-        {user && reserveAd && (
-          <ReserveAdModal
-            ad={reserveAd}
-            user={user}
-            onClose={closeReserveAd}
-            isClosing={!!exitingScreens['reserveAd']}
-            onSuccess={handleReservationSuccess}
-          />
-        )}
+          {/* Reserve Ad Modal */}
+          {user && reserveAd && (
+            <ReserveAdModal
+              ad={reserveAd}
+              user={user}
+              onClose={closeReserveAd}
+              isClosing={!!exitingScreens['reserveAd']}
+              onSuccess={handleReservationSuccess}
+            />
+          )}
 
-        {/* Report Ad Modal */}
-        {user && reportAd && (
-          <ReportAdModal
-            ad={reportAd}
-            onClose={closeReportAd}
-            isClosing={!!exitingScreens['reportAd']}
-          />
-        )}
+          {/* Report Ad Modal */}
+          {user && reportAd && (
+            <ReportAdModal
+              ad={reportAd}
+              onClose={closeReportAd}
+              isClosing={!!exitingScreens['reportAd']}
+            />
+          )}
 
-        {/* 1:1 Neighbor Chat Modal */}
-        {user && chatAd && (
-          <ChatModal
-            ad={chatAd}
-            user={user}
-            onClose={closeChatAd}
-            isClosing={!!exitingScreens['chatAd']}
-          />
-        )}
+          {/* 1:1 Neighbor Chat Modal */}
+          {user && chatAd && (
+            <ChatModal
+              ad={chatAd}
+              user={user}
+              onClose={closeChatAd}
+              isClosing={!!exitingScreens['chatAd']}
+            />
+          )}
 
-        {/* Add Favorite Bus Stop Modal */}
-        {user && addFavBusOpen && (
-          <AddFavoriteBusModal
-            onClose={closeAddFavBus}
-            isClosing={!!exitingScreens['addFavBus']}
-            onSave={handleAddFavoriteBus}
-          />
-        )}
+          {/* Add Favorite Bus Stop Modal */}
+          {user && addFavBusOpen && (
+            <AddFavoriteBusModal
+              onClose={closeAddFavBus}
+              isClosing={!!exitingScreens['addFavBus']}
+              onSave={handleAddFavoriteBus}
+            />
+          )}
 
-        {/* PWA Install Modal (iOS Safari & Android Chrome) */}
-        <InstallAppModal
-          open={installModalOpen}
-          onOpenChange={setInstallModalOpen}
-          container={frame}
-        />
+          {/* PWA Install Modal (iOS Safari & Android Chrome) */}
+          {installModalOpen && (
+            <InstallAppModal
+              open={installModalOpen}
+              onOpenChange={setInstallModalOpen}
+              container={frame}
+            />
+          )}
+        </Suspense>
 
         {/* Mobile Landscape Orientation Barrier */}
         <div
