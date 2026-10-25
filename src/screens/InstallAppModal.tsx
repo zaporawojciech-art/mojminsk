@@ -156,7 +156,7 @@ export function InstallAppModal({
                   Aplikacja jest już zainstalowana!
                 </p>
                 <p className="mt-1 text-[13px] text-emerald-800 leading-snug">
-                  Masz pełny dostęp z ekranu początkowego, powiadomienia o awariach i tryb offline.
+                  Masz pełny dostęp z ekranu początkowego, błyskawiczne ładowanie i tryb offline.
                 </p>
                 <button
                   type="button"

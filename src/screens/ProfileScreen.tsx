@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   BadgeCheck,
-  Bell,
   Car,
   Check,
   ChevronRight,
@@ -12,17 +11,21 @@ import {
   Lock,
   Mail,
   Megaphone,
-  MessagesSquare,
+  MessageCircle,
   Plus,
   ReceiptText,
   ShieldCheck,
-  ShoppingBag,
   Smartphone,
-  Sparkles,
   Vote,
 } from 'lucide-react';
-import { avatarUrl, type Ad, type User } from '../data/mockData';
-import { NativeHeader, StreetPill, cn } from '../components/ui';
+import {
+  avatarUrl,
+  initialAdConversations,
+  type Ad,
+  type AdConversation,
+  type User,
+} from '../data/mockData';
+import { Img, NativeHeader, StreetPill, cn } from '../components/ui';
 
 interface ProfileScreenProps {
   user: User;
@@ -33,46 +36,16 @@ interface ProfileScreenProps {
   onMyAds?: () => void;
   myAdsCount?: number;
   myReservedAdsCount?: number;
-  myPromotedAdsCount?: number;
   onOpenConversations?: () => void;
+  onOpenChatWithNeighbor?: (conv: AdConversation) => void;
+  conversations?: AdConversation[];
   unreadConversationsCount?: number;
   onPreviewPublic?: () => void;
-  onPromoteFirstAd?: () => void;
-  onOpenRides?: () => void;
+  onAddRide?: () => void;
+  myRidesCount?: number;
   onInstallApp?: () => void;
   userAds?: Ad[];
   isClosing?: boolean;
-}
-
-function IosToggle({
-  checked,
-  onChange,
-  label,
-}: {
-  checked: boolean;
-  onChange: (next: boolean) => void;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={label}
-      onClick={() => onChange(!checked)}
-      className={cn(
-        'relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-200',
-        checked ? 'bg-ink' : 'bg-mist-300',
-      )}
-    >
-      <span
-        className={cn(
-          'inline-block h-6 w-6 rounded-full bg-white shadow transition-transform duration-200',
-          checked ? 'translate-x-5' : 'translate-x-0',
-        )}
-      />
-    </button>
-  );
 }
 
 export function ProfileScreen({
@@ -84,12 +57,13 @@ export function ProfileScreen({
   onMyAds,
   myAdsCount = 1,
   myReservedAdsCount = 0,
-  myPromotedAdsCount = 0,
   onOpenConversations,
+  onOpenChatWithNeighbor,
+  conversations = initialAdConversations,
   unreadConversationsCount = 0,
   onPreviewPublic: _onPreviewPublic,
-  onPromoteFirstAd,
-  onOpenRides,
+  onAddRide,
+  myRidesCount = 0,
   onInstallApp,
   userAds: _userAds = [],
   isClosing = false,
@@ -104,12 +78,6 @@ export function ProfileScreen({
   const [supportBlikCode, setSupportBlikCode] = useState('');
   const [supportPaid, setSupportPaid] = useState(false);
 
-  const notifications = user.notifications ?? {
-    alerts: true,
-    chats: true,
-    orders: true,
-  };
-
   const badges = [
     {
       id: 'verified',
@@ -122,20 +90,9 @@ export function ProfileScreen({
     },
   ];
 
-  const handleToggleNotification = (key: keyof typeof notifications, val: boolean) => {
-    onUpdate({
-      ...user,
-      notifications: {
-        ...notifications,
-        [key]: val,
-      },
-    });
-  };
-
   const adsMetaLabel = [
     `${myAdsCount} aktywne`,
     myReservedAdsCount > 0 ? `${myReservedAdsCount} zarez.` : null,
-    myPromotedAdsCount > 0 ? `${myPromotedAdsCount} wyróż.` : null,
   ]
     .filter(Boolean)
     .join(' · ');
@@ -309,6 +266,164 @@ export function ProfileScreen({
         </div>
       )}
 
+      {/* Czat sąsiedzki — Dedykowany widżet komunikatora sąsiedzkiego */}
+      <div className="mx-5 mt-6">
+        <div className="mb-2 flex items-center justify-between px-3">
+          <div className="flex items-center gap-2">
+            <p className="text-[11.5px] font-extrabold uppercase tracking-wider text-ink-400">
+              Czat sąsiedzki
+            </p>
+            {unreadConversationsCount > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-coral px-2 py-0.5 text-[10px] font-extrabold text-ink">
+                <span className="h-1.5 w-1.5 rounded-full bg-ink animate-pulse" />
+                {unreadConversationsCount} {unreadConversationsCount === 1 ? 'nowa wiadomość' : 'nowe'}
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={onOpenConversations}
+            className="flex items-center gap-0.5 text-[11.5px] font-bold text-ink-600 hover:text-ink"
+          >
+            Wszystkie ({conversations.length})
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+
+        <div className="overflow-hidden rounded-4xl bg-white shadow-card">
+          {/* Pasek aktywnych rozmówców (Messenger-style) */}
+          <div className="flex items-center gap-3.5 border-b border-mist bg-mist/35 px-4 py-3 overflow-x-auto no-scrollbar">
+            {conversations.map((conv) => {
+              const seed = conv.otherUser.avatarSeed || conv.otherUser.name;
+              const isUnread = conv.unreadCount > 0;
+              return (
+                <button
+                  key={conv.id}
+                  type="button"
+                  onClick={() =>
+                    onOpenChatWithNeighbor ? onOpenChatWithNeighbor(conv) : onOpenConversations?.()
+                  }
+                  className="group flex shrink-0 flex-col items-center gap-1 text-center transition-transform active:scale-95"
+                >
+                  <div className="relative">
+                    <img
+                      src={avatarUrl(seed)}
+                      alt={conv.otherUser.name}
+                      className={cn(
+                        'h-12 w-12 rounded-2xl bg-sand-100 object-cover transition-all',
+                        isUnread
+                          ? 'ring-2 ring-coral ring-offset-2 ring-offset-white'
+                          : 'ring-1 ring-mist-300',
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        'absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full ring-2 ring-white',
+                        isUnread ? 'bg-coral' : 'bg-emerald-500',
+                      )}
+                    />
+                  </div>
+                  <span className="max-w-[68px] truncate text-[11px] font-bold text-ink">
+                    {conv.otherUser.name}
+                  </span>
+                  <span className="max-w-[68px] truncate text-[9.5px] font-medium text-ink-400 -mt-1">
+                    ul. {conv.otherUser.street}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Ostatnie wątki czatu */}
+          <div className="divide-y divide-mist">
+            {conversations.slice(0, 2).map((conv) => {
+              const seed = conv.otherUser.avatarSeed || conv.otherUser.name;
+              const isUnread = conv.unreadCount > 0;
+              return (
+                <button
+                  key={conv.id}
+                  type="button"
+                  onClick={() =>
+                    onOpenChatWithNeighbor ? onOpenChatWithNeighbor(conv) : onOpenConversations?.()
+                  }
+                  className={cn(
+                    'flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-mist/40 active:bg-mist/70',
+                    isUnread && 'bg-coral-50/35',
+                  )}
+                >
+                  <div className="relative mt-0.5 shrink-0">
+                    <img
+                      src={avatarUrl(seed)}
+                      alt={conv.otherUser.name}
+                      className="h-11 w-11 rounded-2xl bg-sand-100 object-cover ring-1 ring-mist-300"
+                    />
+                    {isUnread && (
+                      <span className="absolute -right-1 -top-1 grid h-4.5 min-w-[18px] place-items-center rounded-full bg-coral px-1 text-[10px] font-extrabold text-ink ring-2 ring-white">
+                        {conv.unreadCount}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="truncate text-[13.5px] font-bold text-ink">
+                        {conv.otherUser.name}{' '}
+                        <span className="font-normal text-[11.5px] text-ink-400">
+                          · ul. {conv.otherUser.street}
+                        </span>
+                      </p>
+                      <span
+                        className={cn(
+                          'shrink-0 text-[10.5px]',
+                          isUnread ? 'font-extrabold text-coral-700' : 'font-medium text-ink-400',
+                        )}
+                      >
+                        {conv.lastMessageTime}
+                      </span>
+                    </div>
+
+                    {/* Dymek ostatniej wiadomości */}
+                    <p
+                      className={cn(
+                        'mt-0.5 line-clamp-1 text-[12.5px] leading-snug',
+                        isUnread ? 'font-bold text-ink' : 'text-ink-500',
+                      )}
+                    >
+                      {conv.role === 'buyer' ? 'Sąsiad: ' : ''}
+                      {conv.lastMessage}
+                    </p>
+
+                    {/* Kontekst ogłoszenia */}
+                    <div className="mt-1 flex items-center gap-1.5">
+                      <span className="inline-block truncate rounded-md bg-mist px-1.5 py-0.5 text-[10px] font-semibold text-ink-500 max-w-[200px]">
+                        dot. {conv.adTitle}
+                      </span>
+                    </div>
+                  </div>
+
+                  <Img
+                    src={conv.adImage}
+                    alt={conv.adTitle}
+                    className="mt-0.5 h-10 w-10 shrink-0 rounded-xl object-cover ring-1 ring-mist"
+                  />
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Dolny przycisk otwierający pełną skrzynkę czatu */}
+          <button
+            type="button"
+            onClick={onOpenConversations}
+            className="flex w-full items-center justify-center gap-1.5 border-t border-mist bg-mist/40 py-2.5 text-[12px] font-bold text-ink hover:bg-mist transition-colors"
+          >
+            <MessageCircle className="h-3.5 w-3.5 text-coral-700" />
+            Otwórz pełny czat sąsiedzki ({conversations.length})
+            <ChevronRight className="h-3.5 w-3.5 text-ink-400" />
+          </button>
+        </div>
+      </div>
+
       {/* Moje Sprawy Sąsiedzkie — iOS Grouped List (Decision #2 + Subagent Views) */}
       <div className="mx-5 mt-6">
         <p className="mb-2 px-3 text-[11.5px] font-extrabold uppercase tracking-wider text-ink-400">
@@ -337,7 +452,7 @@ export function ProfileScreen({
             </li>
           )}
 
-          {/* Moje ogłoszenia -> MyAdsModal (EditAdModal + PromoteAdModal) */}
+          {/* Moje ogłoszenia -> MyAdsModal */}
           <li className="border-b border-mist">
             <button
               onClick={onMyAds}
@@ -348,7 +463,7 @@ export function ProfileScreen({
               </span>
               <div className="min-w-0 flex-1">
                 <p className="text-[14.5px] font-semibold text-ink">Moje ogłoszenia</p>
-                <p className="text-[11.5px] text-ink-400">Edycja, statusy rezerwacji i promowanie</p>
+                <p className="text-[11.5px] text-ink-400">Zarządzanie ofertami, edycja i statusy rezerwacji</p>
               </div>
               <span className="rounded-full bg-mist px-2.5 py-1 text-[11.5px] font-bold text-ink-700">
                 {adsMetaLabel}
@@ -356,52 +471,6 @@ export function ProfileScreen({
               <ChevronRight className="h-4 w-4 text-ink-300" aria-hidden />
             </button>
           </li>
-
-          {/* Skrzynka Rozmów i Rezerwacji -> AdConversationsModal */}
-          <li className="border-b border-mist">
-            <button
-              onClick={onOpenConversations}
-              className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-mist/50 active:bg-mist"
-            >
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-coral-100 text-ink">
-                <MessagesSquare className="h-[18px] w-[18px]" aria-hidden />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-[14.5px] font-semibold text-ink">Rozmowy i odbiory osobiste</p>
-                <p className="text-[11.5px] text-ink-400">Zapytania (Kupuję / Sprzedaję) i rezerwacje</p>
-              </div>
-              {unreadConversationsCount > 0 ? (
-                <span className="rounded-full bg-coral px-2.5 py-0.5 text-[11.5px] font-extrabold text-ink">
-                  {unreadConversationsCount} nowe
-                </span>
-              ) : (
-                <span className="text-[12px] text-ink-400">Skrzynka</span>
-              )}
-              <ChevronRight className="h-4 w-4 text-ink-300" aria-hidden />
-            </button>
-          </li>
-
-          {/* Wyróżnij ogłoszenie BLIK -> PromoteAdModal */}
-          {onPromoteFirstAd && (
-            <li className="border-b border-mist">
-              <button
-                onClick={onPromoteFirstAd}
-                className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-mist/50 active:bg-mist"
-              >
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-amber-100 text-amber-900">
-                  <Sparkles className="h-[18px] w-[18px]" aria-hidden />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[14.5px] font-semibold text-ink">Promowanie i wyróżnianie ofert (BLIK)</p>
-                  <p className="text-[11.5px] text-ink-400">Wyróżnij ofertę na górze listy ogłoszeń</p>
-                </div>
-                <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-extrabold text-amber-900">
-                  od 4 zł
-                </span>
-                <ChevronRight className="h-4 w-4 text-ink-300" aria-hidden />
-              </button>
-            </li>
-          )}
 
           {/* Moje zamówienia (Motylek Market & Strefa Kuchni) */}
           <li className="border-b border-mist">
@@ -444,20 +513,22 @@ export function ProfileScreen({
             )}
           </li>
 
-          {/* Moje przejazdy (Carpooling) */}
+          {/* Dodaj przejazd sąsiedzki (Carpooling) -> AddRideModal */}
           <li className="border-b border-mist">
             <button
-              onClick={onOpenRides}
+              onClick={onAddRide}
               className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-mist/50 active:bg-mist"
             >
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-sky-100 text-ink">
                 <Car className="h-[18px] w-[18px]" aria-hidden />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-[14.5px] font-semibold text-ink">Moje przejazdy sąsiedzkie</p>
-                <p className="text-[11.5px] text-ink-400">Mińsk Maz. ↔ Warszawa · Wspólne dojazdy</p>
+                <p className="text-[14.5px] font-semibold text-ink">Dodaj przejazd sąsiedzki</p>
+                <p className="text-[11.5px] text-ink-400">Zaproponuj wspólny dojazd (Mińsk ↔ Warszawa / powiat)</p>
               </div>
-              <span className="text-[12px] text-ink-400">5 tras</span>
+              <span className="rounded-full bg-sky-100 px-2.5 py-0.5 text-[11px] font-extrabold text-sky-900">
+                {myRidesCount > 0 ? `${myRidesCount} aktywne · + Dodaj` : '+ Dodaj kurs'}
+              </span>
               <ChevronRight className="h-4 w-4 text-ink-300" aria-hidden />
             </button>
           </li>
@@ -512,65 +583,6 @@ export function ProfileScreen({
                 )}
               </div>
             )}
-          </li>
-        </ul>
-      </div>
-
-      {/* 5. Szybkie Przełączniki Powiadomień WebPush (Decision #9) */}
-      <div className="mx-5 mt-6">
-        <p className="mb-2 px-3 text-[11.5px] font-extrabold uppercase tracking-wider text-ink-400">
-          Powiadomienia Push (Mińsk Mazowiecki)
-        </p>
-        <ul className="overflow-hidden rounded-4xl bg-white shadow-card">
-          <li className="flex items-center justify-between gap-3 border-b border-mist px-4 py-3.5">
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-coral-100 text-coral-800">
-                <Bell className="h-[18px] w-[18px]" aria-hidden />
-              </span>
-              <div className="min-w-0">
-                <p className="text-[14px] font-semibold text-ink">Alerty kryzysowe Mińska</p>
-                <p className="text-[11.5px] text-ink-400">Wypadki DK92/A2, awarie PWiK, utrudnienia</p>
-              </div>
-            </div>
-            <IosToggle
-              label="Alerty kryzysowe Mińska"
-              checked={notifications.alerts}
-              onChange={(v) => handleToggleNotification('alerts', v)}
-            />
-          </li>
-
-          <li className="flex items-center justify-between gap-3 border-b border-mist px-4 py-3.5">
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-sky-100 text-sky-900">
-                <MessagesSquare className="h-[18px] w-[18px]" aria-hidden />
-              </span>
-              <div className="min-w-0">
-                <p className="text-[14px] font-semibold text-ink">Wiadomości z czatu i rezerwacje</p>
-                <p className="text-[11.5px] text-ink-400">Zapytania od sąsiadów i terminy odbioru</p>
-              </div>
-            </div>
-            <IosToggle
-              label="Wiadomości z czatu i rezerwacje"
-              checked={notifications.chats}
-              onChange={(v) => handleToggleNotification('chats', v)}
-            />
-          </li>
-
-          <li className="flex items-center justify-between gap-3 px-4 py-3.5">
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-sand-100 text-ink">
-                <ShoppingBag className="h-[18px] w-[18px]" aria-hidden />
-              </span>
-              <div className="min-w-0">
-                <p className="text-[14px] font-semibold text-ink">Statusy dostaw (Motylek & Kuchnia)</p>
-                <p className="text-[11.5px] text-ink-400">Kurier w drodze, spakowane zakupy</p>
-              </div>
-            </div>
-            <IosToggle
-              label="Statusy dostaw"
-              checked={notifications.orders}
-              onChange={(v) => handleToggleNotification('orders', v)}
-            />
           </li>
         </ul>
       </div>

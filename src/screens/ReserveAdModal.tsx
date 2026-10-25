@@ -82,7 +82,7 @@ export function ReserveAdModal({ ad, user: _user, onClose, onSuccess, isClosing 
               </div>
               <h3 className="font-display text-[24px] font-bold text-ink">Rezerwacja wysłana!</h3>
               <p className="text-[14px] text-ink-500 max-w-[280px] mx-auto leading-relaxed">
-                Przedmiot został zarezerwowany. Sprzedający <b>{ad.author}</b> otrzymał powiadomienie z Twoją propozycją terminu i miejsca.
+                Przedmiot został zarezerwowany. Sprzedający <b>{ad.author}</b> otrzymał wiadomość z Twoją propozycją terminu i miejsca.
               </p>
 
               {/* Reservation Confirmation Card */}

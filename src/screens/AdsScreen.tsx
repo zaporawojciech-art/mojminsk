@@ -1,12 +1,20 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import {
+  Armchair,
   ArrowUpDown,
+  Baby,
+  Bike,
   Camera,
+  Car,
   Check,
   ChevronDown,
   ChevronRight,
+  Gift,
   Heart,
+  HelpCircle,
+  Laptop,
   LayoutGrid,
+  Leaf,
   List,
   MapPin,
   MessageCircle,
@@ -15,6 +23,7 @@ import {
   SlidersHorizontal,
   Sparkles,
   X,
+  type LucideIcon,
 } from 'lucide-react';
 import {
   ads as initialAds,
@@ -29,7 +38,6 @@ import {
   ProfileAvatarButton,
   ScreenHeader,
   SectionHeader,
-  StreetPill,
   cn,
   zl,
 } from '../components/ui';
@@ -43,71 +51,115 @@ interface CategoryItem {
   filterCategory?: string;
   filterKind?: 'sell' | 'free' | 'lost';
   isAll?: boolean;
-  image?: string;
-  tone?: string;
+  icon: LucideIcon;
+  badge?: string;
+  tone: {
+    bg: string;
+    text: string;
+    active: string;
+  };
 }
 
 const CATEGORIES: CategoryItem[] = [
   {
     id: 'all',
-    label: 'Wszystkie kategorie',
+    label: 'Wszystkie',
     isAll: true,
+    icon: Sparkles,
+    tone: {
+      bg: 'bg-sand-100',
+      text: 'text-sand-900',
+      active: 'bg-ink text-white',
+    },
   },
   {
     id: 'free',
     label: 'Oddam za darmo',
     filterKind: 'free',
-    image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=200&auto=format&fit=crop&q=75',
-    tone: 'bg-sky-100',
+    icon: Gift,
+    badge: 'Sąsiedzkie',
+    tone: {
+      bg: 'bg-emerald-100',
+      text: 'text-emerald-900',
+      active: 'bg-emerald-700 text-white',
+    },
   },
   {
     id: 'home',
     label: 'Dom i Meble',
     filterCategory: 'Meble & Dom',
-    image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=200&auto=format&fit=crop&q=75',
-    tone: 'bg-sand-100',
+    icon: Armchair,
+    tone: {
+      bg: 'bg-amber-100',
+      text: 'text-amber-900',
+      active: 'bg-amber-700 text-white',
+    },
   },
   {
     id: 'electronics',
     label: 'Elektronika',
     filterCategory: 'Elektronika',
-    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200&auto=format&fit=crop&q=75',
-    tone: 'bg-sky-100',
+    icon: Laptop,
+    tone: {
+      bg: 'bg-indigo-100',
+      text: 'text-indigo-900',
+      active: 'bg-indigo-700 text-white',
+    },
   },
   {
     id: 'kids',
     label: 'Dla Dzieci',
     filterCategory: 'Dziecięce',
-    image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?w=200&auto=format&fit=crop&q=75',
-    tone: 'bg-coral-50',
+    icon: Baby,
+    tone: {
+      bg: 'bg-pink-100',
+      text: 'text-pink-900',
+      active: 'bg-pink-700 text-white',
+    },
   },
   {
     id: 'sport',
     label: 'Sport i Rowery',
     filterCategory: 'Sport & Rowery',
-    image: 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=200&auto=format&fit=crop&q=75',
-    tone: 'bg-sand-100',
-  },
-  {
-    id: 'moto',
-    label: 'Motoryzacja i Opony',
-    filterCategory: 'Motoryzacja',
-    image: 'https://images.unsplash.com/photo-1578844251758-2f71da64c96f?w=200&auto=format&fit=crop&q=75',
-    tone: 'bg-mist',
+    icon: Bike,
+    tone: {
+      bg: 'bg-sky-100',
+      text: 'text-sky-900',
+      active: 'bg-sky-700 text-white',
+    },
   },
   {
     id: 'garden',
     label: 'Ogród i Rośliny',
     filterCategory: 'Ogród & Narzędzia',
-    image: 'https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=200&auto=format&fit=crop&q=75',
-    tone: 'bg-sky-100',
+    icon: Leaf,
+    tone: {
+      bg: 'bg-teal-100',
+      text: 'text-teal-900',
+      active: 'bg-teal-700 text-white',
+    },
+  },
+  {
+    id: 'moto',
+    label: 'Motoryzacja',
+    filterCategory: 'Motoryzacja',
+    icon: Car,
+    tone: {
+      bg: 'bg-stone-200',
+      text: 'text-stone-900',
+      active: 'bg-stone-800 text-white',
+    },
   },
   {
     id: 'lost',
     label: 'Zgubione / Znalezione',
     filterKind: 'lost',
-    image: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=200&auto=format&fit=crop&q=75',
-    tone: 'bg-coral-50',
+    icon: HelpCircle,
+    tone: {
+      bg: 'bg-coral-100',
+      text: 'text-coral-900',
+      active: 'bg-coral text-ink',
+    },
   },
 ];
 
@@ -165,10 +217,6 @@ export function AdsScreen({
   const [localSort, setLocalSort] = useState<AdFilterState['sortBy'] | null>(null);
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
 
-  // Horizontal scroll progress for 2-row category grid
-  const catScrollRef = useRef<HTMLDivElement>(null);
-  const [catScrollProgress, setCatScrollProgress] = useState(0);
-
   // Recently viewed ads
   const [recentlyViewedIds, setRecentlyViewedIds] = useState<string[]>(() => {
     if (typeof window !== 'undefined') {
@@ -211,15 +259,13 @@ export function AdsScreen({
     }
   };
 
-  const handleCatScroll = () => {
-    const el = catScrollRef.current;
-    if (!el) return;
-    const maxScroll = el.scrollWidth - el.clientWidth;
-    if (maxScroll <= 0) {
-      setCatScrollProgress(0);
-      return;
-    }
-    setCatScrollProgress(Math.min(1, Math.max(0, el.scrollLeft / maxScroll)));
+  const getCategoryCount = (cat: CategoryItem) => {
+    if (cat.isAll) return adsList.length;
+    return adsList.filter((a) => {
+      if (cat.filterKind) return a.kind === cat.filterKind;
+      if (cat.filterCategory) return a.category === cat.filterCategory;
+      return true;
+    }).length;
   };
 
   const handleSelectCategory = (cat: CategoryItem) => {
@@ -265,7 +311,6 @@ export function AdsScreen({
     }
 
     if (filtersState) {
-      if (filtersState.onlyPromoted && !a.promoted) return false;
       if (filtersState.onlyFree && a.kind !== 'free' && a.price !== 0 && a.price !== null) return false;
       if (filtersState.minPrice && (a.price === null || a.price < parseFloat(filtersState.minPrice))) return false;
       if (filtersState.maxPrice && (a.price === null || a.price > parseFloat(filtersState.maxPrice))) return false;
@@ -296,8 +341,6 @@ export function AdsScreen({
     if (activeSort === 'price_asc') return (x.price ?? 0) - (y.price ?? 0);
     if (activeSort === 'price_desc') return (y.price ?? 0) - (x.price ?? 0);
     if (activeSort === 'popular') return (y.views ?? 0) - (x.views ?? 0);
-    if (x.promoted && !y.promoted) return -1;
-    if (!x.promoted && y.promoted) return 1;
     return 0;
   });
 
@@ -459,91 +502,77 @@ export function AdsScreen({
         )}
       </div>
 
-      {/* SECTION 1: Przeglądaj kategorie (OLX 2-row horizontal grid adapted to mójMińsk UI) */}
-      <section className="mx-5 mt-4 rounded-3xl bg-white p-4 shadow-card">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-display text-[17.5px] font-bold tracking-tight text-ink">
-            Przeglądaj kategorie
-          </h2>
+      {/* SECTION 1: Kategorie sąsiedzkie (Nowoczesny pasek 1-rzędowy Vinted / Airbnb) */}
+      <section className="mt-3">
+        <div className="mb-2 flex items-center justify-between px-5">
+          <div className="flex items-center gap-1.5">
+            <span className="grid h-6 w-6 place-items-center rounded-lg bg-sand-200 text-ink">
+              <Sparkles className="h-3.5 w-3.5" />
+            </span>
+            <h2 className="font-display text-[15.5px] font-bold tracking-tight text-ink">
+              Kategorie w Mińsku
+            </h2>
+          </div>
           <button
             type="button"
             onClick={() => setAllCategoriesSheetOpen(true)}
-            className="flex items-center gap-0.5 text-[12px] font-bold text-ink-500 active:opacity-60"
+            className="flex items-center gap-0.5 text-[12px] font-bold text-ink-500 hover:text-ink active:opacity-60"
           >
-            Wszystkie
+            Wszystkie ({CATEGORIES.length})
             <ChevronRight className="h-3.5 w-3.5" />
           </button>
         </div>
 
-        <div
-          ref={catScrollRef}
-          onScroll={handleCatScroll}
-          className="grid grid-rows-2 grid-flow-col auto-cols-[76px] gap-x-3 gap-y-3.5 overflow-x-auto pb-1.5 no-scrollbar"
-        >
+        <div className="flex gap-2 overflow-x-auto px-5 pb-1.5 no-scrollbar">
           {CATEGORIES.map((cat) => {
             const isSelected = cat.isAll
               ? selectedCatId === 'all' && quickFilter === 'all'
               : selectedCatId === cat.id;
+            const count = getCategoryCount(cat);
 
             return (
               <button
                 key={cat.id}
                 type="button"
                 onClick={() => handleSelectCategory(cat)}
-                className="group flex flex-col items-center focus:outline-none"
+                className={cn(
+                  'group flex shrink-0 items-center gap-2.5 rounded-2xl py-2 pl-2 pr-3.5 transition-all active:scale-95 border',
+                  isSelected
+                    ? 'bg-ink text-white border-ink shadow-card'
+                    : 'bg-white text-ink-700 border-mist-300 shadow-card hover:bg-mist/40',
+                )}
               >
-                <div
-                  className={cn(
-                    'relative grid h-15 w-15 place-items-center rounded-full overflow-hidden transition-all duration-150 active:scale-95',
-                    isSelected && !cat.isAll
-                      ? 'ring-2 ring-ink bg-coral-100 shadow-sm'
-                      : cat.tone || 'bg-mist',
-                  )}
-                >
-                  {cat.isAll ? (
-                    <svg
-                      viewBox="0 0 28 28"
-                      fill="none"
-                      className="h-6 w-6 text-ink"
-                      stroke="currentColor"
-                      strokeWidth="2.1"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <rect x="4" y="4" width="8" height="8" rx="2" />
-                      <rect x="4" y="16" width="8" height="8" rx="2" />
-                      <rect x="16" y="16" width="8" height="8" rx="2" />
-                      <path d="M20 4v8M16 8h8" />
-                    </svg>
-                  ) : (
-                    <Img
-                      src={cat.image!}
-                      alt={cat.label}
-                      className="h-11 w-11 rounded-full object-cover shadow-xs"
-                    />
-                  )}
-                </div>
                 <span
                   className={cn(
-                    'mt-1.5 text-center text-[11px] leading-[1.2] line-clamp-2 max-w-[74px]',
-                    isSelected && !cat.isAll ? 'font-extrabold text-ink' : 'font-semibold text-ink-700',
+                    'grid h-8.5 w-8.5 shrink-0 place-items-center rounded-xl transition-colors',
+                    isSelected
+                      ? 'bg-white/20 text-white'
+                      : cn(cat.tone.bg, cat.tone.text),
                   )}
                 >
-                  {cat.label}
+                  <cat.icon className="h-4 w-4" aria-hidden />
                 </span>
+                <div className="text-left min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="truncate text-[12px] font-bold leading-tight">{cat.label}</span>
+                    {cat.badge && !isSelected && (
+                      <span className="rounded-full bg-emerald-100 px-1.5 py-0.2 text-[8.5px] font-extrabold text-emerald-800">
+                        {cat.badge}
+                      </span>
+                    )}
+                  </div>
+                  <span
+                    className={cn(
+                      'text-[9.5px] font-medium leading-none block mt-0.5',
+                      isSelected ? 'text-white/80' : 'text-ink-400',
+                    )}
+                  >
+                    {count} {count === 1 ? 'oferta' : count < 5 ? 'oferty' : 'ofert'}
+                  </span>
+                </div>
               </button>
             );
           })}
-        </div>
-
-        {/* Horizontal Scroll Progress Pill Indicator */}
-        <div className="mt-2 flex justify-center">
-          <div className="h-1 w-11 rounded-full bg-mist-200 overflow-hidden">
-            <div
-              className="h-full w-1/2 rounded-full bg-ink-400 transition-transform duration-75"
-              style={{ transform: `translateX(${catScrollProgress * 100}%)` }}
-            />
-          </div>
         </div>
       </section>
 
@@ -660,38 +689,42 @@ export function AdsScreen({
 
       {/* Results Count + Sort & View Switcher Toolbar */}
       <div className="relative mt-4 flex items-center justify-between px-5">
-        <div>
-          <h2 className="font-display text-[18px] font-semibold tracking-tight text-ink">
-            {quickFilter === 'saved'
-              ? 'Obserwowane ogłoszenia'
-              : activeCategoryObj && !activeCategoryObj.isAll
-                ? activeCategoryObj.label
-                : 'Ogłoszenia sąsiadów'}
-          </h2>
-          <p className="text-[11.5px] font-medium text-ink-400">
-            Znaleźliśmy {filteredAds.length}{' '}
-            {filteredAds.length === 1 ? 'ogłoszenie' : filteredAds.length < 5 ? 'ogłoszenia' : 'ogłoszeń'}
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <h2 className="font-display text-[17px] font-bold tracking-tight text-ink truncate">
+              {quickFilter === 'saved'
+                ? 'Obserwowane'
+                : activeCategoryObj && !activeCategoryObj.isAll
+                  ? activeCategoryObj.label
+                  : 'Wszystkie ogłoszenia'}
+            </h2>
+            <span className="rounded-full bg-mist-300 px-2 py-0.5 text-[10.5px] font-bold text-ink-700">
+              {filteredAds.length}
+            </span>
+          </div>
+          <p className="text-[11px] font-medium text-ink-400 mt-0.5">
+            Mińsk Mazowiecki · bezpośrednio od sąsiadów
           </p>
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 shrink-0">
           <button
             type="button"
             onClick={() => setSortDropdownOpen((prev) => !prev)}
-            className="flex h-9 items-center gap-1.5 rounded-full bg-white px-3 text-[11.5px] font-bold text-ink shadow-card active:scale-95"
+            className="flex h-8.5 items-center gap-1 rounded-full bg-white px-3 text-[11px] font-bold text-ink shadow-card active:scale-95 border border-mist-300"
           >
-            <ArrowUpDown className="h-3.5 w-3.5 text-ink-500" />
-            <span>{SORT_LABELS[activeSort]}</span>
+            <ArrowUpDown className="h-3 w-3 text-ink-500" />
+            <span className="max-w-[70px] truncate">{SORT_LABELS[activeSort]}</span>
           </button>
 
-          <div className="flex rounded-full bg-white p-0.5 shadow-card">
+          <div className="flex rounded-full bg-white p-0.5 shadow-card border border-mist-300">
             <button
               type="button"
               onClick={() => setViewMode('grid')}
               aria-label="Widok kafelków"
               className={cn(
-                'grid h-8 w-8 place-items-center rounded-full transition-colors',
-                viewMode === 'grid' ? 'bg-ink text-white' : 'text-ink-400',
+                'grid h-7.5 w-7.5 place-items-center rounded-full transition-colors',
+                viewMode === 'grid' ? 'bg-ink text-white' : 'text-ink-400 hover:text-ink',
               )}
             >
               <LayoutGrid className="h-3.5 w-3.5" />
@@ -701,8 +734,8 @@ export function AdsScreen({
               onClick={() => setViewMode('list')}
               aria-label="Widok listy"
               className={cn(
-                'grid h-8 w-8 place-items-center rounded-full transition-colors',
-                viewMode === 'list' ? 'bg-ink text-white' : 'text-ink-400',
+                'grid h-7.5 w-7.5 place-items-center rounded-full transition-colors',
+                viewMode === 'list' ? 'bg-ink text-white' : 'text-ink-400 hover:text-ink',
               )}
             >
               <List className="h-3.5 w-3.5" />
@@ -711,7 +744,7 @@ export function AdsScreen({
         </div>
 
         {sortDropdownOpen && (
-          <div className="absolute right-5 top-11 z-30 w-48 rounded-2xl bg-white p-1.5 shadow-float">
+          <div className="absolute right-5 top-11 z-30 w-48 rounded-2xl bg-white p-1.5 shadow-float border border-mist-300">
             {(Object.keys(SORT_LABELS) as Array<AdFilterState['sortBy']>).map((sortKey) => (
               <button
                 key={sortKey}
@@ -749,13 +782,13 @@ export function AdsScreen({
           </p>
           <button
             onClick={resetAllLocalFilters}
-            className="mt-4 rounded-full bg-ink px-4 py-2 text-[12.5px] font-bold text-white"
+            className="mt-4 rounded-full bg-ink px-4 py-2 text-[12.5px] font-bold text-white shadow-card active:scale-95"
           >
             Przeglądaj wszystkie
           </button>
         </div>
       ) : viewMode === 'grid' ? (
-        /* 2-Column Mosaic Grid (mójMińsk Card Style + Neighbor Avatar + OLX details) */
+        /* 2-Column Mosaic Grid (Vinted / Airbnb neighborly style) */
         <div className="mt-3 grid grid-cols-2 gap-3 px-5">
           {filteredAds.map((a) => {
             const isItemLiked = !!likedAds[a.id];
@@ -763,14 +796,26 @@ export function AdsScreen({
             return (
               <article
                 key={a.id}
-                className={cn(
-                  'group relative flex flex-col justify-between rounded-3xl p-2.5 shadow-card transition-shadow hover:shadow-float',
-                  a.promoted
-                    ? 'bg-gradient-to-b from-amber-50/70 to-white border-2 border-amber-300 ring-1 ring-amber-200'
-                    : 'bg-white',
-                )}
+                className="group relative flex flex-col justify-between rounded-3xl bg-white p-3 shadow-card transition-all hover:shadow-float active:scale-[0.99] border border-mist-200"
               >
                 <div>
+                  {/* Neighbor Identity Header (Avatar + Name + Street + Time) */}
+                  <div className="mb-2 flex items-center justify-between gap-1.5 px-0.5">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <img
+                        src={avatarUrl(a.author)}
+                        alt={a.author}
+                        className="h-6 w-6 shrink-0 rounded-full bg-sand-100 object-cover ring-1 ring-mist-300"
+                      />
+                      <div className="min-w-0">
+                        <p className="truncate text-[11.5px] font-bold text-ink leading-tight">{a.author}</p>
+                        <p className="truncate text-[9.5px] font-medium text-ink-400 leading-none">ul. {a.street}</p>
+                      </div>
+                    </div>
+                    <span className="shrink-0 text-[9.5px] font-medium text-ink-400">{a.time}</span>
+                  </div>
+
+                  {/* Photo with rounded corners and badges */}
                   <div
                     onClick={() => handleOpenAd(a)}
                     className="relative cursor-pointer overflow-hidden rounded-2xl bg-mist"
@@ -780,6 +825,8 @@ export function AdsScreen({
                       alt={a.title}
                       className="aspect-[4/3] w-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
+
+                    {/* Obserwuj Heart Button */}
                     <button
                       type="button"
                       onClick={(e) => {
@@ -788,110 +835,79 @@ export function AdsScreen({
                       }}
                       aria-label="Obserwuj"
                       aria-pressed={isItemLiked}
-                      className="absolute right-2 top-2 grid h-9 w-9 place-items-center rounded-full bg-white/90 backdrop-blur shadow-sm transition-transform active:scale-90"
+                      className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-white/90 backdrop-blur shadow-sm transition-transform active:scale-90"
                     >
                       <Heart
-                        className={cn('h-4 w-4 transition-colors', isItemLiked && 'fill-coral text-coral')}
+                        className={cn('h-3.5 w-3.5 transition-colors', isItemLiked && 'fill-coral text-coral')}
                         aria-hidden
                       />
                     </button>
 
-                    {a.promoted && (
-                      <span className="absolute left-2 top-2 z-10 flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 px-2 py-0.5 text-[9.5px] font-extrabold text-ink shadow">
-                        <Sparkles className="h-3 w-3" />
-                        Wyróżnione
+                    {/* Status Badges */}
+                    {a.status === 'reserved' ? (
+                      <span className="absolute left-2 top-2 rounded-full bg-amber-400 px-2 py-0.5 text-[9px] font-extrabold text-ink shadow">
+                        Zarezerwowane
                       </span>
-                    )}
+                    ) : a.status === 'sold' ? (
+                      <span className="absolute left-2 top-2 rounded-full bg-ink px-2 py-0.5 text-[9px] font-extrabold text-white shadow">
+                        Sprzedane
+                      </span>
+                    ) : a.kind === 'free' ? (
+                      <span className="absolute left-2 top-2 rounded-full bg-emerald-600 px-2 py-0.5 text-[9px] font-extrabold text-white shadow">
+                        Oddam za darmo
+                      </span>
+                    ) : a.kind === 'lost' ? (
+                      <span className="absolute left-2 top-2 rounded-full bg-coral px-2 py-0.5 text-[9px] font-extrabold text-ink shadow">
+                        Zaginął
+                      </span>
+                    ) : null}
 
+                    {/* Photo Count */}
                     {photoCount > 1 && (
-                      <span className="absolute bottom-2 right-2 flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-[9.5px] font-bold text-white backdrop-blur-xs">
+                      <span className="absolute bottom-2 right-2 flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-[9px] font-bold text-white backdrop-blur-xs">
                         <Camera className="h-2.5 w-2.5" />
                         {photoCount}
                       </span>
                     )}
-
-                    {a.status === 'reserved' ? (
-                      <span
-                        className={cn(
-                          'absolute left-2 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold text-ink shadow',
-                          a.promoted ? 'top-8' : 'top-2',
-                        )}
-                      >
-                        Zarezerwowane
-                      </span>
-                    ) : a.status === 'sold' ? (
-                      <span
-                        className={cn(
-                          'absolute left-2 rounded-full bg-ink px-2 py-0.5 text-[10px] font-bold text-white shadow',
-                          a.promoted ? 'top-8' : 'top-2',
-                        )}
-                      >
-                        Sprzedane
-                      </span>
-                    ) : a.kind !== 'sell' ? (
-                      <span
-                        className={cn(
-                          'absolute left-2 rounded-full px-2 py-0.5 text-[10px] font-bold shadow',
-                          a.promoted ? 'top-8' : 'top-2',
-                          a.kind === 'free' ? 'bg-sky text-ink' : 'bg-coral text-ink',
-                        )}
-                      >
-                        {a.kind === 'free' ? 'Oddam' : 'Zaginął'}
-                      </span>
-                    ) : null}
                   </div>
 
-                  <div className="px-1 pb-1 pt-2.5">
-                    <div onClick={() => handleOpenAd(a)} className="cursor-pointer">
-                      <div className="flex items-baseline gap-1.5 flex-wrap">
-                        <p className="font-display text-[17.5px] font-semibold leading-none text-ink">
-                          {a.price ? zl(a.price) : a.kind === 'free' ? 'Za darmo' : 'Pomóż'}
-                        </p>
-                        {a.negotiable && (
-                          <span className="text-[10px] font-semibold text-ink-400">do negocjacji</span>
-                        )}
-                      </div>
-                      <p className="mt-1 line-clamp-2 min-h-[2.5em] text-[12.5px] font-semibold leading-snug text-ink-700">
-                        {a.title}
+                  {/* Title & Price */}
+                  <div onClick={() => handleOpenAd(a)} className="cursor-pointer pt-2.5 px-0.5">
+                    <div className="flex items-baseline gap-1.5 flex-wrap">
+                      <p className="font-display text-[17px] font-bold leading-none text-ink">
+                        {a.price ? zl(a.price) : a.kind === 'free' ? 'Za darmo' : 'Pomóż'}
                       </p>
-                    </div>
-
-                    {/* Neighbor Identity Row (Avatar + Name + StreetPill) */}
-                    <div className="mt-2 flex items-center justify-between gap-1">
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        <img
-                          src={avatarUrl(a.author)}
-                          alt={a.author}
-                          className="h-5 w-5 shrink-0 rounded-full bg-sand-100 object-cover"
-                        />
-                        <span className="truncate text-[11px] font-bold text-ink-700">{a.author}</span>
-                      </div>
-                      <span className="shrink-0 text-[10px] text-ink-400">{a.time}</span>
-                    </div>
-                    <div className="mt-1.5 flex items-center justify-between gap-1">
-                      <StreetPill street={a.street} />
-                      {a.condition && (
-                        <span className="truncate text-[9.5px] font-semibold text-ink-400">
-                          {a.condition}
-                        </span>
+                      {a.negotiable && (
+                        <span className="text-[10px] font-semibold text-ink-400">do neg.</span>
                       )}
                     </div>
+                    <p className="mt-1 line-clamp-2 min-h-[2.4em] text-[12.5px] font-semibold leading-snug text-ink-700">
+                      {a.title}
+                    </p>
                   </div>
                 </div>
 
-                <button
-                  onClick={() => onChatClick?.(a)}
-                  className="mt-2.5 flex h-9 w-full items-center justify-center gap-1.5 rounded-full bg-mist text-[12px] font-bold text-ink hover:bg-mist-200 transition-colors"
-                >
-                  <MessageCircle className="h-3.5 w-3.5" aria-hidden />
-                  Napisz do {a.author}
-                </button>
+                {/* Card Footer: Condition / Location + Discreet Chat Micro-Pill */}
+                <div className="mt-2.5 flex items-center justify-between gap-1 border-t border-mist/80 pt-2 px-0.5">
+                  <span className="truncate text-[10px] font-semibold text-ink-400">
+                    {a.condition || `Mińsk`}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => onChatClick?.(a)}
+                    className="flex items-center gap-1 rounded-full bg-mist px-2.5 py-1 text-[11px] font-bold text-ink transition-colors hover:bg-mist-300 active:scale-95"
+                    title={`Napisz do ${a.author}`}
+                  >
+                    <MessageCircle className="h-3 w-3 text-ink-700" />
+                    <span>Napisz</span>
+                  </button>
+                </div>
               </article>
             );
           })}
         </div>
       ) : (
-        /* Horizontal List View (mójMińsk Card Style + Neighbor Avatar) */
+        /* Horizontal List View (Vinted / Airbnb neighborly style) */
         <div className="mt-3 space-y-3 px-5">
           {filteredAds.map((a) => {
             const isItemLiked = !!likedAds[a.id];
@@ -900,34 +916,42 @@ export function AdsScreen({
               <article
                 key={a.id}
                 onClick={() => handleOpenAd(a)}
-                className={cn(
-                  'flex cursor-pointer gap-3.5 rounded-3xl p-3 shadow-card transition-shadow hover:shadow-float',
-                  a.promoted
-                    ? 'bg-gradient-to-r from-amber-50/70 to-white border-2 border-amber-300'
-                    : 'bg-white',
-                )}
+                className="flex cursor-pointer gap-3.5 rounded-3xl bg-white p-3 shadow-card transition-all hover:shadow-float active:scale-[0.99] border border-mist-200"
               >
                 <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-2xl bg-mist">
                   <Img src={a.image} alt={a.title} className="h-full w-full object-cover" />
-                  {a.promoted && (
-                    <span className="absolute left-1.5 top-1.5 flex items-center gap-0.5 rounded-full bg-amber-400 px-1.5 py-0.5 text-[8.5px] font-extrabold text-ink shadow">
-                      <Sparkles className="h-2.5 w-2.5" />
-                      Top
-                    </span>
-                  )}
                   {photoCount > 1 && (
-                    <span className="absolute bottom-1.5 right-1.5 flex items-center gap-0.5 rounded-full bg-black/55 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                    <span className="absolute bottom-1.5 right-1.5 flex items-center gap-0.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[9px] font-bold text-white">
                       <Camera className="h-2.5 w-2.5" />
                       {photoCount}
+                    </span>
+                  )}
+                  {a.kind === 'free' && (
+                    <span className="absolute top-1.5 left-1.5 rounded-full bg-emerald-600 px-2 py-0.5 text-[8.5px] font-extrabold text-white shadow">
+                      Oddam
                     </span>
                   )}
                 </div>
 
                 <div className="flex min-w-0 flex-1 flex-col justify-between">
                   <div>
+                    {/* Neighbor Header */}
+                    <div className="flex items-center justify-between gap-1 mb-1">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <img
+                          src={avatarUrl(a.author)}
+                          alt={a.author}
+                          className="h-4.5 w-4.5 shrink-0 rounded-full bg-sand-100 object-cover"
+                        />
+                        <span className="truncate text-[11px] font-bold text-ink-700">{a.author}</span>
+                        <span className="text-[10px] text-ink-400">· ul. {a.street}</span>
+                      </div>
+                      <span className="text-[9.5px] text-ink-400 shrink-0">{a.time}</span>
+                    </div>
+
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-baseline gap-1.5 flex-wrap">
-                        <p className="font-display text-[17.5px] font-semibold leading-none text-ink">
+                        <p className="font-display text-[17px] font-bold leading-none text-ink">
                           {a.price ? zl(a.price) : a.kind === 'free' ? 'Za darmo' : 'Pomóż'}
                         </p>
                         {a.negotiable && (
@@ -941,38 +965,31 @@ export function AdsScreen({
                           onToggleLike?.(a.id);
                         }}
                         aria-label="Obserwuj"
-                        className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-mist text-ink"
+                        className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-mist text-ink"
                       >
                         <Heart className={cn('h-3.5 w-3.5', isItemLiked && 'fill-coral text-coral')} />
                       </button>
                     </div>
 
-                    <p className="mt-1 line-clamp-2 text-[13px] font-semibold leading-snug text-ink-700">
+                    <p className="mt-1 line-clamp-1 text-[12.5px] font-semibold text-ink-700">
                       {a.title}
                     </p>
                   </div>
 
-                  <div className="mt-2 flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <img
-                        src={avatarUrl(a.author)}
-                        alt={a.author}
-                        className="h-5 w-5 shrink-0 rounded-full bg-sand-100 object-cover"
-                      />
-                      <span className="truncate text-[11px] font-bold text-ink-700">{a.author}</span>
-                      <StreetPill street={a.street} />
-                    </div>
-
+                  <div className="mt-2 flex items-center justify-between gap-2 border-t border-mist/80 pt-1.5">
+                    <span className="text-[10px] font-medium text-ink-400">
+                      {a.condition || `Mińsk Mazowiecki`}
+                    </span>
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         onChatClick?.(a);
                       }}
-                      className="flex shrink-0 items-center gap-1 rounded-full bg-mist px-3 py-1.5 text-[11.5px] font-bold text-ink hover:bg-mist-200"
+                      className="flex shrink-0 items-center gap-1 rounded-full bg-mist px-2.5 py-1 text-[11px] font-bold text-ink hover:bg-mist-300"
                     >
-                      <MessageCircle className="h-3.5 w-3.5" />
-                      Czat
+                      <MessageCircle className="h-3 w-3" />
+                      <span>Napisz</span>
                     </button>
                   </div>
                 </div>
@@ -1005,11 +1022,7 @@ export function AdsScreen({
 
             <div className="mt-2 overflow-y-auto divide-y divide-mist">
               {CATEGORIES.map((cat) => {
-                const count = cat.isAll
-                  ? adsList.length
-                  : adsList.filter((a) =>
-                      cat.filterKind ? a.kind === cat.filterKind : a.category === cat.filterCategory,
-                    ).length;
+                const count = getCategoryCount(cat);
 
                 return (
                   <button
@@ -1029,20 +1042,17 @@ export function AdsScreen({
                     <div className="flex items-center gap-3">
                       <div
                         className={cn(
-                          'grid h-11 w-11 shrink-0 place-items-center rounded-full overflow-hidden',
-                          cat.tone || 'bg-mist',
+                          'grid h-10 w-10 shrink-0 place-items-center rounded-xl',
+                          cat.tone.bg,
+                          cat.tone.text,
                         )}
                       >
-                        {cat.isAll ? (
-                          <LayoutGrid className="h-5 w-5 text-ink" />
-                        ) : (
-                          <Img src={cat.image!} alt={cat.label} className="h-9 w-9 rounded-full object-cover" />
-                        )}
+                        <cat.icon className="h-5 w-5" />
                       </div>
                       <div>
                         <p className="text-[14px] font-bold text-ink">{cat.label}</p>
                         <p className="text-[11.5px] text-ink-400">
-                          {count} {count === 1 ? 'ogłoszenie' : count < 5 ? 'ogłoszenia' : 'ogłoszeń'}
+                          {count} {count === 1 ? 'oferta' : count < 5 ? 'oferty' : 'ofert'}
                         </p>
                       </div>
                     </div>

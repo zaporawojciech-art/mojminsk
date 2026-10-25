@@ -14,7 +14,6 @@ import {
   Share2,
   ShieldAlert,
   ShieldCheck,
-  Sparkles,
   Tag,
   Trash2,
   X,
@@ -36,7 +35,6 @@ interface AdDetailModalProps {
   onDelete?: (adId: string) => void;
   onSellerClick?: (sellerName: string, sellerStreet: string) => void;
   onEditClick?: (ad: Ad) => void;
-  onPromoteClick?: (ad: Ad) => void;
   onReserveClick?: (ad: Ad) => void;
   isClosing?: boolean;
 }
@@ -53,7 +51,6 @@ export function AdDetailModal({
   onDelete,
   onSellerClick,
   onEditClick,
-  onPromoteClick,
   onReserveClick,
   isClosing = false,
 }: AdDetailModalProps) {
@@ -225,12 +222,6 @@ export function AdDetailModal({
             {/* Badges & Photo Counter Bar (positioned above the -mt-7 rounded sheet overlap) */}
             <div className="pointer-events-none absolute inset-x-4 bottom-10 z-20 flex items-end justify-between gap-2">
               <div className="flex flex-wrap items-center gap-1.5">
-                {ad.promoted && (
-                  <span className="flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 px-2.5 py-1 text-[10.5px] font-extrabold text-ink shadow-md">
-                    <Sparkles className="h-3 w-3" />
-                    Wyróżnione
-                  </span>
-                )}
                 {currentStatus === 'reserved' && (
                   <span className="rounded-full bg-amber-400 px-2.5 py-1 text-[10.5px] font-bold text-ink shadow">
                     Zarezerwowane
@@ -448,25 +439,15 @@ export function AdDetailModal({
                   Zarządzaj swoim ogłoszeniem
                 </h3>
 
-                {/* Edit & Promote Buttons */}
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => onEditClick?.(ad)}
-                    className="flex h-11 items-center justify-center gap-1.5 rounded-2xl bg-mist px-3 text-[13px] font-bold text-ink hover:bg-mist-200 transition-all active:scale-95"
-                  >
-                    <Edit3 className="h-4 w-4" />
-                    Edytuj treść
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onPromoteClick?.(ad)}
-                    className="flex h-11 items-center justify-center gap-1.5 rounded-2xl bg-amber-100 px-3 text-[13px] font-bold text-amber-900 hover:bg-amber-200 transition-all active:scale-95"
-                  >
-                    <Sparkles className="h-4 w-4 text-amber-600" />
-                    Wyróżnij (BLIK)
-                  </button>
-                </div>
+                {/* Edit Button */}
+                <button
+                  type="button"
+                  onClick={() => onEditClick?.(ad)}
+                  className="flex h-11 w-full items-center justify-center gap-1.5 rounded-2xl bg-mist px-3 text-[13px] font-bold text-ink hover:bg-mist-200 transition-all active:scale-95"
+                >
+                  <Edit3 className="h-4 w-4" />
+                  Edytuj treść ogłoszenia
+                </button>
 
                 <div className="grid grid-cols-2 gap-2 border-t border-mist pt-2">
                   {currentStatus !== 'active' && (

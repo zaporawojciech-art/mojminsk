@@ -23,12 +23,14 @@ import {
   allProducts,
   ads as initialAds,
   initialAdConversations,
+  rides as initialRides,
   type Ad,
   type AdConversation,
   type FavoriteBusStop,
   FAVORITE_BUS_STOPS_KEY,
   type LineId,
   type Product,
+  type Ride,
   type User,
 } from './data/mockData';
 import { OnboardingScreen } from './screens/OnboardingScreen';
@@ -48,12 +50,12 @@ const CheckoutScreen = lazy(() => import('./screens/CheckoutScreen').then((m) =>
 const MotylekScreen = lazy(() => import('./screens/MotylekScreen').then((m) => ({ default: m.MotylekScreen })));
 const ZditmScreen = lazy(() => import('./screens/ZditmScreen').then((m) => ({ default: m.ZditmScreen })));
 const AddAdModal = lazy(() => import('./screens/AddAdModal').then((m) => ({ default: m.AddAdModal })));
+const AddRideModal = lazy(() => import('./screens/AddRideModal').then((m) => ({ default: m.AddRideModal })));
 const ChatModal = lazy(() => import('./screens/ChatModal').then((m) => ({ default: m.ChatModal })));
 const AdDetailModal = lazy(() => import('./screens/AdDetailModal').then((m) => ({ default: m.AdDetailModal })));
 const MyAdsModal = lazy(() => import('./screens/MyAdsModal').then((m) => ({ default: m.MyAdsModal })));
 const ReportAdModal = lazy(() => import('./screens/ReportAdModal').then((m) => ({ default: m.ReportAdModal })));
 const EditAdModal = lazy(() => import('./screens/EditAdModal').then((m) => ({ default: m.EditAdModal })));
-const PromoteAdModal = lazy(() => import('./screens/PromoteAdModal').then((m) => ({ default: m.PromoteAdModal })));
 const AdConversationsModal = lazy(() => import('./screens/AdConversationsModal').then((m) => ({ default: m.AdConversationsModal })));
 const SellerProfileModal = lazy(() => import('./screens/SellerProfileModal').then((m) => ({ default: m.SellerProfileModal })));
 const AdFiltersModal = lazy(() => import('./screens/AdFiltersModal').then((m) => ({ default: m.AdFiltersModal })));
@@ -90,9 +92,11 @@ export default function App() {
   const [frame, setFrame] = useState<HTMLDivElement | null>(null);
   const mainRef = useRef<HTMLElement>(null);
 
-  // Dynamic ads list
+  // Dynamic ads & rides list
   const [adsList, setAdsList] = useState<Ad[]>(initialAds);
   const [likedAds, setLikedAds] = useState<Record<string, boolean>>({});
+  const [ridesList, setRidesList] = useState<Ride[]>(initialRides);
+  const [addRideOpen, setAddRideOpen] = useState(false);
 
   // Modals for Ads logic
   const [addAdOpen, setAddAdOpen] = useState(false);
@@ -105,7 +109,6 @@ export default function App() {
   const [conversations, setConversations] = useState<AdConversation[]>(initialAdConversations);
   const [conversationsOpen, setConversationsOpen] = useState(false);
   const [editAd, setEditAd] = useState<Ad | null>(null);
-  const [promoteAd, setPromoteAd] = useState<Ad | null>(null);
   const [sellerProfile, setSellerProfile] = useState<{ name: string; street: string } | null>(null);
   const [reserveAd, setReserveAd] = useState<Ad | null>(null);
   const [filtersModalOpen, setFiltersModalOpen] = useState(false);
@@ -117,7 +120,6 @@ export default function App() {
     selectedCategory: 'Wszystkie',
     selectedStreet: 'all',
     onlyFree: false,
-    onlyPromoted: false,
   });
 
   const handleAddFavoriteBus = (newFav: Omit<FavoriteBusStop, 'id'>) => {
@@ -209,10 +211,10 @@ export default function App() {
       myAdsOpen ||
       reportAd ||
       addAdOpen ||
+      addRideOpen ||
       chatAd ||
       conversationsOpen ||
       editAd ||
-      promoteAd ||
       sellerProfile ||
       reserveAd ||
       filtersModalOpen ||
@@ -240,11 +242,11 @@ export default function App() {
   const closeFiltersModal = useCallback(() => closeWithAnimation('filtersModal', () => setFiltersModalOpen(false)), [closeWithAnimation]);
   const closeReportAd = useCallback(() => closeWithAnimation('reportAd', () => setReportAd(null)), [closeWithAnimation]);
   const closeChatAd = useCallback(() => closeWithAnimation('chatAd', () => setChatAd(null)), [closeWithAnimation]);
-  const closePromoteAd = useCallback(() => closeWithAnimation('promoteAd', () => setPromoteAd(null)), [closeWithAnimation]);
   const closeEditAd = useCallback(() => closeWithAnimation('editAd', () => setEditAd(null)), [closeWithAnimation]);
   const closeSellerProfile = useCallback(() => closeWithAnimation('sellerProfile', () => setSellerProfile(null)), [closeWithAnimation]);
   const closeConversations = useCallback(() => closeWithAnimation('conversations', () => setConversationsOpen(false)), [closeWithAnimation]);
   const closeSelectedAd = useCallback(() => closeWithAnimation('selectedAd', () => setSelectedAd(null)), [closeWithAnimation]);
+  const closeAddRide = useCallback(() => closeWithAnimation('addRide', () => setAddRideOpen(false)), [closeWithAnimation]);
   const closeAddAd = useCallback(() => closeWithAnimation('addAd', () => setAddAdOpen(false)), [closeWithAnimation]);
   const closeMyAds = useCallback(() => closeWithAnimation('myAds', () => setMyAdsOpen(false)), [closeWithAnimation]);
   const closePartner = useCallback(() => closeWithAnimation('partner', () => setPartnerOpen(false)), [closeWithAnimation]);
@@ -256,9 +258,9 @@ export default function App() {
     { active: !!chatAd, close: closeChatAd },
     { active: !!reportAd, close: closeReportAd },
     { active: !!reserveAd, close: closeReserveAd },
-    { active: !!promoteAd, close: closePromoteAd },
     { active: !!editAd, close: closeEditAd },
     { active: !!sellerProfile, close: closeSellerProfile },
+    { active: addRideOpen, close: closeAddRide },
     { active: addAdOpen, close: closeAddAd },
     { active: !!selectedAd, close: closeSelectedAd },
     { active: filtersModalOpen, close: closeFiltersModal },
@@ -342,13 +344,8 @@ export default function App() {
     setSelectedAd((prev) => (prev && prev.id === updatedAd.id ? updatedAd : prev));
   }, []);
 
-  const handleAdPromoted = useCallback((adId: string, plan: 'boost' | 'highlight' | 'vip') => {
-    setAdsList((prev) =>
-      prev.map((a) => (a.id === adId ? { ...a, promoted: true, promotedPlan: plan } : a)),
-    );
-    setSelectedAd((prev) =>
-      prev && prev.id === adId ? { ...prev, promoted: true, promotedPlan: plan } : prev,
-    );
+  const handleDeleteRide = useCallback((rideId: string) => {
+    setRidesList((prev) => prev.filter((r) => r.id !== rideId));
   }, []);
 
   const handleReservationSuccess = useCallback(
@@ -387,8 +384,7 @@ export default function App() {
     (adFilters.maxPrice ? 1 : 0) +
     (adFilters.selectedCategory !== 'Wszystkie' ? 1 : 0) +
     (adFilters.selectedStreet !== 'all' ? 1 : 0) +
-    (adFilters.onlyFree ? 1 : 0) +
-    (adFilters.onlyPromoted ? 1 : 0);
+    (adFilters.onlyFree ? 1 : 0);
 
   const unreadConversationsCount = conversations.reduce((acc, c) => acc + c.unreadCount, 0);
 
@@ -417,8 +413,9 @@ export default function App() {
     : [];
   const userActiveAdsCount = userAds.filter((a) => (a.status ?? 'active') === 'active').length;
   const userReservedAdsCount = userAds.filter((a) => a.status === 'reserved').length;
-  const userPromotedAdsCount = userAds.filter((a) => !!a.promoted).length;
-  const firstActiveUserAd = userAds.find((a) => (a.status ?? 'active') === 'active') ?? userAds[0] ?? adsList[0];
+  const userRidesCount = user
+    ? ridesList.filter((r) => r.driver.toLowerCase() === user.name.toLowerCase()).length
+    : 0;
 
   const handleTabChange = useCallback(
     (nextTab: TabId) => {
@@ -452,8 +449,8 @@ export default function App() {
       void import('./screens/PartnerScreen');
       void import('./screens/CheckoutScreen');
       void import('./screens/AddAdModal');
+      void import('./screens/AddRideModal');
       void import('./screens/EditAdModal');
-      void import('./screens/PromoteAdModal');
       void import('./screens/AdConversationsModal');
       void import('./screens/SellerProfileModal');
       void import('./screens/ChatModal');
@@ -521,7 +518,14 @@ export default function App() {
       />
     );
   } else if (tab === 'rides') {
-    tabContent = <RidesScreen user={user} onProfile={() => setOverlay('profile')} />;
+    tabContent = (
+      <RidesScreen
+        user={user}
+        onProfile={() => setOverlay('profile')}
+        ridesList={ridesList}
+        onDeleteRide={handleDeleteRide}
+      />
+    );
   } else {
     tabContent = (
       <TalksScreen
@@ -597,15 +601,29 @@ export default function App() {
               onMyAds={() => setMyAdsOpen(true)}
               myAdsCount={userActiveAdsCount}
               myReservedAdsCount={userReservedAdsCount}
-              myPromotedAdsCount={userPromotedAdsCount}
               onOpenConversations={() => setConversationsOpen(true)}
+              conversations={conversations}
+              onOpenChatWithNeighbor={(conv) => {
+                const foundAd = adsList.find((a) => a.id === conv.adId);
+                if (foundAd) {
+                  setChatAd(foundAd);
+                } else {
+                  setChatAd({
+                    id: conv.adId,
+                    title: conv.adTitle,
+                    price: conv.adPrice,
+                    kind: conv.adPrice ? 'sell' : 'free',
+                    author: conv.otherUser.name,
+                    street: conv.adStreet,
+                    time: 'Dzisiaj',
+                    image: conv.adImage,
+                  });
+                }
+              }}
               unreadConversationsCount={unreadConversationsCount}
               onPreviewPublic={() => setSellerProfile({ name: user.name, street: user.street.name })}
-              onPromoteFirstAd={firstActiveUserAd ? () => setPromoteAd(firstActiveUserAd) : undefined}
-              onOpenRides={() => {
-                closeOverlay();
-                handleTabChange('rides');
-              }}
+              onAddRide={() => setAddRideOpen(true)}
+              myRidesCount={userRidesCount}
               onInstallApp={() => setInstallModalOpen(true)}
               userAds={userAds}
             />
@@ -701,7 +719,6 @@ export default function App() {
               onStatusChange={handleStatusChange}
               onDeleteAd={handleDeleteAd}
               onEditAd={(ad) => setEditAd(ad)}
-              onPromoteAd={(ad) => setPromoteAd(ad)}
             />
           </AsyncViewBoundary>
         )}
@@ -745,7 +762,6 @@ export default function App() {
                   selectedCategory: 'Wszystkie',
                   selectedStreet: 'all',
                   onlyFree: false,
-                  onlyPromoted: false,
                 })
               }
             />
@@ -788,7 +804,6 @@ export default function App() {
               onDelete={handleDeleteAd}
               onSellerClick={(name, street) => setSellerProfile({ name, street })}
               onEditClick={(ad) => setEditAd(ad)}
-              onPromoteClick={(ad) => setPromoteAd(ad)}
               onReserveClick={(ad) => setReserveAd(ad)}
             />
           </AsyncViewBoundary>
@@ -810,6 +825,24 @@ export default function App() {
           </AsyncViewBoundary>
         )}
 
+        {user && addRideOpen && (
+          <AsyncViewBoundary
+            viewKey="modal-add-ride"
+            level={3}
+            isClosing={!!exitingScreens['addRide']}
+            skeleton={<ModalFormSkeleton />}
+          >
+            <AddRideModal
+              user={user}
+              rides={ridesList}
+              onClose={closeAddRide}
+              isClosing={!!exitingScreens['addRide']}
+              onRideCreated={(newRide) => setRidesList((prev) => [newRide, ...prev])}
+              onDeleteRide={handleDeleteRide}
+            />
+          </AsyncViewBoundary>
+        )}
+
         {/* LEVEL 4 (z-[56]): Views nested inside AdDetail / MyAds / Profile */}
         {user && editAd && (
           <AsyncViewBoundary
@@ -824,23 +857,6 @@ export default function App() {
               onClose={closeEditAd}
               isClosing={!!exitingScreens['editAd']}
               onAdUpdated={handleAdUpdated}
-            />
-          </AsyncViewBoundary>
-        )}
-
-        {user && promoteAd && (
-          <AsyncViewBoundary
-            viewKey={`promote-ad-${promoteAd.id}`}
-            level={4}
-            isClosing={!!exitingScreens['promoteAd']}
-            skeleton={<ModalFormSkeleton />}
-          >
-            <PromoteAdModal
-              ad={promoteAd}
-              user={user}
-              onClose={closePromoteAd}
-              isClosing={!!exitingScreens['promoteAd']}
-              onPromoted={handleAdPromoted}
             />
           </AsyncViewBoundary>
         )}

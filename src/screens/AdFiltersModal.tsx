@@ -10,7 +10,6 @@ export interface AdFilterState {
   selectedCategory: string;
   selectedStreet: string;
   onlyFree: boolean;
-  onlyPromoted: boolean;
 }
 
 interface AdFiltersModalProps {
@@ -232,22 +231,6 @@ export function AdFiltersModal({
                 ))}
               </select>
             </div>
-          </div>
-
-          {/* Extra Checkbox: Tylko wyróżnione */}
-          <div className="rounded-3xl bg-white p-4 shadow-card">
-            <label className="flex items-center gap-3 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={filters.onlyPromoted}
-                onChange={(e) => setFilters((prev) => ({ ...prev, onlyPromoted: e.target.checked }))}
-                className="h-4 w-4 rounded accent-coral"
-              />
-              <div>
-                <p className="text-[13.5px] font-bold text-ink">Tylko wyróżnione oferty</p>
-                <p className="text-[11.5px] text-ink-400">Pokaż ogłoszenia z pakietem promowania</p>
-              </div>
-            </label>
           </div>
         </div>
 

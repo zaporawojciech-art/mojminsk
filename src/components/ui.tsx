@@ -156,18 +156,31 @@ export function NativeHeader({
 }) {
   return (
     <header className="z-20 shrink-0 border-b border-mist-300 bg-white pt-[max(env(safe-area-inset-top),12px)]">
-      <div className="flex h-14 items-center gap-1 px-2">
-        <button
-          type="button"
-          onClick={onBack}
-          aria-label={`Wróć do: ${backLabel}`}
-          className="flex h-11 min-w-11 shrink-0 items-center gap-0.5 rounded-full pl-1 pr-3 text-[15px] font-semibold text-ink transition-colors active:bg-mist"
-        >
-          <ChevronLeft className="h-6 w-6" aria-hidden />
-          <span className="max-w-[88px] truncate">{backLabel}</span>
-        </button>
-        <h1 className="min-w-0 flex-1 truncate px-1 text-center font-display text-[16px] font-bold text-ink">{title}</h1>
-        <div className="flex shrink-0 items-center gap-1">{right}</div>
+      <div className="relative flex h-14 items-center justify-between px-2">
+        {/* Lewa strona: Przycisk powrotu */}
+        <div className="z-10 flex min-w-11 items-center justify-start">
+          <button
+            type="button"
+            onClick={onBack}
+            aria-label={`Wróć do: ${backLabel}`}
+            className="flex h-11 items-center gap-0.5 rounded-full pl-1 pr-3 text-[15px] font-semibold text-ink transition-colors active:bg-mist"
+          >
+            <ChevronLeft className="h-6 w-6 shrink-0" aria-hidden />
+            <span className="max-w-[88px] truncate">{backLabel}</span>
+          </button>
+        </div>
+
+        {/* Centrum: Tytuł matematycznie wycentrowany względem całej szerokości ekranu */}
+        <div className="pointer-events-none absolute inset-x-0 flex items-center justify-center px-24">
+          <h1 className="truncate font-display text-[16px] font-bold text-ink">
+            {title}
+          </h1>
+        </div>
+
+        {/* Prawa strona: Akcje lub pusty bufor */}
+        <div className="z-10 flex min-w-11 items-center justify-end gap-1">
+          {right}
+        </div>
       </div>
     </header>
   );

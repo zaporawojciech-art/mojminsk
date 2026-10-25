@@ -8,7 +8,6 @@ import {
   Heart,
   MessageCircle,
   Plus,
-  Sparkles,
   Tag,
   Trash2,
 } from 'lucide-react';
@@ -24,7 +23,6 @@ interface MyAdsModalProps {
   onStatusChange: (adId: string, status: 'active' | 'reserved' | 'sold') => void;
   onDeleteAd: (adId: string) => void;
   onEditAd?: (ad: Ad) => void;
-  onPromoteAd?: (ad: Ad) => void;
   isClosing?: boolean;
 }
 
@@ -37,7 +35,6 @@ export function MyAdsModal({
   onStatusChange,
   onDeleteAd,
   onEditAd,
-  onPromoteAd,
   isClosing = false,
 }: MyAdsModalProps) {
   const [filter, setFilter] = useState<'all' | 'active' | 'reserved' | 'sold'>('all');
@@ -189,10 +186,7 @@ export function MyAdsModal({
               return (
                 <article
                   key={ad.id}
-                  className={cn(
-                    'overflow-hidden rounded-3xl bg-white shadow-card transition-all border',
-                    ad.promoted ? 'border-amber-300 ring-1 ring-amber-200/60' : 'border-transparent',
-                  )}
+                  className="overflow-hidden rounded-3xl border border-transparent bg-white shadow-card transition-all"
                 >
                   {/* Main List Item Row -> Tapping opens Offer View */}
                   <button
@@ -201,7 +195,7 @@ export function MyAdsModal({
                     className="flex w-full items-center justify-between gap-3 p-4 text-left transition-colors hover:bg-mist/30 active:bg-mist/50"
                   >
                     <div className="min-w-0 flex-1">
-                      {/* Top badges: Status + Promoted + Time */}
+                      {/* Top badges: Status + Time */}
                       <div className="flex flex-wrap items-center gap-1.5">
                         <span
                           className={cn(
@@ -212,13 +206,6 @@ export function MyAdsModal({
                           <span className={cn('h-1.5 w-1.5 rounded-full', meta.dot)} />
                           {meta.label}
                         </span>
-
-                        {ad.promoted && (
-                          <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-extrabold text-amber-900">
-                            <Sparkles className="h-2.5 w-2.5 text-amber-600" />
-                            Wyróżnione
-                          </span>
-                        )}
 
                         <span className="flex items-center gap-0.5 text-[10.5px] font-medium text-ink-400">
                           <Clock className="h-3 w-3" />
@@ -344,21 +331,7 @@ export function MyAdsModal({
                         className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl bg-mist text-[11.5px] font-bold text-ink active:scale-95 transition-transform hover:bg-mist-200"
                       >
                         <Edit3 className="h-3.5 w-3.5 text-ink-600" />
-                        Edytuj
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => onPromoteAd?.(ad)}
-                        className={cn(
-                          'flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl text-[11.5px] font-bold active:scale-95 transition-transform',
-                          ad.promoted
-                            ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                            : 'bg-amber-100 text-amber-900 hover:bg-amber-200',
-                        )}
-                      >
-                        <Sparkles className="h-3.5 w-3.5 text-amber-600" />
-                        {ad.promoted ? 'Promowane' : 'Wyróżnij'}
+                        Edytuj ogłoszenie
                       </button>
 
                       <button

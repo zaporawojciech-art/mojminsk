@@ -20,12 +20,6 @@ export interface UserPrivacy {
   showRides: boolean;
 }
 
-export interface UserNotifications {
-  alerts: boolean;
-  chats: boolean;
-  orders: boolean;
-}
-
 export interface User {
   name: string;
   street: Street;
@@ -34,7 +28,6 @@ export interface User {
   verified: boolean;
   trialDaysLeft: number;
   privacy?: UserPrivacy;
-  notifications?: UserNotifications;
 }
 
 export const streets: Street[] = [
@@ -71,11 +64,6 @@ export const demoUser: User = {
     showStats: true,
     showPastAds: true,
     showRides: true,
-  },
-  notifications: {
-    alerts: true,
-    chats: true,
-    orders: true,
   },
 };
 
@@ -527,8 +515,6 @@ export interface Ad {
   status?: 'active' | 'reserved' | 'sold';
   views?: number;
   isOwner?: boolean;
-  promoted?: boolean;
-  promotedPlan?: 'boost' | 'highlight' | 'vip';
   negotiable?: boolean;
 }
 
@@ -571,7 +557,6 @@ export const ads: Ad[] = [
     condition: 'Bardzo dobry',
     status: 'active',
     views: 42,
-    promoted: true,
     negotiable: true,
   },
   {
@@ -615,7 +600,6 @@ export const ads: Ad[] = [
     status: 'active',
     views: 67,
     isOwner: true,
-    promoted: true,
   },
   {
     id: 'a4',

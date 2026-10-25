@@ -72,8 +72,8 @@ export function AdConversationsModal({
       <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist">
         {/* Top Native Header */}
         <NativeHeader
-          title="Rozmowy o ogłoszeniach"
-          backLabel="Ogłoszenia"
+          title="Czat sąsiedzki"
+          backLabel="Profil"
           onBack={onClose}
           right={
             unreadTotal > 0 ? (
