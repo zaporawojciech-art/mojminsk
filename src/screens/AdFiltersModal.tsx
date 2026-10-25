@@ -32,10 +32,11 @@ const sortOptions = [
 const categories = [
   'Wszystkie',
   'Meble & Dom',
-  'Dziecięce',
   'Elektronika',
+  'Dziecięce',
   'Sport & Rowery',
   'Ogród & Narzędzia',
+  'Motoryzacja',
   'Oddam za darmo',
   'Zgubiłem / Znalazłem',
 ];

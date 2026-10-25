@@ -13,6 +13,7 @@ import {
   Mail,
   Megaphone,
   MessagesSquare,
+  Plus,
   ReceiptText,
   ShieldCheck,
   ShoppingBag,
@@ -28,6 +29,7 @@ interface ProfileScreenProps {
   onBack: () => void;
   onUpdate: (u: User) => void;
   onPartner: () => void;
+  onAddAd?: () => void;
   onMyAds?: () => void;
   myAdsCount?: number;
   myReservedAdsCount?: number;
@@ -78,6 +80,7 @@ export function ProfileScreen({
   onBack,
   onUpdate,
   onPartner,
+  onAddAd,
   onMyAds,
   myAdsCount = 1,
   myReservedAdsCount = 0,
@@ -149,6 +152,32 @@ export function ProfileScreen({
           title="Mój profil"
           backLabel="Wróć"
           onBack={onBack}
+          right={
+            <div className="flex items-center gap-1.5 pr-1">
+              {onMyAds && (
+                <button
+                  type="button"
+                  onClick={onMyAds}
+                  className="flex h-9 items-center gap-1 rounded-full bg-mist px-3 text-[12px] font-bold text-ink transition-transform active:scale-95"
+                  title="Moje ogłoszenia"
+                >
+                  <Megaphone className="h-3.5 w-3.5 text-ink-700" aria-hidden />
+                  Moje
+                </button>
+              )}
+              {onAddAd && (
+                <button
+                  type="button"
+                  onClick={onAddAd}
+                  className="flex h-9 items-center gap-1 rounded-full bg-coral px-3 text-[12px] font-bold text-ink shadow-xs transition-transform active:scale-95"
+                  title="Dodaj ogłoszenie"
+                >
+                  <Plus className="h-3.5 w-3.5" aria-hidden />
+                  Dodaj
+                </button>
+              )}
+            </div>
+          }
         />
 
         <div className="flex-1 overflow-y-auto overscroll-contain pb-24">
@@ -286,6 +315,28 @@ export function ProfileScreen({
           Moja aktywność i ogłoszenia
         </p>
         <ul className="overflow-hidden rounded-4xl bg-white shadow-card">
+          {/* Dodaj nowe ogłoszenie -> AddAdModal */}
+          {onAddAd && (
+            <li className="border-b border-mist">
+              <button
+                onClick={onAddAd}
+                className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-mist/50 active:bg-mist"
+              >
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-coral text-ink shadow-xs">
+                  <Plus className="h-[18px] w-[18px]" aria-hidden />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[14.5px] font-semibold text-ink">Dodaj ogłoszenie</p>
+                  <p className="text-[11.5px] text-ink-400">Wystaw przedmiot, oddaj za darmo lub zgłoś zgubę</p>
+                </div>
+                <span className="rounded-full bg-coral-100 px-2.5 py-0.5 text-[11px] font-extrabold text-coral-800">
+                  Darmowe
+                </span>
+                <ChevronRight className="h-4 w-4 text-ink-300" aria-hidden />
+              </button>
+            </li>
+          )}
+
           {/* Moje ogłoszenia -> MyAdsModal (EditAdModal + PromoteAdModal) */}
           <li className="border-b border-mist">
             <button
@@ -404,7 +455,7 @@ export function ProfileScreen({
               </span>
               <div className="min-w-0 flex-1">
                 <p className="text-[14.5px] font-semibold text-ink">Moje przejazdy sąsiedzkie</p>
-                <p className="text-[11.5px] text-ink-400">Mińsk Maz. ↔ Warszawa · Ocena 5.0 ★</p>
+                <p className="text-[11.5px] text-ink-400">Mińsk Maz. ↔ Warszawa · Wspólne dojazdy</p>
               </div>
               <span className="text-[12px] text-ink-400">5 tras</span>
               <ChevronRight className="h-4 w-4 text-ink-300" aria-hidden />

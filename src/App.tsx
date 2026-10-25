@@ -7,7 +7,6 @@ import {
   ChatSkeleton,
   CheckoutSkeleton,
   ConversationsSkeleton,
-  JobDetailSkeleton,
   ModalFormSkeleton,
   MotylekSkeleton,
   MyAdsSkeleton,
@@ -23,13 +22,11 @@ import { CartPill, CartSheet, type CartLine } from './components/Cart';
 import {
   allProducts,
   ads as initialAds,
-  jobs as initialJobs,
   initialAdConversations,
   type Ad,
   type AdConversation,
   type FavoriteBusStop,
   FAVORITE_BUS_STOPS_KEY,
-  type Job,
   type LineId,
   type Product,
   type User,
@@ -53,8 +50,6 @@ const ZditmScreen = lazy(() => import('./screens/ZditmScreen').then((m) => ({ de
 const AddAdModal = lazy(() => import('./screens/AddAdModal').then((m) => ({ default: m.AddAdModal })));
 const ChatModal = lazy(() => import('./screens/ChatModal').then((m) => ({ default: m.ChatModal })));
 const AdDetailModal = lazy(() => import('./screens/AdDetailModal').then((m) => ({ default: m.AdDetailModal })));
-const JobDetailModal = lazy(() => import('./screens/JobDetailModal').then((m) => ({ default: m.JobDetailModal })));
-const JobApplyModal = lazy(() => import('./screens/JobApplyModal').then((m) => ({ default: m.JobApplyModal })));
 const MyAdsModal = lazy(() => import('./screens/MyAdsModal').then((m) => ({ default: m.MyAdsModal })));
 const ReportAdModal = lazy(() => import('./screens/ReportAdModal').then((m) => ({ default: m.ReportAdModal })));
 const EditAdModal = lazy(() => import('./screens/EditAdModal').then((m) => ({ default: m.EditAdModal })));
@@ -66,7 +61,7 @@ const ReserveAdModal = lazy(() => import('./screens/ReserveAdModal').then((m) =>
 const InstallAppModal = lazy(() => import('./screens/InstallAppModal').then((m) => ({ default: m.InstallAppModal })));
 const AddFavoriteBusModal = lazy(() => import('./screens/AddFavoriteBusModal').then((m) => ({ default: m.AddFavoriteBusModal })));
 
-type Overlay = null | 'profile' | 'partner' | 'checkout' | 'motylek' | 'zditm';
+type Overlay = null | 'profile' | 'checkout' | 'motylek' | 'zditm';
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -74,6 +69,7 @@ export default function App() {
   const [isTabLoading, setIsTabLoading] = useState(false);
   const tabTimerRef = useRef<number | null>(null);
   const [overlay, setOverlay] = useState<Overlay>(null);
+  const [partnerOpen, setPartnerOpen] = useState(false);
   const [selectedZditmLine, setSelectedZditmLine] = useState<LineId>('M2');
   const [selectedZditmStop, setSelectedZditmStop] = useState<string | undefined>(undefined);
   const [favoriteBuses, setFavoriteBuses] = useState<FavoriteBusStop[]>(() => {
@@ -94,18 +90,14 @@ export default function App() {
   const [frame, setFrame] = useState<HTMLDivElement | null>(null);
   const mainRef = useRef<HTMLElement>(null);
 
-  // Dynamic ads & jobs lists
+  // Dynamic ads list
   const [adsList, setAdsList] = useState<Ad[]>(initialAds);
-  const [jobsList, setJobsList] = useState<Job[]>(initialJobs);
   const [likedAds, setLikedAds] = useState<Record<string, boolean>>({});
-  const [appliedJobs, setAppliedJobs] = useState<Record<string, boolean>>({});
 
   // Modals for Ads logic
   const [addAdOpen, setAddAdOpen] = useState(false);
   const [chatAd, setChatAd] = useState<Ad | null>(null);
   const [selectedAd, setSelectedAd] = useState<Ad | null>(null);
-  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-  const [applyJob, setApplyJob] = useState<Job | null>(null);
   const [myAdsOpen, setMyAdsOpen] = useState(false);
   const [reportAd, setReportAd] = useState<Ad | null>(null);
 
@@ -212,9 +204,8 @@ export default function App() {
 
   const isChildScreenActive = Boolean(
     overlay ||
+      partnerOpen ||
       selectedAd ||
-      selectedJob ||
-      applyJob ||
       myAdsOpen ||
       reportAd ||
       addAdOpen ||
@@ -249,34 +240,32 @@ export default function App() {
   const closeFiltersModal = useCallback(() => closeWithAnimation('filtersModal', () => setFiltersModalOpen(false)), [closeWithAnimation]);
   const closeReportAd = useCallback(() => closeWithAnimation('reportAd', () => setReportAd(null)), [closeWithAnimation]);
   const closeChatAd = useCallback(() => closeWithAnimation('chatAd', () => setChatAd(null)), [closeWithAnimation]);
-  const closeApplyJob = useCallback(() => closeWithAnimation('applyJob', () => setApplyJob(null)), [closeWithAnimation]);
   const closePromoteAd = useCallback(() => closeWithAnimation('promoteAd', () => setPromoteAd(null)), [closeWithAnimation]);
   const closeEditAd = useCallback(() => closeWithAnimation('editAd', () => setEditAd(null)), [closeWithAnimation]);
   const closeSellerProfile = useCallback(() => closeWithAnimation('sellerProfile', () => setSellerProfile(null)), [closeWithAnimation]);
   const closeConversations = useCallback(() => closeWithAnimation('conversations', () => setConversationsOpen(false)), [closeWithAnimation]);
-  const closeSelectedJob = useCallback(() => closeWithAnimation('selectedJob', () => setSelectedJob(null)), [closeWithAnimation]);
   const closeSelectedAd = useCallback(() => closeWithAnimation('selectedAd', () => setSelectedAd(null)), [closeWithAnimation]);
   const closeAddAd = useCallback(() => closeWithAnimation('addAd', () => setAddAdOpen(false)), [closeWithAnimation]);
   const closeMyAds = useCallback(() => closeWithAnimation('myAds', () => setMyAdsOpen(false)), [closeWithAnimation]);
+  const closePartner = useCallback(() => closeWithAnimation('partner', () => setPartnerOpen(false)), [closeWithAnimation]);
   const closeOverlay = useCallback(() => closeWithAnimation('overlay', () => setOverlay(null)), [closeWithAnimation]);
 
-  // Navigation stack: layers ordered from the topmost (closed first) to the bottom one
+  // Navigation stack: layers ordered strictly from the topmost nesting level (Level 5 -> Level 1)
   const layers = [
     { active: installModalOpen, close: closeInstallModal },
-    { active: addFavBusOpen, close: closeAddFavBus },
-    { active: !!reserveAd, close: closeReserveAd },
-    { active: filtersModalOpen, close: closeFiltersModal },
-    { active: !!reportAd, close: closeReportAd },
     { active: !!chatAd, close: closeChatAd },
-    { active: !!applyJob, close: closeApplyJob },
+    { active: !!reportAd, close: closeReportAd },
+    { active: !!reserveAd, close: closeReserveAd },
     { active: !!promoteAd, close: closePromoteAd },
     { active: !!editAd, close: closeEditAd },
     { active: !!sellerProfile, close: closeSellerProfile },
-    { active: conversationsOpen, close: closeConversations },
-    { active: !!selectedJob, close: closeSelectedJob },
-    { active: !!selectedAd, close: closeSelectedAd },
     { active: addAdOpen, close: closeAddAd },
+    { active: !!selectedAd, close: closeSelectedAd },
+    { active: filtersModalOpen, close: closeFiltersModal },
+    { active: addFavBusOpen, close: closeAddFavBus },
+    { active: conversationsOpen, close: closeConversations },
     { active: myAdsOpen, close: closeMyAds },
+    { active: partnerOpen, close: closePartner },
     { active: !!overlay, close: closeOverlay },
   ];
   const depth = layers.filter((l) => l.active).length;
@@ -403,10 +392,6 @@ export default function App() {
 
   const unreadConversationsCount = conversations.reduce((acc, c) => acc + c.unreadCount, 0);
 
-  const handleJobApplied = useCallback((jobId: string) => {
-    setAppliedJobs((prev) => ({ ...prev, [jobId]: true }));
-  }, []);
-
   const add = useCallback((p: Product, qty = 1) => setCart((c) => ({ ...c, [p.id]: (c[p.id] ?? 0) + qty })), []);
   const setQty = useCallback(
     (id: string, qty: number) =>
@@ -472,6 +457,11 @@ export default function App() {
       void import('./screens/AdConversationsModal');
       void import('./screens/SellerProfileModal');
       void import('./screens/ChatModal');
+      void import('./screens/AdFiltersModal');
+      void import('./screens/ReserveAdModal');
+      void import('./screens/ReportAdModal');
+      void import('./screens/AddFavoriteBusModal');
+      void import('./screens/InstallAppModal');
     }, 100);
     return () => {
       window.clearTimeout(id);
@@ -490,7 +480,7 @@ export default function App() {
         user={user}
         onTab={handleTabChange}
         onProfile={() => setOverlay('profile')}
-        onPartner={() => setOverlay('partner')}
+        onPartner={() => setPartnerOpen(true)}
         onZditm={(line, stopName) => {
           setSelectedZditmLine(line ?? 'M2');
           setSelectedZditmStop(stopName);
@@ -519,16 +509,10 @@ export default function App() {
         user={user}
         onProfile={() => setOverlay('profile')}
         adsList={adsList}
-        jobsList={jobsList}
         likedAds={likedAds}
-        appliedJobs={appliedJobs}
         onToggleLike={handleToggleLike}
         onAdClick={(ad) => setSelectedAd(ad)}
-        onJobClick={(job) => setSelectedJob(job)}
-        onApplyJob={(job) => setApplyJob(job)}
-        onAddClick={() => setAddAdOpen(true)}
         onChatClick={(ad) => setChatAd(ad)}
-        onMyAdsClick={() => setMyAdsOpen(true)}
         onOpenFilters={() => setFiltersModalOpen(true)}
         activeFiltersCount={activeFiltersCount}
         onOpenConversations={() => setConversationsOpen(true)}
@@ -580,7 +564,7 @@ export default function App() {
             aria-hidden
             onTouchStart={onEdgeTouchStart}
             onTouchEnd={onEdgeTouchEnd}
-            className="fixed inset-y-0 left-0 z-[60] w-4"
+            className="fixed inset-y-0 left-0 z-[70] w-4"
           />
         )}
 
@@ -595,11 +579,11 @@ export default function App() {
           container={frame}
         />
 
-        {/* Overlays rendered as smooth pushed screens with dedicated Skeleton Screens */}
+        {/* LEVEL 1 (z-[50]): Root Pushed Screens from Tabs */}
         {user && overlay === 'profile' && (
           <AsyncViewBoundary
             viewKey="overlay-profile"
-            mode="screen"
+            level={1}
             isClosing={!!exitingScreens['overlay']}
             skeleton={<ProfileSkeleton />}
           >
@@ -608,7 +592,8 @@ export default function App() {
               onBack={closeOverlay}
               isClosing={!!exitingScreens['overlay']}
               onUpdate={setUser}
-              onPartner={() => setOverlay('partner')}
+              onPartner={() => setPartnerOpen(true)}
+              onAddAd={() => setAddAdOpen(true)}
               onMyAds={() => setMyAdsOpen(true)}
               myAdsCount={userActiveAdsCount}
               myReservedAdsCount={userReservedAdsCount}
@@ -627,24 +612,10 @@ export default function App() {
           </AsyncViewBoundary>
         )}
 
-        {user && overlay === 'partner' && (
-          <AsyncViewBoundary
-            viewKey="overlay-partner"
-            mode="screen"
-            isClosing={!!exitingScreens['overlay']}
-            skeleton={<PartnerSkeleton />}
-          >
-            <PartnerScreen
-              onBack={closeOverlay}
-              isClosing={!!exitingScreens['overlay']}
-            />
-          </AsyncViewBoundary>
-        )}
-
         {user && overlay === 'motylek' && (
           <AsyncViewBoundary
             viewKey="overlay-motylek"
-            mode="screen"
+            level={1}
             isClosing={!!exitingScreens['overlay']}
             skeleton={<MotylekSkeleton />}
           >
@@ -662,7 +633,7 @@ export default function App() {
         {user && overlay === 'zditm' && (
           <AsyncViewBoundary
             viewKey={`overlay-zditm-${selectedZditmLine}-${selectedZditmStop ?? 'all'}`}
-            mode="screen"
+            level={1}
             isClosing={!!exitingScreens['overlay']}
             skeleton={<ZditmSkeleton />}
           >
@@ -681,7 +652,7 @@ export default function App() {
         {user && overlay === 'checkout' && (
           <AsyncViewBoundary
             viewKey="overlay-checkout"
-            mode="screen"
+            level={1}
             isClosing={!!exitingScreens['overlay']}
             skeleton={<CheckoutSkeleton />}
           >
@@ -698,18 +669,31 @@ export default function App() {
           </AsyncViewBoundary>
         )}
 
-        {/* My Ads Modal */}
+        {/* LEVEL 2 (z-[52]): Views opened from Tabs OR nested inside Level 1 (e.g. from Profile / ZDiTM) */}
+        {user && partnerOpen && (
+          <AsyncViewBoundary
+            viewKey="overlay-partner"
+            level={2}
+            isClosing={!!exitingScreens['partner']}
+            skeleton={<PartnerSkeleton />}
+          >
+            <PartnerScreen
+              onBack={closePartner}
+              isClosing={!!exitingScreens['partner']}
+            />
+          </AsyncViewBoundary>
+        )}
+
         {user && myAdsOpen && (
           <AsyncViewBoundary
             viewKey="modal-my-ads"
-            mode="screen"
+            level={2}
             isClosing={!!exitingScreens['myAds']}
             skeleton={<MyAdsSkeleton />}
           >
             <MyAdsModal
               user={user}
               ads={adsList}
-              jobs={jobsList}
               onClose={closeMyAds}
               isClosing={!!exitingScreens['myAds']}
               onOpenAd={(ad) => setSelectedAd(ad)}
@@ -722,132 +706,10 @@ export default function App() {
           </AsyncViewBoundary>
         )}
 
-        {/* Add Ad Modal with BLIK payment flow */}
-        {user && addAdOpen && (
-          <AsyncViewBoundary
-            viewKey="modal-add-ad"
-            mode="modal"
-            isClosing={!!exitingScreens['addAd']}
-            skeleton={<ModalFormSkeleton />}
-          >
-            <AddAdModal
-              user={user}
-              onClose={closeAddAd}
-              isClosing={!!exitingScreens['addAd']}
-              onAdCreated={(newAd) => setAdsList((prev) => [newAd, ...prev])}
-              onJobCreated={(newJob) => setJobsList((prev) => [newJob, ...prev])}
-            />
-          </AsyncViewBoundary>
-        )}
-
-        {/* Ad Detail Modal */}
-        {user && selectedAd && (
-          <AsyncViewBoundary
-            viewKey={`ad-detail-${selectedAd.id}`}
-            mode="screen"
-            isClosing={!!exitingScreens['selectedAd']}
-            skeleton={<AdDetailSkeleton />}
-          >
-            <AdDetailModal
-              ad={selectedAd}
-              user={user}
-              isLiked={!!likedAds[selectedAd.id]}
-              onClose={closeSelectedAd}
-              isClosing={!!exitingScreens['selectedAd']}
-              onToggleLike={handleToggleLike}
-              onChatClick={(ad) => setChatAd(ad)}
-              onReportClick={(ad) => setReportAd(ad)}
-              onStatusChange={handleStatusChange}
-              onDelete={handleDeleteAd}
-              onSellerClick={(name, street) => setSellerProfile({ name, street })}
-              onEditClick={(ad) => setEditAd(ad)}
-              onPromoteClick={(ad) => setPromoteAd(ad)}
-              onReserveClick={(ad) => setReserveAd(ad)}
-            />
-          </AsyncViewBoundary>
-        )}
-
-        {/* Job Detail Modal */}
-        {user && selectedJob && (
-          <AsyncViewBoundary
-            viewKey={`job-detail-${selectedJob.id}`}
-            mode="screen"
-            isClosing={!!exitingScreens['selectedJob']}
-            skeleton={<JobDetailSkeleton />}
-          >
-            <JobDetailModal
-              job={selectedJob}
-              user={user}
-              hasApplied={!!appliedJobs[selectedJob.id]}
-              onClose={closeSelectedJob}
-              isClosing={!!exitingScreens['selectedJob']}
-              onApplyClick={(job) => {
-                closeSelectedJob();
-                setApplyJob(job);
-              }}
-            />
-          </AsyncViewBoundary>
-        )}
-
-        {/* 1-Click Job Apply Modal */}
-        {user && applyJob && (
-          <AsyncViewBoundary
-            viewKey={`job-apply-${applyJob.id}`}
-            mode="modal"
-            isClosing={!!exitingScreens['applyJob']}
-            skeleton={<ModalFormSkeleton />}
-          >
-            <JobApplyModal
-              job={applyJob}
-              user={user}
-              onClose={closeApplyJob}
-              isClosing={!!exitingScreens['applyJob']}
-              onSuccess={handleJobApplied}
-            />
-          </AsyncViewBoundary>
-        )}
-
-        {/* Edit Ad Modal */}
-        {user && editAd && (
-          <AsyncViewBoundary
-            viewKey={`edit-ad-${editAd.id}`}
-            mode="screen"
-            isClosing={!!exitingScreens['editAd']}
-            skeleton={<ModalFormSkeleton />}
-          >
-            <EditAdModal
-              ad={editAd}
-              user={user}
-              onClose={closeEditAd}
-              isClosing={!!exitingScreens['editAd']}
-              onAdUpdated={handleAdUpdated}
-            />
-          </AsyncViewBoundary>
-        )}
-
-        {/* Promote Ad Modal (BLIK) */}
-        {user && promoteAd && (
-          <AsyncViewBoundary
-            viewKey={`promote-ad-${promoteAd.id}`}
-            mode="modal"
-            isClosing={!!exitingScreens['promoteAd']}
-            skeleton={<ModalFormSkeleton />}
-          >
-            <PromoteAdModal
-              ad={promoteAd}
-              user={user}
-              onClose={closePromoteAd}
-              isClosing={!!exitingScreens['promoteAd']}
-              onPromoted={handleAdPromoted}
-            />
-          </AsyncViewBoundary>
-        )}
-
-        {/* Ad Conversations Modal (Inbox) */}
         {user && conversationsOpen && (
           <AsyncViewBoundary
             viewKey="modal-conversations"
-            mode="screen"
+            level={2}
             isClosing={!!exitingScreens['conversations']}
             skeleton={<ConversationsSkeleton />}
           >
@@ -857,46 +719,15 @@ export default function App() {
               ads={adsList}
               onClose={closeConversations}
               isClosing={!!exitingScreens['conversations']}
-              onOpenChat={(ad) => {
-                closeConversations();
-                setChatAd(ad);
-              }}
+              onOpenChat={(ad) => setChatAd(ad)}
             />
           </AsyncViewBoundary>
         )}
 
-        {/* Seller Profile Modal */}
-        {user && sellerProfile && (
-          <AsyncViewBoundary
-            viewKey={`seller-profile-${sellerProfile.name}-${sellerProfile.street}`}
-            mode="screen"
-            isClosing={!!exitingScreens['sellerProfile']}
-            skeleton={<SellerProfileSkeleton />}
-          >
-            <SellerProfileModal
-              sellerName={sellerProfile.name}
-              sellerStreet={sellerProfile.street}
-              currentUser={user}
-              allAds={adsList}
-              onClose={closeSellerProfile}
-              isClosing={!!exitingScreens['sellerProfile']}
-              onOpenAd={(ad) => {
-                closeSellerProfile();
-                setSelectedAd(ad);
-              }}
-              onStartChat={(ad) => {
-                closeSellerProfile();
-                setChatAd(ad);
-              }}
-            />
-          </AsyncViewBoundary>
-        )}
-
-        {/* Ad Filters & Sort Modal */}
         {user && filtersModalOpen && (
           <AsyncViewBoundary
             viewKey="modal-filters"
-            mode="modal"
+            level={2}
             isClosing={!!exitingScreens['filtersModal']}
             skeleton={<ModalFormSkeleton />}
           >
@@ -921,11 +752,126 @@ export default function App() {
           </AsyncViewBoundary>
         )}
 
-        {/* Reserve Ad Modal */}
+        {user && addFavBusOpen && (
+          <AsyncViewBoundary
+            viewKey="modal-add-fav-bus"
+            level={2}
+            isClosing={!!exitingScreens['addFavBus']}
+            skeleton={<ModalFormSkeleton />}
+          >
+            <AddFavoriteBusModal
+              onClose={closeAddFavBus}
+              isClosing={!!exitingScreens['addFavBus']}
+              onSave={handleAddFavoriteBus}
+            />
+          </AsyncViewBoundary>
+        )}
+
+        {/* LEVEL 3 (z-[54]): Views opened from Level 0/1/2 (e.g. AdDetail from Ads/MyAds, AddAd from Profile/MyAds) */}
+        {user && selectedAd && (
+          <AsyncViewBoundary
+            viewKey={`ad-detail-${selectedAd.id}`}
+            level={3}
+            isClosing={!!exitingScreens['selectedAd']}
+            skeleton={<AdDetailSkeleton />}
+          >
+            <AdDetailModal
+              ad={selectedAd}
+              user={user}
+              isLiked={!!likedAds[selectedAd.id]}
+              onClose={closeSelectedAd}
+              isClosing={!!exitingScreens['selectedAd']}
+              onToggleLike={handleToggleLike}
+              onChatClick={(ad) => setChatAd(ad)}
+              onReportClick={(ad) => setReportAd(ad)}
+              onStatusChange={handleStatusChange}
+              onDelete={handleDeleteAd}
+              onSellerClick={(name, street) => setSellerProfile({ name, street })}
+              onEditClick={(ad) => setEditAd(ad)}
+              onPromoteClick={(ad) => setPromoteAd(ad)}
+              onReserveClick={(ad) => setReserveAd(ad)}
+            />
+          </AsyncViewBoundary>
+        )}
+
+        {user && addAdOpen && (
+          <AsyncViewBoundary
+            viewKey="modal-add-ad"
+            level={3}
+            isClosing={!!exitingScreens['addAd']}
+            skeleton={<ModalFormSkeleton />}
+          >
+            <AddAdModal
+              user={user}
+              onClose={closeAddAd}
+              isClosing={!!exitingScreens['addAd']}
+              onAdCreated={(newAd) => setAdsList((prev) => [newAd, ...prev])}
+            />
+          </AsyncViewBoundary>
+        )}
+
+        {/* LEVEL 4 (z-[56]): Views nested inside AdDetail / MyAds / Profile */}
+        {user && editAd && (
+          <AsyncViewBoundary
+            viewKey={`edit-ad-${editAd.id}`}
+            level={4}
+            isClosing={!!exitingScreens['editAd']}
+            skeleton={<ModalFormSkeleton />}
+          >
+            <EditAdModal
+              ad={editAd}
+              user={user}
+              onClose={closeEditAd}
+              isClosing={!!exitingScreens['editAd']}
+              onAdUpdated={handleAdUpdated}
+            />
+          </AsyncViewBoundary>
+        )}
+
+        {user && promoteAd && (
+          <AsyncViewBoundary
+            viewKey={`promote-ad-${promoteAd.id}`}
+            level={4}
+            isClosing={!!exitingScreens['promoteAd']}
+            skeleton={<ModalFormSkeleton />}
+          >
+            <PromoteAdModal
+              ad={promoteAd}
+              user={user}
+              onClose={closePromoteAd}
+              isClosing={!!exitingScreens['promoteAd']}
+              onPromoted={handleAdPromoted}
+            />
+          </AsyncViewBoundary>
+        )}
+
+        {user && sellerProfile && (
+          <AsyncViewBoundary
+            viewKey={`seller-profile-${sellerProfile.name}-${sellerProfile.street}`}
+            level={4}
+            isClosing={!!exitingScreens['sellerProfile']}
+            skeleton={<SellerProfileSkeleton />}
+          >
+            <SellerProfileModal
+              sellerName={sellerProfile.name}
+              sellerStreet={sellerProfile.street}
+              currentUser={user}
+              allAds={adsList}
+              onClose={closeSellerProfile}
+              isClosing={!!exitingScreens['sellerProfile']}
+              onOpenAd={(ad) => {
+                setSellerProfile(null);
+                setSelectedAd(ad);
+              }}
+              onStartChat={(ad) => setChatAd(ad)}
+            />
+          </AsyncViewBoundary>
+        )}
+
         {user && reserveAd && (
           <AsyncViewBoundary
             viewKey={`reserve-ad-${reserveAd.id}`}
-            mode="modal"
+            level={4}
             isClosing={!!exitingScreens['reserveAd']}
             skeleton={<ModalFormSkeleton />}
           >
@@ -939,11 +885,10 @@ export default function App() {
           </AsyncViewBoundary>
         )}
 
-        {/* Report Ad Modal */}
         {user && reportAd && (
           <AsyncViewBoundary
             viewKey={`report-ad-${reportAd.id}`}
-            mode="modal"
+            level={4}
             isClosing={!!exitingScreens['reportAd']}
             skeleton={<ModalFormSkeleton />}
           >
@@ -955,11 +900,11 @@ export default function App() {
           </AsyncViewBoundary>
         )}
 
-        {/* 1:1 Neighbor Chat Modal */}
+        {/* LEVEL 5 (z-[58]): 1:1 Neighbor Chat (can be opened from Level 0, 2, 3, or 4) */}
         {user && chatAd && (
           <AsyncViewBoundary
             viewKey={`chat-ad-${chatAd.id}`}
-            mode="screen"
+            level={5}
             isClosing={!!exitingScreens['chatAd']}
             skeleton={<ChatSkeleton />}
           >
@@ -968,22 +913,6 @@ export default function App() {
               user={user}
               onClose={closeChatAd}
               isClosing={!!exitingScreens['chatAd']}
-            />
-          </AsyncViewBoundary>
-        )}
-
-        {/* Add Favorite Bus Stop Modal */}
-        {user && addFavBusOpen && (
-          <AsyncViewBoundary
-            viewKey="modal-add-fav-bus"
-            mode="modal"
-            isClosing={!!exitingScreens['addFavBus']}
-            skeleton={<ModalFormSkeleton />}
-          >
-            <AddFavoriteBusModal
-              onClose={closeAddFavBus}
-              isClosing={!!exitingScreens['addFavBus']}
-              onSave={handleAddFavoriteBus}
             />
           </AsyncViewBoundary>
         )}

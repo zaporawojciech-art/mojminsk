@@ -43,71 +43,82 @@
   scrollbar-width: none;
 }
 
-/* Native iOS / Android Navigation Stack Transitions */
+/* Native iOS / Android Navigation Stack Transitions (Pure GPU Transform, 0 Opacity Flicker) */
 @keyframes nativeSlideInRight {
   from {
     transform: translate3d(100%, 0, 0);
-    opacity: 0.95;
   }
   to {
     transform: translate3d(0, 0, 0);
-    opacity: 1;
   }
 }
 
 @keyframes nativeSlideOutRight {
   from {
     transform: translate3d(0, 0, 0);
-    opacity: 1;
   }
   to {
     transform: translate3d(100%, 0, 0);
-    opacity: 0.95;
   }
 }
 
 @keyframes nativeSlideInBottom {
   from {
     transform: translate3d(0, 100%, 0);
-    opacity: 0.95;
   }
   to {
     transform: translate3d(0, 0, 0);
-    opacity: 1;
   }
 }
 
 @keyframes nativeModalSlideOutBottom {
   from {
     transform: translate3d(0, 0, 0);
-    opacity: 1;
   }
   to {
     transform: translate3d(0, 100%, 0);
-    opacity: 0.95;
   }
 }
 
 .native-screen-slide {
-  animation: nativeSlideInRight 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  will-change: transform, opacity;
+  animation: nativeSlideInRight 0.24s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .native-screen-exit {
-  animation: nativeSlideOutRight 0.22s cubic-bezier(0.32, 0, 0.67, 0) forwards !important;
-  will-change: transform, opacity;
+  animation: nativeSlideOutRight 0.2s cubic-bezier(0.32, 0, 0.67, 0) forwards !important;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   pointer-events: none;
 }
 
 .native-modal-slide {
-  animation: nativeSlideInBottom 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  will-change: transform, opacity;
+  animation: nativeSlideInBottom 0.26s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .native-modal-exit {
-  animation: nativeModalSlideOutBottom 0.22s cubic-bezier(0.32, 0, 0.67, 0) forwards !important;
-  will-change: transform, opacity;
+  animation: nativeModalSlideOutBottom 0.2s cubic-bezier(0.32, 0, 0.67, 0) forwards !important;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   pointer-events: none;
+}
+
+/* Zapobiega podwójnej animacji wjazdu, gdy komponent potomny wewnątrz AsyncViewBoundary
+   posiada własną klasę .native-screen-slide / .native-modal-slide lub fixed inset-0 */
+.native-view-shell :where(.native-screen-slide, .native-screen-exit, .native-modal-slide, .native-modal-exit) {
+  animation: none !important;
+  transform: none !important;
+  position: relative !important;
+  inset: auto !important;
+  height: 100% !important;
+  width: 100% !important;
 }
 
 @keyframes tabViewEnter {

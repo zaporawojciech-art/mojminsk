@@ -760,11 +760,71 @@ Poniżej zestawiono finalne wytyczne UX/UI wynikające z Twoich 20 odpowiedzi:
   3. *Odbierz fizyczny list z kodem i 5 kuponami rabatowymi od lokalnych firm!*
 - **Kupony Rabatowe:** Zgodnie z decyzją biznesową kupony funkcjonują **wyłącznie w formie tradycyjnych voucherów papierowych w liście weryfikacyjnym**, co gwarantuje fizyczne otwarcie przesyłki i realne odwiedzenie mińskich sklepów stacjonarnych.
 
-### 6.6. Asynchroniczne Ładowanie Widoków i Skeleton Screens (Na Każdym Widoku)
-- **Zasada globalna (Obowiązkowa dla każdego ekranu):** Każdy widok w aplikacji — zarówno główne zakładki (`Start`, `Kuchnia`, `Ogłoszenia`, `Przejazdy`, `Rozmowy`), jak i wszystkie widoki podstron, profilu oraz modali (`Mój profil`, `Szczegóły ogłoszenia`, `Moje ogłoszenia`, `Motylek Market`, `ZDiTM`, `Strefa Partnera`, `Kasa / Checkout`, `Wizytówka sąsiada`, `Wiadomości`, `Czat 1:1`, formularze dodawania/edycji/filtrów) — **musi być ładowany asynchronicznie (`React.lazy` + `Suspense`) oraz poprzedzony dedykowanym Skeleton Screenem (`TabSkeleton` / `AsyncViewBoundary`)**.
-- **Cel wydajnościowy (Zero Lag / 60–120 FPS):**
-  1. Animacje nawigacji dolnej (`BottomNav`) oraz animacje wjazdu ekranów (`native-screen-slide`, `native-modal-slide`) operują wyłącznie na właściwościach GPU (`transform: translate3d`, `opacity`) bez wywoływania przeliczeń layoutu (Zero Layout Reflow).
-  2. W momencie przejścia na dowolny widok natychmiast wyświetlany jest dopasowany geometrycznie **Skeleton Screen** z płynnym efektem fali (`skeleton-shimmer`), a ciężki komponent docelowy montuje się asynchronicznie i płynnie pojawia w miejscu szkieletu (`tab-view-enter` / `async-view-ready`).
+### 6.6. Pełna Specyfikacja Wyświetlania Nowych Widoków, Animacji Wejścia/Wyjścia, Widoków Zagnieżdżonych i Skeleton Screens
+
+#### A. Zasada Jednorodności Widoków Pełnoekranowych (Zero Wyjątków)
+W całej aplikacji **mójMińsk** obowiązuje **jeden zunifikowany standard wizualizacji i animacji** dla każdego nowego widoku pełnoekranowego otwieranego ponad zakładkami głównymi (`BottomNav`) lub ponad innym widokiem podrzędnym. Dotyczy to **wszystkich** ekranów w katalogu `src/screens/` (m.in. `ProfileScreen`, `MyAdsModal`, `AddAdModal`, `EditAdModal`, `AdDetailModal`, `PromoteAdModal`, `AdConversationsModal`, `SellerProfileModal`, `AdFiltersModal`, `ReserveAdModal`, `ReportAdModal`, `ChatModal`, `AddFavoriteBusModal`, `PartnerScreen`, `MotylekScreen`, `ZditmScreen`, `CheckoutScreen`):
+
+1. **Jednolity kierunek i krzywa animacji (Horizontal Push & Pop):**
+   - **Wejście nowego widoku (`.native-screen-slide`):** Każdy widok pełnoekranowy **zawsze wjeżdża poziomo z prawej krawędzi ekranu do lewej** (`transform: translate3d(100%, 0, 0)` $\to$ `translate3d(0, 0, 0)`), czas trwania **`240ms`**, krzywa **`cubic-bezier(0.22, 1, 0.36, 1)`**.
+   - **Wyjście / zamknięcie widoku (`.native-screen-exit`):** Każdy widok pełnoekranowy **zawsze wyjeżdża poziomo w prawą stronę** (`transform: translate3d(0, 0, 0)` $\to$ `translate3d(100%, 0, 0)`), czas trwania **`200ms`**, krzywa **`cubic-bezier(0.32, 0, 0.67, 0)`**.
+   - **Całkowity zakaz mieszania kierunków dla widoków pełnoekranowych:** Żaden pełnoekranowy widok z nagłówkiem `<NativeHeader />` (np. *Dodaj ogłoszenie*, *Filtry*, *Wyróżnij BLIK*, *Zarezerwuj*, *Zgłoś*) **nie może** wjeżdżać pionowo od dołu (`nativeSlideInBottom`). Animacja pionowa od dołu jest zarezerwowana wyłącznie dla częściowych szuflad dolnych (*Bottom Sheets* z przyciemnionym tłem `bg-ink/60`: `ProductSheet`, `CartSheet`, `InstallAppModal`).
+
+2. **Architektura Single-Shell Native Transition (`AsyncViewBoundary` + `.native-view-shell`):**
+   - Zewnętrzna powłoka `.native-view-shell` (`fixed inset-0 flex flex-col overflow-hidden select-none`) znajduje się **na zewnątrz** granicy `<Suspense>`.
+   - Wewnętrzna ramka `max-w-md` posiada lewostronny cień głębi (`shadow-[-12px_0_32px_rgba(18,19,26,0.18)]`), który podczas wjazdu nowego widoku wyraźnie oddziela wjeżdżającą kartę od widoku znajdującego się pod spodem.
+   - Animacja `translate3d` uruchamia się **dokładnie raz** w momencie otwarcia widoku i nigdy nie jest restartowana przez rozwiązanie leniwego modułu (`React.lazy`) ani przez koniec fazy szkieletu.
+   - Reguła CSS `.native-view-shell :where(.native-screen-slide, .native-screen-exit, .native-modal-slide, .native-modal-exit)` neutralizuje ewentualne zduplikowane klasy animacji wewnątrz komponentu potomnego.
+
+3. **Faza In-Place Skeleton (`.skeleton-in-place` $\to$ `.skeleton-revealed`):**
+   - W klatce `0ms` (równocześnie ze startem wjazdu `translate3d`) widok montuje się w swoich docelowych wymiarach 1:1 z klasą `.skeleton-in-place` (shimmer `#E3E1EC` $\leftrightarrow$ `#ECEAF4` na kartach `.rounded-3xl.bg-white`, polach i przyciskach, przy ukrytych tekstach i ikonach).
+   - Po **`150ms`** (gdy widok kończy główną fazę wjazdu) klasa przełącza się w miejscu na `.skeleton-revealed` (`transition: opacity 0.14s ease-out`), odsłaniając treść **bez podmiany drzewa DOM i z zerowym przesunięciem układu (`0px CLS`)**.
+   - Przy przełączaniu dolnych zakładek głównych (`BottomNav` — Poziom 0) nie wykonuje się poziomego wjazdu `translate3d`, lecz natychmiastową fazę `.skeleton-in-place` (`160ms`) przechodzącą w `.skeleton-revealed`.
+
+4. **Ujednolicona Struktura Wizualna Widoku Pełnoekranowego:**
+   - **Tło bazowe ekranu:** `bg-mist` (`#F4F3F8`) — zakaz tworzenia płaskich białych widoków `bg-white` bez wydzielonych kart (wyjątkiem jest ciemny motyw `bg-ink` w `PartnerScreen`).
+   - **Górny pasek nawigacji:** `<NativeHeader title="..." backLabel="Wróć" onBack={onClose} />` (`sticky top-0 z-20 h-13 border-b border-mist bg-white/95 backdrop-blur`).
+   - **Obszar przewijania i karty:** `flex-1 overflow-y-auto overscroll-contain p-4 space-y-3.5`, w którym sekcje formularzy, listy i szczegóły są pogrupowane w białe kontenery `rounded-3xl bg-white p-4 shadow-card` (zapewnia to identyczny wygląd zarówno w fazie `.skeleton-in-place`, jak i po odsłonięciu treści).
+   - **Dolny pasek akcji (Sticky Bottom Action Bar):** W każdym widoku formularza lub akcji (m.in. `AddAdModal`, `EditAdModal`, `PromoteAdModal`, `ReserveAdModal`, `AdFiltersModal`, `ReportAdModal`, `SellerProfileModal`) główny przycisk CTA znajduje się w przyklejonym dolnym pasku `border-t border-mist bg-white px-5 py-3 pb-[max(env(safe-area-inset-bottom),14px)] shrink-0 shadow-float`.
+
+---
+
+#### B. Specyfikacja Widoków Zagnieżdżonych (Multi-Level Stack Architecture, Poziomy 0–5)
+
+Aplikacja obsługuje wielopoziomowe zagnieżdżanie widoków (np. przejście `Start` $\to$ `Mój profil` $\to$ `Moje ogłoszenia` $\to$ `Dodaj ogłoszenie` lub `Mój profil` $\to$ `Moje ogłoszenia` $\to$ `Szczegóły ogłoszenia` $\to$ `Wizytówka sąsiada` $\to$ `Czat 1:1`).
+
+```mermaid
+flowchart LR
+    L0["Poziom 0 (z-0)\nZakładki Główne\n(Start, Kuchnia, Ogłoszenia,\nPrzejazdy, Rozmowy)"] --> L1["Poziom 1 (z-50)\nPodstrony Główne\n(Profil, Motylek,\nZDiTM, Kasa)"]
+    L1 --> L2["Poziom 2 (z-52)\nWidoki II Rzędu\n(Moje ogłoszenia, Partner,\nRozmowy o ogł., Filtry,\nWybór przystanku)"]
+    L2 --> L3["Poziom 3 (z-54)\nWidoki III Rzędu\n(Szczegóły ogłoszenia,\nDodaj ogłoszenie)"]
+    L3 --> L4["Poziom 4 (z-56)\nWidoki IV Rzędu\n(Edytuj ogł., Wyróżnij BLIK,\nWizytówka sąsiada,\nZarezerwuj, Zgłoś)"]
+    L4 --> L5["Poziom 5 (z-58)\nWidok V Rzędu\n(Czat sąsiedzki 1:1)"]
+```
+
+1. **Zasada Trwałości Widoku Nadrzędnego (Parent DOM Persistence):**
+   - Otwarcie widoku zagnieżdżonego (np. kliknięcie `+ Dodaj` lub oferty wewnątrz `Moje ogłoszenia`, albo otwarcie `Strefy Partnera` z poziomu `Mój profil`) **nigdy nie odmontowuje widoku nadrzędnego**.
+   - Widok nadrzędny pozostaje zamontowany w drzewie DOM pod spodem, zachowując swoją dokładną pozycję przewinięcia (`scrollTop`) oraz lokalny stan kontrolek.
+   - Nowy widok zagnieżdżony wjeżdża z prawej strony (`.native-screen-slide`) na wyższej warstwie `z-index` bezpośrednio ponad widokiem nadrzędnym.
+
+2. **Sztywna Hierarchia Warstw (`level` w `AsyncViewBoundary`):**
+   Każda instancja `<AsyncViewBoundary level={1..5}>` otrzymuje przypisany poziom głębokości determinujący jej `z-index` oraz kolejność w drzewie DOM:
+   | Poziom | Klasa `z-index` | Widoki przypisane do poziomu |
+   | :--- | :--- | :--- |
+   | **Poziom 0** | `z-0` | Główne zakładki `BottomNav`: `HomeScreen`, `KitchenScreen`, `AdsScreen`, `RidesScreen`, `TalksScreen` |
+   | **Poziom 1** | `z-[50]` | `ProfileScreen`, `MotylekScreen`, `ZditmScreen`, `CheckoutScreen` |
+   | **Poziom 2** | `z-[52]` | `MyAdsModal`, `PartnerScreen`, `AdConversationsModal`, `AdFiltersModal`, `AddFavoriteBusModal` |
+   | **Poziom 3** | `z-[54]` | `AdDetailModal`, `AddAdModal` |
+   | **Poziom 4** | `z-[56]` | `EditAdModal`, `PromoteAdModal`, `SellerProfileModal`, `ReserveAdModal`, `ReportAdModal` |
+   | **Poziom 5** | `z-[58]` | `ChatModal` (Czat sąsiedzki 1:1 — dostępny z każdego niższego poziomu 0–4) |
+   | **Gesty i Szuflady** | `z-[70]` / `z-[80]` | Strefa gestu powrotu od lewej krawędzi (`z-[70]`) oraz dolne szuflady częściowe `ProductSheet`, `CartSheet`, `InstallAppModal` |
+
+3. **Zdejmowanie ze Stosu (LIFO Pop) i Nawigacja Wstecz:**
+   - Tablica `layers` w `App.tsx` jest uporządkowana ściśle malejąco od **Poziomu 5 do Poziomu 1**.
+   - Naciśnięcie przycisku `< Wróć` w `<NativeHeader />`, wykonanie gestu przeciągnięcia palcem od lewej krawędzi ekranu (`onEdgeTouchStart` / `onEdgeTouchEnd`) lub użycie sprzętowego przycisku Wstecz (`window.history` / `popstate`) uruchamia `closeWithAnimation` (`200ms .native-screen-exit`) **wyłącznie dla najwyższego aktywnego widoku na stosie**, płynnie odsłaniając nietknięty widok nadrzędny pod spodem.
+
+4. **Zakaz Operacji Przesuwających Viewport podczas Transformacji `translate3d`:**
+   - Wewnątrz widoków pełnoekranowych i zagnieżdżonych **zabrania się** wywoływania `element.scrollIntoView()` (zamiast tego należy operować wyłącznie na `containerRef.current.scrollTop = ...`) oraz ustawiania atrybutu `autoFocus` na polach `<input>` w momencie montowania widoku. Wywołania te na elemencie znajdującym się w punkcie `translate3d(100%, 0, 0)` powodują przymusowe przewinięcie głównego okna przeglądarki mobilnej i szarpnięcie animacji.
 
 ### 6.7. Dodatkowe Wytyczne Produktowe i Prywatności (Aktualizacja UX)
 - **Prywatność i Anonimowość Sąsiedzka:**
@@ -772,7 +832,10 @@ Poniżej zestawiono finalne wytyczne UX/UI wynikające z Twoich 20 odpowiedzi:
   - Wizytówka sąsiada (`SellerProfileModal`) potwierdza wyłącznie fizyczną weryfikację adresu zamieszkania bez eksponowania katalogu sprzedawanych ani historycznych przedmiotów.
   - Komunikat o przesyłce weryfikacyjnej informuje neutralnie o wysyłce na adres zamieszkania bez eksponowania nazwy ulicy w treści powiadomienia.
   - Brak limitów zmian / losowań awatara 3D podczas rejestracji oraz w profilu mieszkańca.
-- **Standard Ogłoszeń (Inspiracja OLX Mobile):**
+- **Standard Ogłoszeń Sąsiedzkich (Inspiracja OLX Mobile w Design Systemie mójMińsk):**
+  - Brak modułu ogłoszeń o pracę (`Praca`) — sekcja `Ogłoszenia` służy wyłącznie do darmowych ogłoszeń sąsiedzkich (`Sprzedam`, `Oddam za darmo`, `Zgubione / Znalezione`).
+  - Przyciski zarządzania własnymi ofertami (**`Moje`** oraz **`+ Dodaj`**) znajdują się w nawigacji widoku **Mój profil** (`ProfileScreen`), dzięki czemu nagłówek zakładki `Ogłoszenia` pozostaje czysty (zawiera wyłącznie skrót do rozmów i awatar profilu).
+  - Główny widok `Ogłoszenia` (`AdsScreen`) łączy ergonomię OLX.pl (2-rzędowa przewijana poziomo siatka kategorii z paskiem postępu przewijania, karuzela „Ostatnio oglądane”, przełącznik widoku Kafelki/Lista, szybkie sortowanie i filtr ulic) ze spójnym UI/UX aplikacji **mójMińsk** (awatary sąsiadów, `StreetPill`, karty `rounded-3xl`).
   - Widok szczegółów oferty (`AdDetailModal`) prezentuje na górze karuzelę wielu zdjęć (`images[]`) z obsługą pełnoekranowego podglądu (Lightbox z zoomem i miniaturami), a biały kontener z ceną, tytułem i ulicą nachodzi zaokrąglonymi górnymi rogami (`-mt-7 rounded-t-[28px]`) bezpośrednio na zdjęcie.
   - Widok „Moje ogłoszenia” (`MyAdsModal`) w profilu prezentuje kompaktową listę tekstową bez dużych zdjęć z bezpośrednim przejściem (`Oferta ›`) do widoku szczegółów ogłoszenia.
 - **Komunikacja Miejska ZDiTM na HOME:**

@@ -13,12 +13,11 @@ import {
   Trash2,
 } from 'lucide-react';
 import { NativeHeader, cn, zl } from '../components/ui';
-import type { Ad, Job, User } from '../data/mockData';
+import type { Ad, User } from '../data/mockData';
 
 interface MyAdsModalProps {
   user: User;
   ads: Ad[];
-  jobs: Job[];
   onClose: () => void;
   onOpenAd: (ad: Ad) => void;
   onAddNew: () => void;
@@ -32,7 +31,6 @@ interface MyAdsModalProps {
 export function MyAdsModal({
   user,
   ads,
-  jobs: _jobs,
   onClose,
   onOpenAd,
   onAddNew,

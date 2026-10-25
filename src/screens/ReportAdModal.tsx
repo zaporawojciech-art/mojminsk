@@ -30,11 +30,11 @@ export function ReportAdModal({ ad, onClose, isClosing = false }: ReportAdModalP
   return (
     <div
       className={cn(
-        'fixed inset-0 z-50 flex flex-col bg-white select-none',
+        'fixed inset-0 z-50 flex flex-col bg-mist select-none',
         isClosing ? 'native-screen-exit' : 'native-screen-slide',
       )}
     >
-      <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-white">
+      <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist">
         {/* Native Top Navigation Bar */}
         <NativeHeader title="Zgłoś ogłoszenie" backLabel="Wróć" onBack={onClose} />
 
@@ -55,19 +55,19 @@ export function ReportAdModal({ ad, onClose, isClosing = false }: ReportAdModalP
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="flex-1 flex flex-col justify-between overflow-y-auto p-5 pb-[max(env(safe-area-inset-bottom),16px)]">
-            <div className="space-y-4">
-              <div className="rounded-2xl bg-mist p-3.5">
+          <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-3.5">
+              <div className="rounded-3xl bg-white p-4 shadow-card">
                 <p className="text-[11px] font-bold uppercase tracking-wider text-ink-400">Zgłaszane ogłoszenie</p>
                 <p className="font-semibold text-[14px] text-ink truncate mt-0.5">{ad.title}</p>
                 <p className="text-[12px] text-ink-500">Wystawca: {ad.author} · ul. {ad.street}</p>
               </div>
 
-              <div>
+              <div className="rounded-3xl bg-white p-4 shadow-card">
                 <label className="text-[12px] font-bold uppercase tracking-wider text-ink-400">
                   Wybierz powód zgłoszenia
                 </label>
-                <div className="mt-2 space-y-2">
+                <div className="mt-2.5 space-y-2">
                   {reportReasons.map((reason) => (
                     <button
                       key={reason}
@@ -94,27 +94,31 @@ export function ReportAdModal({ ad, onClose, isClosing = false }: ReportAdModalP
                 </div>
               </div>
 
-              <label className="block">
-                <span className="text-[12px] font-bold text-ink">
-                  Dodatkowe informacje <span className="text-ink-400 font-normal">(opcjonalnie)</span>
-                </span>
-                <textarea
-                  rows={3}
-                  value={details}
-                  onChange={(e) => setDetails(e.target.value)}
-                  placeholder="Napisz krótko, na czym polega problem..."
-                  className="mt-1 w-full rounded-2xl bg-mist p-3.5 text-[13.5px] outline-none focus:ring-2 focus:ring-ink"
-                />
-              </label>
+              <div className="rounded-3xl bg-white p-4 shadow-card">
+                <label className="block">
+                  <span className="text-[12px] font-bold text-ink">
+                    Dodatkowe informacje <span className="text-ink-400 font-normal">(opcjonalnie)</span>
+                  </span>
+                  <textarea
+                    rows={3}
+                    value={details}
+                    onChange={(e) => setDetails(e.target.value)}
+                    placeholder="Napisz krótko, na czym polega problem..."
+                    className="mt-1.5 w-full rounded-2xl border border-mist-300 bg-mist/50 p-3.5 text-[13.5px] outline-none focus:border-ink focus:bg-white"
+                  />
+                </label>
+              </div>
             </div>
 
-            <button
-              type="submit"
-              className="mt-4 flex h-13 w-full items-center justify-center gap-2 rounded-full bg-coral text-[15px] font-bold text-ink shadow-coral transition-transform active:scale-95"
-            >
-              <ShieldAlert className="h-4 w-4" />
-              Prześlij zgłoszenie do moderacji
-            </button>
+            <div className="border-t border-mist bg-white px-5 py-3 pb-[max(env(safe-area-inset-bottom),14px)] shrink-0 shadow-float">
+              <button
+                type="submit"
+                className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-coral text-[14px] font-bold text-ink shadow-coral transition-transform active:scale-95"
+              >
+                <ShieldAlert className="h-4 w-4" />
+                Prześlij zgłoszenie do moderacji
+              </button>
+            </div>
           </form>
         )}
       </div>

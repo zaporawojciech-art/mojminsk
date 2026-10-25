@@ -104,14 +104,16 @@ export function AdsSkeleton() {
     <div className="space-y-4 pb-36" role="status" aria-label="Ładowanie Ogłoszeń">
       <HeaderSkeleton hasSearch />
 
-      {/* Segmented Switcher & Action Bar */}
-      <div className="px-5 space-y-3">
-        <Bone className="h-11 w-full rounded-full" />
-        <div className="flex gap-2 overflow-hidden">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Bone key={i} className="h-9 w-24 shrink-0 rounded-full" />
-          ))}
-        </div>
+      {/* Categories Card Skeleton */}
+      <div className="px-5">
+        <Bone className="h-52 w-full rounded-3xl" />
+      </div>
+
+      {/* Quick Filter Chips */}
+      <div className="flex gap-2 overflow-hidden px-5">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Bone key={i} className="h-9 w-24 shrink-0 rounded-full" />
+        ))}
       </div>
 
       {/* 2-Column C2C Grid Skeleton */}
@@ -447,33 +449,25 @@ export function SellerProfileSkeleton() {
   );
 }
 
-/** Skeleton szczegółów oferty pracy (JobDetailModal) */
-export function JobDetailSkeleton() {
-  return (
-    <div className="flex h-full w-full flex-col overflow-hidden bg-mist" role="status" aria-label="Ładowanie oferty pracy">
-      <NativeBarSkeleton />
-      <div className="p-4 space-y-4 flex-1 overflow-hidden">
-        <Bone className="h-36 w-full rounded-3xl" />
-        <Bone className="h-44 w-full rounded-3xl" />
-      </div>
-      <div className="border-t border-mist bg-white px-5 py-3">
-        <Bone className="h-12 w-full rounded-full" />
-      </div>
-    </div>
-  );
-}
-
-/** Uniwersalny Skeleton dla modali formularzy i akcji (AddAd, EditAd, PromoteAd, ReserveAd, Filtry, Zgłoś, Przystanek) */
+/** Uniwersalny Skeleton dla podstron formularzy i akcji (AddAd, EditAd, PromoteAd, ReserveAd, Filtry, Zgłoś, Przystanek) */
 export function ModalFormSkeleton() {
   return (
     <div className="flex h-full w-full flex-col overflow-hidden bg-mist" role="status" aria-label="Ładowanie widoku">
       <NativeBarSkeleton />
-      <div className="flex-1 overflow-hidden p-5 space-y-4">
-        <Bone className="h-11 w-full rounded-2xl" />
+      <div className="flex-1 overflow-hidden p-4 space-y-3.5">
+        <div className="space-y-1.5">
+          <Bone className="h-3.5 w-32 rounded-md" />
+          <div className="grid grid-cols-3 gap-2">
+            <Bone className="h-11 rounded-2xl" />
+            <Bone className="h-11 rounded-2xl" />
+            <Bone className="h-11 rounded-2xl" />
+          </div>
+        </div>
         <Bone className="h-44 w-full rounded-3xl" />
+        <Bone className="h-40 w-full rounded-3xl" />
         <Bone className="h-36 w-full rounded-3xl" />
       </div>
-      <div className="border-t border-mist bg-white px-5 py-3">
+      <div className="border-t border-mist bg-white px-5 py-3 pb-[max(env(safe-area-inset-bottom),14px)] shrink-0">
         <Bone className="h-12 w-full rounded-full" />
       </div>
     </div>
@@ -484,23 +478,31 @@ export function OverlaySkeleton() {
   return <ModalFormSkeleton />;
 }
 
+const LEVEL_Z_CLASS: Record<number, string> = {
+  1: 'z-[50]',
+  2: 'z-[52]',
+  3: 'z-[54]',
+  4: 'z-[56]',
+  5: 'z-[58]',
+};
+
 /**
- * Kontener asynchronicznego widoku (In-Place Geometry-Locked Skeleton):
- * Widok montuje się od razu w docelowych wymiarach (1:1) w stanie .skeleton-in-place
- * (kości szkieletu dokładnie na miejscu rzeczywistych elementów), a po zakończeniu fazy
- * ładowania przełącza klasę na .skeleton-revealed bez odmontowywania DOM i bez
- * jakiegokolwiek przeskoku layoutu (0px CLS).
+ * Kontener asynchronicznego widoku (Single-Shell Native Push Transition + In-Place Skeleton):
+ * Wszystkie widoki pełnoekranowe i zagnieżdżone wjeżdżają jednolicie z prawej strony
+ * (.native-screen-slide) i wyjeżdżają w prawo (.native-screen-exit).
+ * Parametr `level` (1..5) określa poziom zagnieżdżenia na stosie nawigacji (z-index: 50..58),
+ * dzięki czemu widok nadrzędny pozostaje zamontowany pod spodem z zachowaniem pozycji scrolla.
  */
 export function AsyncViewBoundary({
   viewKey,
-  mode = 'screen',
+  level = 1,
   isClosing = false,
   skeleton,
-  durationMs = 170,
+  durationMs = 150,
   children,
 }: {
   viewKey: string;
-  mode?: 'screen' | 'modal';
+  level?: 1 | 2 | 3 | 4 | 5;
   isClosing?: boolean;
   skeleton: ReactNode;
   durationMs?: number;
@@ -517,31 +519,29 @@ export function AsyncViewBoundary({
   }, [viewKey, durationMs]);
 
   const isReady = readyKey === viewKey || isClosing;
-
-  const shellSkeleton = (
-    <div
-      className={cn(
-        'fixed inset-0 z-50 flex flex-col bg-mist select-none',
-        isClosing
-          ? mode === 'modal'
-            ? 'native-modal-exit'
-            : 'native-screen-exit'
-          : mode === 'modal'
-            ? 'native-modal-slide'
-            : 'native-screen-slide',
-      )}
-    >
-      <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist">
-        {skeleton}
-      </div>
-    </div>
-  );
+  const zClass = LEVEL_Z_CLASS[level] ?? 'z-[50]';
 
   return (
-    <Suspense fallback={shellSkeleton}>
-      <div className={isReady ? 'skeleton-revealed' : 'skeleton-in-place'}>
-        {children}
+    <div
+      data-view-level={level}
+      className={cn(
+        'native-view-shell fixed inset-0 flex flex-col overflow-hidden select-none',
+        zClass,
+        isClosing ? 'native-screen-exit' : 'native-screen-slide',
+      )}
+    >
+      <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist shadow-[-12px_0_32px_rgba(18,19,26,0.18)]">
+        <Suspense fallback={skeleton}>
+          <div
+            className={cn(
+              'flex h-full w-full flex-1 flex-col overflow-hidden',
+              isReady ? 'skeleton-revealed' : 'skeleton-in-place',
+            )}
+          >
+            {children}
+          </div>
+        </Suspense>
       </div>
-    </Suspense>
+    </div>
   );
 }

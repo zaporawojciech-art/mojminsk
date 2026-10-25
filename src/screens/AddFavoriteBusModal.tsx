@@ -77,7 +77,6 @@ export function AddFavoriteBusModal({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full rounded-2xl bg-mist py-2.5 pl-10 pr-4 text-[13px] font-medium text-ink placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-ink"
-              autoFocus
             />
             {search && (
               <button

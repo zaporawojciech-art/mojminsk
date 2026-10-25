@@ -523,6 +523,7 @@ export interface Ad {
   images?: string[];
   description?: string;
   category?: string;
+  condition?: 'Nowe' | 'Używane' | 'Bardzo dobry';
   status?: 'active' | 'reserved' | 'sold';
   views?: number;
   isOwner?: boolean;
@@ -567,8 +568,11 @@ export const ads: Ad[] = [
     ],
     description: 'Rower po jednym dziecku, 100% sprawny technicznie. Nowy dzwonek, hamulce wyregulowane, opony bez zużycia. Gratis dorzucam kask w rozmiarze S. Odbiór osobisty przy ul. Kościuszki, niedaleko SP nr 1.',
     category: 'Sport & Rowery',
+    condition: 'Bardzo dobry',
     status: 'active',
     views: 42,
+    promoted: true,
+    negotiable: true,
   },
   {
     id: 'a2',
@@ -586,6 +590,7 @@ export const ads: Ad[] = [
     ],
     description: 'Oddam za darmo rozkładaną sofę w kolorze szarym. Czysta, bez plam, drobne przetarcie z tyłu oparcia. 2. piętro bez windy, potrzebne 2 osoby do zniesienia. Chcę zwolnić miejsce do piątku.',
     category: 'Meble & Dom',
+    condition: 'Używane',
     status: 'active',
     views: 89,
   },
@@ -606,9 +611,11 @@ export const ads: Ad[] = [
     ],
     description: 'Solidne biurko wykonane z klejonki dębowej z czarnymi nogami w stylu loft. Idealne do pracy z laptopem lub nauki. Używane przez rok, stan gabinetowy. Odbiór ul. Spacerowa (pomogę znieść do auta).',
     category: 'Meble & Dom',
+    condition: 'Bardzo dobry',
     status: 'active',
     views: 67,
     isOwner: true,
+    promoted: true,
   },
   {
     id: 'a4',
@@ -645,6 +652,7 @@ export const ads: Ad[] = [
     ],
     description: 'Zestawy policja, straż i 2 małe pojazdy. Kompletne w 100%, z papierowymi instrukcjami w bardzo dobrym stanie. Zapakowane w woreczki strunowe. Świetny prezent dla dziecka.',
     category: 'Dziecięce',
+    condition: 'Bardzo dobry',
     status: 'active',
     views: 33,
   },
@@ -664,8 +672,49 @@ export const ads: Ad[] = [
     ],
     description: 'Zdrowa roślina z 7 dużymi liśćmi z dziurami, regularnie nawożona biohumusem. Sprzedaję wraz z nową doniczką ceramiczną i podstawkiem, bo po remoncie zabrakło dla niej miejsca.',
     category: 'Ogród & Narzędzia',
+    condition: 'Nowe',
     status: 'active',
     views: 51,
+  },
+  {
+    id: 'a7',
+    title: 'Słuchawki bezprzewodowe Sony WH-1000XM4 ANC',
+    price: 580,
+    kind: 'sell',
+    author: 'Michał',
+    street: 'Warszawska',
+    time: '3 godz.',
+    image: img('photo-1505740420928-5e560c06d30e', 800),
+    images: [
+      img('photo-1505740420928-5e560c06d30e', 1000),
+      img('photo-1484704849700-f032a568e944', 1000),
+    ],
+    description: 'Oryginalne słuchawki z redukcją hałasu ANC, idealne do pociągu Kolei Mazowieckich do Warszawy. W zestawie twarde etui oraz przewód USB-C. Bateria trzyma pełne 30 godzin.',
+    category: 'Elektronika',
+    condition: 'Bardzo dobry',
+    status: 'active',
+    views: 94,
+    negotiable: true,
+  },
+  {
+    id: 'a8',
+    title: 'Komplet opon zimowych 205/55 R16 Michelin (4 szt.)',
+    price: 450,
+    kind: 'sell',
+    author: 'Krzysztof',
+    street: 'Kazikowskiego',
+    time: '5 godz.',
+    image: img('photo-1578844251758-2f71da64c96f', 800),
+    images: [
+      img('photo-1578844251758-2f71da64c96f', 1000),
+      img('photo-1580273916550-e323be2ae537', 1000),
+    ],
+    description: 'Bieżnik ponad 6,5 mm, równe, nieklejone, przechowywane w suchym garażu przy ul. Kazikowskiego. Sprzedaję po zmianie samochodu.',
+    category: 'Motoryzacja',
+    condition: 'Używane',
+    status: 'active',
+    views: 78,
+    negotiable: true,
   },
 ];
 
@@ -720,96 +769,6 @@ export const initialAdConversations: AdConversation[] = [
     lastMessage: 'Dzięki sąsiedzie za kontakt. Sofa czeka, pomogę przy znoszeniu!',
     lastMessageTime: 'Wczoraj',
     unreadCount: 0,
-  },
-];
-
-export interface Job {
-  id: string;
-  company: string;
-  position: string;
-  salary: string;
-  period: string;
-  tags: string[];
-  time: string;
-  tone: Tone;
-  description?: string;
-  requirements?: string[];
-  benefits?: string[];
-  address?: string;
-  isOwner?: boolean;
-}
-
-export const jobs: Job[] = [
-  {
-    id: 'j1',
-    company: 'Motylek Market',
-    position: 'Kasjer / sprzedawca',
-    salary: '4 900 – 5 600 zł',
-    period: 'brutto / mies.',
-    tags: ['Pełny etat', 'Umowa o pracę', 'ul. Siennicka'],
-    time: 'Dziś',
-    tone: 'sand',
-    description: 'Dołącz do zgranego zespołu najpopularniejszego lokalnego marketu w Mińsku Mazowieckim! Szukamy osoby uśmiechniętej, punktualnej i zorientowanej na życzliwą obsługę sąsiadów.',
-    requirements: [
-      'Książeczka do celów sanitarno-epidemiologicznych (lub chęć jej wyrobienia)',
-      'Uczciwość, punktualność i życzliwość wobec klientów',
-      'Doświadczenie na kasie fiskalnej mile widziane, ale wszystkiego nauczymy!',
-    ],
-    benefits: [
-      'Stabilna Umowa o Pracę bez pośredników',
-      'Karta rabatowa 15% na zakupy spożywcze w Motylek Market',
-      'Premia miesięczna od obrotu sklepu',
-      'Elastyczny grafik dopasowany do dojazdów lub rodziny',
-    ],
-    address: 'ul. Siennicka 24, Mińsk Mazowiecki',
-  },
-  {
-    id: 'j2',
-    company: 'mójMińsk',
-    position: 'Kurier rowerowy / car delivery',
-    salary: 'od 28 zł',
-    period: 'brutto / godz.',
-    tags: ['Elastyczne godziny', 'Student mile widziany', 'Centrum'],
-    time: 'Dziś',
-    tone: 'coral',
-    description: 'Realizuj szybkie dostawy z restauracji Strefy Kuchni oraz zamówień z Motylek Market do mieszkańców Mińska. Pracujesz we własnym mieście, na własnym rowerze lub aucie.',
-    requirements: [
-      'Własny sprawny rower, skuter lub samochód',
-      'Smartfon z aplikacją mójMińsk',
-      'Dobra znajomość topografii ulic Mińska Mazowieckiego',
-      'Ukończone 18 lat',
-    ],
-    benefits: [
-      'Wypłaty co tydzień w każdy piątek',
-      'Sam decydujesz, w które dni i godziny chcesz jeździć',
-      '100% napiwków od mieszkańców trafia do Twojej kieszeni',
-      'Termos i torba termiczna w pakiecie powitalnym',
-    ],
-    address: 'Baza: ul. Spacerowa / Centrum, Mińsk Mazowiecki',
-  },
-  {
-    id: 'j3',
-    company: 'SolarTech Mińsk',
-    position: 'Monter instalacji PV & pomp ciepła',
-    salary: '6 000 – 8 000 zł',
-    period: 'brutto / mies.',
-    tags: ['Pełny etat', 'Prawo jazdy B', 'ul. Warszawska'],
-    time: '2 dni',
-    tone: 'sky',
-    description: 'Lokalna mińska firma instalacyjna poszukuje monterów paneli fotowoltaicznych i pomp ciepła do realizacji inwestycji na terenie powiatu mińskiego.',
-    requirements: [
-      'Brak lęku wysokości (praca na dachach budynków)',
-      'Prawo jazdy kat. B',
-      'Uprawnienia SEP do 1kV mile widziane',
-      'Sumienność i dbałość o estetykę montażu',
-    ],
-    benefits: [
-      'Umowa o pracę na pełny etat',
-      'Nowy sprzęt i odzież robocza renomowanych marek',
-      'Płatne nadgodziny i premie za zrealizowane obiekty',
-      'Szkolenia certyfikujące SEP i UDT',
-    ],
-    address: 'ul. Warszawska 180, Mińsk Mazowiecki',
   },
 ];
 

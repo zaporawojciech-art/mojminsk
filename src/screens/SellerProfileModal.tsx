@@ -52,7 +52,7 @@ export function SellerProfileModal({
     >
       <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist">
         <NativeHeader
-          title="Weryfikacja sąsiada"
+          title="Wizytówka sąsiada"
           backLabel="Wróć"
           onBack={onClose}
         />
@@ -100,11 +100,19 @@ export function SellerProfileModal({
           {/* Verification info banner */}
           <div className="rounded-3xl bg-sand-100 p-4 shadow-sm border border-sand-200">
             <div className="flex items-start gap-3">
-              <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" />
+              {isVerified ? (
+                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" />
+              ) : (
+                <Clock className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
+              )}
               <div className="text-[12.5px] leading-relaxed text-ink-700">
-                <p className="font-bold text-ink">Tożsamość sąsiedzka potwierdzona</p>
+                <p className="font-bold text-ink">
+                  {isVerified ? 'Adres zamieszkania zweryfikowany' : 'Konto w okresie próbnym (14 dni)'}
+                </p>
                 <p className="mt-1 text-ink-600">
-                  Użytkownik mieszka w Mińsku Mazowieckim przy ul. {sellerStreet}. Weryfikacja adresu odbywa się tradycyjnym listem z jednorazowym kodem aktywacyjnym PIN.
+                  {isVerified
+                    ? `Sąsiad mieszka w Mińsku Mazowieckim przy ul. ${sellerStreet}. Adres został potwierdzony tradycyjnym listem powitalnym z jednorazowym kodem PIN.`
+                    : `Użytkownik zadeklarował zamieszkanie przy ul. ${sellerStreet} i oczekuje na doręczenie listu powitalnego z kodem aktywacyjnym PIN.`}
                 </p>
               </div>
             </div>
