@@ -428,10 +428,10 @@ export interface MotylekDeal {
 }
 
 export const motylekDeals: MotylekDeal[] = [
-  { id: 'deal1', badge: 'Hit Tygodnia −30%', title: 'Masło ekstra z Mazowsza 82%', price: 5.99, oldPrice: 8.49, unit: '200 g', image: img('photo-1589985270826-4b7bb135bc9d', 400) },
-  { id: 'deal2', badge: 'Świeża dostawa', title: 'Pomidory malinowe gruntowe', price: 7.99, oldPrice: 11.99, unit: '1 kg', image: img('photo-1592924357228-91a4daadcfea', 400) },
-  { id: 'deal3', badge: 'Gazetka', title: 'Schab wiejski bez kości', price: 16.90, oldPrice: 22.90, unit: '1 kg', image: img('photo-1607623814075-e51df1bdc82f', 400) },
-  { id: 'deal4', badge: 'Supercena', title: 'Kawa ziarnista Lavazza Crema', price: 44.90, oldPrice: 59.90, unit: '1 kg', image: img('photo-1559056199-641a0ac8b55e', 400) },
+  { id: 'g7', badge: 'Hit Tygodnia −30%', title: 'Masło ekstra z Mazowsza 82%', price: 5.99, oldPrice: 8.49, unit: '200 g', image: img('photo-1589985270826-4b7bb135bc9d', 400) },
+  { id: 'g2', badge: 'Świeża dostawa', title: 'Pomidory malinowe gruntowe', price: 7.99, oldPrice: 11.99, unit: '1 kg', image: img('photo-1592924357228-91a4daadcfea', 400) },
+  { id: 'g13', badge: 'Gazetka', title: 'Schab wiejski bez kości', price: 16.90, oldPrice: 22.90, unit: '1 kg', image: img('photo-1607623814075-e51df1bdc82f', 400) },
+  { id: 'g10', badge: 'Supercena', title: 'Kawa ziarnista Lavazza Crema', price: 44.90, oldPrice: 59.90, unit: '1 kg', image: img('photo-1559056199-641a0ac8b55e', 400) },
 ];
 
 export const motylekAislesList = [
@@ -450,17 +450,18 @@ export interface GroceryProduct extends Product {
 
 export const groceries: GroceryProduct[] = [
   { id: 'g1', kind: 'grocery', cat: 'motylek', aisle: 'bakery', name: 'Chleb wiejski tradycyjny', vendor: 'Motylek Market', price: 4.2, unit: '500 g', tone: 'sand', description: 'Codziennie świeży, pieczony w lokalnej piekarni partnerskiej.', image: img('photo-1509440159596-0249088772ff', 400) },
-  { id: 'g2', kind: 'grocery', cat: 'motylek', aisle: 'produce', name: 'Pomidory malinowe', vendor: 'Motylek Market', price: 8.99, oldPrice: 11.99, unit: '1 kg', tone: 'coral', description: 'Słodkie pomidory malinowe od rolników spod Mińska.', image: img('photo-1592924357228-91a4daadcfea', 400) },
+  { id: 'g2', kind: 'grocery', cat: 'motylek', aisle: 'produce', name: 'Pomidory malinowe gruntowe', vendor: 'Motylek Market', price: 7.99, oldPrice: 11.99, unit: '1 kg', tone: 'coral', description: 'Słodkie pomidory malinowe od rolników spod Mińska.', image: img('photo-1592924357228-91a4daadcfea', 400) },
   { id: 'g3', kind: 'grocery', cat: 'motylek', aisle: 'dairy', name: 'Mleko świeże 3,2%', vendor: 'Motylek Market', price: 3.49, unit: '1 l', tone: 'sky', description: 'Mleko z mazowieckiej mleczarni, pasteryzowane.', image: img('photo-1563636619-e9143da7973b', 400) },
   { id: 'g4', kind: 'grocery', cat: 'motylek', aisle: 'dairy', name: 'Ser gouda w plastrach', vendor: 'Motylek Market', price: 5.8, unit: '150 g', tone: 'sand', description: 'Łagodny ser żółty, idealny do kanapek.', image: img('photo-1486297678162-eb2a19b0a32d', 400) },
   { id: 'g5', kind: 'grocery', cat: 'motylek', aisle: 'produce', name: 'Jabłka Ligol grójeckie', vendor: 'Motylek Market', price: 3.99, oldPrice: 5.49, unit: '1 kg', tone: 'coral', description: 'Soczyste jabłka z grójeckich sadów, chrupkie i słodkie.', image: img('photo-1560806887-1e4cd0b6cbd6', 400) },
   { id: 'g6', kind: 'grocery', cat: 'motylek', aisle: 'dairy', name: 'Jaja z wolnego wybiegu L', vendor: 'Motylek Market', price: 12.99, unit: '10 szt.', tone: 'sky', description: 'Jaja klasy L z certyfikowanego wolnego wybiegu.', image: img('photo-1582722872445-44dc5f7e3c8f', 400) },
-  { id: 'g7', kind: 'grocery', cat: 'motylek', aisle: 'dairy', name: 'Masło ekstra mazowieckie 82%', vendor: 'Motylek Market', price: 5.99, oldPrice: 8.49, unit: '200 g', tone: 'sand', description: 'Prawdziwe masło ekstra ze śmietanki pasteryzowanej.', image: img('photo-1589985270826-4b7bb135bc9d', 400) },
+  { id: 'g7', kind: 'grocery', cat: 'motylek', aisle: 'dairy', name: 'Masło ekstra z Mazowsza 82%', vendor: 'Motylek Market', price: 5.99, oldPrice: 8.49, unit: '200 g', tone: 'sand', description: 'Prawdziwe masło ekstra ze śmietanki pasteryzowanej.', image: img('photo-1589985270826-4b7bb135bc9d', 400) },
   { id: 'g8', kind: 'grocery', cat: 'motylek', aisle: 'meat', name: 'Szynka z wędzarni mińskiej', vendor: 'Motylek Market', price: 9.8, unit: '200 g', tone: 'coral', description: 'Tradycyjnie wędzona dymem olchowym szynka z lokalnej masarni.', image: img('photo-1524438418049-ab2acb7aa48f', 400) },
   { id: 'g9', kind: 'grocery', cat: 'motylek', aisle: 'drinks', name: 'Woda mineralna Cisowianka Niegaz.', vendor: 'Motylek Market', price: 2.19, unit: '1,5 l', tone: 'sky', description: 'Naturalna woda mineralna średnionasycona.', image: img('photo-1559839914-17aae19cec71', 400) },
   { id: 'g10', kind: 'grocery', cat: 'motylek', aisle: 'drinks', name: 'Kawa ziarnista Lavazza Crema', vendor: 'Motylek Market', price: 44.9, oldPrice: 59.9, unit: '1 kg', tone: 'sand', description: 'Mieszanka arabiki i robusty o kremowym aromacie i nutach czekolady.', image: img('photo-1559056199-641a0ac8b55e', 400) },
   { id: 'g11', kind: 'grocery', cat: 'motylek', aisle: 'household', name: 'Ekologiczny płyn do naczyń', vendor: 'Motylek Market', price: 7.49, unit: '750 ml', tone: 'sky', description: 'Biodegradowalny płyn z ekstraktem z aloesu, łagodny dla dłoni.', image: img('photo-1585421514284-efb74c2b69ba', 400) },
   { id: 'g12', kind: 'grocery', cat: 'motylek', aisle: 'bakery', name: 'Bułka paryska chrupiąca', vendor: 'Motylek Market', price: 3.2, unit: '350 g', tone: 'sand', description: 'Lekka pszenna bagietka z chrupiącą złocistą skórką.', image: img('photo-1549931319-a545dcf3bc73', 400) },
+  { id: 'g13', kind: 'grocery', cat: 'motylek', aisle: 'meat', name: 'Schab wiejski bez kości', vendor: 'Motylek Market', price: 16.90, oldPrice: 22.90, unit: '1 kg', tone: 'coral', description: 'Świeży schab wieprzowy z mazowieckiego chowu, idealny na tradycyjne kotlety.', image: img('photo-1607623814075-e51df1bdc82f', 400) },
 ];
 
 export const allProducts: Product[] = [...dishes, ...groceries];

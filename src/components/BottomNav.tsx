@@ -1,12 +1,12 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Car, House, Megaphone, MessagesSquare, UtensilsCrossed } from 'lucide-react';
+import { Car, House, Megaphone, MessagesSquare, ShoppingBag } from 'lucide-react';
 import { cn } from './ui';
 
-export type TabId = 'home' | 'kitchen' | 'ads' | 'rides' | 'talks';
+export type TabId = 'home' | 'shop' | 'ads' | 'rides' | 'talks';
 
 const items: { id: TabId; label: string; icon: typeof House }[] = [
   { id: 'home', label: 'Start', icon: House },
-  { id: 'kitchen', label: 'Kuchnia', icon: UtensilsCrossed },
+  { id: 'shop', label: 'Sklep', icon: ShoppingBag },
   { id: 'ads', label: 'Ogłoszenia', icon: Megaphone },
   { id: 'rides', label: 'Przejazdy', icon: Car },
   { id: 'talks', label: 'Rozmowy', icon: MessagesSquare },

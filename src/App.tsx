@@ -8,7 +8,6 @@ import {
   CheckoutSkeleton,
   ConversationsSkeleton,
   ModalFormSkeleton,
-  MotylekSkeleton,
   MyAdsSkeleton,
   OverlaySkeleton,
   PartnerSkeleton,
@@ -38,7 +37,7 @@ import type { AdFilterState } from './screens/AdFiltersModal';
 
 // Asynchronicznie ładowane widoki zakładek (Code-Splitting + Skeleton Screen)
 const HomeScreen = lazy(() => import('./screens/HomeScreen').then((m) => ({ default: m.HomeScreen })));
-const KitchenScreen = lazy(() => import('./screens/KitchenScreen').then((m) => ({ default: m.KitchenScreen })));
+const ShopScreen = lazy(() => import('./screens/ShopScreen').then((m) => ({ default: m.ShopScreen })));
 const AdsScreen = lazy(() => import('./screens/AdsScreen').then((m) => ({ default: m.AdsScreen })));
 const RidesScreen = lazy(() => import('./screens/RidesScreen').then((m) => ({ default: m.RidesScreen })));
 const TalksScreen = lazy(() => import('./screens/TalksScreen').then((m) => ({ default: m.TalksScreen })));
@@ -47,7 +46,6 @@ const TalksScreen = lazy(() => import('./screens/TalksScreen').then((m) => ({ de
 const ProfileScreen = lazy(() => import('./screens/ProfileScreen').then((m) => ({ default: m.ProfileScreen })));
 const PartnerScreen = lazy(() => import('./screens/PartnerScreen').then((m) => ({ default: m.PartnerScreen })));
 const CheckoutScreen = lazy(() => import('./screens/CheckoutScreen').then((m) => ({ default: m.CheckoutScreen })));
-const MotylekScreen = lazy(() => import('./screens/MotylekScreen').then((m) => ({ default: m.MotylekScreen })));
 const ZditmScreen = lazy(() => import('./screens/ZditmScreen').then((m) => ({ default: m.ZditmScreen })));
 const AddAdModal = lazy(() => import('./screens/AddAdModal').then((m) => ({ default: m.AddAdModal })));
 const AddRideModal = lazy(() => import('./screens/AddRideModal').then((m) => ({ default: m.AddRideModal })));
@@ -437,14 +435,13 @@ export default function App() {
   useEffect(() => {
     const id = window.setTimeout(() => {
       void import('./screens/HomeScreen');
-      void import('./screens/KitchenScreen');
+      void import('./screens/ShopScreen');
       void import('./screens/AdsScreen');
       void import('./screens/RidesScreen');
       void import('./screens/TalksScreen');
       void import('./screens/ProfileScreen');
       void import('./screens/AdDetailModal');
       void import('./screens/MyAdsModal');
-      void import('./screens/MotylekScreen');
       void import('./screens/ZditmScreen');
       void import('./screens/PartnerScreen');
       void import('./screens/CheckoutScreen');
@@ -483,21 +480,21 @@ export default function App() {
           setSelectedZditmStop(stopName);
           setOverlay('zditm');
         }}
-        onMotylek={() => setOverlay('motylek')}
+        onMotylek={() => handleTabChange('shop')}
         favoriteBuses={favoriteBuses}
         onAddFavoriteBus={() => setAddFavBusOpen(true)}
         onRemoveFavoriteBus={handleRemoveFavoriteBus}
       />
     );
-  } else if (tab === 'kitchen') {
+  } else if (tab === 'shop') {
     tabContent = (
-      <KitchenScreen
+      <ShopScreen
         user={user}
         onProfile={() => setOverlay('profile')}
-        onOpen={setSheet}
+        onOpenProduct={setSheet}
         onAdd={(p) => add(p)}
         qtyOf={(id) => cart[id] ?? 0}
-        onOpenMotylek={() => setOverlay('motylek')}
+        totalCartValue={total}
       />
     );
   } else if (tab === 'ads') {
@@ -558,7 +555,7 @@ export default function App() {
           </Suspense>
         </main>
 
-        {showChrome && !isChildScreenActive && count > 0 && (tab === 'kitchen' || tab === 'home') && (
+        {showChrome && !isChildScreenActive && count > 0 && (tab === 'shop' || tab === 'home') && (
           <CartPill count={count} total={total} onOpen={() => setCartOpen(true)} />
         )}
         {showChrome && !isChildScreenActive && <BottomNav tab={tab} onChange={handleTabChange} />}
@@ -626,24 +623,6 @@ export default function App() {
               myRidesCount={userRidesCount}
               onInstallApp={() => setInstallModalOpen(true)}
               userAds={userAds}
-            />
-          </AsyncViewBoundary>
-        )}
-
-        {user && overlay === 'motylek' && (
-          <AsyncViewBoundary
-            viewKey="overlay-motylek"
-            level={1}
-            isClosing={!!exitingScreens['overlay']}
-            skeleton={<MotylekSkeleton />}
-          >
-            <MotylekScreen
-              onBack={closeOverlay}
-              isClosing={!!exitingScreens['overlay']}
-              onOpenProduct={setSheet}
-              onAdd={(p) => add(p)}
-              qtyOf={(id) => cart[id] ?? 0}
-              totalCartValue={total}
             />
           </AsyncViewBoundary>
         )}

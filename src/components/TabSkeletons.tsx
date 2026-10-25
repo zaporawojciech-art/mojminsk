@@ -66,34 +66,25 @@ export function HomeSkeleton() {
   );
 }
 
-export function KitchenSkeleton() {
+export function ShopSkeleton() {
   return (
-    <div className="space-y-6 pb-36" role="status" aria-label="Ładowanie Strefy Kuchni">
+    <div className="space-y-6 pb-36" role="status" aria-label="Ładowanie Sklepu Motylek">
       <HeaderSkeleton hasSearch />
 
-      {/* Category Bubbles (Glovo style) */}
+      {/* Alejki i gazetka */}
       <div className="flex gap-3 overflow-hidden px-5">
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="flex flex-col items-center gap-2 shrink-0">
-            <Bone className="h-16 w-16 rounded-full" />
-            <Bone className="h-3 w-12 rounded-full" />
+            <Bone className="h-10 w-24 rounded-full" />
           </div>
         ))}
       </div>
 
-      {/* Order / Promo Banner Skeleton */}
-      <div className="px-5">
-        <Bone className="h-36 w-full rounded-4xl" />
-      </div>
-
-      {/* Dish / Restaurant Cards */}
-      <div className="px-5 space-y-3">
-        <Bone className="h-5 w-44 rounded-lg" />
-        <div className="grid grid-cols-2 gap-3">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Bone key={i} className="h-52 w-full rounded-3xl" />
-          ))}
-        </div>
+      {/* Deals / Products grid */}
+      <div className="grid grid-cols-2 gap-3 px-5">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Bone key={i} className="h-52 w-full rounded-3xl" />
+        ))}
       </div>
     </div>
   );
@@ -182,8 +173,8 @@ export function TabSkeleton({ tab }: { tab: TabId }) {
   switch (tab) {
     case 'home':
       return <HomeSkeleton />;
-    case 'kitchen':
-      return <KitchenSkeleton />;
+    case 'shop':
+      return <ShopSkeleton />;
     case 'ads':
       return <AdsSkeleton />;
     case 'rides':
@@ -304,28 +295,6 @@ export function MyAdsSkeleton() {
         {Array.from({ length: 3 }).map((_, i) => (
           <Bone key={i} className="h-36 w-full rounded-3xl" />
         ))}
-      </div>
-    </div>
-  );
-}
-
-/** Skeleton widoku „Motylek Market” (MotylekScreen) */
-export function MotylekSkeleton() {
-  return (
-    <div className="flex h-full w-full flex-col overflow-hidden bg-mist" role="status" aria-label="Ładowanie Motylek Market">
-      <NativeBarSkeleton />
-      <div className="flex-1 overflow-hidden p-4 space-y-4">
-        <Bone className="h-36 w-full rounded-4xl" />
-        <div className="flex gap-2 overflow-hidden">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Bone key={i} className="h-9 w-24 shrink-0 rounded-full" />
-          ))}
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Bone key={i} className="h-48 w-full rounded-3xl" />
-          ))}
-        </div>
       </div>
     </div>
   );

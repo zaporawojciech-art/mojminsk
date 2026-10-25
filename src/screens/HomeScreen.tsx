@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   ArrowRight, Bus, Car, Check, Cloud, CloudMoon, CloudRain, CloudSun, Coffee, Droplets, Eye, Gauge, MapPin, Megaphone,
-  Moon, Plus, ShieldCheck, Sparkles, Sun, TriangleAlert, Umbrella, UtensilsCrossed, Wind, X,
+  Moon, Plus, ShieldCheck, ShoppingBag, Sparkles, Sun, TriangleAlert, Umbrella, Wind, X,
 } from 'lucide-react';
 import {
   getUpcomingDepartures, liveAlert, news, partner, poll, weather,
@@ -422,7 +422,7 @@ export function HomeScreen({
   onRemoveFavoriteBus,
 }: HomeScreenProps) {
   const quick = [
-    { label: 'Motylek', icon: UtensilsCrossed, cls: 'bg-sand text-ink', onClick: () => (onMotylek ? onMotylek() : onTab('kitchen')) },
+    { label: 'Motylek', icon: ShoppingBag, cls: 'bg-sand text-ink', onClick: () => (onMotylek ? onMotylek() : onTab('shop')) },
     { label: 'Rozkład', icon: Bus, cls: 'bg-sky-100 text-ink', onClick: () => (onZditm ? onZditm('M2') : onTab('home')) },
     { label: 'Przejazd', icon: Car, cls: 'bg-coral-100 text-ink', onClick: () => onTab('rides') },
     { label: 'Ogłoszenia', icon: Megaphone, cls: 'bg-white text-ink', onClick: () => onTab('ads') },

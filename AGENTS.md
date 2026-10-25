@@ -111,7 +111,7 @@ flowchart TD
 +--------------------------------------------------------------+
 | [X-SĄSIEDZI] Wojtek ze Spacerowej: "Czy u Was też nie ma..."  |
 +--------------------------------------------------------------+
-| [BOTTOM NAV] Home | Ogłoszenia | Kuchnia | Przejazdy | Rozmowy |
+| [BOTTOM NAV] Start | Sklep (Motylek) | Ogłoszenia | Przejazdy | Rozmowy |
 +--------------------------------------------------------------+
 ```
 
@@ -206,25 +206,26 @@ Widok zaprojektowany w czytelnej siatce kafelków, łączący potrzeby sąsiedzk
 
 ---
 
-### 4.3. Widok ZAMÓWIENIA & „STREFA KUCHNI” (Lokalne Glovo) (Decyzje #10, #37, #38, #39)
+### 4.3. Widok SKLEP (Wyłączność mGrocery: Motylek Market) (Decyzje #10, #43–#48)
 
-Hiperlokalny marketplace gastronomiczno-handlowy łączący mińskie restauracje, piekarnie i sklepy spożywcze z mieszkańcami, wiernie odwzorowujący UX i UI aplikacji Glovo.
+Zgodnie z decyzją produktową zrezygnowano z wielorestauracyjnego marketplace'u („Strefa Kuchni” / klon Glovo) na rzecz **100% wyłączności dla lokalnej sieci Motylek Market w Mińsku Mazowieckim** w głównej zakładce **„Sklep”**. Restauracje w Mińsku Mazowieckim bazują na zamówieniach telefonicznych oraz ogólnokrajowych agregatorach (Glovo, Pyszne); ewentualna promocja lokali gastronomicznych będzie w przyszłości realizowana w module Ogłoszeń Lokalnych.
 
 ```
 +--------------------------------------------------------------+
-| Adres dostawy: ul. Spacerowa 14, Mińsk Maz. [Zmień]          |
+| [TOP BAR] Motylek Market · Wyłączność · Otwarte do 21:00     |
+|           Dostawa: ul. Spacerowa · [Profil]                  |
 +--------------------------------------------------------------+
-| [BĄBLE GLOVO UI]                                             |
-|  (🍕 Kuchnia)  (🥖 Piekarnie)  (🛒 Spożywcze)  (☕ Kawiarnie)|
+| [SZUKAJ W MOTYLKU] 🔍 Szukaj chleba, mleka, pomidorów...     |
 +--------------------------------------------------------------+
-| [PROMO BANER] Bella Ciao: Dowóz 0 zł dla ul. Spacerowej!     |
+| [DOSTAWA W 35 MIN] Do darmowej dostawy brakuje: 42 zł (120 zł)|
 +--------------------------------------------------------------+
-| [LISTING LOKALI]                                             |
-| 🍕 Pizzeria Bella Ciao · 25-35 min · ⭐ 4.8 · Min. 40 zł     |
-| 🍔 Burger Stacja Mińsk · 30-40 min · ⭐ 4.9 · Min. 35 zł     |
-| 🥖 Piekarnia Gromulski · Świeże pieczywo na rano             |
+| [HITY TYGODNIA Z GAZETKI] Karuzela promocyjna z rabatami     |
 +--------------------------------------------------------------+
-| [KOSZYK PŁYWAJĄCY] 1 zamówienie w toku -> Śledź kuriera      |
+| [ALEJKI SKLEPOWE] (Wszystkie) (Pieczywo) (Nabiał) (Owoce)... |
++--------------------------------------------------------------+
+| [SIATKA PRODUKTÓW 2-KOL] Zdjęcie, gramatura, cena, [+] Koszyk|
++--------------------------------------------------------------+
+| [PŁYWAJĄCY KOSZYK] 3 produkty · 48,50 zł -> Przejdź do kasy  |
 +--------------------------------------------------------------+
 ```
 
@@ -795,7 +796,7 @@ Aplikacja obsługuje wielopoziomowe zagnieżdżanie widoków (np. przejście `St
 
 ```mermaid
 flowchart LR
-    L0["Poziom 0 (z-0)\nZakładki Główne\n(Start, Kuchnia, Ogłoszenia,\nPrzejazdy, Rozmowy)"] --> L1["Poziom 1 (z-50)\nPodstrony Główne\n(Profil, Motylek,\nZDiTM, Kasa)"]
+    L0["Poziom 0 (z-0)\nZakładki Główne\n(Start, Sklep, Ogłoszenia,\nPrzejazdy, Rozmowy)"] --> L1["Poziom 1 (z-50)\nPodstrony Główne\n(Profil, ZDiTM, Kasa)"]
     L1 --> L2["Poziom 2 (z-52)\nWidoki II Rzędu\n(Moje ogłoszenia, Partner,\nRozmowy o ogł., Filtry,\nWybór przystanku)"]
     L2 --> L3["Poziom 3 (z-54)\nWidoki III Rzędu\n(Szczegóły ogłoszenia,\nDodaj ogłoszenie)"]
     L3 --> L4["Poziom 4 (z-56)\nWidoki IV Rzędu\n(Edytuj ogł., Wyróżnij BLIK,\nWizytówka sąsiada,\nZarezerwuj, Zgłoś)"]
