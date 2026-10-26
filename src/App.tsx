@@ -41,6 +41,7 @@ import { AdsScreen } from './screens/AdsScreen';
 import { RidesScreen } from './screens/RidesScreen';
 import { TalksScreen } from './screens/TalksScreen';
 import type { AdFilterState } from './screens/AdFiltersModal';
+import { AuthRequiredModal } from './components/AuthRequiredModal';
 
 // Asynchronicznie ładowane widoki podstron i modali (Lazy Modals)
 const ProfileScreen = lazy(() => import('./screens/ProfileScreen').then((m) => ({ default: m.ProfileScreen })));
@@ -186,6 +187,27 @@ export default function App() {
 
   const [pollsModalOpen, setPollsModalOpen] = useState(false);
   const [addPollModalOpen, setAddPollModalOpen] = useState(false);
+  const [authModal, setAuthModal] = useState<{
+    isOpen: boolean;
+    actionTitle?: string;
+    actionDesc?: string;
+  }>({ isOpen: false });
+
+  const requireAuth = useCallback(
+    (actionTitle: string, actionDesc: string, onAuthorized: () => void) => {
+      if (!user || user.isGuest) {
+        setAuthModal({
+          isOpen: true,
+          actionTitle,
+          actionDesc,
+        });
+        return false;
+      }
+      onAuthorized();
+      return true;
+    },
+    [user],
+  );
 
   useEffect(() => {
     try {
@@ -199,21 +221,30 @@ export default function App() {
     } catch {}
   }, [userVotes]);
 
-  const handleVote = useCallback((pollId: string, optionId: string) => {
-    setUserVotes((prev) => ({ ...prev, [pollId]: optionId }));
-    setPolls((prev) =>
-      prev.map((p) => {
-        if (p.id !== pollId) return p;
-        return {
-          ...p,
-          totalVotes: p.totalVotes + 1,
-          options: p.options.map((opt) =>
-            opt.id === optionId ? { ...opt, votes: opt.votes + 1 } : opt
-          ),
-        };
-      })
-    );
-  }, []);
+  const handleVote = useCallback(
+    (pollId: string, optionId: string) => {
+      requireAuth(
+        'Głosowanie w ankietach',
+        'Głosować mogą wyłącznie zweryfikowani mieszkańcy Mińska Mazowieckiego, aby zapewnić rzetelne i reprezentatywne wyniki.',
+        () => {
+          setUserVotes((prev) => ({ ...prev, [pollId]: optionId }));
+          setPolls((prev) =>
+            prev.map((p) => {
+              if (p.id !== pollId) return p;
+              return {
+                ...p,
+                totalVotes: p.totalVotes + 1,
+                options: p.options.map((opt) =>
+                  opt.id === optionId ? { ...opt, votes: opt.votes + 1 } : opt
+                ),
+              };
+            })
+          );
+        },
+      );
+    },
+    [requireAuth],
+  );
 
   const handleAddFavoriteBus = (newFav: Omit<FavoriteBusStop, 'id'>) => {
     const id = `${newFav.lineId}_${newFav.stopName}_${newFav.directionIdx}`;
@@ -426,9 +457,16 @@ export default function App() {
     if (dx > 70 && dy < 60) window.history.back();
   };
 
-  const handleToggleLike = useCallback((adId: string) => {
-    setLikedAds((prev) => ({ ...prev, [adId]: !prev[adId] }));
-  }, []);
+  const handleToggleLike = useCallback(
+    (adId: string) => {
+      requireAuth(
+        'Zapisz w ulubionych',
+        'Zarejestruj się bezpłatnie, aby dodawać ogłoszenia sąsiadów do schowka.',
+        () => setLikedAds((prev) => ({ ...prev, [adId]: !prev[adId] })),
+      );
+    },
+    [requireAuth],
+  );
 
   const handleStatusChange = useCallback((adId: string, status: 'active' | 'reserved' | 'sold') => {
     setAdsList((prev) =>
@@ -632,10 +670,22 @@ export default function App() {
                     likedAds={likedAds}
                     onToggleLike={handleToggleLike}
                     onAdClick={(ad) => setSelectedAd(ad)}
-                    onChatClick={(ad) => setChatAd(ad)}
+                    onChatClick={(ad) =>
+                      requireAuth(
+                        'Napisz do sąsiada',
+                        'Aby rozpocząć bezpieczną rozmowę o ogłoszeniu, zaloguj się lub załóż konto.',
+                        () => setChatAd(ad),
+                      )
+                    }
                     onOpenFilters={() => setFiltersModalOpen(true)}
                     activeFiltersCount={activeFiltersCount}
-                    onOpenConversations={() => setConversationsOpen(true)}
+                    onOpenConversations={() =>
+                      requireAuth(
+                        'Wiadomości sąsiedzkie',
+                        'Dostęp do czatu i historii rozmów z sąsiadami wymaga posiadania konta.',
+                        () => setConversationsOpen(true),
+                      )
+                    }
                     conversationsUnreadCount={unreadConversationsCount}
                     filtersState={adFilters}
                   />
@@ -649,6 +699,13 @@ export default function App() {
                     onProfile={() => setOverlay('profile')}
                     ridesList={ridesList}
                     onDeleteRide={handleDeleteRide}
+                    onAuthRequired={(title, desc) =>
+                      setAuthModal({
+                        isOpen: true,
+                        actionTitle: title,
+                        actionDesc: desc,
+                      })
+                    }
                   />
                 </div>
               )}
@@ -659,6 +716,13 @@ export default function App() {
                     user={user}
                     onProfile={() => setOverlay('profile')}
                     onNeighborClick={(name, street) => setSellerProfile({ name, street })}
+                    onAuthRequired={(title, desc) =>
+                      setAuthModal({
+                        isOpen: true,
+                        actionTitle: title,
+                        actionDesc: desc,
+                      })
+                    }
                   />
                 </div>
               )}
@@ -687,7 +751,13 @@ export default function App() {
           lines={lines}
           setQty={setQty}
           onPaid={() => setCart({})}
-          onProceedToCheckout={() => setOverlay('checkout')}
+          onProceedToCheckout={() =>
+            requireAuth(
+              'Dostawa z Motylka',
+              'Aby zamówić zakupy spożywcze z dostawą pod drzwi, zarejestruj swoje konto i adres.',
+              () => setOverlay('checkout'),
+            )
+          }
           container={frame}
         />
 
@@ -709,35 +779,71 @@ export default function App() {
                 closeOverlay();
               }}
               onPartner={() => setPartnerOpen(true)}
-              onAddAd={() => setAddAdOpen(true)}
-              onMyAds={() => setMyAdsOpen(true)}
+              onAddAd={() =>
+                requireAuth(
+                  'Dodaj ogłoszenie',
+                  'Publikacja ogłoszeń na tablicy Mińska wymaga konta mieszkańca.',
+                  () => setAddAdOpen(true),
+                )
+              }
+              onMyAds={() =>
+                requireAuth(
+                  'Twoje ogłoszenia',
+                  'Zarządzanie ogłoszeniami dostępne jest po zarejestrowaniu konta.',
+                  () => setMyAdsOpen(true),
+                )
+              }
               myAdsCount={userActiveAdsCount}
               myReservedAdsCount={userReservedAdsCount}
-              onOpenConversations={() => setConversationsOpen(true)}
+              onOpenConversations={() =>
+                requireAuth(
+                  'Wiadomości sąsiedzkie',
+                  'Dostęp do czatu wymaga konta mieszkańca.',
+                  () => setConversationsOpen(true),
+                )
+              }
               conversations={conversations}
               onOpenChatWithNeighbor={(conv) => {
-                const foundAd = adsList.find((a) => a.id === conv.adId);
-                if (foundAd) {
-                  setChatAd(foundAd);
-                } else {
-                  setChatAd({
-                    id: conv.adId,
-                    title: conv.adTitle,
-                    price: conv.adPrice,
-                    kind: conv.adPrice ? 'sell' : 'free',
-                    author: conv.otherUser.name,
-                    street: conv.adStreet,
-                    time: 'Dzisiaj',
-                    image: conv.adImage,
-                  });
-                }
+                requireAuth(
+                  'Napisz do sąsiada',
+                  'Aby rozmawiać na czacie, załóż konto sąsiedzkie.',
+                  () => {
+                    const foundAd = adsList.find((a) => a.id === conv.adId);
+                    if (foundAd) {
+                      setChatAd(foundAd);
+                    } else {
+                      setChatAd({
+                        id: conv.adId,
+                        title: conv.adTitle,
+                        price: conv.adPrice,
+                        kind: conv.adPrice ? 'sell' : 'free',
+                        author: conv.otherUser.name,
+                        street: conv.adStreet,
+                        time: 'Dzisiaj',
+                        image: conv.adImage,
+                      });
+                    }
+                  },
+                );
               }}
               unreadConversationsCount={unreadConversationsCount}
               onPreviewPublic={() => setSellerProfile({ name: user.name, street: user.street.name })}
-              onAddRide={() => setAddRideOpen(true)}
+              onAddRide={() =>
+                requireAuth(
+                  'Dodaj wspólny przejazd',
+                  'Tylko zweryfikowani mieszkańcy mogą oferować carpooling.',
+                  () => setAddRideOpen(true),
+                )
+              }
               myRidesCount={userRidesCount}
               onOpenPolls={() => setPollsModalOpen(true)}
-              onAddPoll={() => setAddPollModalOpen(true)}
+              onAddPoll={() =>
+                requireAuth(
+                  'Utwórz ankietę sąsiedzką',
+                  'Tworzenie ankiet i plebiscytów wymaga konta mieszkańca.',
+                  () => setAddPollModalOpen(true),
+                )
+              }
               activePollsCount={polls.filter(isPollActive).length}
               onInstallApp={() => setInstallModalOpen(true)}
               userAds={userAds}
@@ -797,7 +903,13 @@ export default function App() {
               userVotes={userVotes}
               onVote={handleVote}
               onClose={closePollsModal}
-              onAddPoll={() => setAddPollModalOpen(true)}
+              onAddPoll={() =>
+                requireAuth(
+                  'Utwórz ankietę sąsiedzką',
+                  'Tworzenie ankiet i plebiscytów wymaga konta mieszkańca.',
+                  () => setAddPollModalOpen(true),
+                )
+              }
               isClosing={!!exitingScreens['pollsModal']}
             />
           </AsyncViewBoundary>
@@ -831,7 +943,13 @@ export default function App() {
               onClose={closeMyAds}
               isClosing={!!exitingScreens['myAds']}
               onOpenAd={(ad) => setSelectedAd(ad)}
-              onAddNew={() => setAddAdOpen(true)}
+              onAddNew={() =>
+                requireAuth(
+                  'Dodaj ogłoszenie',
+                  'Publikacja ogłoszeń na tablicy Mińska wymaga konta mieszkańca.',
+                  () => setAddAdOpen(true),
+                )
+              }
               onStatusChange={handleStatusChange}
               onDeleteAd={handleDeleteAd}
               onEditAd={(ad) => setEditAd(ad)}
@@ -930,13 +1048,25 @@ export default function App() {
               onClose={closeSelectedAd}
               isClosing={!!exitingScreens['selectedAd']}
               onToggleLike={handleToggleLike}
-              onChatClick={(ad) => setChatAd(ad)}
+              onChatClick={(ad) =>
+                requireAuth(
+                  'Napisz do sąsiada',
+                  'Aby wysłać wiadomość do autora ogłoszenia, załóż konto sąsiedzkie.',
+                  () => setChatAd(ad),
+                )
+              }
               onReportClick={(ad) => setReportAd(ad)}
               onStatusChange={handleStatusChange}
               onDelete={handleDeleteAd}
               onSellerClick={(name, street) => setSellerProfile({ name, street })}
               onEditClick={(ad) => setEditAd(ad)}
-              onReserveClick={(ad) => setReserveAd(ad)}
+              onReserveClick={(ad) =>
+                requireAuth(
+                  'Rezerwacja ogłoszenia',
+                  'Rezerwacja wymaga tożsamości mieszkańca, aby sprzedający wiedział, komu odkłada przedmiot.',
+                  () => setReserveAd(ad),
+                )
+              }
             />
           </AsyncViewBoundary>
         )}
@@ -1011,7 +1141,13 @@ export default function App() {
                 setSellerProfile(null);
                 setSelectedAd(ad);
               }}
-              onStartChat={(ad) => setChatAd(ad)}
+              onStartChat={(ad) =>
+                requireAuth(
+                  'Napisz do sąsiada',
+                  'Aby wysłać wiadomość do sąsiada, załóż konto sąsiedzkie.',
+                  () => setChatAd(ad),
+                )
+              }
             />
           </AsyncViewBoundary>
         )}
@@ -1075,6 +1211,22 @@ export default function App() {
             />
           </Suspense>
         )}
+
+        {/* Modal Wymaganej Autoryzacji / Rejestracji Mieszkańca */}
+        <AuthRequiredModal
+          isOpen={authModal.isOpen}
+          onClose={() => setAuthModal({ isOpen: false })}
+          actionTitle={authModal.actionTitle}
+          actionDesc={authModal.actionDesc}
+          onRegister={() => {
+            setAuthModal({ isOpen: false });
+            handleUpdateUser(null);
+          }}
+          onLogin={() => {
+            setAuthModal({ isOpen: false });
+            handleUpdateUser(null);
+          }}
+        />
 
         {/* Mobile Landscape Orientation Barrier */}
         <div

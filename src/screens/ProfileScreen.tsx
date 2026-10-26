@@ -84,17 +84,27 @@ export function ProfileScreen({
   const [supportBlikCode, setSupportBlikCode] = useState('');
   const [supportPaid, setSupportPaid] = useState(false);
 
-  const badges = [
-    {
-      id: 'verified',
-      label: user.verified ? 'Zweryfikowany mieszkaniec' : 'Weryfikacja w toku (list)',
-      icon: user.verified ? ShieldCheck : Clock,
-      unlocked: true,
-      tone: user.verified
-        ? 'bg-sky-100 text-sky-900 border-sky-200'
-        : 'bg-amber-100 text-amber-900 border-amber-200',
-    },
-  ];
+  const badges = user.isGuest
+    ? [
+        {
+          id: 'guest',
+          label: 'Tryb gościa (tylko podgląd)',
+          icon: Clock,
+          unlocked: true,
+          tone: 'bg-sand-200 text-ink border-sand-300',
+        },
+      ]
+    : [
+        {
+          id: 'verified',
+          label: user.verified ? 'Zweryfikowany mieszkaniec' : 'Weryfikacja w toku (list)',
+          icon: user.verified ? ShieldCheck : Clock,
+          unlocked: true,
+          tone: user.verified
+            ? 'bg-sky-100 text-sky-900 border-sky-200'
+            : 'bg-amber-100 text-amber-900 border-amber-200',
+        },
+      ];
 
   const adsMetaLabel = [
     `${myAdsCount} aktywne`,
@@ -215,8 +225,29 @@ export function ProfileScreen({
         </div>
       </section>
 
-      {/* 2. 14-Day Postal Verification Banner (Decision #5) */}
-      {user.verified ? (
+      {/* 2. 14-Day Postal Verification Banner OR Guest Registration Promo */}
+      {user.isGuest ? (
+        <div className="mx-5 mt-5 rounded-4xl border border-sand-200 bg-sand-100 p-5 shadow-card text-center">
+          <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-white shadow-xs text-ink mb-3">
+            <ShieldCheck className="h-6 w-6 text-coral" />
+          </div>
+          <p className="font-display text-[16px] font-bold text-ink">
+            Przeglądasz aplikację w trybie gościa
+          </p>
+          <p className="mt-1 text-[12.5px] leading-relaxed text-ink-600">
+            Zarejestruj się bezpłatnie, aby dodawać ogłoszenia, rozmawiać na czacie, zamawiać przejazdy i brać udział w ankietach mieszkańców.
+          </p>
+          {onLogout && (
+            <button
+              type="button"
+              onClick={onLogout}
+              className="mt-4 flex h-12 w-full items-center justify-center rounded-2xl bg-ink font-bold text-[13.5px] text-white shadow-xs transition-transform active:scale-95"
+            >
+              Zarejestruj konto mieszkańca
+            </button>
+          )}
+        </div>
+      ) : user.verified ? (
         <div className="mx-5 mt-5 flex items-center gap-3 rounded-4xl bg-sky p-4 shadow-card">
           <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/80 text-emerald-700">
             <BadgeCheck className="h-6 w-6" aria-hidden />
@@ -696,7 +727,7 @@ export function ProfileScreen({
         </ul>
       </div>
 
-        {/* Przycisk Wyloguj się */}
+        {/* Przycisk Wyloguj się / Wyjdź z trybu gościa */}
         {onLogout && (
           <div className="mx-5 mt-4">
             <button
@@ -705,7 +736,7 @@ export function ProfileScreen({
               className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-mist-300 bg-white text-[13.5px] font-bold text-coral-700 hover:bg-mist active:scale-[0.98] transition-all shadow-xs"
             >
               <LogOut className="h-4.5 w-4.5" />
-              Wyloguj się z konta
+              {user.isGuest ? 'Opuść tryb gościa / Zarejestruj się' : 'Wyloguj się z konta'}
             </button>
           </div>
         )}

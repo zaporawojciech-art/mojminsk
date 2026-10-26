@@ -19,6 +19,7 @@ interface RidesScreenProps {
   onProfile?: () => void;
   ridesList?: Ride[];
   onDeleteRide?: (rideId: string) => void;
+  onAuthRequired?: (title: string, desc: string) => void;
 }
 
 export function RidesScreen({
@@ -26,6 +27,7 @@ export function RidesScreen({
   onProfile,
   ridesList = initialRides,
   onDeleteRide,
+  onAuthRequired,
 }: RidesScreenProps) {
   const defaultOrigin = `Mińsk · ${user ? user.street.name : 'Spacerowa'}`;
 
@@ -56,6 +58,13 @@ export function RidesScreen({
   };
 
   const handleToggleBook = (rideId: string) => {
+    if (user?.isGuest) {
+      onAuthRequired?.(
+        'Rezerwacja miejsca w przejeździe',
+        'Sąsiedzki carpooling jest dostępny dla zweryfikowanych mieszkańców. Zarejestruj się, aby wspólnie dojeżdżać do Warszawy.',
+      );
+      return;
+    }
     setBooked((prev) => ({ ...prev, [rideId]: !prev[rideId] }));
   };
 

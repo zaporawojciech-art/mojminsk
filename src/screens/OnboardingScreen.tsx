@@ -133,10 +133,11 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
 
             <button
               type="button"
-              onClick={() => onDone(demoUser)}
-              className="rounded-full bg-ink/15 px-3 py-1 text-[11.5px] font-bold text-ink backdrop-blur-xs hover:bg-ink/25 active:scale-95 transition-all"
+              onClick={() => onDone({ ...demoUser, isGuest: true, name: 'Gość' })}
+              className="flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1.5 text-[12px] font-extrabold text-ink shadow-md border border-white/80 hover:bg-sand-50 active:scale-95 transition-all"
             >
-              Pomiń (demo)
+              <Sparkles className="h-3.5 w-3.5 text-sand-700" />
+              <span>Pomiń (demo)</span>
             </button>
           </div>
 

@@ -26,10 +26,12 @@ export function TalksScreen({
   user,
   onProfile,
   onNeighborClick,
+  onAuthRequired,
 }: {
   user: User;
   onProfile?: () => void;
   onNeighborClick?: (name: string, street: string) => void;
+  onAuthRequired?: (title: string, desc: string) => void;
 }) {
   const [list, setList] = useState<Post[]>(seedPosts);
   const [text, setText] = useState('');
@@ -40,12 +42,30 @@ export function TalksScreen({
   const left = MAX - text.length;
 
   const publish = () => {
+    if (user.isGuest) {
+      onAuthRequired?.(
+        'Publikowanie w Strefie Rozmów',
+        'Wpisy w mińskiej strefie dyskusji mogą dodawać wyłącznie zarejestrowani mieszkańcy, aby wyeliminować anonimowy hejt i boty.',
+      );
+      return;
+    }
     if (!text.trim()) return;
     setList((l) => [
       { id: `new-${Date.now()}`, author: user.name, authorAs: user.street.as, time: 'teraz', content: text.trim(), likes: 0, replies: 0, reposts: 0, views: 1 },
       ...l,
     ]);
     setText('');
+  };
+
+  const toggleLike = (postId: string) => {
+    if (user.isGuest) {
+      onAuthRequired?.(
+        'Polubienie wpisu',
+        'Reakcje na wpisy sąsiadów są dostępne wyłącznie dla zalogowanych mieszkańców.',
+      );
+      return;
+    }
+    setLiked((l) => ({ ...l, [postId]: !l[postId] }));
   };
 
   return (
@@ -130,7 +150,7 @@ export function TalksScreen({
                     {p.reposts}
                   </button>
                   <button
-                    onClick={() => setLiked((l) => ({ ...l, [p.id]: !l[p.id] }))}
+                    onClick={() => toggleLike(p.id)}
                     aria-pressed={isLiked}
                     aria-label="Polub"
                     className={cn('flex items-center gap-1.5 transition-transform active:scale-90', isLiked ? 'font-bold text-coral-700' : 'hover:text-ink')}

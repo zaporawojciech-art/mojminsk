@@ -33,6 +33,7 @@ export interface User {
   trialDaysLeft: number;
   activationPin?: string;
   privacy?: UserPrivacy;
+  isGuest?: boolean;
 }
 
 export const streets: Street[] = [
