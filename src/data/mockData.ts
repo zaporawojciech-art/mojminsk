@@ -38,6 +38,39 @@ export interface User {
   isGuest?: boolean;
 }
 
+export const gminaCities: string[] = [
+  'Mińsk Mazowiecki',
+  'Stojadła',
+  'Nowe Osiny',
+  'Stare Osiny',
+  'Huta Mińska',
+  'Karolina',
+  'Arynów',
+  'Barcząca',
+  'Brzóze',
+  'Budy Barcząckie',
+  'Cielechowizna',
+  'Dłużka',
+  'Gliniak',
+  'Grębiszew',
+  'Ignaców',
+  'Janów',
+  'Józefów',
+  'Kolonia Janów',
+  'Maliszew',
+  'Marianka',
+  'Mikanów',
+  'Niedziałka',
+  'Oględzin',
+  'Podrudzie',
+  'Pruszynek',
+  'Tartak',
+  'Wólka Iłówiecka',
+  'Wólka Mińska',
+  'Zamienie',
+  'Żuków',
+];
+
 export interface PostalAreaOption {
   postalCode: string;
   city: string;

@@ -14,7 +14,7 @@ import {
   Sparkles,
   Users,
 } from 'lucide-react';
-import { avatarUrl, demoUser, gminaLocalityAs, minskPostalAreas, streets, type Street, type User } from '../data/mockData';
+import { avatarUrl, demoUser, gminaCities, gminaLocalityAs, streets, type Street, type User } from '../data/mockData';
 import { cn } from '../components/ui';
 
 interface OnboardingScreenProps {
@@ -37,33 +37,21 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
   const [flatNumber, setFlatNumber] = useState('');
   const [postalCode, setPostalCode] = useState('05-300');
   const [city, setCity] = useState('Mińsk Mazowiecki');
-  const [selectedAreaKey, setSelectedAreaKey] = useState<string>('05-300-Mińsk Mazowiecki');
 
-  // Obsługa wyboru obszaru / miejscowości z dropdowna
-  const isSelectedGmina = useMemo(() => {
-    const found = minskPostalAreas.find((a) => `${a.postalCode}-${a.city}` === selectedAreaKey);
-    return Boolean(found?.isGmina);
-  }, [selectedAreaKey]);
+  const isSelectedGmina = city !== 'Mińsk Mazowiecki';
 
-  const handleAreaSelect = (val: string) => {
-    setSelectedAreaKey(val);
-    if (val === 'custom') {
-      return;
-    }
-    const found = minskPostalAreas.find((a) => `${a.postalCode}-${a.city}` === val);
-    if (found) {
-      setPostalCode(found.postalCode);
-      setCity(found.city);
-      if (found.isGmina) {
-        const asForm = gminaLocalityAs[found.city] || `z ${found.city}`;
-        setStreet({
-          name: found.city,
-          as: asForm,
-          neighbors: 35,
-        });
-      } else {
-        setStreet(streets[0]);
-      }
+  const handleCitySelect = (selectedCity: string) => {
+    setCity(selectedCity);
+    setPostalCode('05-300');
+    if (selectedCity !== 'Mińsk Mazowiecki') {
+      const asForm = gminaLocalityAs[selectedCity] || `z ${selectedCity}`;
+      setStreet({
+        name: selectedCity,
+        as: asForm,
+        neighbors: 35,
+      });
+    } else {
+      setStreet(streets[0]);
     }
   };
 
@@ -74,14 +62,6 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
   const [loginSmsCode, setLoginSmsCode] = useState('');
   const [loginPin, setLoginPin] = useState('');
   const [loginError, setLoginError] = useState('');
-
-  const handlePostalCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let val = e.target.value.replace(/[^\d-]/g, '');
-    if (!val.includes('-') && val.length > 2) {
-      val = `${val.slice(0, 2)}-${val.slice(2, 5)}`;
-    }
-    setPostalCode(val.slice(0, 6));
-  };
 
   // Filtrowanie i podpowiedzi ulic
   const topStreets = streets.slice(0, 3);
@@ -421,44 +401,29 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
                   />
                 </div>
 
-                {/* DROPDOWN WYBORU MIEJSCOWOŚCI / GMINY */}
+                {/* DROPDOWN WYBORU MIEJSCOWOŚCI W GMINIE / MIASTA */}
                 <div className="rounded-3xl bg-white p-4 shadow-card border border-mist-300 space-y-2">
                   <div className="flex items-center justify-between">
-                    <label className="text-[13px] font-bold text-ink block">
+                    <label htmlFor="city-select" className="text-[13px] font-bold text-ink block">
                       Miejscowość w gminie / miasto
                     </label>
-                    <span className="rounded-full bg-sand-100 px-2 py-0.5 text-[10.5px] font-extrabold text-sand-800">
-                      Wybierz z listy
+                    <span className="rounded-full bg-sand-100 px-2.5 py-0.5 text-[11px] font-bold text-ink">
+                      {city}
                     </span>
                   </div>
-                  <p className="text-[11.5px] text-ink-400">
-                    Wybierz miasto Mińsk Mazowiecki lub swoją miejscowość w gminie:
-                  </p>
 
-                  <div className="relative mt-1.5">
+                  <div className="relative mt-1">
                     <select
-                      value={selectedAreaKey}
-                      onChange={(e) => handleAreaSelect(e.target.value)}
-                      className="h-12 w-full appearance-none rounded-2xl border-2 border-mist-300 bg-mist/50 px-3.5 pr-10 text-[14px] font-bold text-ink outline-none focus:border-ink focus:bg-white focus:ring-2 focus:ring-ink transition-all"
+                      id="city-select"
+                      value={city}
+                      onChange={(e) => handleCitySelect(e.target.value)}
+                      className="h-12 w-full appearance-none rounded-2xl border-2 border-mist-300 bg-mist/50 px-3.5 pr-10 text-[14.5px] font-bold text-ink outline-none focus:border-ink focus:bg-white focus:ring-2 focus:ring-ink transition-all cursor-pointer"
                     >
-                      <optgroup label="Miasto Mińsk Mazowiecki">
-                        {minskPostalAreas
-                          .filter((a) => !a.isGmina)
-                          .map((a) => (
-                            <option key={`step1-${a.postalCode}-${a.city}-${a.label}`} value={`${a.postalCode}-${a.city}`}>
-                              {a.label}
-                            </option>
-                          ))}
-                      </optgroup>
-                      <optgroup label="Gmina Mińsk Mazowiecki (Miejscowości i Sołectwa)">
-                        {minskPostalAreas
-                          .filter((a) => a.isGmina)
-                          .map((a) => (
-                            <option key={`step1-${a.postalCode}-${a.city}-${a.label}`} value={`${a.postalCode}-${a.city}`}>
-                              {a.label}
-                            </option>
-                          ))}
-                      </optgroup>
+                      {gminaCities.map((cityName) => (
+                        <option key={`step1-${cityName}`} value={cityName}>
+                          {cityName}
+                        </option>
+                      ))}
                     </select>
                     <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-ink-600">
                       <ChevronDown className="h-5 w-5" />
@@ -747,86 +712,36 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
                     </div>
                   </div>
 
-                  {/* DROPDOWN WYBORU MIEJSCOWOŚCI / SOŁECTWA W GMINIE LUB MIASTA */}
+                  {/* DROPDOWN WYBORU MIEJSCOWOŚCI W GMINIE LUB MIASTA */}
                   <div className="space-y-2 pt-1">
-                    <label className="text-[12px] font-bold text-ink-700 block">
+                    <label htmlFor="step3-city-select" className="text-[12px] font-bold text-ink-700 block">
                       Miejscowość w gminie / miasto *
                     </label>
 
                     <div className="relative">
                       <select
-                        value={selectedAreaKey}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setSelectedAreaKey(val);
-                          if (val === 'custom') {
-                            return;
-                          }
-                          const found = minskPostalAreas.find((a) => `${a.postalCode}-${a.city}` === val);
-                          if (found) {
-                            setPostalCode(found.postalCode);
-                            setCity(found.city);
-                          }
-                        }}
-                        className="h-12 w-full appearance-none rounded-2xl border border-mist-300 bg-mist/50 px-3.5 pr-10 text-[13.5px] font-bold text-ink outline-none focus:ring-2 focus:ring-ink"
+                        id="step3-city-select"
+                        value={city}
+                        onChange={(e) => handleCitySelect(e.target.value)}
+                        className="h-12 w-full appearance-none rounded-2xl border border-mist-300 bg-mist/50 px-3.5 pr-10 text-[14px] font-bold text-ink outline-none focus:ring-2 focus:ring-ink cursor-pointer"
                       >
-                        <optgroup label="Miasto Mińsk Mazowiecki">
-                          {minskPostalAreas
-                            .filter((a) => !a.isGmina)
-                            .map((a) => (
-                              <option key={`${a.postalCode}-${a.city}-${a.label}`} value={`${a.postalCode}-${a.city}`}>
-                                {a.label}
-                              </option>
-                            ))}
-                        </optgroup>
-                        <optgroup label="Gmina Mińsk Mazowiecki (Miejscowości i Sołectwa)">
-                          {minskPostalAreas
-                            .filter((a) => a.isGmina)
-                            .map((a) => (
-                              <option key={`${a.postalCode}-${a.city}-${a.label}`} value={`${a.postalCode}-${a.city}`}>
-                                {a.label}
-                              </option>
-                            ))}
-                        </optgroup>
-                        <option value="custom">Inna miejscowość / wpisz ręcznie...</option>
+                        {gminaCities.map((cityName) => (
+                          <option key={`step3-${cityName}`} value={cityName}>
+                            {cityName}
+                          </option>
+                        ))}
                       </select>
                       <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-ink-500">
                         <ChevronDown className="h-4.5 w-4.5" />
                       </div>
                     </div>
 
-                    {/* Jeśli wybrano inną miejscowość lub tryb edycji */}
-                    {selectedAreaKey === 'custom' ? (
-                      <div className="grid grid-cols-5 gap-2 pt-1">
-                        <div className="col-span-2">
-                          <label className="text-[11px] font-bold text-ink-500">Kod pocztowy</label>
-                          <input
-                            value={postalCode}
-                            onChange={handlePostalCodeChange}
-                            placeholder="05-300"
-                            inputMode="numeric"
-                            maxLength={6}
-                            className="mt-1 h-11 w-full rounded-xl border border-mist-300 bg-mist/40 px-3 text-center text-[14px] font-bold text-ink outline-none focus:ring-2 focus:ring-ink"
-                          />
-                        </div>
-                        <div className="col-span-3">
-                          <label className="text-[11px] font-bold text-ink-500">Nazwa miejscowości</label>
-                          <input
-                            value={city}
-                            onChange={(e) => setCity(e.target.value)}
-                            placeholder="np. Stojadła, Karolina..."
-                            className="mt-1 h-11 w-full rounded-xl border border-mist-300 bg-mist/40 px-3 text-[13.5px] font-bold text-ink outline-none focus:ring-2 focus:ring-ink"
-                          />
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex h-10 items-center justify-between rounded-xl bg-mist/60 px-3.5 text-[12px] font-semibold text-ink-600">
-                        <span>Adres do listu:</span>
-                        <strong className="text-ink font-bold">
-                          {postalCode} {city}
-                        </strong>
-                      </div>
-                    )}
+                    <div className="flex h-10 items-center justify-between rounded-xl bg-mist/60 px-3.5 text-[12px] font-semibold text-ink-600">
+                      <span>Adres do listu:</span>
+                      <strong className="text-ink font-bold">
+                        {postalCode} {city}
+                      </strong>
+                    </div>
 
                     <p className="text-[11px] text-ink-400 leading-snug">
                       Darmowy list powitalny z kodem PIN i kuponami doręczamy na terenie całego <strong>Mińska Mazowieckiego</strong> oraz <strong>Gminy Mińsk Mazowiecki</strong>.
