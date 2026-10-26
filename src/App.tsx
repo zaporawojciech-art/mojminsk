@@ -209,6 +209,18 @@ export default function App() {
     [user],
   );
 
+  const handleCityChange = useCallback(
+    (newCity: string) => {
+      if (!user) return;
+      const updatedUser: User = {
+        ...user,
+        city: newCity,
+      };
+      handleUpdateUser(updatedUser);
+    },
+    [user, handleUpdateUser],
+  );
+
   useEffect(() => {
     try {
       localStorage.setItem('mojminsk_polls', JSON.stringify(polls));
@@ -645,6 +657,8 @@ export default function App() {
                   userVotes={userVotes}
                   onVote={handleVote}
                   onOpenPolls={() => setPollsModalOpen(true)}
+                  city={user.city || 'Mińsk Mazowiecki'}
+                  onCityChange={handleCityChange}
                 />
               </div>
 

@@ -75,7 +75,7 @@ function HourlyWeatherIcon({ icon, isDay }: { icon: string; isDay: boolean }) {
   }
 }
 
-function WeatherCard() {
+function WeatherCard({ city = 'Mińsk Mazowiecki' }: { city?: string }) {
   const [open, setOpen] = useState(false);
   const h = new Date().getHours();
   const metrics = [
@@ -95,7 +95,7 @@ function WeatherCard() {
             <div>
               <p className="flex items-center gap-1 text-[12.5px] font-semibold text-ink/70">
                 <MapPin className="h-3.5 w-3.5" aria-hidden />
-                Mińsk Mazowiecki
+                {city}
               </p>
               <p className="mt-2 font-display text-[68px] font-semibold leading-none tracking-tighter">{weather.temp}°</p>
               <p className="mt-1 text-[15px] font-bold">{weather.condition}</p>
@@ -504,6 +504,8 @@ interface HomeScreenProps {
   userVotes?: Record<string, string>;
   onVote?: (pollId: string, optionId: string) => void;
   onOpenPolls?: () => void;
+  city?: string;
+  onCityChange?: (c: string) => void;
 }
 
 export function HomeScreen({
@@ -520,6 +522,8 @@ export function HomeScreen({
   userVotes = {},
   onVote,
   onOpenPolls,
+  city = 'Mińsk Mazowiecki',
+  onCityChange,
 }: HomeScreenProps) {
   const activePolls = polls
     .filter((p) => isPollActive(p))
@@ -538,6 +542,14 @@ export function HomeScreen({
       <StandardTopBar
         user={user}
         onProfile={onProfile}
+        citySelector={
+          city && onCityChange
+            ? {
+                city,
+                onCityChange,
+              }
+            : undefined
+        }
         title={
           <button onClick={onProfile} className="text-left leading-none active:opacity-75 transition-opacity">
             <span className="block text-[12px] font-semibold text-ink-500 leading-none mb-1">
@@ -550,7 +562,7 @@ export function HomeScreen({
         }
       />
 
-      <WeatherCard />
+      <WeatherCard city={city} />
 
       <div className="grid grid-cols-4 gap-2.5 px-5">
         {quick.map(({ label, icon: Icon, cls, onClick }) => (

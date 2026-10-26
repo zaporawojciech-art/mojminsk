@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import { ChevronLeft, ChevronRight, MapPin, Search, ShieldCheck, SlidersHorizontal } from 'lucide-react';
-import { avatarUrl, type Tone, type User } from '../data/mockData';
+import { ChevronDown, ChevronLeft, ChevronRight, MapPin, Search, ShieldCheck, SlidersHorizontal } from 'lucide-react';
+import { avatarUrl, gminaCities, type Tone, type User } from '../data/mockData';
 
 export const cn = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(' ');
 export const zl = (n: number) => `${n.toFixed(2).replace('.', ',')} zł`;
@@ -91,6 +91,7 @@ export function StandardTopBar({
   user,
   onProfile,
   action,
+  citySelector,
   className,
 }: {
   title: ReactNode;
@@ -98,11 +99,15 @@ export function StandardTopBar({
   user?: User | null;
   onProfile?: () => void;
   action?: ReactNode;
+  citySelector?: {
+    city: string;
+    onCityChange: (c: string) => void;
+  };
   className?: string;
 }) {
   return (
     <header className={cn('px-5 pt-[max(env(safe-area-inset-top),16px)] pb-2 select-none', className)}>
-      <div className="flex h-12 items-center justify-between gap-3">
+      <div className="flex h-12 items-center justify-between gap-2.5">
         <div className="min-w-0 flex-1">
           {typeof title === 'string' ? (
             <h1 className="truncate font-display text-[23px] font-bold tracking-tight text-ink leading-tight">
@@ -113,7 +118,13 @@ export function StandardTopBar({
           )}
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0">
+          {citySelector && (
+            <CityDropdown
+              value={citySelector.city}
+              onChange={citySelector.onCityChange}
+            />
+          )}
           {action}
           {user && onProfile && (
             <ProfileAvatarButton user={user} onClick={onProfile} />
@@ -127,6 +138,40 @@ export function StandardTopBar({
         </div>
       )}
     </header>
+  );
+}
+
+export function CityDropdown({
+  value,
+  onChange,
+  className,
+}: {
+  value: string;
+  onChange: (city: string) => void;
+  className?: string;
+}) {
+  return (
+    <div className={cn('relative inline-flex items-center', className)}>
+      <label htmlFor="platform-city-dropdown" className="sr-only">
+        Miejscowość w gminie
+      </label>
+      <div className="flex h-9 items-center gap-1.5 rounded-full bg-white pl-2.5 pr-2 shadow-card border border-mist-300 hover:border-ink-400 transition-colors">
+        <MapPin className="h-3.5 w-3.5 text-coral shrink-0" aria-hidden />
+        <select
+          id="platform-city-dropdown"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="appearance-none bg-transparent pr-4 text-[12px] font-bold text-ink outline-none cursor-pointer max-w-[110px] truncate"
+        >
+          {gminaCities.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="pointer-events-none -ml-3.5 h-3.5 w-3.5 text-ink-500 shrink-0" aria-hidden />
+      </div>
+    </div>
   );
 }
 
