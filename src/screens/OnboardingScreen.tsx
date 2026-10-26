@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import {
   ArrowRight,
   CheckCircle2,
+  ChevronDown,
   ChevronLeft,
   Dices,
   KeyRound,
@@ -36,7 +37,7 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
   const [flatNumber, setFlatNumber] = useState('');
   const [postalCode, setPostalCode] = useState('05-300');
   const [city, setCity] = useState('Mińsk Mazowiecki');
-  const [showAreaPicker, setShowAreaPicker] = useState(false);
+  const [selectedAreaKey, setSelectedAreaKey] = useState<string>('05-300-Mińsk Mazowiecki');
 
   // --- STAN LOGOWANIA ---
   const [loginMethod, setLoginMethod] = useState<'phone' | 'pin'>('phone');
@@ -620,109 +621,89 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
                     </div>
                   </div>
 
-                  {/* KOD POCZTOWY I MIEJSCOWOŚĆ: OBSŁUGA MIASTA I GMINY MIŃSK MAZOWIECKI */}
+                  {/* DROPDOWN WYBORU MIEJSCOWOŚCI / SOŁECTWA W GMINIE LUB MIASTA */}
                   <div className="space-y-2 pt-1">
-                    <div className="flex items-center justify-between">
-                      <label className="text-[12px] font-bold text-ink-700">
-                        Kod pocztowy i miejscowość *
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => setShowAreaPicker((v) => !v)}
-                        className="text-[11.5px] font-bold text-coral-700 hover:text-coral active:scale-95 transition-transform"
+                    <label className="text-[12px] font-bold text-ink-700 block">
+                      Miejscowość w gminie / miasto *
+                    </label>
+
+                    <div className="relative">
+                      <select
+                        value={selectedAreaKey}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setSelectedAreaKey(val);
+                          if (val === 'custom') {
+                            return;
+                          }
+                          const found = minskPostalAreas.find((a) => `${a.postalCode}-${a.city}` === val);
+                          if (found) {
+                            setPostalCode(found.postalCode);
+                            setCity(found.city);
+                          }
+                        }}
+                        className="h-12 w-full appearance-none rounded-2xl border border-mist-300 bg-mist/50 px-3.5 pr-10 text-[13.5px] font-bold text-ink outline-none focus:ring-2 focus:ring-ink"
                       >
-                        {showAreaPicker ? 'Ukryj listę' : 'Wybierz miejscowość'}
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-5 gap-2">
-                      <div className="col-span-2">
-                        <input
-                          value={postalCode}
-                          onChange={handlePostalCodeChange}
-                          placeholder="05-300"
-                          inputMode="numeric"
-                          maxLength={6}
-                          className="h-11 w-full rounded-xl border border-mist-300 bg-mist/40 px-3 text-center text-[14px] font-bold text-ink outline-none focus:ring-2 focus:ring-ink"
-                        />
+                        <optgroup label="Miasto Mińsk Mazowiecki">
+                          {minskPostalAreas
+                            .filter((a) => !a.isGmina)
+                            .map((a) => (
+                              <option key={`${a.postalCode}-${a.city}-${a.label}`} value={`${a.postalCode}-${a.city}`}>
+                                {a.label}
+                              </option>
+                            ))}
+                        </optgroup>
+                        <optgroup label="Gmina Mińsk Mazowiecki (Miejscowości i Sołectwa)">
+                          {minskPostalAreas
+                            .filter((a) => a.isGmina)
+                            .map((a) => (
+                              <option key={`${a.postalCode}-${a.city}-${a.label}`} value={`${a.postalCode}-${a.city}`}>
+                                {a.label}
+                              </option>
+                            ))}
+                        </optgroup>
+                        <option value="custom">Inna miejscowość / wpisz ręcznie...</option>
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-ink-500">
+                        <ChevronDown className="h-4.5 w-4.5" />
                       </div>
-                      <div className="col-span-3">
-                        <input
-                          value={city}
-                          onChange={(e) => setCity(e.target.value)}
-                          placeholder="np. Mińsk Maz. lub wieś w gminie"
-                          className="h-11 w-full rounded-xl border border-mist-300 bg-mist/40 px-3 text-[13.5px] font-bold text-ink outline-none focus:ring-2 focus:ring-ink"
-                        />
+                    </div>
+
+                    {/* Jeśli wybrano inną miejscowość lub tryb edycji */}
+                    {selectedAreaKey === 'custom' ? (
+                      <div className="grid grid-cols-5 gap-2 pt-1">
+                        <div className="col-span-2">
+                          <label className="text-[11px] font-bold text-ink-500">Kod pocztowy</label>
+                          <input
+                            value={postalCode}
+                            onChange={handlePostalCodeChange}
+                            placeholder="05-300"
+                            inputMode="numeric"
+                            maxLength={6}
+                            className="mt-1 h-11 w-full rounded-xl border border-mist-300 bg-mist/40 px-3 text-center text-[14px] font-bold text-ink outline-none focus:ring-2 focus:ring-ink"
+                          />
+                        </div>
+                        <div className="col-span-3">
+                          <label className="text-[11px] font-bold text-ink-500">Nazwa miejscowości</label>
+                          <input
+                            value={city}
+                            onChange={(e) => setCity(e.target.value)}
+                            placeholder="np. Stojadła, Karolina..."
+                            className="mt-1 h-11 w-full rounded-xl border border-mist-300 bg-mist/40 px-3 text-[13.5px] font-bold text-ink outline-none focus:ring-2 focus:ring-ink"
+                          />
+                        </div>
                       </div>
-                    </div>
-
-                    {/* Szybkie pigułki wyboru dla miasta i najczęstszych sołectw gminy */}
-                    <div className="flex flex-wrap gap-1.5 pt-1">
-                      {[
-                        { postal: '05-300', name: 'Mińsk Mazowiecki' },
-                        { postal: '05-300', name: 'Stojadła' },
-                        { postal: '05-300', name: 'Nowe Osiny' },
-                        { postal: '05-300', name: 'Huta Mińska' },
-                        { postal: '05-300', name: 'Karolina' },
-                        { postal: '05-300', name: 'Arynów' },
-                        { postal: '05-300', name: 'Janów' },
-                        { postal: '05-300', name: 'Zamienie' },
-                        { postal: '05-301', name: 'Mińsk Mazowiecki' },
-                        { postal: '05-311', name: 'gm. Mińsk / Dębe' },
-                      ].map((item) => {
-                        const isSelected = postalCode === item.postal && city === item.name;
-                        return (
-                          <button
-                            key={`${item.postal}-${item.name}`}
-                            type="button"
-                            onClick={() => {
-                              setPostalCode(item.postal);
-                              setCity(item.name);
-                            }}
-                            className={cn(
-                              'flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold transition-all border active:scale-95',
-                              isSelected
-                                ? 'bg-ink text-white border-ink shadow-xs'
-                                : 'bg-mist/70 text-ink-700 border-mist-300 hover:bg-mist',
-                            )}
-                          >
-                            <span>{item.postal}</span>
-                            <strong>{item.name}</strong>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {/* Rozwijana lista miejscowości Gminy Mińsk Mazowiecki */}
-                    {showAreaPicker && (
-                      <div className="mt-2 max-h-48 overflow-y-auto rounded-2xl border border-mist-300 bg-white p-1.5 shadow-md divide-y divide-mist">
-                        {minskPostalAreas.map((area) => (
-                          <button
-                            key={`${area.postalCode}-${area.city}-${area.label}`}
-                            type="button"
-                            onClick={() => {
-                              setPostalCode(area.postalCode);
-                              setCity(area.city);
-                              setShowAreaPicker(false);
-                            }}
-                            className="flex w-full items-center justify-between px-3 py-2 text-left hover:bg-mist/60 rounded-xl transition-colors"
-                          >
-                            <div>
-                              <p className="text-[12.5px] font-bold text-ink">{area.label}</p>
-                              {area.locality && (
-                                <p className="text-[11px] text-ink-400">{area.locality}</p>
-                              )}
-                            </div>
-                            <span className="rounded-full bg-sand-100 px-2 py-0.5 text-[10px] font-bold text-sand-800">
-                              {area.isGmina ? 'Gmina' : 'Miasto'}
-                            </span>
-                          </button>
-                        ))}
+                    ) : (
+                      <div className="flex h-10 items-center justify-between rounded-xl bg-mist/60 px-3.5 text-[12px] font-semibold text-ink-600">
+                        <span>Adres do listu:</span>
+                        <strong className="text-ink font-bold">
+                          {postalCode} {city}
+                        </strong>
                       </div>
                     )}
 
                     <p className="text-[11px] text-ink-400 leading-snug">
-                      Obsługujemy miasto <strong>Mińsk Mazowiecki</strong> oraz wszystkie sołectwa <strong>Gminy Mińsk Mazowiecki</strong> (m.in. Stojadła, Karolina, Huta Mińska, Nowe Osiny, kody 05-300, 05-301, 05-311 i inne).
+                      Darmowy list powitalny z kodem PIN i kuponami doręczamy na terenie całego <strong>Mińska Mazowieckiego</strong> oraz <strong>Gminy Mińsk Mazowiecki</strong>.
                     </p>
                   </div>
                 </div>
