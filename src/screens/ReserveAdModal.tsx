@@ -5,6 +5,7 @@ import {
   Clock,
   HeartHandshake,
   MapPin,
+  MessageCircle,
   Phone,
   ShieldCheck,
 } from 'lucide-react';
@@ -111,8 +112,9 @@ export function ReserveAdModal({ ad, user: _user, onClose, onSuccess, isClosing 
 
             <button
               onClick={onClose}
-              className="flex h-14 w-full items-center justify-center rounded-2xl bg-ink text-[15px] font-bold text-white shadow-card transition-transform active:scale-95"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-ink text-[14.5px] font-bold text-white shadow-sm hover:bg-ink-700 active:scale-[0.98] transition-all"
             >
+              <MessageCircle className="h-4.5 w-4.5" />
               Przejdź do czatu
             </button>
           </div>
@@ -229,14 +231,14 @@ export function ReserveAdModal({ ad, user: _user, onClose, onSuccess, isClosing 
             </div>
 
             {/* Bottom Button */}
-            <div className="border-t border-mist bg-white px-5 py-3 pb-[max(env(safe-area-inset-bottom),14px)] shrink-0 shadow-float">
+            <div className="border-t border-mist bg-white px-4 py-2.5 pb-[max(env(safe-area-inset-bottom),14px)] shrink-0 shadow-float">
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-coral text-[15px] font-bold text-ink shadow-coral transition-transform active:scale-95 disabled:opacity-50"
+                className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-ink text-[14.5px] font-bold text-white shadow-sm hover:bg-ink-700 active:scale-[0.98] transition-all disabled:opacity-50"
               >
-                <HeartHandshake className="h-5 w-5" />
-                {isSubmitting ? 'Wysyłanie...' : 'Zarezerwuj'}
+                <HeartHandshake className="h-4.5 w-4.5 text-coral" />
+                {isSubmitting ? 'Wysyłanie rezerwacji...' : 'Zarezerwuj'}
               </button>
             </div>
           </form>

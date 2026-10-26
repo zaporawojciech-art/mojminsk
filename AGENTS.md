@@ -845,8 +845,12 @@ flowchart LR
   - Widok szczegółów oferty (`AdDetailModal`) prezentuje na górze karuzelę wielu zdjęć (`images[]`) z obsługą pełnoekranowego podglądu (Lightbox z zoomem i miniaturami), a biały kontener z ceną, tytułem i ulicą nachodzi zaokrąglonymi górnymi rogami (`-mt-7 rounded-t-[28px]`) bezpośrednio na zdjęcie.
   - Widok „Moje ogłoszenia” (`MyAdsModal`) w profilu prezentuje kompaktową listę tekstową bez dużych zdjęć z bezpośrednim przejściem (`Oferta ›`) do widoku szczegółów ogłoszenia.
 - **Standard Etykiet i Ergonomii Przycisków Akcji (CTA Mobile-First):**
-  - **Zwięzłość etykiet (maksymalnie 1–2 słowa):** Na przyciskach akcji mobilnych stosujemy wyłącznie krótkie, precyzyjne słowa (np. `Rezerwacja`, `Zarezerwuj`, `Czat`, `Zapisz zmiany`, `Pokaż oferty`).
+  - **Zwięzłość etykiet (maksymalnie 1–2 słowa):** Na przyciskach akcji mobilnych stosujemy wyłącznie krótkie, precyzyjne słowa (np. `Zarezerwuj`, `Czat`, `Zapisz zmiany`, `Pokaż ogłoszenia`).
   - **Kategoryczny zakaz długich fraz wieloczłonowych:** Zakazuje się tasiemców typu „Zarezerwuj & Odbiór” czy „Zarezerwuj i wyślij prośbę”. Odbiór, powiadomienie sprzedającego czy wysłanie wiadomości są kolejnymi krokami procesu, a nie etykietą na przycisku.
-  - **Wysokość i Touch-Target:** Przyciski główne CTA w dolnych paskach (Sticky Bottom Bar) mają pełną wysokość `h-14` (56px) z `min-h-[52px]` i `rounded-2xl`, a przyciski w parach poziomych mają min. `h-13` (52px). Zapewnia to natychmiastową czytelność i ergonomię kciuka na ekranach o dowolnej szerokości.
+  - **Ujednolicona geometria i wysokość:** Wszystkie przyciski akcji w dolnych paskach (Sticky Bottom Bar) mają sztywny standard: wysokość **`h-12` (48px)** oraz promień zaokrąglenia **`rounded-2xl`** (16px). Kategoryczny zakaz mieszania owali `rounded-full` z prostokątami `rounded-2xl` w paskach akcji.
+  - **Spójna hierarchia kolorystyczna:**
+    - **Primary Button (Główna akcja):** `bg-ink text-white font-bold h-12 rounded-2xl shadow-sm hover:bg-ink-700 active:scale-[0.98]` (nowoczesna, czytelna czerń/grafit z idealnym kontrastem).
+    - **Secondary Button (Akcja uzupełniająca w rzędzie):** `border border-mist-300/80 bg-mist/70 text-ink font-bold h-12 rounded-2xl hover:bg-mist active:scale-[0.98]` (z delikatnym akcentem kolorystycznym ikony).
+    - **Zakaz agresywnych zderzeń kolorystycznych:** Zakazuje się stawiania obok siebie dwóch przycisków o maksymalnym kontraście (np. jaskrawy koral obok głębokiej czerni) oraz tworzenia wielkich, krzykliwych koralowych bloków z `shadow-coral` jako głównego przycisku w dolnych paskach.
 - **Komunikacja Miejska ZDiTM na HOME:**
   - Kompaktowy widżet spersonalizowanych przystanków („Moje przystanki”) z szybkim dodawaniem obserwowanego przystanku i kierunku z alfabetycznej listy przystanków Mińska Mazowieckiego.

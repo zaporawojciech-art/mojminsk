@@ -139,7 +139,7 @@ export function SellerProfileModal({
           {isSelf ? (
             <button
               onClick={onClose}
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-ink text-[14.5px] font-bold text-white transition-transform active:scale-95"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-ink text-[14.5px] font-bold text-white shadow-sm hover:bg-ink-700 transition-all active:scale-[0.98]"
             >
               Zamknij
             </button>
@@ -149,15 +149,15 @@ export function SellerProfileModal({
                 onClose();
                 onStartChat(relatedAd);
               }}
-              className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-coral text-[15px] font-bold text-ink shadow-coral transition-transform active:scale-95"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-ink text-[14.5px] font-bold text-white shadow-sm hover:bg-ink-700 transition-all active:scale-[0.98]"
             >
-              <MessageCircle className="h-5 w-5" />
+              <MessageCircle className="h-4.5 w-4.5" />
               Napisz na czacie
             </button>
           ) : (
             <button
               onClick={onClose}
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-ink text-[14.5px] font-bold text-white transition-transform active:scale-95"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-ink text-[14.5px] font-bold text-white shadow-sm hover:bg-ink-700 transition-all active:scale-[0.98]"
             >
               Zamknij
             </button>

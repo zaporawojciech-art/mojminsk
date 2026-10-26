@@ -235,14 +235,14 @@ export function AdFiltersModal({
         </div>
 
         {/* Bottom Apply Bar */}
-        <div className="border-t border-mist bg-white px-5 py-3 pb-[max(env(safe-area-inset-bottom),14px)] shrink-0 shadow-float">
+        <div className="border-t border-mist bg-white px-4 py-2.5 pb-[max(env(safe-area-inset-bottom),14px)] shrink-0 shadow-float">
           <button
             type="button"
             onClick={() => {
               onApply(filters);
               onClose();
             }}
-            className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-coral text-[15px] font-bold text-ink shadow-coral transition-transform active:scale-95"
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-ink text-[14.5px] font-bold text-white shadow-sm hover:bg-ink-700 active:scale-[0.98] transition-all"
           >
             Pokaż ogłoszenia ({totalMatching})
           </button>

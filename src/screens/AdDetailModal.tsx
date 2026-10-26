@@ -496,15 +496,15 @@ export function AdDetailModal({
 
         {/* Pinned Bottom Action Bar (Native App Style) */}
         {!isOwner && (
-          <div className="border-t border-mist bg-white px-5 py-3 pb-[max(env(safe-area-inset-bottom),14px)] shrink-0 shadow-float space-y-2">
+          <div className="border-t border-mist bg-white px-4 py-2.5 pb-[max(env(safe-area-inset-bottom),14px)] shrink-0 shadow-float space-y-2">
             <div className="flex items-center gap-2.5">
               {currentStatus !== 'sold' && (
                 <button
                   onClick={() => onReserveClick?.(ad)}
-                  className="flex h-13 flex-1 items-center justify-center gap-2 rounded-2xl bg-coral text-[14.5px] font-bold text-ink shadow-coral transition-transform active:scale-95"
+                  className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-mist-300/80 bg-mist/70 text-[14px] font-bold text-ink hover:bg-mist active:scale-[0.98] transition-all"
                 >
-                  <HeartHandshake className="h-4.5 w-4.5 shrink-0" />
-                  Rezerwacja
+                  <HeartHandshake className="h-4.5 w-4.5 text-coral shrink-0" />
+                  Zarezerwuj
                 </button>
               )}
               <button
@@ -513,10 +513,10 @@ export function AdDetailModal({
                   onChatClick?.(ad);
                 }}
                 className={cn(
-                  'flex h-13 items-center justify-center gap-2 rounded-2xl text-[14.5px] font-bold transition-transform active:scale-95',
+                  'flex h-12 items-center justify-center gap-2 rounded-2xl text-[14px] font-bold transition-all active:scale-[0.98]',
                   currentStatus === 'sold'
                     ? 'w-full bg-mist text-ink-600'
-                    : 'flex-1 bg-ink text-white shadow-card',
+                    : 'flex-1 bg-ink text-white shadow-sm hover:bg-ink-700',
                 )}
               >
                 <MessageCircle className="h-4.5 w-4.5 shrink-0" />
@@ -525,7 +525,7 @@ export function AdDetailModal({
             </div>
             <button
               onClick={() => onReportClick?.(ad)}
-              className="flex w-full items-center justify-center gap-1.5 text-[11px] font-semibold text-ink-400 hover:text-ink-600"
+              className="flex w-full items-center justify-center gap-1.5 text-[11px] font-medium text-ink-400 hover:text-ink-600"
             >
               <ShieldAlert className="h-3 w-3" />
               Zgłoś nieaktualne lub naruszenie

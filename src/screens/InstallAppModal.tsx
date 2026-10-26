@@ -255,9 +255,9 @@ export function InstallAppModal({
                         type="button"
                         disabled={isInstalling}
                         onClick={handleInstallClick}
-                        className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-coral text-[15px] font-bold text-ink shadow-coral transition-transform active:scale-95 disabled:opacity-50"
+                        className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-ink text-[14.5px] font-bold text-white shadow-sm hover:bg-ink-700 transition-all active:scale-[0.98] disabled:opacity-50"
                       >
-                        <Download className="h-5 w-5" />
+                        <Download className="h-4.5 w-4.5" />
                         {isInstalling ? 'Instalowanie...' : 'Zainstaluj aplikację'}
                       </button>
                     ) : (
