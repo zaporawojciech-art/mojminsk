@@ -27,6 +27,8 @@ export interface User {
   houseNumber?: string;
   flatNumber?: string;
   phone?: string;
+  postalCode?: string;
+  city?: string;
   seed: string;
   rerolls: number;
   verified: boolean;
@@ -35,6 +37,35 @@ export interface User {
   privacy?: UserPrivacy;
   isGuest?: boolean;
 }
+
+export interface PostalAreaOption {
+  postalCode: string;
+  city: string;
+  locality?: string;
+  label: string;
+  isGmina?: boolean;
+}
+
+export const minskPostalAreas: PostalAreaOption[] = [
+  { postalCode: '05-300', city: 'Mińsk Mazowiecki', label: '05-300 Mińsk Mazowiecki (centrum i miasto)' },
+  { postalCode: '05-300', city: 'Stojadła', locality: 'gm. Mińsk Mazowiecki', label: '05-300 Stojadła (gm. Mińsk Maz.)', isGmina: true },
+  { postalCode: '05-300', city: 'Nowe Osiny', locality: 'gm. Mińsk Mazowiecki', label: '05-300 Nowe Osiny (gm. Mińsk Maz.)', isGmina: true },
+  { postalCode: '05-300', city: 'Huta Mińska', locality: 'gm. Mińsk Mazowiecki', label: '05-300 Huta Mińska (gm. Mińsk Maz.)', isGmina: true },
+  { postalCode: '05-300', city: 'Karolina', locality: 'gm. Mińsk Mazowiecki', label: '05-300 Karolina (gm. Mińsk Maz.)', isGmina: true },
+  { postalCode: '05-300', city: 'Arynów', locality: 'gm. Mińsk Mazowiecki', label: '05-300 Arynów (gm. Mińsk Maz.)', isGmina: true },
+  { postalCode: '05-300', city: 'Janów', locality: 'gm. Mińsk Mazowiecki', label: '05-300 Janów (gm. Mińsk Maz.)', isGmina: true },
+  { postalCode: '05-300', city: 'Zamienie', locality: 'gm. Mińsk Mazowiecki', label: '05-300 Zamienie (gm. Mińsk Maz.)', isGmina: true },
+  { postalCode: '05-300', city: 'Barcząca', locality: 'gm. Mińsk Mazowiecki', label: '05-300 Barcząca (gm. Mińsk Maz.)', isGmina: true },
+  { postalCode: '05-300', city: 'Brzóze', locality: 'gm. Mińsk Mazowiecki', label: '05-300 Brzóze (gm. Mińsk Maz.)', isGmina: true },
+  { postalCode: '05-300', city: 'Gliniak', locality: 'gm. Mińsk Mazowiecki', label: '05-300 Gliniak (gm. Mińsk Maz.)', isGmina: true },
+  { postalCode: '05-300', city: 'Stara Niedziałka', locality: 'gm. Mińsk Mazowiecki', label: '05-300 Stara Niedziałka (gm. Mińsk Maz.)', isGmina: true },
+  { postalCode: '05-300', city: 'Wólka Mińska', locality: 'gm. Mińsk Mazowiecki', label: '05-300 Wólka Mińska (gm. Mińsk Maz.)', isGmina: true },
+  { postalCode: '05-301', city: 'Mińsk Mazowiecki', label: '05-301 Mińsk Mazowiecki (UP Mińsk 1)' },
+  { postalCode: '05-302', city: 'Mińsk Mazowiecki', label: '05-302 Mińsk Mazowiecki (FUP Mińsk)' },
+  { postalCode: '05-303', city: 'Mińsk Mazowiecki', label: '05-303 Mińsk Mazowiecki (FUP Mińsk)' },
+  { postalCode: '05-311', city: 'Dębe Wielkie', locality: 'pogranicze gm. Mińsk Maz.', label: '05-311 Dębe Wielkie (obszar gminy)', isGmina: true },
+  { postalCode: '05-332', city: 'Siennica', locality: 'południowa gm. Mińsk Maz.', label: '05-332 Siennica (obszar gminy)', isGmina: true },
+];
 
 export const streets: Street[] = [
   { name: 'Spacerowa', as: 'ze Spacerowej', neighbors: 142 },
@@ -57,6 +88,13 @@ export const streets: Street[] = [
   { name: 'Kościelna', as: 'z Kościelnej', neighbors: 14 },
   { name: 'Mireckiego', as: 'z Mireckiego', neighbors: 12 },
   { name: 'Langiewicza', as: 'z Langiewicza', neighbors: 9 },
+  // Ulice / sołectwa z terenu Gminy Mińsk Mazowiecki
+  { name: 'Warszawska (Stojadła)', as: 'z Warszawskiej (Stojadła)', neighbors: 48 },
+  { name: 'Mazowiecka (Huta Mińska)', as: 'z Huty Mińskiej', neighbors: 39 },
+  { name: 'Sosnowa (Nowe Osiny)', as: 'z Nowych Osin', neighbors: 35 },
+  { name: 'Główna (Karolina)', as: 'z Karoliny', neighbors: 28 },
+  { name: 'Zamienie', as: 'z Zamienia', neighbors: 22 },
+  { name: 'Arynów', as: 'z Arynowa', neighbors: 19 },
 ];
 
 export const demoUser: User = {
@@ -66,6 +104,8 @@ export const demoUser: User = {
   houseNumber: '14',
   flatNumber: '8',
   phone: '500 123 456',
+  postalCode: '05-300',
+  city: 'Mińsk Mazowiecki',
   seed: 'Wojtek-1',
   rerolls: 3,
   verified: false,

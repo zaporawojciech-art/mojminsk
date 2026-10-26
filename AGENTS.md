@@ -18,10 +18,14 @@ Jest automatycznie wczytywany przy każdej sesji asystenta.
 ## 1. Wstęp, Misja i Zasady Działania
 
 ### 1.1. Wizja Projektu
-**mójMińsk.app** to hiperlokalna platforma społecznościowo-usługowa stworzona wyłącznie dla mieszkańców Mińska Mazowieckiego. Rozwiązuje problem dezinformacji, spamu, anonimowego hejtu i trolli w lokalnych grupach (np. na Facebooku), wprowadzając **fizyczną weryfikację adresu zamieszkania** oraz publiczną tożsamość sąsiedzką opartą na regule:  
-> **„[Imię] z ulicy [Nazwa Ulicy]”** (np. *Wojtek ze Spacerowej*).
+**mójMińsk.app** to hiperlokalna platforma społecznościowo-usługowa stworzona wyłącznie dla mieszkańców Mińska Mazowieckiego oraz Gminy Mińsk Mazowiecki. Rozwiązuje problem dezinformacji, spamu, anonimowego hejtu i trolli w lokalnych grupach (np. na Facebooku), wprowadzając **fizyczną weryfikację adresu zamieszkania** oraz publiczną tożsamość sąsiedzką opartą na regule:  
+> **„[Imię] z ulicy [Nazwa Ulicy]”** (np. *Wojtek ze Spacerowej*, *Marek ze Stojadeł*).
 
-Dla innych użytkowników widoczne jest wyłącznie imię oraz nazwa ulicy. Pełne dane adresowe (numer domu, lokalu oraz nazwisko dla doręczyciela pocztowego) są **szyfrowane w bazie danych i dostępne wyłącznie dla Administratora** na potrzeby wysyłki listu weryfikacyjnego.
+Zasięg terytorialny i pocztowy obejmuje:
+- **Miasto Mińsk Mazowiecki** (kody pocztowe: 05-300, 05-301, 05-302, 05-303).
+- **Gminę Mińsk Mazowiecki** (m.in. sołectwa: Stojadła, Karolina, Huta Mińska, Nowe Osiny, Stare Osiny, Arynów, Barcząca, Brzóze, Budy Barcząckie, Gliniak, Janów, Marianka, Niedziałka, Podrudzie, Tartak, Wólka Mińska, Zamienie itd. – kody: 05-300, 05-311, 05-332 oraz pokrewne).
+
+Dla innych użytkowników widoczne jest wyłącznie imię oraz nazwa ulicy/miejscowości. Pełne dane adresowe (numer domu, lokalu, kod pocztowy, miejscowość oraz nazwisko dla doręczyciela pocztowego) są **szyfrowane w bazie danych i dostępne wyłącznie dla Administratora** na potrzeby wysyłki listu weryfikacyjnego.
 
 ### 1.2. Model Dostępu Tymczasowego (Decyzja #1)
 - Użytkownik po rejestracji (podanie imienia, wybór ulicy oraz pełnego adresu do korespondencji) otrzymuje **dostęp tymczasowy na 14 dni**.
