@@ -2,13 +2,10 @@ import { useState } from 'react';
 import {
   Check,
   Clock,
-  Info,
-  Moon,
   PackageCheck,
   Plus,
   Search,
   ShieldCheck,
-  Sun,
   Tag,
   Truck,
   X,
@@ -32,43 +29,6 @@ interface ShopScreenProps {
   totalCartValue: number;
 }
 
-export type DeliverySlotId = 'today_evening' | 'tomorrow_morning' | 'tomorrow_evening';
-
-interface DeliverySlot {
-  id: DeliverySlotId;
-  label: string;
-  sub: string;
-  cutoff: string;
-  badge?: string;
-  icon: typeof Moon | typeof Sun;
-}
-
-const DELIVERY_SLOTS: DeliverySlot[] = [
-  {
-    id: 'today_evening',
-    label: 'Dzisiaj wieczorem',
-    sub: '18:30 – 20:30',
-    cutoff: 'Zamów do 16:00',
-    badge: 'Najchętniej wybierany',
-    icon: Moon,
-  },
-  {
-    id: 'tomorrow_morning',
-    label: 'Jutro rano',
-    sub: '07:30 – 09:30',
-    cutoff: 'Zamów do 21:00',
-    badge: 'Świeże pieczywo',
-    icon: Sun,
-  },
-  {
-    id: 'tomorrow_evening',
-    label: 'Jutro po pracy',
-    sub: '18:30 – 20:30',
-    cutoff: 'Zaplanowane zakupy',
-    icon: Moon,
-  },
-];
-
 export function ShopScreen({
   user,
   onProfile,
@@ -79,8 +39,6 @@ export function ShopScreen({
 }: ShopScreenProps) {
   const [selectedAisle, setSelectedAisle] = useState<MotylekAisle>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedSlot, setSelectedSlot] = useState<DeliverySlotId>('today_evening');
-  const [showHowItWorks, setShowHowItWorks] = useState(false);
 
   const filteredGroceries = groceries.filter((g) => {
     const matchesAisle = selectedAisle === 'all' || g.aisle === selectedAisle;
@@ -93,8 +51,6 @@ export function ShopScreen({
 
   const missingForFreeDelivery = Math.max(0, 120 - totalCartValue);
   const deliveryProgress = Math.min(100, Math.round((totalCartValue / 120) * 100));
-
-  const activeSlot = DELIVERY_SLOTS.find((s) => s.id === selectedSlot) ?? DELIVERY_SLOTS[0];
 
   const getDealProduct = (deal: (typeof motylekDeals)[number]): Product => {
     const existing = groceries.find((g) => g.id === deal.id);
@@ -194,99 +150,6 @@ export function ShopScreen({
       </div>
 
       <div className="space-y-6 pt-4">
-        {/* Planned Delivery Slot Hero Selector */}
-        <section className="px-5">
-          <div className="relative overflow-hidden rounded-3xl bg-ink p-4 text-white shadow-float border border-ink-800">
-            <div className="absolute right-0 top-0 h-36 w-36 rounded-full bg-coral/15 blur-2xl pointer-events-none" />
-
-            <div className="flex items-center justify-between">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-bold text-sand">
-                <Clock className="h-3.5 w-3.5 text-sand" />
-                Planowana dostawa domowa
-              </span>
-              <button
-                type="button"
-                onClick={() => setShowHowItWorks((prev) => !prev)}
-                className="flex items-center gap-1 text-[11.5px] font-semibold text-white/70 hover:text-white transition-colors"
-              >
-                <span>Jak to działa?</span>
-                <Info className="h-3.5 w-3.5" />
-              </button>
-            </div>
-
-            <div className="mt-3">
-              <div className="flex items-baseline justify-between gap-2">
-                <h2 className="font-display text-[19px] font-bold text-white tracking-tight leading-snug">
-                  {activeSlot.label}: <span className="text-sand">{activeSlot.sub}</span>
-                </h2>
-              </div>
-              <p className="mt-1 text-[12px] text-white/80 leading-relaxed">
-                {activeSlot.cutoff} · Kurier doręcza zakupy w zaplanowanej pętli wieczornej.
-              </p>
-            </div>
-
-            {/* Delivery Slot Buttons */}
-            <div className="mt-3.5 grid grid-cols-3 gap-2">
-              {DELIVERY_SLOTS.map((slot) => {
-                const isSelected = selectedSlot === slot.id;
-                const SlotIcon = slot.icon;
-                return (
-                  <button
-                    key={slot.id}
-                    type="button"
-                    onClick={() => setSelectedSlot(slot.id)}
-                    className={cn(
-                      'relative flex flex-col items-start rounded-2xl p-2.5 text-left transition-all active:scale-95 border',
-                      isSelected
-                        ? 'bg-white text-ink border-sand shadow-sm'
-                        : 'bg-white/10 text-white border-white/10 hover:bg-white/15',
-                    )}
-                  >
-                    {slot.badge && isSelected && (
-                      <span className="absolute -top-2 right-1.5 rounded-full bg-coral px-1.5 py-0.2 text-[8px] font-extrabold text-ink">
-                        HIT
-                      </span>
-                    )}
-                    <div className="flex items-center gap-1">
-                      <SlotIcon className={cn('h-3.5 w-3.5', isSelected ? 'text-coral' : 'text-sand')} />
-                      <span className="text-[11px] font-bold truncate">{slot.label}</span>
-                    </div>
-                    <span className={cn('text-[11.5px] font-extrabold mt-0.5', isSelected ? 'text-ink' : 'text-sand-100')}>
-                      {slot.sub}
-                    </span>
-                    <span className={cn('text-[9.5px] mt-0.5 truncate', isSelected ? 'text-ink-500' : 'text-white/60')}>
-                      {slot.cutoff}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Collapsible How It Works Explanation */}
-            {showHowItWorks && (
-              <div className="mt-4 pt-3.5 border-t border-white/15 space-y-2 text-[12px] text-white/90">
-                <p className="font-bold text-sand text-[12.5px]">
-                  Dlaczego zakupy na slot, a nie w 15 minut?
-                </p>
-                <div className="grid grid-cols-3 gap-2 text-[11px] leading-snug pt-1">
-                  <div className="rounded-xl bg-white/5 p-2 border border-white/10">
-                    <p className="font-bold text-white">1. Zamawiasz do 16:00</p>
-                    <p className="text-white/70 mt-1">Spokojny wybór z pracy lub domu.</p>
-                  </div>
-                  <div className="rounded-xl bg-white/5 p-2 border border-white/10">
-                    <p className="font-bold text-white">2. Motylek pakuje</p>
-                    <p className="text-white/70 mt-1">Najświeższe pieczywo i wędliny o 16:30.</p>
-                  </div>
-                  <div className="rounded-xl bg-white/5 p-2 border border-white/10">
-                    <p className="font-bold text-white">3. Kurier dowozi</p>
-                    <p className="text-white/70 mt-1">18:30–20:30 prosto pod Twoje drzwi.</p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </section>
-
         {/* 3 Step Quality Guarantee Bar */}
         <section className="px-5">
           <div className="grid grid-cols-3 gap-2 rounded-2xl bg-sand-50 p-2.5 border border-sand-200 text-center">
