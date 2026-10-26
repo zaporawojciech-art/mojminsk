@@ -31,6 +31,9 @@ import {
   type Product,
   type Ride,
   type User,
+  type PollItem,
+  initialPolls,
+  isPollActive,
 } from './data/mockData';
 import { OnboardingScreen } from './screens/OnboardingScreen';
 import type { AdFilterState } from './screens/AdFiltersModal';
@@ -60,6 +63,8 @@ const AdFiltersModal = lazy(() => import('./screens/AdFiltersModal').then((m) =>
 const ReserveAdModal = lazy(() => import('./screens/ReserveAdModal').then((m) => ({ default: m.ReserveAdModal })));
 const InstallAppModal = lazy(() => import('./screens/InstallAppModal').then((m) => ({ default: m.InstallAppModal })));
 const AddFavoriteBusModal = lazy(() => import('./screens/AddFavoriteBusModal').then((m) => ({ default: m.AddFavoriteBusModal })));
+const PollsModal = lazy(() => import('./screens/PollsModal').then((m) => ({ default: m.PollsModal })));
+const AddPollModal = lazy(() => import('./screens/AddPollModal').then((m) => ({ default: m.AddPollModal })));
 
 type Overlay = null | 'profile' | 'checkout' | 'motylek' | 'zditm';
 
@@ -119,6 +124,62 @@ export default function App() {
     selectedStreet: 'all',
     onlyFree: false,
   });
+
+  // Community Polls State
+  const [polls, setPolls] = useState<PollItem[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('mojminsk_polls');
+        if (stored) return JSON.parse(stored);
+      } catch {
+        // fallback
+      }
+    }
+    return initialPolls;
+  });
+
+  const [userVotes, setUserVotes] = useState<Record<string, string>>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('mojminsk_poll_votes');
+        if (stored) return JSON.parse(stored);
+      } catch {
+        // fallback
+      }
+    }
+    return {};
+  });
+
+  const [pollsModalOpen, setPollsModalOpen] = useState(false);
+  const [addPollModalOpen, setAddPollModalOpen] = useState(false);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('mojminsk_polls', JSON.stringify(polls));
+    } catch {}
+  }, [polls]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('mojminsk_poll_votes', JSON.stringify(userVotes));
+    } catch {}
+  }, [userVotes]);
+
+  const handleVote = useCallback((pollId: string, optionId: string) => {
+    setUserVotes((prev) => ({ ...prev, [pollId]: optionId }));
+    setPolls((prev) =>
+      prev.map((p) => {
+        if (p.id !== pollId) return p;
+        return {
+          ...p,
+          totalVotes: p.totalVotes + 1,
+          options: p.options.map((opt) =>
+            opt.id === optionId ? { ...opt, votes: opt.votes + 1 } : opt
+          ),
+        };
+      })
+    );
+  }, []);
 
   const handleAddFavoriteBus = (newFav: Omit<FavoriteBusStop, 'id'>) => {
     const id = `${newFav.lineId}_${newFav.stopName}_${newFav.directionIdx}`;
@@ -217,7 +278,9 @@ export default function App() {
       reserveAd ||
       filtersModalOpen ||
       installModalOpen ||
-      addFavBusOpen
+      addFavBusOpen ||
+      pollsModalOpen ||
+      addPollModalOpen
   );
 
   const [exitingScreens, setExitingScreens] = useState<Record<string, boolean>>({});
@@ -246,9 +309,16 @@ export default function App() {
   const closeSelectedAd = useCallback(() => closeWithAnimation('selectedAd', () => setSelectedAd(null)), [closeWithAnimation]);
   const closeAddRide = useCallback(() => closeWithAnimation('addRide', () => setAddRideOpen(false)), [closeWithAnimation]);
   const closeAddAd = useCallback(() => closeWithAnimation('addAd', () => setAddAdOpen(false)), [closeWithAnimation]);
+  const closeAddPoll = useCallback(() => closeWithAnimation('addPoll', () => setAddPollModalOpen(false)), [closeWithAnimation]);
+  const closePollsModal = useCallback(() => closeWithAnimation('pollsModal', () => setPollsModalOpen(false)), [closeWithAnimation]);
   const closeMyAds = useCallback(() => closeWithAnimation('myAds', () => setMyAdsOpen(false)), [closeWithAnimation]);
   const closePartner = useCallback(() => closeWithAnimation('partner', () => setPartnerOpen(false)), [closeWithAnimation]);
   const closeOverlay = useCallback(() => closeWithAnimation('overlay', () => setOverlay(null)), [closeWithAnimation]);
+
+  const handlePollCreated = useCallback((newPoll: PollItem) => {
+    setPolls((prev) => [newPoll, ...prev]);
+    closeAddPoll();
+  }, [closeAddPoll]);
 
   // Navigation stack: layers ordered strictly from the topmost nesting level (Level 5 -> Level 1)
   const layers = [
@@ -258,6 +328,7 @@ export default function App() {
     { active: !!reserveAd, close: closeReserveAd },
     { active: !!editAd, close: closeEditAd },
     { active: !!sellerProfile, close: closeSellerProfile },
+    { active: addPollModalOpen, close: closeAddPoll },
     { active: addRideOpen, close: closeAddRide },
     { active: addAdOpen, close: closeAddAd },
     { active: !!selectedAd, close: closeSelectedAd },
@@ -266,6 +337,7 @@ export default function App() {
     { active: conversationsOpen, close: closeConversations },
     { active: myAdsOpen, close: closeMyAds },
     { active: partnerOpen, close: closePartner },
+    { active: pollsModalOpen, close: closePollsModal },
     { active: !!overlay, close: closeOverlay },
   ];
   const depth = layers.filter((l) => l.active).length;
@@ -456,6 +528,8 @@ export default function App() {
       void import('./screens/ReportAdModal');
       void import('./screens/AddFavoriteBusModal');
       void import('./screens/InstallAppModal');
+      void import('./screens/PollsModal');
+      void import('./screens/AddPollModal');
     }, 100);
     return () => {
       window.clearTimeout(id);
@@ -484,6 +558,10 @@ export default function App() {
         favoriteBuses={favoriteBuses}
         onAddFavoriteBus={() => setAddFavBusOpen(true)}
         onRemoveFavoriteBus={handleRemoveFavoriteBus}
+        polls={polls}
+        userVotes={userVotes}
+        onVote={handleVote}
+        onOpenPolls={() => setPollsModalOpen(true)}
       />
     );
   } else if (tab === 'shop') {
@@ -621,6 +699,9 @@ export default function App() {
               onPreviewPublic={() => setSellerProfile({ name: user.name, street: user.street.name })}
               onAddRide={() => setAddRideOpen(true)}
               myRidesCount={userRidesCount}
+              onOpenPolls={() => setPollsModalOpen(true)}
+              onAddPoll={() => setAddPollModalOpen(true)}
+              activePollsCount={polls.filter(isPollActive).length}
               onInstallApp={() => setInstallModalOpen(true)}
               userAds={userAds}
             />
@@ -662,6 +743,25 @@ export default function App() {
                 setCart({});
                 closeOverlay();
               }}
+            />
+          </AsyncViewBoundary>
+        )}
+
+        {user && pollsModalOpen && (
+          <AsyncViewBoundary
+            viewKey="modal-polls"
+            level={1}
+            isClosing={!!exitingScreens['pollsModal']}
+            skeleton={<OverlaySkeleton />}
+          >
+            <PollsModal
+              user={user}
+              polls={polls}
+              userVotes={userVotes}
+              onVote={handleVote}
+              onClose={closePollsModal}
+              onAddPoll={() => setAddPollModalOpen(true)}
+              isClosing={!!exitingScreens['pollsModal']}
             />
           </AsyncViewBoundary>
         )}
@@ -758,6 +858,22 @@ export default function App() {
               onClose={closeAddFavBus}
               isClosing={!!exitingScreens['addFavBus']}
               onSave={handleAddFavoriteBus}
+            />
+          </AsyncViewBoundary>
+        )}
+
+        {user && addPollModalOpen && (
+          <AsyncViewBoundary
+            viewKey="modal-add-poll"
+            level={2}
+            isClosing={!!exitingScreens['addPoll']}
+            skeleton={<ModalFormSkeleton />}
+          >
+            <AddPollModal
+              user={user}
+              onClose={closeAddPoll}
+              onPollCreated={handlePollCreated}
+              isClosing={!!exitingScreens['addPoll']}
             />
           </AsyncViewBoundary>
         )}

@@ -83,8 +83,8 @@ export function CartSheet({
                 <CheckCircle2 className="h-10 w-10 text-ink" aria-hidden />
               </span>
               <Drawer.Title className="mt-5 font-display text-[28px] font-semibold text-ink">Zamówienie przyjęte!</Drawer.Title>
-              <Drawer.Description className="mx-auto mt-2 max-w-[260px] text-[14px] text-ink-500">
-                Kurier mójMińsk odbierze je za chwilę. Status śledzisz w zakładce Kuchnia.
+              <Drawer.Description className="mx-auto mt-2 max-w-[270px] text-[13.5px] text-ink-500">
+                Motylek kompletuje zakupy, a dedykowany kurier mójMińsk doręczy je wieczorem w oknie 18:30–20:30.
               </Drawer.Description>
               <button onClick={() => close(false)} className="mt-6 h-12 w-full rounded-full bg-ink text-[15px] font-bold text-white">
                 Świetnie
@@ -93,7 +93,7 @@ export function CartSheet({
           ) : (
             <div className="overflow-y-auto px-5 pb-[max(env(safe-area-inset-bottom),20px)]">
               <Drawer.Title className="mt-2 font-display text-[28px] font-semibold text-ink">Twój koszyk</Drawer.Title>
-              <Drawer.Description className="text-[13px] text-ink-500">Dostawa na ul. Spacerową · ok. 35 min</Drawer.Description>
+              <Drawer.Description className="text-[13px] text-ink-500">Dostawa: Motylek Market ➔ kurier mójMińsk (18:30–20:30)</Drawer.Description>
 
               <div className="mt-4 space-y-2.5">
                 {lines.length === 0 && <p className="rounded-3xl bg-white p-6 text-center text-[14px] text-ink-500">Koszyk jest pusty</p>}

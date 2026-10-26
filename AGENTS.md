@@ -212,12 +212,17 @@ Zgodnie z decyzją produktową zrezygnowano z wielorestauracyjnego marketplace'u
 
 ```
 +--------------------------------------------------------------+
-| [TOP BAR] Motylek Market · Wyłączność · Otwarte do 21:00     |
+| [TOP BAR] Motylek Market · Wyłączność · Siennicka 14         |
 |           Dostawa: ul. Spacerowa · [Profil]                  |
 +--------------------------------------------------------------+
 | [SZUKAJ W MOTYLKU] 🔍 Szukaj chleba, mleka, pomidorów...     |
 +--------------------------------------------------------------+
-| [DOSTAWA W 35 MIN] Do darmowej dostawy brakuje: 42 zł (120 zł)|
+| [DEDYKOWANY KURIER] Do darmowej dostawy: 42 zł (od 120 zł)   |
++--------------------------------------------------------------+
+| [PLANOWANE SLOTY] Zamów do 16:00 ➔ Dostawa dzisiaj 18:30-20:30|
+| [Slot 1: Dzisiaj wieczór] [Slot 2: Jutro rano] [Slot 3: Zapasy]|
++--------------------------------------------------------------+
+| [JAK TO DZIAŁA] 1. Zamawiasz ➔ 2. Motylek pakuje ➔ 3. Kurier  |
 +--------------------------------------------------------------+
 | [HITY TYGODNIA Z GAZETKI] Karuzela promocyjna z rabatami     |
 +--------------------------------------------------------------+
@@ -229,32 +234,32 @@ Zgodnie z decyzją produktową zrezygnowano z wielorestauracyjnego marketplace'u
 +--------------------------------------------------------------+
 ```
 
-1. **Architektura Wizualna Glovo-Style UI:**
-   - **Górne bąble kategorii:** Okrągłe, estetyczne ikony przewijane horyzontalnie (*Restauracje*, *Piekarnie*, *Sklepy Spożywcze*, *Kawiarnie & Cukiernie*, *Dania Dnia*).
-   - **Sekcje kafelkowe poniżej:** Dynamiczne karuzele: *„Najczęściej zamawiane w Mińsku”*, *„Szybka dostawa (<30 min)”*, *„Lokalne Piekarnie ze świeżym chlebem”*.
-   - **Pełne menu z koszykiem wewnątrz aplikacji:** Użytkownik wybiera dania, modyfikuje składniki/sosy, dodaje napoje i płaci BLIKiem/kartą wewnątrz mójMińsk bez opuszczania aplikacji.
+1. **Architektura Wizualna – Zaplanowane E-Zakupy Domowe:**
+   - **Hero Slot Picker:** Przełącznik okien doręczeń:
+     - *Dzisiaj wieczorem (18:30 – 20:30)* – zamówienie złożone w ciągu dnia do godz. 16:00.
+     - *Jutro rano (07:30 – 09:30)* – świeże pieczywo i nabiał prosto na śniadanie.
+     - *Jutro wieczorem (18:30 – 20:30)* – zaplanowane cotygodniowe zakupy domowe.
+   - **Brak pośpiechu Q-Commerce:** Odrzucenie szkodliwego modelu 15–30 minut na rzecz spokojnej kompletacji przez załogę i wysokich koszyków domowych (90–160 zł).
+   - **Pełne menu z koszykiem wewnątrz aplikacji:** Użytkownik wybiera artykuły, dodaje promocje gazetkowe i płaci BLIKiem/kartą wewnątrz mójMińsk bez opuszczania aplikacji.
 
-2. **Dedykowana Flota Kurierska mójMińsk:**
-   - **Lokalna Flota Kurierów:** Zamiast zdawać się na własnych kierowców restauracji, uruchamiana jest **dedykowana mińska flota kurierów** (lokalni studenci i uczniowie na rowerach, hulajnogach i skuterach z termicznymi torbami z logo mójMińsk).
-   - **Zalety:**
-     - Kontrola nad czasem i standardem dostawy w granicach miasta.
-     - Możliwość obsługi mniejszych lokali i sklepów, które nie mają własnych kierowców (np. cukiernie, piekarnie, warzywniaki).
-     - Budowanie widoczności marki mójMińsk na ulicach miasta poprzez kurierów z torbami.
+2. **Dedykowany Kurier mójMińsk (Logistyka Zaplanowanej Pętli):**
+   - **Zoptymalizowana pętla doręczeń:** Zamiast pojedynczych, kosztownych kursów w te i z powrotem, dedykowany kurier mójMińsk odbiera o 17:45 spakowane torby z rampy Motylka (ul. Siennicka 14) i rozwozi je po zaplanowanej trasie ulic Mińska Mazowieckiego w godz. 18:30–20:30.
+   - **Zalety dla Motylek Market:**
+     - Zero inwestycji w auta dostawcze, paliwo czy zatrudnianie kierowców.
+     - Personel kompletuje zakupy w spokojnym oknie 16:00–17:30 bez paraliżowania obsługi kas w sklepie stacjonarnym.
+     - Ochrona świeżości: chłodniczy transport, brak pogniecionych produktów.
 
 3. **Moduł mGrocery – Wyłączny Partner Spożywczy: Motylek Market (Decyzje #43–#48):**
    - **Wyłączność Branżowa:** Lokalna sieć sklepów **Motylek Market** w Mińsku Mazowieckim posiada 100% wyłączności na e-zakupy spożywcze w aplikacji.
    - **Monetyzacja:**
      - Stały miesięczny abonament za wyłączność: **1 000 – 1 500 zł / mc**.
-     - Niska prowizja koszykowa: **5% – 8% od wartości zamówienia**.
-     - Obecność w Liście Powitalnym: Motylek Market jest jednym z 5 partnerów (500 zł z puli 2 500 zł) oferującym np. *15 zł zniżki na pierwsze e-zakupy* w powitalnej kopercie.
-   - **Branding w Glovo UI:**
-     - Dedykowany, obrandowany bąbel **„Motylek Market”** na samej górze interfejsu (obok Restauracji).
-     - Baner promocyjny: *„Motylek Market – świeże zakupy spożywcze u Twoich drzwi w 35 min!”*.
-   - **Proces Logistyczny (Szybkie Doręczenie):**
+     - Niska prowizja koszykowa: **5% – 7% od wartości zamówienia** (wobec 25–35% w korporacyjnych agregatorach).
+     - Obecność w Liście Powitalnym: Motylek Market jest jednym z 5 partnerów oferującym np. *15 zł zniżki na pierwsze zakupy (kod MINSK15)* w powitalnej kopercie do mieszkańców.
+   - **Proces Logistyczny (Dostawa Planowana w Slotach):**
      1. Mieszkaniec składa zamówienie w aplikacji (min. wartość: **40 zł**).
-     2. **Kompletowanie:** Pracownicy sklepu Motylek Market pakują torbę papierową z artykułami.
-     3. **Odbiór i dowóz:** Kurier floty mójMińsk podjeżdża pod rampę/sklep, odbiera gotową, spakowaną torbę i natychmiast wiezie ją pod adres klienta.
-     4. **Koszty dostawy:** Darmowa dostawa od **120 zł** koszyka; poniżej stała opłata 6–8 zł dla kuriera.
+     2. **Kompletowanie:** Po godz. 16:00 pracownicy sklepu Motylek Market pakują torby papierowe z artykułami.
+     3. **Odbiór i dowóz:** O 17:45 dedykowany kurier floty mójMińsk podjeżdża pod rampę/sklep, odbiera gotowe zamówienia i doręcza je w oknie 18:30–20:30.
+     4. **Koszty dostawy:** Darmowa dostawa od **120 zł** koszyka; poniżej stała opłata 6,99 zł za zorganizowany kurs kuriera.
    - **Integracja Technologiczna:**
      - Automatyczna integracja API z systemem kasowo-magazynowym Motylek Market (aktualne ceny, promocje gazetkowe i stany magazynowe w czasie rzeczywistym).
 

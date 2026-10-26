@@ -333,16 +333,136 @@ export const news = [
   { id: 'n3', source: 'Mińsk Info', time: '5 godz.', tag: 'Inwestycje', title: 'Nowe ścieżki rowerowe połączą Serbinów z centrum', image: img('photo-1485965120184-e220f721d03e', 500) },
 ];
 
+export interface PollOption {
+  id: string;
+  name: string;
+  votes: number;
+}
+
+export interface PollItem {
+  id: string;
+  title: string;
+  author: string;
+  authorStreet: string;
+  createdAt: string;
+  expiresAt: string;
+  durationDays: number;
+  options: PollOption[];
+  totalVotes: number;
+  category?: 'city' | 'neighborhood' | 'culture' | 'investments';
+  isOfficial?: boolean;
+}
+
+const now = Date.now();
+const dayMs = 86400000;
+
+export const initialPolls: PollItem[] = [
+  {
+    id: 'poll_1',
+    title: 'Gdzie zjesz najlepszą pizzę w Mińsku?',
+    author: 'Redakcja mójMińsk',
+    authorStreet: 'Centrum',
+    createdAt: new Date(now - 4 * dayMs).toISOString(),
+    expiresAt: new Date(now + 3 * dayMs).toISOString(),
+    durationDays: 7,
+    isOfficial: true,
+    category: 'city',
+    totalVotes: 384,
+    options: [
+      { id: 'o1', name: 'Pizzeria Bella Ciao', votes: 168 },
+      { id: 'o2', name: 'Da Grasso', votes: 104 },
+      { id: 'o3', name: 'Biesiadowo', votes: 65 },
+      { id: 'o4', name: 'Pod Strzechą', votes: 47 },
+    ],
+  },
+  {
+    id: 'poll_2',
+    title: 'Czy Park Dernałowiczów powinien mieć nowe oświetlenie alejek?',
+    author: 'Marek',
+    authorStreet: 'ze Spacerowej',
+    createdAt: new Date(now - 2 * dayMs).toISOString(),
+    expiresAt: new Date(now + 5 * dayMs).toISOString(),
+    durationDays: 7,
+    isOfficial: false,
+    category: 'investments',
+    totalVotes: 354,
+    options: [
+      { id: 'o1', name: 'Tak, zdecydowanie (bezpieczeństwo po zmroku)', votes: 214 },
+      { id: 'o2', name: 'Lepszy byłby stały monitoring miejski', votes: 98 },
+      { id: 'o3', name: 'Wystarczy obecne oświetlenie', votes: 42 },
+    ],
+  },
+  {
+    id: 'poll_3',
+    title: 'Czy autobus linii M2 powinien kursować częściej w szczycie?',
+    author: 'Kasia',
+    authorStreet: 'z Sosnkowskiego',
+    createdAt: new Date(now - 6 * dayMs).toISOString(),
+    expiresAt: new Date(now + 1 * dayMs).toISOString(),
+    durationDays: 7,
+    isOfficial: false,
+    category: 'city',
+    totalVotes: 296,
+    options: [
+      { id: 'o1', name: 'Tak, co 15 minut rano i po południu', votes: 189 },
+      { id: 'o2', name: 'Więcej kursów w weekendy i niedziele', votes: 76 },
+      { id: 'o3', name: 'Obecny rozkład co 30 min jest w porządku', votes: 31 },
+    ],
+  },
+  {
+    id: 'poll_4',
+    title: 'Najlepsze lody rzemieślnicze w Mińsku na upalne dni',
+    author: 'Piotr',
+    authorStreet: 'z Warszawskiej',
+    createdAt: new Date(now - 14 * dayMs).toISOString(),
+    expiresAt: new Date(now - 7 * dayMs).toISOString(),
+    durationDays: 7,
+    isOfficial: false,
+    category: 'culture',
+    totalVotes: 453,
+    options: [
+      { id: 'o1', name: 'Lodziarnia U Lodziarzy (Kościuszki)', votes: 245 },
+      { id: 'o2', name: 'Cukiernia Janek', votes: 120 },
+      { id: 'o3', name: 'Lody Tradycyjne przy Pałacu', votes: 88 },
+    ],
+  },
+  {
+    id: 'poll_5',
+    title: 'Gdzie zorganizować piknik sąsiedzki na zakończenie lata?',
+    author: 'Ania',
+    authorStreet: 'z Kościuszki',
+    createdAt: new Date(now - 20 * dayMs).toISOString(),
+    expiresAt: new Date(now - 6 * dayMs).toISOString(),
+    durationDays: 14,
+    isOfficial: false,
+    category: 'neighborhood',
+    totalVotes: 314,
+    options: [
+      { id: 'o1', name: 'Polana w Parku Dernałowiczów', votes: 182 },
+      { id: 'o2', name: 'Tereny zielone MOSiR przy basenie', votes: 94 },
+      { id: 'o3', name: 'Skwer przy fontannie na Placu Kilińskiego', votes: 38 },
+    ],
+  },
+];
+
+export const isPollActive = (p: PollItem): boolean => {
+  return new Date(p.expiresAt).getTime() > Date.now();
+};
+
+export const getPollTimeLeftLabel = (p: PollItem): string => {
+  const diffMs = new Date(p.expiresAt).getTime() - Date.now();
+  if (diffMs <= 0) return 'Zakończona';
+  const diffHours = Math.floor(diffMs / 3600000);
+  if (diffHours < 24) return `Zostało: ${diffHours} godz.`;
+  const diffDays = Math.ceil(diffMs / 86400000);
+  return `Zostało: ${diffDays} ${diffDays === 1 ? 'dzień' : diffDays < 5 ? 'dni' : 'dni'}`;
+};
+
 export const poll = {
-  title: 'Gdzie zjesz najlepszą pizzę w Mińsku?',
-  total: 384,
+  title: initialPolls[0].title,
+  total: initialPolls[0].totalVotes,
   daysLeft: 3,
-  options: [
-    { id: 'o1', name: 'Pizzeria Bella Ciao', votes: 168 },
-    { id: 'o2', name: 'Da Grasso', votes: 104 },
-    { id: 'o3', name: 'Biesiadowo', votes: 65 },
-    { id: 'o4', name: 'Pod Strzechą', votes: 47 },
-  ],
+  options: initialPolls[0].options,
 };
 
 /* ---------------- Strefa Kuchni ---------------- */

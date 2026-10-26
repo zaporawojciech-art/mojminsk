@@ -43,6 +43,9 @@ interface ProfileScreenProps {
   onPreviewPublic?: () => void;
   onAddRide?: () => void;
   myRidesCount?: number;
+  onOpenPolls?: () => void;
+  onAddPoll?: () => void;
+  activePollsCount?: number;
   onInstallApp?: () => void;
   userAds?: Ad[];
   isClosing?: boolean;
@@ -64,15 +67,15 @@ export function ProfileScreen({
   onPreviewPublic: _onPreviewPublic,
   onAddRide,
   myRidesCount = 0,
+  onOpenPolls,
+  onAddPoll,
+  activePollsCount = 0,
   onInstallApp,
   userAds: _userAds = [],
   isClosing = false,
 }: ProfileScreenProps) {
   const [pin, setPin] = useState('');
   const [showOrdersDrawer, setShowOrdersDrawer] = useState(false);
-  const [showPollCreator, setShowPollCreator] = useState(false);
-  const [pollQuestion, setPollQuestion] = useState('');
-  const [pollSubmitted, setPollSubmitted] = useState(false);
   const [showBlikSupport, setShowBlikSupport] = useState(false);
   const [supportAmount, setSupportAmount] = useState<number>(10);
   const [supportBlikCode, setSupportBlikCode] = useState('');
@@ -533,57 +536,49 @@ export function ProfileScreen({
             </button>
           </li>
 
-          {/* Utwórz ankietę sąsiedzką (1 / miesiąc) */}
-          <li>
-            <button
-              onClick={() => setShowPollCreator((v) => !v)}
-              className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-mist/50 active:bg-mist"
-            >
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-sand-100 text-ink">
-                <Vote className="h-[18px] w-[18px]" aria-hidden />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-[14.5px] font-semibold text-ink">Utwórz ankietę sąsiedzką</p>
-                <p className="text-[11.5px] text-ink-400">Darmowy przywilej mieszkańca</p>
-              </div>
-              <span className="rounded-full bg-sand-100 px-2.5 py-0.5 text-[11px] font-bold text-ink">
-                {pollSubmitted ? '0 / 1 w tym m-cu' : '1 / miesiąc'}
-              </span>
-              <ChevronRight className={cn('h-4 w-4 text-ink-300 transition-transform', showPollCreator && 'rotate-90')} aria-hidden />
-            </button>
-            {showPollCreator && (
-              <div className="bg-mist/60 px-4 py-3.5">
-                {pollSubmitted ? (
-                  <div className="flex items-center gap-2 rounded-2xl bg-emerald-50 p-3 text-[12.5px] font-semibold text-emerald-900">
-                    <Check className="h-4 w-4 shrink-0 text-emerald-600" />
-                    Twoja propozycja ankiety sąsiedzkiej trafiła do moderacji!
-                  </div>
-                ) : (
-                  <div className="space-y-2.5 rounded-3xl bg-white p-3.5 shadow-card">
-                    <p className="text-[12px] font-bold text-ink">
-                      Zadaj pytanie mieszkańcom ul. {user.street.name} lub całego Mińska:
-                    </p>
-                    <input
-                      value={pollQuestion}
-                      onChange={(e) => setPollQuestion(e.target.value)}
-                      placeholder="Np. Gdzie brakuje oświetlenia na naszej ulicy?"
-                      className="h-11 w-full rounded-2xl bg-mist px-3.5 text-[13px] outline-none placeholder:text-ink-400 focus:ring-2 focus:ring-ink"
-                    />
-                    <button
-                      disabled={!pollQuestion.trim()}
-                      onClick={() => {
-                        setPollSubmitted(true);
-                        setPollQuestion('');
-                      }}
-                      className="flex h-10 w-full items-center justify-center rounded-full bg-ink text-[12.5px] font-bold text-white disabled:opacity-40"
-                    >
-                      Wyślij ankietę do publikacji
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-          </li>
+          {/* Utwórz ankietę sąsiedzką -> AddPollModal */}
+          {onAddPoll && (
+            <li className="border-b border-mist">
+              <button
+                onClick={onAddPoll}
+                className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-mist/50 active:bg-mist"
+              >
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-coral-100 text-ink">
+                  <Plus className="h-[18px] w-[18px]" aria-hidden />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[14.5px] font-semibold text-ink">Utwórz ankietę sąsiedzką</p>
+                  <p className="text-[11.5px] text-ink-400">Zadaj pytanie mińszczanom i ustaw czas trwania</p>
+                </div>
+                <span className="rounded-full bg-sand-100 px-2.5 py-0.5 text-[11px] font-bold text-ink">
+                  Darmowa
+                </span>
+                <ChevronRight className="h-4 w-4 text-ink-300" aria-hidden />
+              </button>
+            </li>
+          )}
+
+          {/* Przeglądaj ankiety mieszkańców -> PollsModal */}
+          {onOpenPolls && (
+            <li>
+              <button
+                onClick={onOpenPolls}
+                className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-mist/50 active:bg-mist"
+              >
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-sand-100 text-ink">
+                  <Vote className="h-[18px] w-[18px]" aria-hidden />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[14.5px] font-semibold text-ink">Ankiety mieszkańców</p>
+                  <p className="text-[11.5px] text-ink-400">Głosuj i sprawdzaj wyniki według popularności</p>
+                </div>
+                <span className="rounded-full bg-mist px-2.5 py-1 text-[11.5px] font-bold text-ink-700">
+                  {activePollsCount > 0 ? `${activePollsCount} aktywne` : 'Przeglądaj'}
+                </span>
+                <ChevronRight className="h-4 w-4 text-ink-300" aria-hidden />
+              </button>
+            </li>
+          )}
         </ul>
       </div>
 

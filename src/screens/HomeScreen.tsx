@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import {
   ArrowRight, Bus, Car, Check, Cloud, CloudMoon, CloudRain, CloudSun, Coffee, Droplets, Eye, Gauge, MapPin, Megaphone,
-  Moon, Plus, ShieldCheck, ShoppingBag, Sparkles, Sun, TriangleAlert, Umbrella, Wind, X,
+  Moon, Plus, ShieldCheck, ShoppingBag, Sparkles, Sun, TriangleAlert, Umbrella, Vote, Wind, X,
 } from 'lucide-react';
 import {
-  getUpcomingDepartures, liveAlert, news, partner, poll, weather,
+  getUpcomingDepartures, liveAlert, news, partner, weather,
   type FavoriteBusStop, type LineId, type User,
+  type PollItem, initialPolls, isPollActive, getPollTimeLeftLabel,
 } from '../data/mockData';
 import { Card, Img, ProfileAvatarButton, SectionHeader, cn } from '../components/ui';
 import type { TabId } from '../components/BottomNav';
@@ -348,52 +349,143 @@ function BusWidget({
   );
 }
 
-function Poll() {
-  const [voted, setVoted] = useState<string | null>(null);
-  const total = poll.total + (voted ? 1 : 0);
+function FeaturedPollCard({
+  pollItem,
+  userVoteId,
+  onVote,
+  onOpenPolls,
+  totalActiveCount,
+}: {
+  pollItem: PollItem | null;
+  userVoteId?: string;
+  onVote?: (pollId: string, optionId: string) => void;
+  onOpenPolls?: () => void;
+  totalActiveCount: number;
+}) {
+  const [localVote, setLocalVote] = useState<string | null>(null);
+  const votedOptionId = userVoteId || localVote;
+
+  if (!pollItem) {
+    return (
+      <div className="mx-5 rounded-4xl bg-sand-100 p-5 shadow-card border border-sand-200">
+        <div className="flex items-center justify-between">
+          <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-sand-700">
+            <Vote className="h-3.5 w-3.5" aria-hidden />
+            Głosowanie sąsiadów
+          </span>
+        </div>
+        <h3 className="mt-3 font-display text-[18px] font-bold leading-snug">
+          Brak aktywnych ankiet
+        </h3>
+        <p className="mt-1 text-[12.5px] text-ink-500">
+          Zadaj pierwsze pytanie sąsiadom lub sprawdź wyniki zakończonych głosowań.
+        </p>
+        {onOpenPolls && (
+          <button
+            type="button"
+            onClick={onOpenPolls}
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-[13px] font-bold text-ink shadow-xs active:scale-[.99]"
+          >
+            <span>Przejdź do ankiet</span>
+            <ArrowRight className="h-4 w-4 text-coral-700" />
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  const isVoted = Boolean(votedOptionId);
+  const totalVotes = pollItem.totalVotes + (!userVoteId && localVote ? 1 : 0);
+  const timeLeft = getPollTimeLeftLabel(pollItem);
+
+  const handleVote = (optionId: string) => {
+    if (isVoted) return;
+    setLocalVote(optionId);
+    onVote?.(pollItem.id, optionId);
+  };
+
   return (
-    <div className="mx-5 rounded-4xl bg-sand-100 p-5">
-      <div className="flex items-center justify-between">
-        <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-sand-700">
-          <Sparkles className="h-3.5 w-3.5" aria-hidden />
-          Ankieta tygodnia
+    <div className="mx-5 rounded-4xl bg-sand-100 p-5 shadow-card border border-sand-200">
+      <div className="flex items-center justify-between gap-2">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-sand-700 shadow-xs">
+          <Sparkles className="h-3.5 w-3.5 text-amber-500" aria-hidden />
+          {pollItem.isOfficial ? 'Ankieta tygodnia' : 'Głosowanie sąsiadów'}
         </span>
         <span className="text-[12px] font-medium text-ink-500">
-          {total} głosów · {poll.daysLeft} dni
+          {totalVotes} {totalVotes === 1 ? 'głos' : totalVotes < 5 ? 'głosy' : 'głosów'} · {timeLeft}
         </span>
       </div>
-      <h3 className="mt-3 font-display text-[21px] font-semibold leading-snug">{poll.title}</h3>
+
+      <h3 className="mt-3 font-display text-[20px] font-semibold leading-snug text-ink">
+        {pollItem.title}
+      </h3>
+      <p className="mt-1 text-[12px] text-ink-500">
+        Autor: <b className="text-ink">{pollItem.author}</b> {pollItem.authorStreet}
+      </p>
+
       <div className="mt-4 space-y-2">
-        {poll.options.map((o) => {
-          const votes = o.votes + (voted === o.id ? 1 : 0);
-          const pct = Math.round((votes / total) * 100);
-          const mine = voted === o.id;
+        {pollItem.options.map((o) => {
+          const isMyChoice = votedOptionId === o.id;
+          const optVotes = o.votes + (!userVoteId && localVote === o.id ? 1 : 0);
+          const pct = totalVotes > 0 ? Math.round((optVotes / totalVotes) * 100) : 0;
+
           return (
             <button
               key={o.id}
-              disabled={!!voted}
-              onClick={() => setVoted(o.id)}
-              className="relative w-full overflow-hidden rounded-2xl bg-white px-4 py-3 text-left transition-transform active:scale-[.99] disabled:active:scale-100"
+              disabled={isVoted}
+              onClick={() => handleVote(o.id)}
+              className={cn(
+                'relative w-full overflow-hidden rounded-2xl bg-white px-4 py-3 text-left transition-all',
+                !isVoted && 'active:scale-[.99] hover:bg-white/90',
+                isMyChoice && 'ring-2 ring-ink shadow-xs',
+              )}
             >
-              <span
-                className={cn('absolute inset-y-0 left-0 transition-[width] duration-700 ease-out', mine ? 'bg-coral-200' : 'bg-sand-200')}
-                style={{ width: voted ? `${pct}%` : '0%' }}
-                aria-hidden
-              />
-              <span className="relative flex items-center justify-between text-[14px] font-semibold">
-                <span className="flex items-center gap-2">
-                  {mine && <Check className="h-4 w-4" aria-hidden />}
-                  {o.name}
+              {isVoted && (
+                <span
+                  className={cn(
+                    'absolute inset-y-0 left-0 transition-[width] duration-700 ease-out pointer-events-none',
+                    isMyChoice ? 'bg-coral-200/90' : 'bg-sand-200/70',
+                  )}
+                  style={{ width: `${pct}%` }}
+                  aria-hidden
+                />
+              )}
+              <span className="relative z-10 flex items-center justify-between gap-3 text-[14px] font-semibold">
+                <span className="flex items-center gap-2 min-w-0 flex-1 break-words">
+                  {isMyChoice && <Check className="h-4 w-4 shrink-0 text-ink" aria-hidden />}
+                  <span>{o.name}</span>
                 </span>
-                {voted && <span className="font-bold tabular-nums">{pct}%</span>}
+                {isVoted && <span className="font-bold tabular-nums text-ink shrink-0">{pct}%</span>}
               </span>
             </button>
           );
         })}
       </div>
-      <p className="mt-3 text-[11.5px] text-ink-500">
-        {voted ? 'Dzięki! 1 głos na zweryfikowane konto.' : 'Głosują tylko zweryfikowani mieszkańcy.'}
-      </p>
+
+      <div className="mt-3 flex items-center justify-between text-[11.5px] text-ink-500">
+        <span>{isVoted ? 'Dziękujemy! Twój głos został zapisany.' : 'Głosują tylko zweryfikowani mieszkańcy.'}</span>
+      </div>
+
+      {/* Wyraźne CTA do przejścia do wszystkich ankiet */}
+      {onOpenPolls && (
+        <button
+          type="button"
+          onClick={onOpenPolls}
+          className="mt-4 flex w-full items-center justify-between rounded-2xl bg-white px-4 py-3 font-semibold text-ink shadow-xs transition-transform active:scale-[0.99] hover:bg-mist/80"
+        >
+          <div className="flex items-center gap-2 text-[13px]">
+            <Vote className="h-4 w-4 text-coral-700" aria-hidden />
+            <span>Wszystkie ankiety mieszkańców</span>
+            <span className="rounded-full bg-sand-200 px-2 py-0.5 text-[11px] font-bold text-ink">
+              {totalActiveCount}
+            </span>
+          </div>
+          <div className="flex items-center gap-1 text-[12.5px] font-bold text-coral-700">
+            <span>Zobacz listę</span>
+            <ArrowRight className="h-4 w-4" aria-hidden />
+          </div>
+        </button>
+      )}
     </div>
   );
 }
@@ -408,6 +500,10 @@ interface HomeScreenProps {
   favoriteBuses?: FavoriteBusStop[];
   onAddFavoriteBus?: () => void;
   onRemoveFavoriteBus?: (id: string) => void;
+  polls?: PollItem[];
+  userVotes?: Record<string, string>;
+  onVote?: (pollId: string, optionId: string) => void;
+  onOpenPolls?: () => void;
 }
 
 export function HomeScreen({
@@ -420,7 +516,16 @@ export function HomeScreen({
   favoriteBuses = [],
   onAddFavoriteBus,
   onRemoveFavoriteBus,
+  polls = initialPolls,
+  userVotes = {},
+  onVote,
+  onOpenPolls,
 }: HomeScreenProps) {
+  const activePolls = polls
+    .filter((p) => isPollActive(p))
+    .sort((a, b) => b.totalVotes - a.totalVotes);
+  const featuredPoll = activePolls[0] ?? null;
+  const userVoteForFeatured = featuredPoll ? userVotes[featuredPoll.id] : undefined;
   const quick = [
     { label: 'Motylek', icon: ShoppingBag, cls: 'bg-sand text-ink', onClick: () => (onMotylek ? onMotylek() : onTab('shop')) },
     { label: 'Rozkład', icon: Bus, cls: 'bg-sky-100 text-ink', onClick: () => (onZditm ? onZditm('M2') : onTab('home')) },
@@ -481,7 +586,13 @@ export function HomeScreen({
         </div>
       </section>
 
-      <Poll />
+      <FeaturedPollCard
+        pollItem={featuredPoll}
+        userVoteId={userVoteForFeatured}
+        onVote={onVote}
+        onOpenPolls={onOpenPolls}
+        totalActiveCount={activePolls.length}
+      />
 
       <button onClick={onPartner} className="relative mx-5 block w-[calc(100%-2.5rem)] overflow-hidden rounded-4xl bg-ink p-5 text-left">
         <Img src={partner.hero} alt="" className="absolute inset-y-0 right-0 h-full w-1/2 opacity-90 [mask-image:linear-gradient(to_left,black_40%,transparent)]" />

@@ -13,7 +13,6 @@ import {
   Sparkles,
   Store,
   Tag,
-  Zap,
 } from 'lucide-react';
 import type { CartLine } from '../components/Cart';
 import { cn, zl } from '../components/ui';
@@ -31,7 +30,7 @@ export function CheckoutScreen({ lines, user, onBack, onSuccess, isClosing = fal
   // Steps: 'form' -> 'blik_pending' -> 'tracking'
   const [step, setStep] = useState<'form' | 'blik_pending' | 'tracking'>('form');
   const [deliveryMethod, setDeliveryMethod] = useState<'courier' | 'pickup'>('courier');
-  const [deliveryTime, setDeliveryTime] = useState<'asap' | 'schedule'>('asap');
+  const [deliveryTime, setDeliveryTime] = useState<'today_evening' | 'tomorrow_morning' | 'tomorrow_evening'>('today_evening');
   const [addressNote, setAddressNote] = useState('Kod do domofonu: 42#, 2. piętro. Proszę zostawić pod drzwiami.');
   const [phone, setPhone] = useState('501 234 567');
   const [paymentMethod, setPaymentMethod] = useState<'blik' | 'apple_pay' | 'card' | 'cash'>('blik');
@@ -118,13 +117,19 @@ export function CheckoutScreen({ lines, user, onBack, onSuccess, isClosing = fal
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sand opacity-75" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-sand" />
                 </span>
-                Szacowany czas dostawy
+                Slot doręczenia
               </span>
-              <span className="text-[12px] font-semibold text-white/60">Mińsk Maz.</span>
+              <span className="text-[12px] font-semibold text-white/60">Motylek Market</span>
             </div>
-            <p className="mt-3 font-display text-[38px] font-semibold tracking-tight text-white">24–32 min</p>
-            <p className="mt-0.5 text-[13px] text-white/70">
-              Dostawa na adres: <span className="font-semibold text-white">ul. {user.street.name}</span>
+            <p className="mt-3 font-display text-[32px] font-semibold tracking-tight text-white">
+              {deliveryTime === 'today_evening'
+                ? 'Dzisiaj 18:30–20:30'
+                : deliveryTime === 'tomorrow_morning'
+                ? 'Jutro 07:30–09:30'
+                : 'Jutro 18:30–20:30'}
+            </p>
+            <p className="mt-0.5 text-[12.5px] text-white/80">
+              Dedykowany kurier mójMińsk · Dostawa: <span className="font-semibold text-white">ul. {user.street.name}</span>
             </p>
 
             {/* Progress bar */}
@@ -132,10 +137,10 @@ export function CheckoutScreen({ lines, user, onBack, onSuccess, isClosing = fal
               <div className="h-2 w-full overflow-hidden rounded-full bg-white/15">
                 <div className="h-full w-2/3 rounded-full bg-coral transition-all duration-1000" />
               </div>
-              <div className="flex justify-between text-[11px] font-medium text-white/60">
-                <span>Przyjęte</span>
-                <span className="font-bold text-sand">W drodze</span>
-                <span>Doręczone</span>
+              <div className="flex justify-between text-[11px] font-medium text-white/70">
+                <span>1. Przyjęte</span>
+                <span className="font-bold text-sand">2. Kompletowanie</span>
+                <span>3. Trasa kuriera</span>
               </div>
             </div>
           </div>
@@ -336,33 +341,66 @@ export function CheckoutScreen({ lines, user, onBack, onSuccess, isClosing = fal
 
         {/* Delivery Time Window */}
         <div className="rounded-3xl bg-white p-4 shadow-card">
-          <div className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider text-ink-400">
-            <Clock className="h-4 w-4 text-sand-700" />
-            Kiedy dostarczyć?
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider text-ink-400">
+              <Clock className="h-4 w-4 text-sand-700" />
+              Kiedy dostarczyć?
+            </div>
+            <span className="text-[11px] font-semibold text-emerald-700">
+              Planowane sloty mójMińsk
+            </span>
           </div>
-          <div className="mt-2.5 grid grid-cols-2 gap-2">
+
+          <div className="mt-2.5 space-y-2">
             <button
-              onClick={() => setDeliveryTime('asap')}
+              type="button"
+              onClick={() => setDeliveryTime('today_evening')}
               className={cn(
-                'rounded-2xl border p-3 text-left transition-all',
-                deliveryTime === 'asap' ? 'border-ink bg-sand-50' : 'border-mist bg-white',
+                'w-full rounded-2xl border p-3 text-left transition-all',
+                deliveryTime === 'today_evening' ? 'border-ink bg-sand-50 shadow-xs' : 'border-mist bg-white',
               )}
             >
               <div className="flex items-center justify-between">
-                <span className="text-[13px] font-bold text-ink">Jak najszybciej</span>
-                <Zap className="h-3.5 w-3.5 text-coral" />
+                <span className="text-[13px] font-bold text-ink">Dzisiaj wieczorem (18:30 – 20:30)</span>
+                <span className="rounded-full bg-sand-200 px-2 py-0.5 text-[9.5px] font-extrabold text-ink">
+                  HIT
+                </span>
               </div>
-              <p className="mt-1 text-[11.5px] text-ink-500">ok. 30–40 min</p>
+              <p className="mt-1 text-[11.5px] text-ink-500">Zamów do 16:00 · Po powrocie z pracy</p>
             </button>
+
             <button
-              onClick={() => setDeliveryTime('schedule')}
+              type="button"
+              onClick={() => setDeliveryTime('tomorrow_morning')}
               className={cn(
-                'rounded-2xl border p-3 text-left transition-all',
-                deliveryTime === 'schedule' ? 'border-ink bg-sand-50' : 'border-mist bg-white',
+                'w-full rounded-2xl border p-3 text-left transition-all',
+                deliveryTime === 'tomorrow_morning' ? 'border-ink bg-sand-50 shadow-xs' : 'border-mist bg-white',
               )}
             >
-              <span className="text-[13px] font-bold text-ink">Dzisiaj 18:00–19:00</span>
-              <p className="mt-1 text-[11.5px] text-ink-500">Planowana dostawa</p>
+              <div className="flex items-center justify-between">
+                <span className="text-[13px] font-bold text-ink">Jutro rano (07:30 – 09:30)</span>
+                <span className="rounded-full bg-mist px-2 py-0.5 text-[9.5px] font-bold text-ink-600">
+                  Śniadanie
+                </span>
+              </div>
+              <p className="mt-1 text-[11.5px] text-ink-500">Świeże pieczywo i nabiał z porannej dostawy</p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setDeliveryTime('tomorrow_evening')}
+              className={cn(
+                'w-full rounded-2xl border p-3 text-left transition-all',
+                deliveryTime === 'tomorrow_evening' ? 'border-ink bg-sand-50 shadow-xs' : 'border-mist bg-white',
+              )}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[13px] font-bold text-ink">Jutro po pracy (18:30 – 20:30)</span>
+                <span className="rounded-full bg-mist px-2 py-0.5 text-[9.5px] font-bold text-ink-600">
+                  Zapasy
+                </span>
+              </div>
+              <p className="mt-1 text-[11.5px] text-ink-500">Planowane zakupy domowe na spokojnie</p>
             </button>
           </div>
         </div>
