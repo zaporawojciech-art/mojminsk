@@ -852,5 +852,8 @@ flowchart LR
     - **Primary Button (Główna akcja):** `bg-ink text-white font-bold h-12 rounded-2xl shadow-sm hover:bg-ink-700 active:scale-[0.98]` (nowoczesna, czytelna czerń/grafit z idealnym kontrastem).
     - **Secondary Button (Akcja uzupełniająca w rzędzie):** `border border-mist-300/80 bg-mist/70 text-ink font-bold h-12 rounded-2xl hover:bg-mist active:scale-[0.98]` (z delikatnym akcentem kolorystycznym ikony).
     - **Zakaz agresywnych zderzeń kolorystycznych:** Zakazuje się stawiania obok siebie dwóch przycisków o maksymalnym kontraście (np. jaskrawy koral obok głębokiej czerni) oraz tworzenia wielkich, krzykliwych koralowych bloków z `shadow-coral` jako głównego przycisku w dolnych paskach.
-- **Komunikacja Miejska ZDiTM na HOME:**
-  - Kompaktowy widżet spersonalizowanych przystanków („Moje przystanki”) z szybkim dodawaniem obserwowanego przystanku i kierunku z alfabetycznej listy przystanków Mińska Mazowieckiego.
+- **Komunikacja Miejska ZDiTM (Personalny Hub Rozkładów bez Mapy Trasy):**
+  - **Całkowity brak mapy trasy:** Zrezygnowano ze statycznych i rysowanych map SVG na rzecz szybkiego, czystego widoku tabelaryczno-kafelkowego.
+  - **Model własnych przystanków mieszkańca:** Użytkownik sam konfiguruje swój pulpit rozkładów, dodając przystanki z wyszukiwarki lub alfabetycznej bazy przystanków Mińska Mazowieckiego (`+ Dodaj przystanek do listy`).
+  - **Dynamiczne odjazdy live:** Każdy dodany przystanek prezentuje 3 najbliższe odjazdy w minutach na żywo (np. `za 4 min`, `za 18 min`, `za 34 min`), kierunek docelowy, opcjonalną etykietę (*Dom*, *Praca*, *Szkoła*) oraz rozwijany pełny rozkład godzinowy (Dni robocze / Soboty / Niedziele).
+  - **Przeglądanie linii:** Dedykowana zakładka „Wszystkie linie (M2, M3, M4)” pozwala przeglądać pełne trasy przystanek po przystanku z możliwością dodania dowolnego punktu do obserwowanych za pomocą jednego tapnięcia w gwiazdkę.
