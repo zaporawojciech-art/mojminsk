@@ -7,6 +7,12 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: null, // Będziemy rejestrować ręcznie w kodzie aplikacji za pomocą virtual:pwa-register z auto-reloadem
+      workbox: {
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
+      },
       includeAssets: ['apple-touch-icon.png', 'icons/*.png', 'icons/*.svg'],
       manifest: {
         name: 'mójMińsk - Aplikacja Mieszkańców',
