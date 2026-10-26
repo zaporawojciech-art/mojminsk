@@ -87,12 +87,12 @@ export function Segmented<T extends string>({
 
 export function ScreenHeader({ title, subtitle, right }: { title: string; subtitle?: string; right?: ReactNode }) {
   return (
-    <header className="flex items-end justify-between gap-3 px-5 pb-4 pt-[max(env(safe-area-inset-top),20px)]">
-      <div>
-        <h1 className="font-display text-[32px] font-semibold leading-none tracking-tight text-ink">{title}</h1>
-        {subtitle && <p className="mt-2 text-[13px] font-medium text-ink-500">{subtitle}</p>}
+    <header className="px-5 pt-[max(env(safe-area-inset-top),16px)] pb-3">
+      <div className="flex min-h-11 items-center justify-between gap-3">
+        <h1 className="font-display text-[28px] font-semibold leading-none tracking-tight text-ink">{title}</h1>
+        {right && <div className="flex items-center gap-2 shrink-0">{right}</div>}
       </div>
-      {right}
+      {subtitle && <p className="mt-1.5 text-[13px] font-medium text-ink-500">{subtitle}</p>}
     </header>
   );
 }

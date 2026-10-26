@@ -117,8 +117,8 @@ export function ShopScreen({
   return (
     <div className="pb-36 select-none">
       {/* Sticky Top Header */}
-      <header className="sticky top-0 z-20 border-b border-mist-300 bg-white/95 px-5 pt-[max(env(safe-area-inset-top),14px)] pb-3 backdrop-blur">
-        <div className="flex items-center justify-between gap-3">
+      <header className="sticky top-0 z-20 border-b border-mist-300 bg-white/95 px-5 pt-[max(env(safe-area-inset-top),16px)] pb-3 backdrop-blur">
+        <div className="flex min-h-11 items-center justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <h1 className="font-display text-[21px] font-bold text-ink leading-none">

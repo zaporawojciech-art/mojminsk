@@ -535,7 +535,7 @@ export function HomeScreen({
 
   return (
     <div className="space-y-7 pb-36">
-      <header className="flex items-center justify-between px-5 pt-[max(env(safe-area-inset-top),16px)]">
+      <header className="flex min-h-11 items-center justify-between px-5 pt-[max(env(safe-area-inset-top),16px)]">
         <button onClick={onProfile} className="text-left">
           <p className="text-[13px] font-medium text-ink-500">{greeting()},</p>
           <p className="font-display text-[21px] font-semibold leading-tight text-ink">
