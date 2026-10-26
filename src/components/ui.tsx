@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { ChevronDown, ChevronLeft, ChevronRight, MapPin, Search, ShieldCheck, SlidersHorizontal } from 'lucide-react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Check, ChevronDown, ChevronLeft, ChevronRight, MapPin, Search, ShieldCheck, SlidersHorizontal } from 'lucide-react';
 import { avatarUrl, gminaCities, type Tone, type User } from '../data/mockData';
 
 export const cn = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(' ');
@@ -144,33 +144,133 @@ export function StandardTopBar({
 export function CityDropdown({
   value,
   onChange,
+  variant = 'compact',
   className,
 }: {
   value: string;
   onChange: (city: string) => void;
+  variant?: 'compact' | 'full';
   className?: string;
 }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen]);
+
+  const filteredCities = search.trim()
+    ? gminaCities.filter((c) => c.toLowerCase().includes(search.toLowerCase().trim()))
+    : gminaCities;
+
   return (
-    <div className={cn('relative inline-flex items-center', className)}>
-      <label htmlFor="platform-city-dropdown" className="sr-only">
-        Miejscowość w gminie
-      </label>
-      <div className="flex h-9 items-center gap-1.5 rounded-full bg-white pl-2.5 pr-2 shadow-card border border-mist-300 hover:border-ink-400 transition-colors">
-        <MapPin className="h-3.5 w-3.5 text-coral shrink-0" aria-hidden />
-        <select
-          id="platform-city-dropdown"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="appearance-none bg-transparent pr-4 text-[12px] font-bold text-ink outline-none cursor-pointer max-w-[110px] truncate"
+    <div ref={dropdownRef} className={cn('relative', variant === 'full' ? 'w-full' : 'inline-block', className)}>
+      {/* Przycisk wyzwalający Trigger */}
+      <button
+        type="button"
+        onClick={() => {
+          setIsOpen((v) => !v);
+          setSearch('');
+        }}
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+        className={cn(
+          'flex items-center justify-between transition-all select-none',
+          variant === 'compact'
+            ? 'h-9 gap-1.5 rounded-full bg-white pl-2.5 pr-2 text-[12px] font-bold text-ink shadow-card border border-mist-300 hover:border-ink-400 active:scale-95'
+            : 'h-12 w-full gap-2 rounded-2xl bg-mist/50 px-3.5 text-[14.5px] font-bold text-ink border-2 border-mist-300 hover:border-ink/40 active:scale-[0.99] focus:border-ink focus:bg-white',
+          isOpen && 'border-ink ring-2 ring-ink/20 shadow-md',
+        )}
+      >
+        <span className="flex items-center gap-1.5 truncate">
+          <MapPin className={cn('shrink-0 text-coral', variant === 'compact' ? 'h-3.5 w-3.5' : 'h-4 w-4')} />
+          <span className={cn('truncate', variant === 'compact' && 'max-w-[105px]')}>{value || 'Wybierz miejscowość'}</span>
+        </span>
+        <ChevronDown
+          className={cn(
+            'shrink-0 text-ink-500 transition-transform duration-200',
+            variant === 'compact' ? 'h-3.5 w-3.5' : 'h-4 w-4',
+            isOpen && 'rotate-180 text-ink',
+          )}
+        />
+      </button>
+
+      {/* Ostylowane Menu Rozwijane */}
+      {isOpen && (
+        <div
+          role="listbox"
+          className={cn(
+            'absolute z-[100] mt-1.5 rounded-3xl bg-white p-2 shadow-2xl border border-mist-300 animate-in fade-in zoom-in-95 duration-150',
+            variant === 'compact'
+              ? 'right-0 w-64 origin-top-right'
+              : 'left-0 right-0 w-full origin-top',
+          )}
         >
-          {gminaCities.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-        <ChevronDown className="pointer-events-none -ml-3.5 h-3.5 w-3.5 text-ink-500 shrink-0" aria-hidden />
-      </div>
+          {/* Szybka wyszukiwarka wewnątrz dropdowna */}
+          <div className="relative mb-1.5 px-1 pt-0.5">
+            <Search className="absolute left-3.5 top-3.5 h-3.5 w-3.5 text-ink-400" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Szukaj wsi lub miasta..."
+              autoFocus
+              className="h-9 w-full rounded-xl bg-mist/60 pl-8 pr-3 text-[12.5px] font-semibold text-ink outline-none placeholder:text-ink-400 focus:bg-mist focus:ring-1 focus:ring-ink"
+            />
+          </div>
+
+          {/* Przewijana lista z miejscowościami */}
+          <div className="max-h-56 overflow-y-auto space-y-0.5 overscroll-contain pr-1">
+            {filteredCities.length > 0 ? (
+              filteredCities.map((cityName) => {
+                const isSelected = value === cityName;
+                return (
+                  <button
+                    key={cityName}
+                    type="button"
+                    role="option"
+                    aria-selected={isSelected}
+                    onClick={() => {
+                      onChange(cityName);
+                      setIsOpen(false);
+                    }}
+                    className={cn(
+                      'flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-[13px] font-semibold transition-all active:scale-[0.98]',
+                      isSelected
+                        ? 'bg-ink text-white font-bold shadow-xs'
+                        : 'text-ink hover:bg-mist/80',
+                    )}
+                  >
+                    <span>{cityName}</span>
+                    {isSelected && <Check className="h-4 w-4 text-coral shrink-0" />}
+                  </button>
+                );
+              })
+            ) : (
+              <p className="py-4 text-center text-[12px] text-ink-400">
+                Brak pasującej miejscowości
+              </p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

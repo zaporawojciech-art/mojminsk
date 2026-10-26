@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import {
   ArrowRight,
   CheckCircle2,
-  ChevronDown,
   ChevronLeft,
   Dices,
   KeyRound,
@@ -14,8 +13,8 @@ import {
   Sparkles,
   Users,
 } from 'lucide-react';
-import { avatarUrl, demoUser, gminaCities, gminaLocalityAs, streets, type Street, type User } from '../data/mockData';
-import { cn } from '../components/ui';
+import { avatarUrl, demoUser, gminaLocalityAs, streets, type Street, type User } from '../data/mockData';
+import { CityDropdown, cn } from '../components/ui';
 
 interface OnboardingScreenProps {
   onDone: (user: User) => void;
@@ -401,10 +400,10 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
                   />
                 </div>
 
-                {/* DROPDOWN WYBORU MIEJSCOWOŚCI W GMINIE / MIASTA */}
+                {/* OSTYLOWANY DROPDOWN WYBORU MIEJSCOWOŚCI W GMINIE / MIASTA */}
                 <div className="rounded-3xl bg-white p-4 shadow-card border border-mist-300 space-y-2">
                   <div className="flex items-center justify-between">
-                    <label htmlFor="city-select" className="text-[13px] font-bold text-ink block">
+                    <label className="text-[13px] font-bold text-ink block">
                       Miejscowość w gminie / miasto
                     </label>
                     <span className="rounded-full bg-sand-100 px-2.5 py-0.5 text-[11px] font-bold text-ink">
@@ -412,22 +411,12 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
                     </span>
                   </div>
 
-                  <div className="relative mt-1">
-                    <select
-                      id="city-select"
+                  <div className="mt-1">
+                    <CityDropdown
                       value={city}
-                      onChange={(e) => handleCitySelect(e.target.value)}
-                      className="h-12 w-full appearance-none rounded-2xl border-2 border-mist-300 bg-mist/50 px-3.5 pr-10 text-[14.5px] font-bold text-ink outline-none focus:border-ink focus:bg-white focus:ring-2 focus:ring-ink transition-all cursor-pointer"
-                    >
-                      {gminaCities.map((cityName) => (
-                        <option key={`step1-${cityName}`} value={cityName}>
-                          {cityName}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-ink-600">
-                      <ChevronDown className="h-5 w-5" />
-                    </div>
+                      onChange={handleCitySelect}
+                      variant="full"
+                    />
                   </div>
                 </div>
 
@@ -712,29 +701,17 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
                     </div>
                   </div>
 
-                  {/* DROPDOWN WYBORU MIEJSCOWOŚCI W GMINIE LUB MIASTA */}
+                  {/* OSTYLOWANY DROPDOWN WYBORU MIEJSCOWOŚCI W GMINIE LUB MIASTA */}
                   <div className="space-y-2 pt-1">
-                    <label htmlFor="step3-city-select" className="text-[12px] font-bold text-ink-700 block">
+                    <label className="text-[12px] font-bold text-ink-700 block">
                       Miejscowość w gminie / miasto *
                     </label>
 
-                    <div className="relative">
-                      <select
-                        id="step3-city-select"
-                        value={city}
-                        onChange={(e) => handleCitySelect(e.target.value)}
-                        className="h-12 w-full appearance-none rounded-2xl border border-mist-300 bg-mist/50 px-3.5 pr-10 text-[14px] font-bold text-ink outline-none focus:ring-2 focus:ring-ink cursor-pointer"
-                      >
-                        {gminaCities.map((cityName) => (
-                          <option key={`step3-${cityName}`} value={cityName}>
-                            {cityName}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-ink-500">
-                        <ChevronDown className="h-4.5 w-4.5" />
-                      </div>
-                    </div>
+                    <CityDropdown
+                      value={city}
+                      onChange={handleCitySelect}
+                      variant="full"
+                    />
 
                     <div className="flex h-10 items-center justify-between rounded-xl bg-mist/60 px-3.5 text-[12px] font-semibold text-ink-600">
                       <span>Adres do listu:</span>
