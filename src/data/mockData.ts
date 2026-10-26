@@ -22,11 +22,16 @@ export interface UserPrivacy {
 
 export interface User {
   name: string;
+  surname?: string;
   street: Street;
+  houseNumber?: string;
+  flatNumber?: string;
+  phone?: string;
   seed: string;
   rerolls: number;
   verified: boolean;
   trialDaysLeft: number;
+  activationPin?: string;
   privacy?: UserPrivacy;
 }
 
@@ -55,11 +60,16 @@ export const streets: Street[] = [
 
 export const demoUser: User = {
   name: 'Wojtek',
+  surname: 'Kowalski',
   street: streets[0],
+  houseNumber: '14',
+  flatNumber: '8',
+  phone: '500 123 456',
   seed: 'Wojtek-1',
   rerolls: 3,
   verified: false,
   trialDaysLeft: 9,
+  activationPin: '849201',
   privacy: {
     showStats: true,
     showPastAds: true,

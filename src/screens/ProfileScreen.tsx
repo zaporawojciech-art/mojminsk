@@ -9,6 +9,7 @@ import {
   Dices,
   Gem,
   Lock,
+  LogOut,
   Mail,
   Megaphone,
   MessageCircle,
@@ -47,6 +48,7 @@ interface ProfileScreenProps {
   onAddPoll?: () => void;
   activePollsCount?: number;
   onInstallApp?: () => void;
+  onLogout?: () => void;
   userAds?: Ad[];
   isClosing?: boolean;
 }
@@ -71,6 +73,7 @@ export function ProfileScreen({
   onAddPoll,
   activePollsCount = 0,
   onInstallApp,
+  onLogout,
   userAds: _userAds = [],
   isClosing = false,
 }: ProfileScreenProps) {
@@ -692,6 +695,20 @@ export function ProfileScreen({
           </li>
         </ul>
       </div>
+
+        {/* Przycisk Wyloguj się */}
+        {onLogout && (
+          <div className="mx-5 mt-4">
+            <button
+              type="button"
+              onClick={onLogout}
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-mist-300 bg-white text-[13.5px] font-bold text-coral-700 hover:bg-mist active:scale-[0.98] transition-all shadow-xs"
+            >
+              <LogOut className="h-4.5 w-4.5" />
+              Wyloguj się z konta
+            </button>
+          </div>
+        )}
 
         {/* 8. RODO & Security Footer */}
         <p className="mx-8 mt-6 flex items-start justify-center gap-2 text-center text-[11.5px] leading-snug text-ink-400">

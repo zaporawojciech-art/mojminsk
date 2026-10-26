@@ -66,7 +66,32 @@ const AddPollModal = lazy(() => import('./screens/AddPollModal').then((m) => ({ 
 type Overlay = null | 'profile' | 'checkout' | 'motylek' | 'zditm';
 
 export default function App() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('mojminsk_user');
+        if (stored) return JSON.parse(stored);
+      } catch {
+        // fallback
+      }
+    }
+    return null;
+  });
+
+  const handleUpdateUser = useCallback((nextUser: User | null) => {
+    setUser(nextUser);
+    if (typeof window !== 'undefined') {
+      try {
+        if (nextUser) {
+          localStorage.setItem('mojminsk_user', JSON.stringify(nextUser));
+        } else {
+          localStorage.removeItem('mojminsk_user');
+        }
+      } catch {
+        // storage fallback
+      }
+    }
+  }, []);
   const [tab, setTab] = useState<TabId>('home');
   const [visitedTabs, setVisitedTabs] = useState<Record<TabId, boolean>>({
     home: true,
@@ -559,7 +584,7 @@ export default function App() {
         >
           {!user ? (
             <div className="min-h-full">
-              <OnboardingScreen onDone={setUser} />
+              <OnboardingScreen onDone={handleUpdateUser} />
             </div>
           ) : (
             <div className="min-h-full">
@@ -678,7 +703,11 @@ export default function App() {
               user={user}
               onBack={closeOverlay}
               isClosing={!!exitingScreens['overlay']}
-              onUpdate={setUser}
+              onUpdate={handleUpdateUser}
+              onLogout={() => {
+                handleUpdateUser(null);
+                closeOverlay();
+              }}
               onPartner={() => setPartnerOpen(true)}
               onAddAd={() => setAddAdOpen(true)}
               onMyAds={() => setMyAdsOpen(true)}
