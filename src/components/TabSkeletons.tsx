@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useState, type ReactNode } from 'react';
+import { Suspense, type ReactNode } from 'react';
 import type { TabId } from './BottomNav';
 import { cn } from './ui';
 
@@ -463,11 +463,10 @@ const LEVEL_Z_CLASS: Record<number, string> = {
  * dzięki czemu widok nadrzędny pozostaje zamontowany pod spodem z zachowaniem pozycji scrolla.
  */
 export function AsyncViewBoundary({
-  viewKey,
+  viewKey: _viewKey,
   level = 1,
   isClosing = false,
   skeleton,
-  durationMs = 150,
   children,
 }: {
   viewKey: string;
@@ -477,17 +476,6 @@ export function AsyncViewBoundary({
   durationMs?: number;
   children: ReactNode;
 }) {
-  const [readyKey, setReadyKey] = useState<string | null>(null);
-
-  useEffect(() => {
-    setReadyKey(null);
-    const timer = window.setTimeout(() => {
-      setReadyKey(viewKey);
-    }, durationMs);
-    return () => window.clearTimeout(timer);
-  }, [viewKey, durationMs]);
-
-  const isReady = readyKey === viewKey || isClosing;
   const zClass = LEVEL_Z_CLASS[level] ?? 'z-[50]';
 
   return (
@@ -501,12 +489,7 @@ export function AsyncViewBoundary({
     >
       <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist shadow-[-12px_0_32px_rgba(18,19,26,0.18)]">
         <Suspense fallback={skeleton}>
-          <div
-            className={cn(
-              'flex h-full w-full flex-1 flex-col overflow-hidden',
-              isReady ? 'skeleton-revealed' : 'skeleton-in-place',
-            )}
-          >
+          <div className="flex h-full w-full flex-1 flex-col overflow-hidden">
             {children}
           </div>
         </Suspense>

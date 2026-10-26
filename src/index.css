@@ -173,55 +173,6 @@
   }
 }
 
-/* ============================================================================
- * IN-PLACE SKELETON MASK (ZERO LAYOUT SHIFT / 0px JUMP)
- * Widok montuje się tylko raz w swoich docelowych wymiarach (1:1).
- * W fazie .skeleton-in-place elementy prezentują animowane kości szkieletu
- * dokładnie w swoim docelowym miejscu, a po przejściu do .skeleton-revealed
- * płynnie odsłaniają treść bez żadnego przeskoku layoutu (0px CLS).
- * ========================================================================== */
-.skeleton-in-place :where(.rounded-4xl, .rounded-3xl, .rounded-t-\[28px\]):not(header):not(header *) {
-  background-color: #FFFFFF !important;
-  background-image: none !important;
-  border-color: transparent !important;
-}
-
-.skeleton-in-place :where(
-  .rounded-\[40px\],
-  .rounded-\[36px\],
-  .rounded-2xl,
-  .rounded-xl,
-  .rounded-full,
-  h1,
-  h2,
-  h3,
-  p
-):not(header):not(header *) {
-  background: linear-gradient(90deg, #E4E2ED 25%, #F1F0F7 50%, #E4E2ED 75%) !important;
-  background-size: 200% 100% !important;
-  animation: skeletonBgShimmer 1.05s infinite linear !important;
-  color: transparent !important;
-  border-color: transparent !important;
-  box-shadow: none !important;
-}
-
-.skeleton-in-place :where(h1, h2, h3, p):not(header):not(header *) {
-  border-radius: 8px;
-}
-
-.skeleton-in-place :where(img, svg, input, textarea):not(header):not(header *) {
-  opacity: 0 !important;
-}
-
-.skeleton-in-place :where(.rounded-full, .rounded-2xl, .rounded-xl, h1, h2, h3, p):not(header):not(header *) * {
-  opacity: 0 !important;
-  color: transparent !important;
-}
-
-.skeleton-revealed :where(img, svg, p, h1, h2, h3, span, input, textarea, button, a):not(header):not(header *) {
-  transition: opacity 0.18s ease-out, color 0.18s ease-out, background-color 0.18s ease-out;
-}
-
 /* Landscape rotation barrier for mobile screens (phones held sideways) */
 @media screen and (orientation: landscape) and (max-height: 540px) {
   .landscape-barrier {

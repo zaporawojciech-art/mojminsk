@@ -13,7 +13,6 @@ import {
   PartnerSkeleton,
   ProfileSkeleton,
   SellerProfileSkeleton,
-  TabSkeleton,
   ZditmSkeleton,
 } from './components/TabSkeletons';
 import { ProductSheet } from './components/ProductSheet';
@@ -36,16 +35,14 @@ import {
   isPollActive,
 } from './data/mockData';
 import { OnboardingScreen } from './screens/OnboardingScreen';
+import { HomeScreen } from './screens/HomeScreen';
+import { ShopScreen } from './screens/ShopScreen';
+import { AdsScreen } from './screens/AdsScreen';
+import { RidesScreen } from './screens/RidesScreen';
+import { TalksScreen } from './screens/TalksScreen';
 import type { AdFilterState } from './screens/AdFiltersModal';
 
-// Asynchronicznie ładowane widoki zakładek (Code-Splitting + Skeleton Screen)
-const HomeScreen = lazy(() => import('./screens/HomeScreen').then((m) => ({ default: m.HomeScreen })));
-const ShopScreen = lazy(() => import('./screens/ShopScreen').then((m) => ({ default: m.ShopScreen })));
-const AdsScreen = lazy(() => import('./screens/AdsScreen').then((m) => ({ default: m.AdsScreen })));
-const RidesScreen = lazy(() => import('./screens/RidesScreen').then((m) => ({ default: m.RidesScreen })));
-const TalksScreen = lazy(() => import('./screens/TalksScreen').then((m) => ({ default: m.TalksScreen })));
-
-// Asynchronicznie ładowane widoki podstron i modali
+// Asynchronicznie ładowane widoki podstron i modali (Lazy Modals)
 const ProfileScreen = lazy(() => import('./screens/ProfileScreen').then((m) => ({ default: m.ProfileScreen })));
 const PartnerScreen = lazy(() => import('./screens/PartnerScreen').then((m) => ({ default: m.PartnerScreen })));
 const CheckoutScreen = lazy(() => import('./screens/CheckoutScreen').then((m) => ({ default: m.CheckoutScreen })));
@@ -71,8 +68,20 @@ type Overlay = null | 'profile' | 'checkout' | 'motylek' | 'zditm';
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [tab, setTab] = useState<TabId>('home');
-  const [isTabLoading, setIsTabLoading] = useState(false);
-  const tabTimerRef = useRef<number | null>(null);
+  const [visitedTabs, setVisitedTabs] = useState<Record<TabId, boolean>>({
+    home: true,
+    shop: false,
+    ads: false,
+    rides: false,
+    talks: false,
+  });
+  const scrollPositions = useRef<Record<TabId, number>>({
+    home: 0,
+    shop: 0,
+    ads: 0,
+    rides: 0,
+    talks: 0,
+  });
   const [overlay, setOverlay] = useState<Overlay>(null);
   const [partnerOpen, setPartnerOpen] = useState(false);
   const [selectedZditmLine, setSelectedZditmLine] = useState<LineId>('M2');
@@ -217,13 +226,12 @@ export default function App() {
     }
   };
 
-  // 1. Reset main container scroll immediately upon navigating between tabs or overlays
+  // 1. Reset main container scroll immediately upon opening root overlays
   useLayoutEffect(() => {
-    if (mainRef.current) {
+    if (overlay && mainRef.current) {
       mainRef.current.scrollTop = 0;
     }
-    window.scrollTo(0, 0);
-  }, [tab, overlay]);
+  }, [overlay]);
 
   // 2. Prevent browser from retaining scroll offsets on SPA page changes
   useEffect(() => {
@@ -489,28 +497,29 @@ export default function App() {
 
   const handleTabChange = useCallback(
     (nextTab: TabId) => {
-      if (nextTab === tab) return;
-      if (tabTimerRef.current !== null) {
-        window.clearTimeout(tabTimerRef.current);
+      if (nextTab === tab) {
+        if (mainRef.current) {
+          mainRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        return;
       }
+      if (mainRef.current) {
+        scrollPositions.current[tab] = mainRef.current.scrollTop;
+      }
+      setVisitedTabs((prev) => (prev[nextTab] ? prev : { ...prev, [nextTab]: true }));
       setTab(nextTab);
-      setIsTabLoading(true);
-      tabTimerRef.current = window.setTimeout(() => {
-        tabTimerRef.current = null;
-        setIsTabLoading(false);
-      }, 160);
+      requestAnimationFrame(() => {
+        if (mainRef.current) {
+          mainRef.current.scrollTop = scrollPositions.current[nextTab] || 0;
+        }
+      });
     },
     [tab],
   );
 
-  // Preload async screen chunks in background so transitions never suffer a cold-chunk layout swap
+  // Preload async modal chunks in background so opening overlays has zero delay
   useEffect(() => {
     const id = window.setTimeout(() => {
-      void import('./screens/HomeScreen');
-      void import('./screens/ShopScreen');
-      void import('./screens/AdsScreen');
-      void import('./screens/RidesScreen');
-      void import('./screens/TalksScreen');
       void import('./screens/ProfileScreen');
       void import('./screens/AdDetailModal');
       void import('./screens/MyAdsModal');
@@ -533,83 +542,8 @@ export default function App() {
     }, 100);
     return () => {
       window.clearTimeout(id);
-      if (tabTimerRef.current !== null) {
-        window.clearTimeout(tabTimerRef.current);
-      }
     };
   }, []);
-
-  let tabContent;
-  if (!user) {
-    tabContent = <OnboardingScreen onDone={setUser} />;
-  } else if (tab === 'home') {
-    tabContent = (
-      <HomeScreen
-        user={user}
-        onTab={handleTabChange}
-        onProfile={() => setOverlay('profile')}
-        onPartner={() => setPartnerOpen(true)}
-        onZditm={(line, stopName) => {
-          setSelectedZditmLine(line ?? 'M2');
-          setSelectedZditmStop(stopName);
-          setOverlay('zditm');
-        }}
-        onMotylek={() => handleTabChange('shop')}
-        favoriteBuses={favoriteBuses}
-        onAddFavoriteBus={() => setAddFavBusOpen(true)}
-        onRemoveFavoriteBus={handleRemoveFavoriteBus}
-        polls={polls}
-        userVotes={userVotes}
-        onVote={handleVote}
-        onOpenPolls={() => setPollsModalOpen(true)}
-      />
-    );
-  } else if (tab === 'shop') {
-    tabContent = (
-      <ShopScreen
-        user={user}
-        onProfile={() => setOverlay('profile')}
-        onOpenProduct={setSheet}
-        onAdd={(p) => add(p)}
-        qtyOf={(id) => cart[id] ?? 0}
-        totalCartValue={total}
-      />
-    );
-  } else if (tab === 'ads') {
-    tabContent = (
-      <AdsScreen
-        user={user}
-        onProfile={() => setOverlay('profile')}
-        adsList={adsList}
-        likedAds={likedAds}
-        onToggleLike={handleToggleLike}
-        onAdClick={(ad) => setSelectedAd(ad)}
-        onChatClick={(ad) => setChatAd(ad)}
-        onOpenFilters={() => setFiltersModalOpen(true)}
-        activeFiltersCount={activeFiltersCount}
-        onOpenConversations={() => setConversationsOpen(true)}
-        conversationsUnreadCount={unreadConversationsCount}
-        filtersState={adFilters}
-      />
-    );
-  } else if (tab === 'rides') {
-    tabContent = (
-      <RidesScreen
-        user={user}
-        onProfile={() => setOverlay('profile')}
-        ridesList={ridesList}
-        onDeleteRide={handleDeleteRide}
-      />
-    );
-  } else {
-    tabContent = (
-      <TalksScreen
-        user={user}
-        onProfile={() => setOverlay('profile')}
-        onNeighborClick={(name, street) => setSellerProfile({ name, street })}
-      />
-    );
-  }
 
   const showChrome = !overlay;
 
@@ -623,14 +557,88 @@ export default function App() {
           ref={mainRef}
           className="h-full w-full flex-1 overflow-y-auto overscroll-contain"
         >
-          <Suspense fallback={<TabSkeleton tab={tab} />}>
-            <div
-              key={user ? tab : 'onboarding'}
-              className={`min-h-full ${user && isTabLoading ? 'skeleton-in-place' : 'skeleton-revealed'}`}
-            >
-              {tabContent}
+          {!user ? (
+            <div className="min-h-full">
+              <OnboardingScreen onDone={setUser} />
             </div>
-          </Suspense>
+          ) : (
+            <div className="min-h-full">
+              <div className={tab === 'home' ? 'min-h-full' : 'hidden'}>
+                <HomeScreen
+                  user={user}
+                  onTab={handleTabChange}
+                  onProfile={() => setOverlay('profile')}
+                  onPartner={() => setPartnerOpen(true)}
+                  onZditm={(line, stopName) => {
+                    setSelectedZditmLine(line ?? 'M2');
+                    setSelectedZditmStop(stopName);
+                    setOverlay('zditm');
+                  }}
+                  onMotylek={() => handleTabChange('shop')}
+                  favoriteBuses={favoriteBuses}
+                  onAddFavoriteBus={() => setAddFavBusOpen(true)}
+                  onRemoveFavoriteBus={handleRemoveFavoriteBus}
+                  polls={polls}
+                  userVotes={userVotes}
+                  onVote={handleVote}
+                  onOpenPolls={() => setPollsModalOpen(true)}
+                />
+              </div>
+
+              {visitedTabs.shop && (
+                <div className={tab === 'shop' ? 'min-h-full' : 'hidden'}>
+                  <ShopScreen
+                    user={user}
+                    onProfile={() => setOverlay('profile')}
+                    onOpenProduct={setSheet}
+                    onAdd={(p) => add(p)}
+                    qtyOf={(id) => cart[id] ?? 0}
+                    totalCartValue={total}
+                  />
+                </div>
+              )}
+
+              {visitedTabs.ads && (
+                <div className={tab === 'ads' ? 'min-h-full' : 'hidden'}>
+                  <AdsScreen
+                    user={user}
+                    onProfile={() => setOverlay('profile')}
+                    adsList={adsList}
+                    likedAds={likedAds}
+                    onToggleLike={handleToggleLike}
+                    onAdClick={(ad) => setSelectedAd(ad)}
+                    onChatClick={(ad) => setChatAd(ad)}
+                    onOpenFilters={() => setFiltersModalOpen(true)}
+                    activeFiltersCount={activeFiltersCount}
+                    onOpenConversations={() => setConversationsOpen(true)}
+                    conversationsUnreadCount={unreadConversationsCount}
+                    filtersState={adFilters}
+                  />
+                </div>
+              )}
+
+              {visitedTabs.rides && (
+                <div className={tab === 'rides' ? 'min-h-full' : 'hidden'}>
+                  <RidesScreen
+                    user={user}
+                    onProfile={() => setOverlay('profile')}
+                    ridesList={ridesList}
+                    onDeleteRide={handleDeleteRide}
+                  />
+                </div>
+              )}
+
+              {visitedTabs.talks && (
+                <div className={tab === 'talks' ? 'min-h-full' : 'hidden'}>
+                  <TalksScreen
+                    user={user}
+                    onProfile={() => setOverlay('profile')}
+                    onNeighborClick={(name, street) => setSellerProfile({ name, street })}
+                  />
+                </div>
+              )}
+            </div>
+          )}
         </main>
 
         {showChrome && !isChildScreenActive && count > 0 && (tab === 'shop' || tab === 'home') && (
