@@ -8,15 +8,15 @@ function Bone({ className }: { className?: string }) {
 
 function HeaderSkeleton({ hasSearch = false }: { hasSearch?: boolean }) {
   return (
-    <div className="px-5 pt-[max(env(safe-area-inset-top),16px)] pb-2">
-      <div className="flex items-center justify-between gap-3">
-        <div className="space-y-2">
-          <Bone className="h-3.5 w-32 rounded-full" />
-          <Bone className="h-7 w-44 rounded-xl" />
+    <div className="px-5 pt-[max(env(safe-area-inset-top),16px)] pb-2 select-none">
+      <div className="flex h-12 items-center justify-between gap-3">
+        <div className="space-y-1.5">
+          <Bone className="h-3 w-28 rounded-full" />
+          <Bone className="h-6 w-40 rounded-xl" />
         </div>
         <Bone className="h-11 w-11 shrink-0 rounded-full" />
       </div>
-      {hasSearch && <Bone className="mt-4 h-12 w-full rounded-full" />}
+      {hasSearch && <Bone className="mt-3 h-11 w-full rounded-2xl" />}
     </div>
   );
 }

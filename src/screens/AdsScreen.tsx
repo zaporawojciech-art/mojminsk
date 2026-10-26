@@ -35,8 +35,7 @@ import {
 import {
   Chip,
   Img,
-  ProfileAvatarButton,
-  ScreenHeader,
+  StandardTopBar,
   SectionHeader,
   cn,
   zl,
@@ -365,29 +364,28 @@ export function AdsScreen({
 
   return (
     <div className="pb-36">
-      {/* Native mójMińsk Header */}
-      <ScreenHeader
+      {/* Native mójMińsk Standard Top Bar */}
+      <StandardTopBar
+        user={user}
+        onProfile={onProfile}
         title="Ogłoszenia"
         subtitle="Kupuj, sprzedawaj i oddawaj po sąsiedzku"
-        right={
-          <div className="flex items-center gap-2">
-            {onOpenConversations && (
-              <button
-                type="button"
-                onClick={onOpenConversations}
-                className="relative grid h-11 w-11 place-items-center rounded-full bg-white text-ink shadow-card transition-transform active:scale-95"
-                title="Wiadomości o ogłoszeniach"
-              >
-                <MessagesSquare className="h-4 w-4 text-ink-700" />
-                {conversationsUnreadCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-coral px-1 text-[9.5px] font-extrabold text-ink shadow">
-                    {conversationsUnreadCount}
-                  </span>
-                )}
-              </button>
-            )}
-            {user && onProfile && <ProfileAvatarButton user={user} onClick={onProfile} />}
-          </div>
+        action={
+          onOpenConversations && (
+            <button
+              type="button"
+              onClick={onOpenConversations}
+              className="relative grid h-11 w-11 place-items-center rounded-full bg-white text-ink shadow-card transition-transform active:scale-95"
+              title="Wiadomości o ogłoszeniach"
+            >
+              <MessagesSquare className="h-4 w-4 text-ink-700" />
+              {conversationsUnreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-coral px-1 text-[9.5px] font-extrabold text-ink shadow">
+                  {conversationsUnreadCount}
+                </span>
+              )}
+            </button>
+          )
         }
       />
 

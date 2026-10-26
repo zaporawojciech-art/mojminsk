@@ -85,6 +85,51 @@ export function Segmented<T extends string>({
   );
 }
 
+export function StandardTopBar({
+  title,
+  subtitle,
+  user,
+  onProfile,
+  action,
+  className,
+}: {
+  title: ReactNode;
+  subtitle?: ReactNode;
+  user?: User | null;
+  onProfile?: () => void;
+  action?: ReactNode;
+  className?: string;
+}) {
+  return (
+    <header className={cn('px-5 pt-[max(env(safe-area-inset-top),16px)] pb-2 select-none', className)}>
+      <div className="flex h-12 items-center justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          {typeof title === 'string' ? (
+            <h1 className="truncate font-display text-[23px] font-bold tracking-tight text-ink leading-tight">
+              {title}
+            </h1>
+          ) : (
+            title
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          {action}
+          {user && onProfile && (
+            <ProfileAvatarButton user={user} onClick={onProfile} />
+          )}
+        </div>
+      </div>
+
+      {subtitle && (
+        <div className="mt-1 text-[12.5px] font-medium text-ink-500">
+          {subtitle}
+        </div>
+      )}
+    </header>
+  );
+}
+
 export function ScreenHeader({ title, subtitle, right }: { title: string; subtitle?: string; right?: ReactNode }) {
   return (
     <header className="px-5 pt-[max(env(safe-area-inset-top),16px)] pb-3">

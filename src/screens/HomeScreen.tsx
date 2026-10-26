@@ -8,7 +8,7 @@ import {
   type FavoriteBusStop, type LineId, type User,
   type PollItem, initialPolls, isPollActive, getPollTimeLeftLabel,
 } from '../data/mockData';
-import { Card, Img, ProfileAvatarButton, SectionHeader, cn } from '../components/ui';
+import { Card, Img, SectionHeader, StandardTopBar, cn } from '../components/ui';
 import type { TabId } from '../components/BottomNav';
 
 const lineTone: Record<LineId, string> = { M2: 'bg-sky', M3: 'bg-sand', M4: 'bg-coral' };
@@ -534,16 +534,21 @@ export function HomeScreen({
   ];
 
   return (
-    <div className="space-y-7 pb-36">
-      <header className="flex min-h-11 items-center justify-between px-5 pt-[max(env(safe-area-inset-top),16px)]">
-        <button onClick={onProfile} className="text-left">
-          <p className="text-[13px] font-medium text-ink-500">{greeting()},</p>
-          <p className="font-display text-[21px] font-semibold leading-tight text-ink">
-            {user.name} 👋
-          </p>
-        </button>
-        <ProfileAvatarButton user={user} onClick={onProfile} />
-      </header>
+    <div className="space-y-6 pb-36">
+      <StandardTopBar
+        user={user}
+        onProfile={onProfile}
+        title={
+          <button onClick={onProfile} className="text-left leading-none active:opacity-75 transition-opacity">
+            <span className="block text-[12px] font-semibold text-ink-500 leading-none mb-1">
+              {greeting()},
+            </span>
+            <span className="font-display text-[22px] font-bold text-ink leading-none">
+              {user.name} 👋
+            </span>
+          </button>
+        }
+      />
 
       <WeatherCard />
 

@@ -10,7 +10,7 @@ import {
   Users,
 } from 'lucide-react';
 import { avatarUrl, rides as initialRides, type Ride, type User } from '../data/mockData';
-import { Chip, ProfileAvatarButton, ScreenHeader, cn } from '../components/ui';
+import { Chip, StandardTopBar, cn } from '../components/ui';
 
 const dests = ['Wszystkie', 'Warszawa', 'Halinów', 'Sulejówek', 'Stojadła', 'Dębe Wielkie'];
 
@@ -77,10 +77,11 @@ export function RidesScreen({
 
   return (
     <div className="pb-36">
-      <ScreenHeader
+      <StandardTopBar
+        user={user}
+        onProfile={onProfile}
         title="Przejazdy"
         subtitle="Sąsiedzki carpooling i taxi"
-        right={user && onProfile ? <ProfileAvatarButton user={user} onClick={onProfile} /> : undefined}
       />
 
       {/* Nova Taxi Official Partner Banner */}

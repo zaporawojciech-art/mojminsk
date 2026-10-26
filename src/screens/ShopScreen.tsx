@@ -13,7 +13,7 @@ import {
   Truck,
   X,
 } from 'lucide-react';
-import { Img, ProfileAvatarButton, cn, zl } from '../components/ui';
+import { Img, StandardTopBar, cn, zl } from '../components/ui';
 import {
   type MotylekAisle,
   type Product,
@@ -116,59 +116,59 @@ export function ShopScreen({
 
   return (
     <div className="pb-36 select-none">
-      {/* Sticky Top Header */}
-      <header className="sticky top-0 z-20 border-b border-mist-300 bg-white/95 px-5 pt-[max(env(safe-area-inset-top),16px)] pb-3 backdrop-blur">
-        <div className="flex min-h-11 items-center justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <h1 className="font-display text-[21px] font-bold text-ink leading-none">
-                Motylek Market
-              </h1>
-              <span className="rounded-full bg-sand px-2 py-0.5 text-[10px] font-extrabold text-ink shrink-0">
-                Wyłączność mójMińsk
+      {/* Unified Standard Top Bar */}
+      <StandardTopBar
+        user={user}
+        onProfile={onProfile}
+        title={
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-[22px] font-bold text-ink leading-none">
+              Motylek Market
+            </h1>
+            <span className="rounded-full bg-sand px-2 py-0.5 text-[10px] font-extrabold text-ink shrink-0">
+              Wyłączność
+            </span>
+          </div>
+        }
+        subtitle={
+          <div className="flex items-center gap-2 text-[12px] flex-wrap">
+            <p className="text-[11.5px] font-medium text-ink-500">
+              Dostawa: <span className="font-bold text-ink">ul. {user ? user.street.name : 'Spacerowa'}</span>
+            </p>
+            <span className="text-ink-300">·</span>
+            <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-600" />
               </span>
-            </div>
-            <div className="mt-1 flex items-center gap-2 flex-wrap">
-              <p className="text-[11.5px] font-medium text-ink-500">
-                Dostawa: <span className="font-bold text-ink">ul. {user ? user.street.name : 'Spacerowa'}</span>
-              </p>
-              <span className="text-ink-300">·</span>
-              <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700">
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-600" />
-                </span>
-                <span>ul. Siennicka 14</span>
-              </div>
+              <span>ul. Siennicka 14</span>
             </div>
           </div>
+        }
+      />
 
-          {user && onProfile && (
-            <ProfileAvatarButton user={user} onClick={onProfile} />
-          )}
-        </div>
-
-        {/* Search Field */}
-        <div className="relative mt-3">
+      {/* Search Field */}
+      <div className="px-5 pb-3 pt-1">
+        <div className="relative">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
           <input
             type="search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Szukaj pieczywa, nabiału, wędlin z Motylka…"
-            className="h-11 w-full rounded-2xl bg-mist pl-10 pr-9 text-[13.5px] outline-none placeholder:text-ink-400 focus:bg-white focus:ring-2 focus:ring-ink transition-all"
+            className="h-11 w-full rounded-2xl bg-white pl-10 pr-9 text-[13.5px] outline-none placeholder:text-ink-400 focus:ring-2 focus:ring-ink shadow-card transition-all"
           />
           {searchQuery && (
             <button
               type="button"
               onClick={() => setSearchQuery('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 grid h-6 w-6 place-items-center rounded-full bg-mist-300 text-ink-500"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 grid h-6 w-6 place-items-center rounded-full bg-mist text-ink-500"
             >
               <X className="h-3 w-3" />
             </button>
           )}
         </div>
-      </header>
+      </div>
 
       {/* Free Delivery Bar Banner */}
       <div className="bg-sand-100 px-5 py-2.5 text-[12px] font-medium text-ink-700 border-b border-sand-200">

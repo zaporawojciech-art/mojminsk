@@ -1,7 +1,7 @@
 import { Fragment, useState } from 'react';
 import { BadgeCheck, BarChart2, Heart, ImageIcon, MessageCircle, Repeat2 } from 'lucide-react';
 import { avatarUrl, posts as seedPosts, streets, talkTags, type Post, type User } from '../data/mockData';
-import { Chip, Img, ProfileAvatarButton, ScreenHeader, cn } from '../components/ui';
+import { Chip, Img, StandardTopBar, cn } from '../components/ui';
 
 const MAX = 280;
 
@@ -50,10 +50,11 @@ export function TalksScreen({
 
   return (
     <div className="pb-36">
-      <ScreenHeader
+      <StandardTopBar
+        user={user}
+        onProfile={onProfile}
         title="Rozmowy"
         subtitle="Piszą tylko zweryfikowani mieszkańcy"
-        right={onProfile ? <ProfileAvatarButton user={user} onClick={onProfile} /> : undefined}
       />
 
       <div className="mx-5 rounded-4xl bg-white p-4 shadow-card">
