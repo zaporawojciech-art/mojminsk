@@ -242,9 +242,9 @@ export function AdFiltersModal({
               onApply(filters);
               onClose();
             }}
-            className="flex h-13 w-full items-center justify-center gap-2 rounded-full bg-coral text-[15px] font-bold text-ink shadow-coral transition-transform active:scale-95"
+            className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-coral text-[15px] font-bold text-ink shadow-coral transition-transform active:scale-95"
           >
-            Zastosuj filtry ({totalMatching} ogłoszeń)
+            Pokaż ogłoszenia ({totalMatching})
           </button>
         </div>
       </div>

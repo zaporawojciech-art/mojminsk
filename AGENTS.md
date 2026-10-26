@@ -844,5 +844,9 @@ flowchart LR
   - Główny widok `Ogłoszenia` (`AdsScreen`) łączy ergonomię OLX.pl (2-rzędowa przewijana poziomo siatka kategorii z paskiem postępu przewijania, karuzela „Ostatnio oglądane”, przełącznik widoku Kafelki/Lista, szybkie sortowanie i filtr ulic) ze spójnym UI/UX aplikacji **mójMińsk** (awatary sąsiadów, `StreetPill`, karty `rounded-3xl`).
   - Widok szczegółów oferty (`AdDetailModal`) prezentuje na górze karuzelę wielu zdjęć (`images[]`) z obsługą pełnoekranowego podglądu (Lightbox z zoomem i miniaturami), a biały kontener z ceną, tytułem i ulicą nachodzi zaokrąglonymi górnymi rogami (`-mt-7 rounded-t-[28px]`) bezpośrednio na zdjęcie.
   - Widok „Moje ogłoszenia” (`MyAdsModal`) w profilu prezentuje kompaktową listę tekstową bez dużych zdjęć z bezpośrednim przejściem (`Oferta ›`) do widoku szczegółów ogłoszenia.
+- **Standard Etykiet i Ergonomii Przycisków Akcji (CTA Mobile-First):**
+  - **Zwięzłość etykiet (maksymalnie 1–2 słowa):** Na przyciskach akcji mobilnych stosujemy wyłącznie krótkie, precyzyjne słowa (np. `Rezerwacja`, `Zarezerwuj`, `Czat`, `Zapisz zmiany`, `Pokaż oferty`).
+  - **Kategoryczny zakaz długich fraz wieloczłonowych:** Zakazuje się tasiemców typu „Zarezerwuj & Odbiór” czy „Zarezerwuj i wyślij prośbę”. Odbiór, powiadomienie sprzedającego czy wysłanie wiadomości są kolejnymi krokami procesu, a nie etykietą na przycisku.
+  - **Wysokość i Touch-Target:** Przyciski główne CTA w dolnych paskach (Sticky Bottom Bar) mają pełną wysokość `h-14` (56px) z `min-h-[52px]` i `rounded-2xl`, a przyciski w parach poziomych mają min. `h-13` (52px). Zapewnia to natychmiastową czytelność i ergonomię kciuka na ekranach o dowolnej szerokości.
 - **Komunikacja Miejska ZDiTM na HOME:**
   - Kompaktowy widżet spersonalizowanych przystanków („Moje przystanki”) z szybkim dodawaniem obserwowanego przystanku i kierunku z alfabetycznej listy przystanków Mińska Mazowieckiego.

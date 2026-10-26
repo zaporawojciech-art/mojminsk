@@ -608,10 +608,10 @@ export function CheckoutScreen({ lines, user, onBack, onSuccess, isClosing = fal
 
             <button
               onClick={() => setStep('tracking')}
-              className="mt-6 flex h-13 w-full items-center justify-center gap-2 rounded-full bg-ink text-[14px] font-bold text-white transition-transform active:scale-95"
+              className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-ink text-[14.5px] font-bold text-white shadow-card transition-transform active:scale-95"
             >
-              Potwierdziłem w banku (Symuluj sukces)
-              <CheckCircle2 className="h-4 w-4 text-sand" />
+              Potwierdziłem w banku
+              <CheckCircle2 className="h-4.5 w-4.5 text-sand" />
             </button>
           </div>
         </div>

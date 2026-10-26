@@ -255,10 +255,10 @@ export function InstallAppModal({
                         type="button"
                         disabled={isInstalling}
                         onClick={handleInstallClick}
-                        className="flex h-13 w-full items-center justify-center gap-2 rounded-full bg-coral text-[15px] font-bold text-ink shadow-coral transition-transform active:scale-95 disabled:opacity-50"
+                        className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-coral text-[15px] font-bold text-ink shadow-coral transition-transform active:scale-95 disabled:opacity-50"
                       >
                         <Download className="h-5 w-5" />
-                        {isInstalling ? 'Instalowanie...' : 'Zainstaluj mójMińsk'}
+                        {isInstalling ? 'Instalowanie...' : 'Zainstaluj aplikację'}
                       </button>
                     ) : (
                       <div className="rounded-3xl border border-mist-300 bg-white p-4 text-[12.5px] text-ink-700 shadow-card">

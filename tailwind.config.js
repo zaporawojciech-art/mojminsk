@@ -17,6 +17,10 @@ export default {
         display: ['"Bricolage Grotesque"', '"Plus Jakarta Sans"', 'sans-serif'],
       },
       borderRadius: { '4xl': '2rem' },
+      spacing: {
+        13: '3.25rem', // 52px (standardowy touch target)
+        14: '3.5rem',  // 56px (pełny mobilny CTA)
+      },
       boxShadow: {
         card: '0 1px 2px rgba(31,29,43,.04), 0 10px 24px -14px rgba(31,29,43,.18)',
         float: '0 20px 40px -14px rgba(31,29,43,.45)',

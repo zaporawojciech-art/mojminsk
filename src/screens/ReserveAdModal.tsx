@@ -69,7 +69,7 @@ export function ReserveAdModal({ ad, user: _user, onClose, onSuccess, isClosing 
       <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist">
         {/* Top Header */}
         <NativeHeader
-          title="Zarezerwuj & Umów odbiór"
+          title="Rezerwacja"
           backLabel="Wróć"
           onBack={onClose}
         />
@@ -111,9 +111,9 @@ export function ReserveAdModal({ ad, user: _user, onClose, onSuccess, isClosing 
 
             <button
               onClick={onClose}
-              className="flex h-13 w-full items-center justify-center rounded-full bg-ink text-[15px] font-bold text-white shadow-card transition-transform active:scale-95"
+              className="flex h-14 w-full items-center justify-center rounded-2xl bg-ink text-[15px] font-bold text-white shadow-card transition-transform active:scale-95"
             >
-              Świetnie, przejdź do czatu
+              Przejdź do czatu
             </button>
           </div>
         ) : (
@@ -233,10 +233,10 @@ export function ReserveAdModal({ ad, user: _user, onClose, onSuccess, isClosing 
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex h-13 w-full items-center justify-center gap-2 rounded-full bg-coral text-[15px] font-bold text-ink shadow-coral transition-transform active:scale-95 disabled:opacity-50"
+                className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-coral text-[15px] font-bold text-ink shadow-coral transition-transform active:scale-95 disabled:opacity-50"
               >
                 <HeartHandshake className="h-5 w-5" />
-                {isSubmitting ? 'Wysyłanie rezerwacji...' : 'Zarezerwuj i wyślij prośbę'}
+                {isSubmitting ? 'Wysyłanie...' : 'Zarezerwuj'}
               </button>
             </div>
           </form>

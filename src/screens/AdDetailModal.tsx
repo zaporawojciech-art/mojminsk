@@ -497,14 +497,14 @@ export function AdDetailModal({
         {/* Pinned Bottom Action Bar (Native App Style) */}
         {!isOwner && (
           <div className="border-t border-mist bg-white px-5 py-3 pb-[max(env(safe-area-inset-bottom),14px)] shrink-0 shadow-float space-y-2">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               {currentStatus !== 'sold' && (
                 <button
                   onClick={() => onReserveClick?.(ad)}
-                  className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-coral text-[14px] font-bold text-ink shadow-coral transition-transform active:scale-95"
+                  className="flex h-13 flex-1 items-center justify-center gap-2 rounded-2xl bg-coral text-[14.5px] font-bold text-ink shadow-coral transition-transform active:scale-95"
                 >
-                  <HeartHandshake className="h-4 w-4" />
-                  Zarezerwuj & Odbiór
+                  <HeartHandshake className="h-4.5 w-4.5 shrink-0" />
+                  Rezerwacja
                 </button>
               )}
               <button
@@ -513,13 +513,13 @@ export function AdDetailModal({
                   onChatClick?.(ad);
                 }}
                 className={cn(
-                  'flex h-12 items-center justify-center gap-1.5 rounded-full text-[14px] font-bold transition-transform active:scale-95',
+                  'flex h-13 items-center justify-center gap-2 rounded-2xl text-[14.5px] font-bold transition-transform active:scale-95',
                   currentStatus === 'sold'
                     ? 'w-full bg-mist text-ink-600'
-                    : 'flex-1 bg-ink text-white',
+                    : 'flex-1 bg-ink text-white shadow-card',
                 )}
               >
-                <MessageCircle className="h-4 w-4" />
+                <MessageCircle className="h-4.5 w-4.5 shrink-0" />
                 Czat
               </button>
             </div>

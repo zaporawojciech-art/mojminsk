@@ -315,10 +315,10 @@ export function EditAdModal({ ad, user: _user, onClose, onAdUpdated, isClosing =
               <button
                 type="submit"
                 disabled={!title.trim()}
-                className="flex h-13 w-full items-center justify-center gap-2 rounded-full bg-coral text-[15px] font-bold text-ink shadow-coral transition-transform active:scale-95 disabled:opacity-50"
+                className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-coral text-[15px] font-bold text-ink shadow-coral transition-transform active:scale-95 disabled:opacity-50"
               >
                 <Save className="h-5 w-5" />
-                Zapisz zmiany w ogłoszeniu
+                Zapisz zmiany
               </button>
             </div>
           </form>
