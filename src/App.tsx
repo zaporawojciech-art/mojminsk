@@ -545,7 +545,7 @@ export default function App() {
     };
   }, []);
 
-  const showChrome = !overlay;
+  const showChrome = Boolean(user && !overlay);
 
   return (
     <div className="h-full h-[100dvh] w-full overflow-hidden bg-mist select-none">
