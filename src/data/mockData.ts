@@ -82,6 +82,36 @@ export const minskPostalAreas: PostalAreaOption[] = [
   { postalCode: '05-332', city: 'Siennica', locality: 'obszar gm. Mińsk Maz.', label: 'Obszar gminy / Siennica (05-332)', isGmina: true },
 ];
 
+export const gminaLocalityAs: Record<string, string> = {
+  'Stojadła': 'ze Stojadeł',
+  'Nowe Osiny': 'z Nowych Osin',
+  'Stare Osiny': 'ze Starych Osin',
+  'Huta Mińska': 'z Huty Mińskiej',
+  'Karolina': 'z Karoliny',
+  'Arynów': 'z Arynowa',
+  'Barcząca': 'z Barczącej',
+  'Brzóze': 'z Brzózego',
+  'Budy Barcząckie': 'z Bud Barcząckich',
+  'Cielechowizna': 'z Cielechowizny',
+  'Dłużka': 'z Dłużki',
+  'Gliniak': 'z Gliniaku',
+  'Grębiszew': 'z Grębiszewa',
+  'Ignaców': 'z Ignacowa',
+  'Janów': 'z Janowa',
+  'Józefów': 'z Józefowa',
+  'Kolonia Janów': 'z Kolonii Janów',
+  'Marianka': 'z Marianki',
+  'Mikanów': 'z Mikanowa',
+  'Niedziałka': 'z Niedziałki',
+  'Podrudzie': 'z Podrudzia',
+  'Tartak': 'z Tartaku',
+  'Wólka Mińska': 'z Wólki Mińskiej',
+  'Zamienie': 'z Zamienia',
+  'Żuków': 'z Żukowa',
+  'Dębe Wielkie': 'z Dębego Wielkiego',
+  'Siennica': 'z Siennicy',
+};
+
 export const streets: Street[] = [
   { name: 'Spacerowa', as: 'ze Spacerowej', neighbors: 142 },
   { name: 'Sosnkowskiego', as: 'z Sosnkowskiego', neighbors: 118 },

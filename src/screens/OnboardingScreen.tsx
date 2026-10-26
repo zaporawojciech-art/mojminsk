@@ -14,7 +14,7 @@ import {
   Sparkles,
   Users,
 } from 'lucide-react';
-import { avatarUrl, demoUser, minskPostalAreas, streets, type Street, type User } from '../data/mockData';
+import { avatarUrl, demoUser, gminaLocalityAs, minskPostalAreas, streets, type Street, type User } from '../data/mockData';
 import { cn } from '../components/ui';
 
 interface OnboardingScreenProps {
@@ -28,7 +28,7 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
   // --- STAN REJESTRACJI ---
   const [registerStep, setRegisterStep] = useState<1 | 2 | 3 | 4>(1);
   const [name, setName] = useState('');
-  const [street, setStreet] = useState<Street | null>(null);
+  const [street, setStreet] = useState<Street | null>(streets[0]);
   const [query, setQuery] = useState('');
   const [seedN, setSeedN] = useState(1);
   const [phone, setPhone] = useState('');
@@ -38,6 +38,34 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
   const [postalCode, setPostalCode] = useState('05-300');
   const [city, setCity] = useState('Mińsk Mazowiecki');
   const [selectedAreaKey, setSelectedAreaKey] = useState<string>('05-300-Mińsk Mazowiecki');
+
+  // Obsługa wyboru obszaru / miejscowości z dropdowna
+  const isSelectedGmina = useMemo(() => {
+    const found = minskPostalAreas.find((a) => `${a.postalCode}-${a.city}` === selectedAreaKey);
+    return Boolean(found?.isGmina);
+  }, [selectedAreaKey]);
+
+  const handleAreaSelect = (val: string) => {
+    setSelectedAreaKey(val);
+    if (val === 'custom') {
+      return;
+    }
+    const found = minskPostalAreas.find((a) => `${a.postalCode}-${a.city}` === val);
+    if (found) {
+      setPostalCode(found.postalCode);
+      setCity(found.city);
+      if (found.isGmina) {
+        const asForm = gminaLocalityAs[found.city] || `z ${found.city}`;
+        setStreet({
+          name: found.city,
+          as: asForm,
+          neighbors: 35,
+        });
+      } else {
+        setStreet(streets[0]);
+      }
+    }
+  };
 
   // --- STAN LOGOWANIA ---
   const [loginMethod, setLoginMethod] = useState<'phone' | 'pin'>('phone');
@@ -379,7 +407,7 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
               </div>
             )}
 
-            {/* --- KROK 1: IMIĘ, ULICA I AWATAR 3D --- */}
+            {/* --- KROK 1: IMIĘ, MIEJSCOWOŚĆ W GMINIE / ULICA I AWATAR 3D --- */}
             {registerStep === 1 && (
               <div className="space-y-4">
                 <div className="rounded-3xl bg-white p-4 shadow-card border border-mist-300">
@@ -393,91 +421,189 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
                   />
                 </div>
 
-                <div className="rounded-3xl bg-white p-4 shadow-card border border-mist-300">
-                  <p className="text-[13px] font-bold text-ink">Przy jakiej ulicy mieszkasz?</p>
-                  <p className="text-[11.5px] text-ink-400 mt-0.5">Wybierz z popularnych lub wyszukaj poniżej:</p>
-
-                  <div className="mt-2.5 grid grid-cols-3 gap-2">
-                    {topStreets.map((s) => {
-                      const active = street?.name === s.name;
-                      return (
-                        <button
-                          key={s.name}
-                          type="button"
-                          onClick={() => setStreet(s)}
-                          className={cn(
-                            'rounded-2xl p-2.5 text-left transition-all active:scale-95 border',
-                            active
-                              ? 'bg-ink text-white border-ink shadow-sm'
-                              : 'bg-mist/60 text-ink border-transparent hover:bg-mist',
-                          )}
-                        >
-                          <span
-                            className={cn(
-                              'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold',
-                              active ? 'bg-coral text-ink' : 'bg-sand-100 text-sand-700',
-                            )}
-                          >
-                            <Users className="h-3 w-3" />
-                            {s.neighbors}
-                          </span>
-                          <p className="mt-1.5 truncate text-[13px] font-bold">{s.name}</p>
-                        </button>
-                      );
-                    })}
+                {/* DROPDOWN WYBORU MIEJSCOWOŚCI / GMINY */}
+                <div className="rounded-3xl bg-white p-4 shadow-card border border-mist-300 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[13px] font-bold text-ink block">
+                      Miejscowość w gminie / miasto
+                    </label>
+                    <span className="rounded-full bg-sand-100 px-2 py-0.5 text-[10.5px] font-extrabold text-sand-800">
+                      Wybierz z listy
+                    </span>
                   </div>
+                  <p className="text-[11.5px] text-ink-400">
+                    Wybierz miasto Mińsk Mazowiecki lub swoją miejscowość w gminie:
+                  </p>
 
-                  <input
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Szukaj ulicy lub wsi w gminie Mińsk…"
-                    className="mt-3 h-11 w-full rounded-xl border border-mist-300 bg-mist/40 px-3.5 text-[13.5px] text-ink outline-none focus:ring-2 focus:ring-ink"
-                  />
+                  <div className="relative mt-1.5">
+                    <select
+                      value={selectedAreaKey}
+                      onChange={(e) => handleAreaSelect(e.target.value)}
+                      className="h-12 w-full appearance-none rounded-2xl border-2 border-mist-300 bg-mist/50 px-3.5 pr-10 text-[14px] font-bold text-ink outline-none focus:border-ink focus:bg-white focus:ring-2 focus:ring-ink transition-all"
+                    >
+                      <optgroup label="Miasto Mińsk Mazowiecki">
+                        {minskPostalAreas
+                          .filter((a) => !a.isGmina)
+                          .map((a) => (
+                            <option key={`step1-${a.postalCode}-${a.city}-${a.label}`} value={`${a.postalCode}-${a.city}`}>
+                              {a.label}
+                            </option>
+                          ))}
+                      </optgroup>
+                      <optgroup label="Gmina Mińsk Mazowiecki (Miejscowości i Sołectwa)">
+                        {minskPostalAreas
+                          .filter((a) => a.isGmina)
+                          .map((a) => (
+                            <option key={`step1-${a.postalCode}-${a.city}-${a.label}`} value={`${a.postalCode}-${a.city}`}>
+                              {a.label}
+                            </option>
+                          ))}
+                      </optgroup>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-ink-600">
+                      <ChevronDown className="h-5 w-5" />
+                    </div>
+                  </div>
+                </div>
 
-                  {filteredStreets.length > 0 ? (
-                    <ul className="mt-2 overflow-hidden rounded-2xl border border-mist-300 bg-white">
-                      {filteredStreets.map((s) => (
-                        <li key={s.name}>
+                {/* SEKCJA ULICY: DLA MIASTA LUB WSI W GMINIE */}
+                <div className="rounded-3xl bg-white p-4 shadow-card border border-mist-300">
+                  {!isSelectedGmina ? (
+                    <>
+                      <p className="text-[13px] font-bold text-ink">Przy jakiej ulicy mieszkasz?</p>
+                      <p className="text-[11.5px] text-ink-400 mt-0.5">Wybierz z popularnych lub wyszukaj poniżej:</p>
+
+                      <div className="mt-2.5 grid grid-cols-3 gap-2">
+                        {topStreets.map((s) => {
+                          const active = street?.name === s.name;
+                          return (
+                            <button
+                              key={s.name}
+                              type="button"
+                              onClick={() => setStreet(s)}
+                              className={cn(
+                                'rounded-2xl p-2.5 text-left transition-all active:scale-95 border',
+                                active
+                                  ? 'bg-ink text-white border-ink shadow-sm'
+                                  : 'bg-mist/60 text-ink border-transparent hover:bg-mist',
+                              )}
+                            >
+                              <span
+                                className={cn(
+                                  'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold',
+                                  active ? 'bg-coral text-ink' : 'bg-sand-100 text-sand-700',
+                                )}
+                              >
+                                <Users className="h-3 w-3" />
+                                {s.neighbors}
+                              </span>
+                              <p className="mt-1.5 truncate text-[13px] font-bold">{s.name}</p>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <input
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder="Szukaj innej ulicy w Mińsku…"
+                        className="mt-3 h-11 w-full rounded-xl border border-mist-300 bg-mist/40 px-3.5 text-[13.5px] text-ink outline-none focus:ring-2 focus:ring-ink"
+                      />
+
+                      {filteredStreets.length > 0 ? (
+                        <ul className="mt-2 overflow-hidden rounded-2xl border border-mist-300 bg-white">
+                          {filteredStreets.map((s) => (
+                            <li key={s.name}>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setStreet(s);
+                                  setQuery('');
+                                }}
+                                className="flex w-full items-center justify-between border-b border-mist px-3.5 py-2.5 text-left last:border-0 hover:bg-mist/60"
+                              >
+                                <span className="text-[13.5px] font-bold text-ink">ul. {s.name}</span>
+                                <span className="text-[11.5px] text-ink-400">{s.neighbors} sąsiadów</span>
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : query.trim() ? (
+                        <div className="mt-2 rounded-2xl border border-mist-300 bg-white p-3">
                           <button
                             type="button"
                             onClick={() => {
-                              setStreet(s);
+                              const qClean = query.trim();
+                              const customStreet: Street = {
+                                name: qClean,
+                                as: `z ${qClean}`,
+                                neighbors: 1,
+                              };
+                              setStreet(customStreet);
                               setQuery('');
                             }}
-                            className="flex w-full items-center justify-between border-b border-mist px-3.5 py-2.5 text-left last:border-0 hover:bg-mist/60"
+                            className="flex w-full items-center justify-between text-left"
                           >
-                            <span className="text-[13.5px] font-bold text-ink">ul. {s.name}</span>
-                            <span className="text-[11.5px] text-ink-400">{s.neighbors} sąsiadów</span>
+                            <div>
+                              <p className="text-[13px] font-bold text-ink">Użyj: „{query.trim()}”</p>
+                              <p className="text-[11px] text-ink-500">Ulica w Mińsku Mazowieckim</p>
+                            </div>
+                            <span className="rounded-full bg-sand-100 px-2.5 py-1 text-[11px] font-bold text-ink">
+                              Wybierz
+                            </span>
                           </button>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : query.trim() ? (
-                    <div className="mt-2 rounded-2xl border border-mist-300 bg-white p-3">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const qClean = query.trim();
-                          const customStreet: Street = {
-                            name: qClean,
-                            as: `z ${qClean}`,
-                            neighbors: 1,
-                          };
-                          setStreet(customStreet);
-                          setQuery('');
-                        }}
-                        className="flex w-full items-center justify-between text-left"
-                      >
-                        <div>
-                          <p className="text-[13px] font-bold text-ink">Użyj: „{query.trim()}”</p>
-                          <p className="text-[11px] text-ink-500">Ulica lub miejscowość w gminie Mińsk Mazowiecki</p>
                         </div>
-                        <span className="rounded-full bg-sand-100 px-2.5 py-1 text-[11px] font-bold text-ink">
-                          Wybierz
+                      ) : null}
+                    </>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-[13px] font-bold text-ink">
+                            Miejscowość: <span className="text-coral-700">{city}</span>
+                          </p>
+                          <p className="text-[11.5px] text-ink-400 mt-0.5">
+                            Sołectwo w Gminie Mińsk Mazowiecki
+                          </p>
+                        </div>
+                        <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-800">
+                          Gmina Mińsk
                         </span>
-                      </button>
+                      </div>
+
+                      <div>
+                        <label className="text-[12px] font-bold text-ink-600 block">
+                          Ulica w {city} (opcjonalnie)
+                        </label>
+                        <input
+                          value={query}
+                          onChange={(e) => {
+                            const q = e.target.value;
+                            setQuery(q);
+                            if (q.trim()) {
+                              setStreet({
+                                name: `${q.trim()}, ${city}`,
+                                as: `z ${q.trim()} (${city})`,
+                                neighbors: 1,
+                              });
+                            } else {
+                              const asForm = gminaLocalityAs[city] || `z ${city}`;
+                              setStreet({
+                                name: city,
+                                as: asForm,
+                                neighbors: 35,
+                              });
+                            }
+                          }}
+                          placeholder="np. Warszawska, Wspólna (lub zostaw puste)"
+                          className="mt-1.5 h-11 w-full rounded-xl border border-mist-300 bg-mist/40 px-3.5 text-[13.5px] text-ink outline-none focus:ring-2 focus:ring-ink"
+                        />
+                        <p className="text-[11px] text-ink-400 mt-1">
+                          Jeśli podasz ulicę, Twój podpis to np. <em>{displayName} z {query.trim() || 'Głównej'} ({city})</em>. Bez ulicy: <em>{displayName} {gminaLocalityAs[city] || `z ${city}`}</em>.
+                        </p>
+                      </div>
                     </div>
-                  ) : null}
+                  )}
                 </div>
 
                 {/* PODGLĄD TOŻSAMOŚCI SĄSIEDZKIEJ (KLUCZOWY MODUŁ AGENTS.MD) */}
