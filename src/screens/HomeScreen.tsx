@@ -505,7 +505,6 @@ interface HomeScreenProps {
   onVote?: (pollId: string, optionId: string) => void;
   onOpenPolls?: () => void;
   city?: string;
-  onCityChange?: (c: string) => void;
 }
 
 export function HomeScreen({
@@ -523,7 +522,6 @@ export function HomeScreen({
   onVote,
   onOpenPolls,
   city = 'Mińsk Mazowiecki',
-  onCityChange,
 }: HomeScreenProps) {
   const activePolls = polls
     .filter((p) => isPollActive(p))
@@ -542,14 +540,6 @@ export function HomeScreen({
       <StandardTopBar
         user={user}
         onProfile={onProfile}
-        citySelector={
-          city && onCityChange
-            ? {
-                city,
-                onCityChange,
-              }
-            : undefined
-        }
         title={
           <button onClick={onProfile} className="text-left leading-none active:opacity-75 transition-opacity">
             <span className="block text-[12px] font-semibold text-ink-500 leading-none mb-1">
