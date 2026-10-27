@@ -64,6 +64,8 @@ export function AdDetailModal({
   const scrollRef = useRef<HTMLDivElement>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
 
+  const lightboxStageRef = useRef<HTMLDivElement>(null);
+
   const photos = ad.images && ad.images.length > 0 ? ad.images : [ad.image];
 
   useLayoutEffect(() => {
@@ -76,6 +78,9 @@ export function AdDetailModal({
     if (carouselRef.current) {
       carouselRef.current.scrollLeft = 0;
     }
+    if (lightboxStageRef.current) {
+      lightboxStageRef.current.scrollLeft = 0;
+    }
   }, [ad.id]);
 
   const scrollToPhoto = (idx: number) => {
@@ -85,11 +90,25 @@ export function AdDetailModal({
       const width = carouselRef.current.clientWidth;
       carouselRef.current.scrollTo({ left: width * clamped, behavior: 'smooth' });
     }
+    if (lightboxStageRef.current) {
+      const width = lightboxStageRef.current.clientWidth;
+      lightboxStageRef.current.scrollTo({ left: width * clamped, behavior: 'smooth' });
+    }
   };
 
   const handleCarouselScroll = () => {
     if (!carouselRef.current) return;
     const { scrollLeft, clientWidth } = carouselRef.current;
+    if (clientWidth === 0) return;
+    const idx = Math.round(scrollLeft / clientWidth);
+    if (idx !== activePhotoIdx && idx >= 0 && idx < photos.length) {
+      setActivePhotoIdx(idx);
+    }
+  };
+
+  const handleLightboxScroll = () => {
+    if (!lightboxStageRef.current) return;
+    const { scrollLeft, clientWidth } = lightboxStageRef.current;
     if (clientWidth === 0) return;
     const idx = Math.round(scrollLeft / clientWidth);
     if (idx !== activePhotoIdx && idx >= 0 && idx < photos.length) {
@@ -174,6 +193,12 @@ export function AdDetailModal({
                   onClick={() => {
                     setIsZoomed(false);
                     setIsLightboxOpen(true);
+                    setTimeout(() => {
+                      if (lightboxStageRef.current) {
+                        const width = lightboxStageRef.current.clientWidth;
+                        lightboxStageRef.current.scrollTo({ left: width * activePhotoIdx, behavior: 'auto' });
+                      }
+                    }, 0);
                   }}
                   className="relative h-full w-full shrink-0 snap-center cursor-zoom-in"
                 >
@@ -304,6 +329,12 @@ export function AdDetailModal({
                   onClick={() => {
                     setIsZoomed(false);
                     setIsLightboxOpen(true);
+                    setTimeout(() => {
+                      if (lightboxStageRef.current) {
+                        const width = lightboxStageRef.current.clientWidth;
+                        lightboxStageRef.current.scrollTo({ left: width * activePhotoIdx, behavior: 'auto' });
+                      }
+                    }, 0);
                   }}
                   className="flex h-12 shrink-0 items-center gap-1 rounded-xl bg-mist px-3 text-[11px] font-bold text-ink-600 active:scale-95"
                 >
@@ -566,16 +597,29 @@ export function AdDetailModal({
               </div>
 
               {/* Main Full-Screen Image Stage */}
-              <div className="relative flex flex-1 items-center justify-center overflow-auto px-2">
-                <img
-                  src={photos[activePhotoIdx]}
-                  alt={`${ad.title} — pełny ekran ${activePhotoIdx + 1}`}
-                  onClick={() => setIsZoomed((z) => !z)}
-                  className={cn(
-                    'max-h-full max-w-full object-contain transition-transform duration-200 select-none',
-                    isZoomed ? 'scale-150 cursor-zoom-out' : 'scale-100 cursor-zoom-in',
-                  )}
-                />
+              <div className="relative flex flex-1 items-center justify-center overflow-hidden">
+                <div
+                  ref={lightboxStageRef}
+                  onScroll={handleLightboxScroll}
+                  className="flex h-full w-full snap-x snap-mandatory overflow-x-auto scrollbar-none"
+                >
+                  {photos.map((photoUrl, idx) => (
+                    <div
+                      key={idx}
+                      className="flex h-full w-full shrink-0 snap-center items-center justify-center p-2"
+                    >
+                      <img
+                        src={photoUrl}
+                        alt={`${ad.title} — pełny ekran ${idx + 1}`}
+                        onClick={() => setIsZoomed((z) => !z)}
+                        className={cn(
+                          'max-h-full max-w-full object-contain transition-transform duration-200 select-none',
+                          isZoomed && idx === activePhotoIdx ? 'scale-150 cursor-zoom-out' : 'scale-100 cursor-zoom-in',
+                        )}
+                      />
+                    </div>
+                  ))}
+                </div>
 
                 {photos.length > 1 && !isZoomed && (
                   <>
@@ -584,7 +628,7 @@ export function AdDetailModal({
                         type="button"
                         onClick={() => scrollToPhoto(activePhotoIdx - 1)}
                         aria-label="Poprzednie zdjęcie"
-                        className="absolute left-3 top-1/2 -translate-y-1/2 grid h-11 w-11 place-items-center rounded-full bg-white/20 text-white backdrop-blur-xs transition-transform active:scale-90 hover:bg-white/30"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 z-20 grid h-11 w-11 place-items-center rounded-full bg-white/20 text-white backdrop-blur-xs transition-transform active:scale-90 hover:bg-white/30"
                       >
                         <ChevronLeft className="h-6 w-6" />
                       </button>
@@ -594,7 +638,7 @@ export function AdDetailModal({
                         type="button"
                         onClick={() => scrollToPhoto(activePhotoIdx + 1)}
                         aria-label="Następne zdjęcie"
-                        className="absolute right-3 top-1/2 -translate-y-1/2 grid h-11 w-11 place-items-center rounded-full bg-white/20 text-white backdrop-blur-xs transition-transform active:scale-90 hover:bg-white/30"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 z-20 grid h-11 w-11 place-items-center rounded-full bg-white/20 text-white backdrop-blur-xs transition-transform active:scale-90 hover:bg-white/30"
                       >
                         <ChevronRight className="h-6 w-6" />
                       </button>
