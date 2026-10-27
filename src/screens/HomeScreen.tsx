@@ -234,9 +234,6 @@ function BusWidget({
               <p className="font-display text-[15.5px] font-bold leading-tight text-ink">
                 Autobusy miejskie
               </p>
-              <p className="truncate text-[12px] text-ink-500">
-                Dodaj swój przystanek, by widzieć odjazdy na żywo
-              </p>
             </div>
           </div>
 
