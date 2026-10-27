@@ -42,6 +42,7 @@ import { RidesScreen } from './screens/RidesScreen';
 import { TalksScreen } from './screens/TalksScreen';
 import type { AdFilterState } from './screens/AdFiltersModal';
 import { AuthRequiredModal } from './components/AuthRequiredModal';
+import { DesktopMobileOnlyBarrier } from './components/DesktopMobileOnlyBarrier';
 
 // Asynchronicznie ładowane widoki podstron i modali (Lazy Modals)
 const ProfileScreen = lazy(() => import('./screens/ProfileScreen').then((m) => ({ default: m.ProfileScreen })));
@@ -624,9 +625,12 @@ export default function App() {
 
   return (
     <div className="h-full h-[100dvh] w-full overflow-hidden bg-mist select-none">
+      {/* Infografika blokująca wejście z poziomu Desktopu (aplikacja wyłącznie mobilna) */}
+      <DesktopMobileOnlyBarrier />
+
       <div
         ref={setFrame}
-        className="relative mx-auto flex h-full h-[100dvh] w-full max-w-md flex-col overflow-hidden bg-mist shadow-2xl"
+        className="relative mx-auto flex h-full h-[100dvh] w-full max-w-md flex-col overflow-hidden bg-mist shadow-2xl md:hidden"
       >
         <main
           ref={mainRef}
