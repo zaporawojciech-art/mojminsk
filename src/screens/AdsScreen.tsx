@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Drawer } from 'vaul';
 import {
   Armchair,
   ArrowUpDown,
@@ -998,21 +999,17 @@ export function AdsScreen({
       )}
 
       {/* Bottom Sheet: Wszystkie kategorie */}
-      {allCategoriesSheetOpen && (
-        <div
-          onClick={() => setAllCategoriesSheetOpen(false)}
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 backdrop-blur-xs"
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-t-4xl bg-white p-5 pb-8 shadow-float max-h-[82vh] flex flex-col"
-          >
+      <Drawer.Root open={allCategoriesSheetOpen} onOpenChange={setAllCategoriesSheetOpen}>
+        <Drawer.Portal>
+          <Drawer.Overlay className="fixed inset-0 z-50 bg-black/45 backdrop-blur-xs transition-opacity duration-200" />
+          <Drawer.Content className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md rounded-t-[36px] bg-white p-5 pb-8 shadow-float max-h-[82vh] flex flex-col outline-none transition-transform duration-300 ease-out">
+            <div className="mx-auto mb-2 -mt-1 h-1.5 w-12 shrink-0 rounded-full bg-mist-300" aria-hidden />
             <div className="flex items-center justify-between pb-3 border-b border-mist">
-              <h3 className="font-display text-[19px] font-bold text-ink">Wszystkie kategorie</h3>
+              <Drawer.Title className="font-display text-[19px] font-bold text-ink">Wszystkie kategorie</Drawer.Title>
               <button
                 type="button"
                 onClick={() => setAllCategoriesSheetOpen(false)}
-                className="grid h-9 w-9 place-items-center rounded-full bg-mist text-ink"
+                className="grid h-9 w-9 place-items-center rounded-full bg-mist text-ink hover:bg-mist-200 transition-colors"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -1059,9 +1056,9 @@ export function AdsScreen({
                 );
               })}
             </div>
-          </div>
-        </div>
-      )}
+          </Drawer.Content>
+        </Drawer.Portal>
+      </Drawer.Root>
     </div>
   );
 }
