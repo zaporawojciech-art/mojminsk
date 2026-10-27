@@ -468,18 +468,24 @@ function FeaturedPollCard({
         <button
           type="button"
           onClick={onOpenPolls}
-          className="mt-4 flex w-full items-center justify-between rounded-2xl bg-white px-4 py-3 font-semibold text-ink shadow-xs transition-transform active:scale-[0.99] hover:bg-mist/80"
+          className="mt-4 flex w-full items-center justify-between rounded-2xl bg-white px-4 py-3 shadow-xs transition-transform active:scale-[0.98] hover:bg-mist/60"
         >
-          <div className="flex items-center gap-2 text-[13px]">
-            <Vote className="h-4 w-4 text-coral-700" aria-hidden />
-            <span>Wszystkie ankiety mieszkańców</span>
-            <span className="rounded-full bg-sand-200 px-2 py-0.5 text-[11px] font-bold text-ink">
-              {totalActiveCount}
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-coral-100 text-coral-700">
+              <Vote className="h-4 w-4" aria-hidden />
             </span>
+            <div className="text-left">
+              <p className="text-[13.5px] font-bold text-ink leading-tight">
+                Wszystkie ankiety
+              </p>
+              <p className="text-[11.5px] text-ink-500 leading-tight mt-0.5">
+                {totalActiveCount} aktywne głosowania
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-1 text-[12.5px] font-bold text-coral-700">
-            <span>Zobacz listę</span>
-            <ArrowRight className="h-4 w-4" aria-hidden />
+          <div className="flex items-center gap-1 text-[13px] font-bold text-ink shrink-0 pl-2">
+            <span>Zobacz</span>
+            <ArrowRight className="h-4 w-4 text-ink-400" aria-hidden />
           </div>
         </button>
       )}
