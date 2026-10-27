@@ -622,15 +622,22 @@ export default function App() {
   }, []);
 
   const showChrome = Boolean(user && !overlay);
+  const [isTestDesktopPreview] = useState(
+    () =>
+      typeof window !== 'undefined' &&
+      new URLSearchParams(window.location.search).get('test') === 'test',
+  );
 
   return (
     <div className="h-full h-[100dvh] w-full overflow-hidden bg-mist select-none">
-      {/* Infografika blokująca wejście z poziomu Desktopu (aplikacja wyłącznie mobilna) */}
-      <DesktopMobileOnlyBarrier />
+      {/* Infografika blokująca wejście z poziomu Desktopu (chyba że aktywny parametr ?test=test) */}
+      {!isTestDesktopPreview && <DesktopMobileOnlyBarrier />}
 
       <div
         ref={setFrame}
-        className="relative mx-auto flex h-full h-[100dvh] w-full max-w-md flex-col overflow-hidden bg-mist shadow-2xl md:hidden"
+        className={`relative mx-auto flex h-full h-[100dvh] w-full max-w-md flex-col overflow-hidden bg-mist shadow-2xl ${
+          isTestDesktopPreview ? '' : 'md:hidden'
+        }`}
       >
         <main
           ref={mainRef}
