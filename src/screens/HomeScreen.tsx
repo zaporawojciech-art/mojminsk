@@ -264,7 +264,7 @@ function BusWidget({
           </span>
           <div>
             <p className="font-display text-[15px] font-bold leading-tight text-ink">
-              Twoje odjazdy ZDiTM
+              Twoje przystanki
             </p>
           </div>
         </div>
