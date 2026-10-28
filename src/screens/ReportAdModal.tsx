@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { CheckCircle2, ShieldAlert } from 'lucide-react';
 import { NativeHeader, cn } from '../components/ui';
 import type { Ad } from '../data/mockData';
+import { reportAdInSupabase } from '../lib/supabase';
 
 interface ReportAdModalProps {
   ad: Ad;
@@ -24,6 +25,7 @@ export function ReportAdModal({ ad, onClose, isClosing = false }: ReportAdModalP
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    void reportAdInSupabase(ad.id, selectedReason, details);
     setIsSubmitted(true);
   };
 

@@ -1,7 +1,12 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { BarChart2, Heart, ImageIcon, MessageCircle, Repeat2 } from 'lucide-react';
 import { avatarUrl, posts as seedPosts, streets, talkTags, type Post, type User } from '../data/mockData';
 import { Chip, Img, StandardTopBar, cn } from '../components/ui';
+import {
+  createPostInSupabase,
+  fetchPostsFromSupabase,
+  togglePostLikeInSupabase,
+} from '../lib/supabase';
 
 const MAX = 280;
 
@@ -38,6 +43,14 @@ export function TalksScreen({
   const [tag, setTag] = useState('Wszystko');
   const [liked, setLiked] = useState<Record<string, boolean>>({});
 
+  useEffect(() => {
+    void fetchPostsFromSupabase().then((remotePosts) => {
+      if (remotePosts && remotePosts.length > 0) {
+        setList(remotePosts);
+      }
+    });
+  }, []);
+
   const visible = tag === 'Wszystko' ? list : list.filter((p) => p.content.includes(tag));
   const left = MAX - text.length;
 
@@ -50,10 +63,19 @@ export function TalksScreen({
       return;
     }
     if (!text.trim()) return;
-    setList((l) => [
-      { id: `new-${Date.now()}`, author: user.name, authorAs: user.street.as, time: 'teraz', content: text.trim(), likes: 0, replies: 0, reposts: 0, views: 1 },
-      ...l,
-    ]);
+    const newPost: Post = {
+      id: `p_${Date.now()}`,
+      author: user.name,
+      authorAs: user.street.as,
+      time: 'teraz',
+      content: text.trim(),
+      likes: 0,
+      replies: 0,
+      reposts: 0,
+      views: 1,
+    };
+    setList((l) => [newPost, ...l]);
+    void createPostInSupabase(newPost);
     setText('');
   };
 
@@ -65,7 +87,9 @@ export function TalksScreen({
       );
       return;
     }
-    setLiked((l) => ({ ...l, [postId]: !l[postId] }));
+    const nextLiked = !liked[postId];
+    setLiked((l) => ({ ...l, [postId]: nextLiked }));
+    void togglePostLikeInSupabase(postId, nextLiked ? 1 : -1);
   };
 
   return (

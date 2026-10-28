@@ -53,6 +53,22 @@ import {
   SLUG_TO_CATEGORY_ID,
   TAB_PATHS,
 } from './router/urlUtils';
+import {
+  castPollVoteInSupabase,
+  createAdInSupabase,
+  createPollInSupabase,
+  createRideInSupabase,
+  deleteAdInSupabase,
+  deleteRideInSupabase,
+  fetchAdsFromSupabase,
+  fetchConversationsFromSupabase,
+  fetchPollsFromSupabase,
+  fetchRidesFromSupabase,
+  registerNeighborInSupabase,
+  reserveAdInSupabase,
+  updateAdInSupabase,
+  updateAdStatusInSupabase,
+} from './lib/supabase';
 
 // Asynchronicznie ładowane widoki podstron i modali (Lazy Modals)
 const ProfileScreen = lazy(() => import('./screens/ProfileScreen').then((m) => ({ default: m.ProfileScreen })));
@@ -112,6 +128,21 @@ export default function App() {
           localStorage.setItem('mojminsk_user', JSON.stringify(nextUser));
           if (window.location.pathname === '/dolacz') {
             navigateTo('/');
+          }
+          if (!nextUser.isGuest && !nextUser.activationPin) {
+            void registerNeighborInSupabase(nextUser).then((res) => {
+              if (res?.activationPin) {
+                const enriched: User = {
+                  ...nextUser,
+                  activationPin: res.activationPin,
+                  trialDaysLeft: res.trialDaysLeft ?? nextUser.trialDaysLeft,
+                };
+                setUser(enriched);
+                try {
+                  localStorage.setItem('mojminsk_user', JSON.stringify(enriched));
+                } catch {}
+              }
+            });
           }
         } else {
           localStorage.removeItem('mojminsk_user');
@@ -237,6 +268,22 @@ export default function App() {
     [user],
   );
 
+  // Inicjalna synchronizacja danych z bazy Supabase (PostgreSQL)
+  useEffect(() => {
+    void fetchAdsFromSupabase().then((remoteAds) => {
+      if (remoteAds && remoteAds.length > 0) setAdsList(remoteAds);
+    });
+    void fetchRidesFromSupabase().then((remoteRides) => {
+      if (remoteRides && remoteRides.length > 0) setRidesList(remoteRides);
+    });
+    void fetchPollsFromSupabase().then((remotePolls) => {
+      if (remotePolls && remotePolls.length > 0) setPolls(remotePolls);
+    });
+    void fetchConversationsFromSupabase().then((remoteConvs) => {
+      if (remoteConvs && remoteConvs.length > 0) setConversations(remoteConvs);
+    });
+  }, []);
+
   useEffect(() => {
     try {
       localStorage.setItem('mojminsk_polls', JSON.stringify(polls));
@@ -268,10 +315,12 @@ export default function App() {
               };
             })
           );
+          const voterKey = user ? `${user.name}_${user.street.name}` : 'anon';
+          void castPollVoteInSupabase(pollId, optionId, voterKey);
         },
       );
     },
-    [requireAuth],
+    [requireAuth, user],
   );
 
   const handleAddFavoriteBus = (newFav: Omit<FavoriteBusStop, 'id'>) => {
@@ -492,6 +541,7 @@ export default function App() {
 
   const handlePollCreated = useCallback((newPoll: PollItem) => {
     setPolls((prev) => [newPoll, ...prev]);
+    void createPollInSupabase(newPoll);
     closeAddPoll();
   }, [closeAddPoll]);
 
@@ -745,20 +795,24 @@ export default function App() {
       prev.map((a) => (a.id === adId ? { ...a, status } : a)),
     );
     setSelectedAd((prev) => (prev && prev.id === adId ? { ...prev, status } : prev));
+    void updateAdStatusInSupabase(adId, status);
   }, []);
 
   const handleDeleteAd = useCallback((adId: string) => {
     setAdsList((prev) => prev.filter((a) => a.id !== adId));
     setSelectedAd((prev) => (prev && prev.id === adId ? null : prev));
+    void deleteAdInSupabase(adId);
   }, []);
 
   const handleAdUpdated = useCallback((updatedAd: Ad) => {
     setAdsList((prev) => prev.map((a) => (a.id === updatedAd.id ? updatedAd : a)));
     setSelectedAd((prev) => (prev && prev.id === updatedAd.id ? updatedAd : prev));
+    void updateAdInSupabase(updatedAd);
   }, []);
 
   const handleDeleteRide = useCallback((rideId: string) => {
     setRidesList((prev) => prev.filter((r) => r.id !== rideId));
+    void deleteRideInSupabase(rideId);
   }, []);
 
   const handleReservationSuccess = useCallback(
@@ -785,10 +839,13 @@ export default function App() {
       };
 
       setConversations((prev) => [newConv, ...prev.filter((c) => c.adId !== ad.id)]);
+      if (user) {
+        void reserveAdInSupabase(ad, user, details, newConv);
+      }
       setReserveAd(null);
       setChatAd(ad);
     },
-    [handleStatusChange],
+    [handleStatusChange, user],
   );
 
   const activeFiltersCount =
@@ -1624,7 +1681,10 @@ export default function App() {
               user={user}
               onClose={closeAddAd}
               isClosing={!!exitingScreens['addAd']}
-              onAdCreated={(newAd) => setAdsList((prev) => [newAd, ...prev])}
+              onAdCreated={(newAd) => {
+                setAdsList((prev) => [newAd, ...prev]);
+                void createAdInSupabase(newAd);
+              }}
             />
           </AsyncViewBoundary>
         )}
@@ -1641,7 +1701,10 @@ export default function App() {
               rides={ridesList}
               onClose={closeAddRide}
               isClosing={!!exitingScreens['addRide']}
-              onRideCreated={(newRide) => setRidesList((prev) => [newRide, ...prev])}
+              onRideCreated={(newRide) => {
+                setRidesList((prev) => [newRide, ...prev]);
+                void createRideInSupabase(newRide);
+              }}
               onDeleteRide={handleDeleteRide}
             />
           </AsyncViewBoundary>
