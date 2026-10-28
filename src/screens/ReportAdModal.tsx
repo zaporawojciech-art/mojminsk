@@ -30,11 +30,11 @@ export function ReportAdModal({ ad, onClose, isClosing = false }: ReportAdModalP
   return (
     <div
       className={cn(
-        'fixed inset-0 z-50 flex flex-col bg-mist select-none',
+        'fixed inset-0 md:relative md:inset-auto md:h-full md:w-full z-50 flex flex-col bg-mist select-none',
         isClosing ? 'native-screen-exit' : 'native-screen-slide',
       )}
     >
-      <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist">
+      <div className="mx-auto flex h-full w-full max-w-md md:max-w-none flex-col overflow-hidden bg-mist">
         {/* Native Top Navigation Bar */}
         <NativeHeader title="Zgłoś ogłoszenie" backLabel="Wróć" onBack={onClose} />
 
@@ -56,14 +56,9 @@ export function ReportAdModal({ ad, onClose, isClosing = false }: ReportAdModalP
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden">
-            <div className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-3.5">
-              <div className="rounded-3xl bg-white p-4 shadow-card">
-                <p className="text-[11px] font-bold uppercase tracking-wider text-ink-400">Zgłaszane ogłoszenie</p>
-                <p className="font-semibold text-[14px] text-ink truncate mt-0.5">{ad.title}</p>
-                <p className="text-[12px] text-ink-500">Wystawca: {ad.author} · ul. {ad.street}</p>
-              </div>
-
-              <div className="rounded-3xl bg-white p-4 shadow-card">
+            <div className="flex-1 overflow-y-auto overscroll-contain p-4 md:px-8 lg:px-12 md:py-6 space-y-3.5 md:space-y-0 md:grid md:grid-cols-12 md:gap-6 md:items-start">
+              {/* LEFT COLUMN: Reasons */}
+              <div className="md:col-span-7 rounded-3xl md:rounded-2xl md:border md:border-mist-200 bg-white p-4 md:p-5 shadow-card md:shadow-xs">
                 <label className="text-[12px] font-bold uppercase tracking-wider text-ink-400">
                   Wybierz powód zgłoszenia
                 </label>
@@ -74,7 +69,7 @@ export function ReportAdModal({ ad, onClose, isClosing = false }: ReportAdModalP
                       type="button"
                       onClick={() => setSelectedReason(reason)}
                       className={cn(
-                        'flex w-full items-center justify-between rounded-2xl border p-3.5 text-left text-[13px] font-semibold transition-all',
+                        'flex w-full items-center justify-between rounded-2xl md:rounded-xl border p-3.5 text-left text-[13px] font-semibold transition-all cursor-pointer',
                         selectedReason === reason
                           ? 'border-ink bg-mist text-ink ring-1 ring-ink'
                           : 'border-mist bg-white text-ink-600 hover:bg-mist/50',
@@ -94,23 +89,42 @@ export function ReportAdModal({ ad, onClose, isClosing = false }: ReportAdModalP
                 </div>
               </div>
 
-              <div className="rounded-3xl bg-white p-4 shadow-card">
-                <label className="block">
-                  <span className="text-[12px] font-bold text-ink">
-                    Dodatkowe informacje <span className="text-ink-400 font-normal">(opcjonalnie)</span>
-                  </span>
-                  <textarea
-                    rows={3}
-                    value={details}
-                    onChange={(e) => setDetails(e.target.value)}
-                    placeholder="Napisz krótko, na czym polega problem..."
-                    className="mt-1.5 w-full rounded-2xl border border-mist-300 bg-mist/50 p-3.5 text-[13.5px] outline-none focus:border-ink focus:bg-white"
-                  />
-                </label>
+              {/* RIGHT COLUMN: Ad summary, details & submit */}
+              <div className="space-y-3.5 md:space-y-4 md:col-span-5 md:sticky md:top-2">
+                <div className="rounded-3xl md:rounded-2xl md:border md:border-mist-200 bg-white p-4 md:p-5 shadow-card md:shadow-xs">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-ink-400">Zgłaszane ogłoszenie</p>
+                  <p className="font-semibold text-[14px] text-ink truncate mt-0.5">{ad.title}</p>
+                  <p className="text-[12px] text-ink-500">Wystawca: {ad.author} · ul. {ad.street}</p>
+                </div>
+
+                <div className="rounded-3xl md:rounded-2xl md:border md:border-mist-200 bg-white p-4 md:p-5 shadow-card md:shadow-xs">
+                  <label className="block">
+                    <span className="text-[12px] font-bold text-ink">
+                      Dodatkowe informacje <span className="text-ink-400 font-normal">(opcjonalnie)</span>
+                    </span>
+                    <textarea
+                      rows={4}
+                      value={details}
+                      onChange={(e) => setDetails(e.target.value)}
+                      placeholder="Napisz krótko, na czym polega problem..."
+                      className="mt-1.5 w-full rounded-2xl md:rounded-xl border border-mist-300 bg-mist/50 p-3.5 text-[13.5px] outline-none focus:border-ink focus:bg-white"
+                    />
+                  </label>
+
+                  <div className="hidden md:block mt-4 pt-3 border-t border-mist-200">
+                    <button
+                      type="submit"
+                      className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-coral text-[13.5px] font-bold text-ink shadow-coral hover:bg-coral-400 transition-colors cursor-pointer"
+                    >
+                      <ShieldAlert className="h-4 w-4" />
+                      Prześlij zgłoszenie do moderacji
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="border-t border-mist bg-white px-5 py-3 pb-[max(env(safe-area-inset-bottom),14px)] shrink-0 shadow-float">
+            <div className="md:hidden border-t border-mist bg-white px-5 py-3 pb-[max(env(safe-area-inset-bottom),14px)] shrink-0 shadow-float">
               <button
                 type="submit"
                 className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-coral text-[14px] font-bold text-ink shadow-coral transition-transform active:scale-95"

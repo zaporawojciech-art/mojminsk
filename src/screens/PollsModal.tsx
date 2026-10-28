@@ -69,13 +69,13 @@ export function PollsModal({
       />
 
       {/* Tab switchers: Aktywne (posortowane po głosach) vs Zakończone (archiwum bez bałaganu) */}
-      <div className="border-b border-mist-300 bg-white px-4 pt-3 pb-2.5 shrink-0">
-        <div className="grid grid-cols-2 gap-1 rounded-2xl bg-mist p-1">
+      <div className="border-b border-mist-300 bg-white px-4 md:px-8 lg:px-12 pt-3 pb-2.5 md:py-3.5 shrink-0 md:flex md:items-center md:justify-between md:gap-6">
+        <div className="grid grid-cols-2 gap-1 rounded-2xl md:rounded-xl bg-mist p-1 md:w-80">
           <button
             type="button"
             onClick={() => setActiveTab('active')}
             className={cn(
-              'flex items-center justify-center gap-1.5 rounded-xl py-2 text-[12.5px] font-bold transition-all',
+              'flex items-center justify-center gap-1.5 rounded-xl md:rounded-lg py-2 text-[12.5px] font-bold transition-all cursor-pointer',
               activeTab === 'active'
                 ? 'bg-white text-ink shadow-card'
                 : 'text-ink-500 hover:text-ink',
@@ -88,7 +88,7 @@ export function PollsModal({
             type="button"
             onClick={() => setActiveTab('expired')}
             className={cn(
-              'flex items-center justify-center gap-1.5 rounded-xl py-2 text-[12.5px] font-bold transition-all',
+              'flex items-center justify-center gap-1.5 rounded-xl md:rounded-lg py-2 text-[12.5px] font-bold transition-all cursor-pointer',
               activeTab === 'expired'
                 ? 'bg-white text-ink shadow-card'
                 : 'text-ink-500 hover:text-ink',
@@ -98,17 +98,25 @@ export function PollsModal({
             <span>Wyniki ({expiredPolls.length})</span>
           </button>
         </div>
-        <p className="mt-2 text-center text-[11px] text-ink-400">
+        <p className="mt-2 md:mt-0 text-center md:text-left text-[11px] md:text-[12.5px] text-ink-400 md:flex-1">
           {activeTab === 'active'
-            ? 'Posortowane według największej liczby oddanych głosów'
+            ? 'Posortowane według największej liczby oddanych głosów przez mieszkańców Mińska'
             : 'Zarchiwizowane ankiety miejskie z oficjalnymi wynikami'}
         </p>
+        <button
+          type="button"
+          onClick={onAddPoll}
+          className="hidden md:inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-2.5 text-[12.5px] font-bold text-white shadow-xs hover:bg-ink-800 transition-colors cursor-pointer shrink-0"
+        >
+          <Plus className="h-4 w-4 text-sand" />
+          Stwórz nową ankietę
+        </button>
       </div>
 
-      {/* Polls List */}
-      <div className="flex-1 overflow-y-auto overscroll-contain p-4 pb-8 space-y-4">
+      {/* Polls List / Desktop Multi-Column Grid */}
+      <div className="flex-1 overflow-y-auto overscroll-contain p-4 md:px-8 lg:px-12 md:py-6 pb-8 space-y-4 md:space-y-0 md:grid md:grid-cols-2 xl:grid-cols-3 md:gap-5 md:items-start">
           {currentPolls.length === 0 ? (
-            <div className="rounded-3xl bg-white p-8 text-center shadow-card border border-mist-300">
+            <div className="md:col-span-full rounded-3xl md:rounded-2xl bg-white p-8 text-center shadow-card border border-mist-300">
               <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-sand-100 text-ink">
                 <Vote className="h-6 w-6" />
               </span>
@@ -292,8 +300,8 @@ export function PollsModal({
           )}
         </div>
 
-        {/* Bottom CTA to add a poll */}
-        <div className="border-t border-mist-300 bg-white p-4 pb-[max(env(safe-area-inset-bottom),16px)] shrink-0">
+        {/* Bottom CTA to add a poll (Mobile only) */}
+        <div className="md:hidden border-t border-mist-300 bg-white p-4 pb-[max(env(safe-area-inset-bottom),16px)] shrink-0">
           <button
             type="button"
             onClick={onAddPoll}

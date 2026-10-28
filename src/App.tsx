@@ -16,8 +16,10 @@ import {
 } from './components/TabSkeletons';
 import {
   ads as initialAds,
+  demoUser,
   initialAdConversations,
   rides as initialRides,
+  streets,
   type Ad,
   type AdConversation,
   type FavoriteBusStop,
@@ -34,9 +36,23 @@ import { HomeScreen } from './screens/HomeScreen';
 import { AdsScreen } from './screens/AdsScreen';
 import { RidesScreen } from './screens/RidesScreen';
 import { TalksScreen } from './screens/TalksScreen';
+import { NotFoundScreen } from './screens/NotFoundScreen';
 import type { AdFilterState } from './screens/AdFiltersModal';
 import { AuthRequiredModal } from './components/AuthRequiredModal';
-import { DesktopMobileOnlyBarrier } from './components/DesktopMobileOnlyBarrier';
+import { DesktopTopNavbar } from './components/DesktopTopNavbar';
+import { SeoHead, type SeoHeadProps } from './components/SeoHead';
+import { navigateTo } from './components/AppLink';
+import {
+  buildAdUrl,
+  buildNeighborUrl,
+  buildZditmUrl,
+  CATEGORY_SEO_META,
+  CATEGORY_URL_MAP,
+  extractAdIdFromSlug,
+  slugify,
+  SLUG_TO_CATEGORY_ID,
+  TAB_PATHS,
+} from './router/urlUtils';
 
 // Asynchronicznie ładowane widoki podstron i modali (Lazy Modals)
 const ProfileScreen = lazy(() => import('./screens/ProfileScreen').then((m) => ({ default: m.ProfileScreen })));
@@ -60,6 +76,13 @@ const AddPollModal = lazy(() => import('./screens/AddPollModal').then((m) => ({ 
 
 type Overlay = null | 'profile' | 'zditm';
 
+const DEFAULT_GUEST_USER: User = {
+  ...demoUser,
+  isGuest: true,
+  name: 'Gość',
+  verified: true,
+};
+
 export default function App() {
   const [user, setUser] = useState<User | null>(() => {
     if (typeof window !== 'undefined') {
@@ -74,8 +97,11 @@ export default function App() {
       } catch {
         // fallback
       }
+      if (window.location.pathname === '/dolacz') {
+        return null;
+      }
     }
-    return null;
+    return DEFAULT_GUEST_USER;
   });
 
   const handleUpdateUser = useCallback((nextUser: User | null) => {
@@ -84,8 +110,12 @@ export default function App() {
       try {
         if (nextUser) {
           localStorage.setItem('mojminsk_user', JSON.stringify(nextUser));
+          if (window.location.pathname === '/dolacz') {
+            navigateTo('/');
+          }
         } else {
           localStorage.removeItem('mojminsk_user');
+          navigateTo('/dolacz');
         }
       } catch {
         // storage fallback
@@ -93,9 +123,12 @@ export default function App() {
     }
   }, []);
   const [tab, setTab] = useState<TabId>('home');
+  const [routeNotFound, setRouteNotFound] = useState(false);
+  const [routeCategoryId, setRouteCategoryId] = useState<string>('all');
+  const [routeStreetName, setRouteStreetName] = useState<string>('all');
   const [visitedTabs, setVisitedTabs] = useState<Record<TabId, boolean>>({
     home: true,
-    ads: false,
+    ads: true,
     rides: false,
     talks: false,
   });
@@ -153,6 +186,7 @@ export default function App() {
     selectedStreet: 'all',
     onlyFree: false,
   });
+  const [desktopSearchQuery, setDesktopSearchQuery] = useState('');
 
   // Community Polls State
   const [polls, setPolls] = useState<PollItem[]>(() => {
@@ -362,21 +396,286 @@ export default function App() {
   const closeReportAd = useCallback(() => closeWithAnimation('reportAd', () => setReportAd(null)), [closeWithAnimation]);
   const closeChatAd = useCallback(() => closeWithAnimation('chatAd', () => setChatAd(null)), [closeWithAnimation]);
   const closeEditAd = useCallback(() => closeWithAnimation('editAd', () => setEditAd(null)), [closeWithAnimation]);
-  const closeSellerProfile = useCallback(() => closeWithAnimation('sellerProfile', () => setSellerProfile(null)), [closeWithAnimation]);
-  const closeConversations = useCallback(() => closeWithAnimation('conversations', () => setConversationsOpen(false)), [closeWithAnimation]);
-  const closeSelectedAd = useCallback(() => closeWithAnimation('selectedAd', () => setSelectedAd(null)), [closeWithAnimation]);
+  const closeSellerProfile = useCallback(
+    () =>
+      closeWithAnimation('sellerProfile', () => {
+        setSellerProfile(null);
+        if (window.location.pathname.startsWith('/sasiad/')) {
+          navigateTo(TAB_PATHS[tab], { replace: true });
+        }
+      }),
+    [closeWithAnimation, tab],
+  );
+  const closeConversations = useCallback(
+    () =>
+      closeWithAnimation('conversations', () => {
+        setConversationsOpen(false);
+        if (window.location.pathname === '/wiadomosci') {
+          navigateTo(TAB_PATHS[tab], { replace: true });
+        }
+      }),
+    [closeWithAnimation, tab],
+  );
+  const closeSelectedAd = useCallback(
+    () =>
+      closeWithAnimation('selectedAd', () => {
+        setSelectedAd(null);
+        if (window.location.pathname.startsWith('/ogloszenia/') && !window.location.pathname.startsWith('/ogloszenia/kategoria/') && !window.location.pathname.startsWith('/ogloszenia/ulica/')) {
+          const fallbackUrl =
+            routeCategoryId !== 'all'
+              ? CATEGORY_URL_MAP[routeCategoryId] ?? '/ogloszenia'
+              : routeStreetName !== 'all'
+                ? `/ogloszenia/ulica/${slugify(routeStreetName)}`
+                : TAB_PATHS[tab] === '/'
+                  ? '/'
+                  : '/ogloszenia';
+          navigateTo(fallbackUrl, { replace: true });
+        }
+      }),
+    [closeWithAnimation, routeCategoryId, routeStreetName, tab],
+  );
   const closeAddRide = useCallback(() => closeWithAnimation('addRide', () => setAddRideOpen(false)), [closeWithAnimation]);
-  const closeAddAd = useCallback(() => closeWithAnimation('addAd', () => setAddAdOpen(false)), [closeWithAnimation]);
+  const closeAddAd = useCallback(
+    () =>
+      closeWithAnimation('addAd', () => {
+        setAddAdOpen(false);
+        if (window.location.pathname === '/ogloszenia/dodaj') {
+          navigateTo(TAB_PATHS[tab], { replace: true });
+        }
+      }),
+    [closeWithAnimation, tab],
+  );
   const closeAddPoll = useCallback(() => closeWithAnimation('addPoll', () => setAddPollModalOpen(false)), [closeWithAnimation]);
-  const closePollsModal = useCallback(() => closeWithAnimation('pollsModal', () => setPollsModalOpen(false)), [closeWithAnimation]);
-  const closeMyAds = useCallback(() => closeWithAnimation('myAds', () => setMyAdsOpen(false)), [closeWithAnimation]);
-  const closePartner = useCallback(() => closeWithAnimation('partner', () => setPartnerOpen(false)), [closeWithAnimation]);
-  const closeOverlay = useCallback(() => closeWithAnimation('overlay', () => setOverlay(null)), [closeWithAnimation]);
+  const closePollsModal = useCallback(
+    () =>
+      closeWithAnimation('pollsModal', () => {
+        setPollsModalOpen(false);
+        if (window.location.pathname === '/ankiety') {
+          navigateTo(TAB_PATHS[tab], { replace: true });
+        }
+      }),
+    [closeWithAnimation, tab],
+  );
+  const closeMyAds = useCallback(
+    () =>
+      closeWithAnimation('myAds', () => {
+        setMyAdsOpen(false);
+        if (window.location.pathname === '/moje-ogloszenia') {
+          navigateTo('/profil', { replace: true });
+        }
+      }),
+    [closeWithAnimation],
+  );
+  const closePartner = useCallback(
+    () =>
+      closeWithAnimation('partner', () => {
+        setPartnerOpen(false);
+        if (window.location.pathname.startsWith('/partnerzy')) {
+          navigateTo(TAB_PATHS[tab], { replace: true });
+        }
+      }),
+    [closeWithAnimation, tab],
+  );
+  const closeOverlay = useCallback(
+    () =>
+      closeWithAnimation('overlay', () => {
+        setOverlay(null);
+        if (
+          window.location.pathname.startsWith('/zditm') ||
+          window.location.pathname === '/profil'
+        ) {
+          navigateTo(TAB_PATHS[tab], { replace: true });
+        }
+      }),
+    [closeWithAnimation, tab],
+  );
 
   const handlePollCreated = useCallback((newPoll: PollItem) => {
     setPolls((prev) => [newPoll, ...prev]);
     closeAddPoll();
   }, [closeAddPoll]);
+
+  // Synchronizacja paska adresu URL (Deep Linking + Browser History API) ze stanem aplikacji
+  const syncStateFromLocation = useCallback(
+    (pathname: string) => {
+      const cleanPath = pathname.replace(/\/+$/, '') || '/';
+      setRouteNotFound(false);
+
+      // 1. Onboarding / Rejestracja
+      if (cleanPath === '/dolacz') {
+        setUser(null);
+        return;
+      }
+
+      // Gdy użytkownik był na /dolacz i przeszedł na trasę publiczną, przywróć sesję lub gościa
+      setUser((prev) => prev ?? DEFAULT_GUEST_USER);
+
+      // Reset modal layers before applying route-matched layer
+      setOverlay(null);
+      setPartnerOpen(false);
+      setPollsModalOpen(false);
+      setMyAdsOpen(false);
+      setConversationsOpen(false);
+      setAddAdOpen(false);
+      setSellerProfile(null);
+
+      // 2. Główne zakładki
+      if (cleanPath === '/') {
+        setSelectedAd(null);
+        setTab('home');
+        return;
+      }
+
+      if (cleanPath === '/ogloszenia') {
+        setSelectedAd(null);
+        setRouteCategoryId('all');
+        setRouteStreetName('all');
+        setVisitedTabs((prev) => ({ ...prev, ads: true }));
+        setTab('ads');
+        return;
+      }
+
+      if (cleanPath.startsWith('/ogloszenia/kategoria/')) {
+        const catSlug = cleanPath.replace('/ogloszenia/kategoria/', '');
+        const catId = SLUG_TO_CATEGORY_ID[catSlug];
+        setSelectedAd(null);
+        if (catId) {
+          setRouteCategoryId(catId);
+          setRouteStreetName('all');
+          setVisitedTabs((prev) => ({ ...prev, ads: true }));
+          setTab('ads');
+        } else {
+          setRouteNotFound(true);
+        }
+        return;
+      }
+
+      if (cleanPath.startsWith('/ogloszenia/ulica/')) {
+        const streetSlug = cleanPath.replace('/ogloszenia/ulica/', '');
+        const matchedStreet = streets.find((s) => slugify(s.name) === streetSlug);
+        setSelectedAd(null);
+        if (matchedStreet) {
+          setRouteStreetName(matchedStreet.name);
+          setRouteCategoryId('all');
+          setVisitedTabs((prev) => ({ ...prev, ads: true }));
+          setTab('ads');
+        } else {
+          setRouteNotFound(true);
+        }
+        return;
+      }
+
+      if (cleanPath === '/ogloszenia/dodaj') {
+        setVisitedTabs((prev) => ({ ...prev, ads: true }));
+        setTab('ads');
+        setAddAdOpen(true);
+        return;
+      }
+
+      if (cleanPath.startsWith('/ogloszenia/')) {
+        const slugId = cleanPath.replace('/ogloszenia/', '');
+        const adId = extractAdIdFromSlug(slugId);
+        const foundAd = adsList.find((a) => a.id === adId || a.id === slugId);
+        setVisitedTabs((prev) => ({ ...prev, ads: true }));
+        setTab('ads');
+        if (foundAd) {
+          setSelectedAd(foundAd);
+          const canonical = buildAdUrl(foundAd);
+          if (cleanPath !== canonical) {
+            window.history.replaceState({}, '', canonical);
+          }
+        } else {
+          setSelectedAd(null);
+          setRouteNotFound(true);
+        }
+        return;
+      }
+
+      if (cleanPath === '/przejazdy') {
+        setSelectedAd(null);
+        setVisitedTabs((prev) => ({ ...prev, rides: true }));
+        setTab('rides');
+        return;
+      }
+
+      if (cleanPath === '/rozmowy' || cleanPath.startsWith('/rozmowy/tag/')) {
+        setSelectedAd(null);
+        setVisitedTabs((prev) => ({ ...prev, talks: true }));
+        setTab('talks');
+        return;
+      }
+
+      // 3. Rozkład jazdy ZDiTM (/zditm, /zditm/m2, /zditm/m2/plac-dworcowy)
+      if (cleanPath === '/zditm' || cleanPath.startsWith('/zditm/')) {
+        const parts = cleanPath.split('/').filter(Boolean); // ['zditm', 'm2', 'plac-dworcowy']
+        const lineUpper = parts[1]?.toUpperCase();
+        const validLine: LineId =
+          lineUpper === 'M2' || lineUpper === 'M3' || lineUpper === 'M4' ? lineUpper : 'M2';
+        setSelectedZditmLine(validLine);
+        setSelectedZditmStop(parts[2] ? parts[2].replace(/-/g, ' ') : undefined);
+        setOverlay('zditm');
+        return;
+      }
+
+      // 4. Ankiety, Partner, Profil, Moje Ogłoszenia, Wiadomości, Profil Sąsiada
+      if (cleanPath === '/ankiety') {
+        setPollsModalOpen(true);
+        return;
+      }
+
+      if (cleanPath === '/partnerzy' || cleanPath.startsWith('/partnerzy/')) {
+        setPartnerOpen(true);
+        return;
+      }
+
+      if (cleanPath === '/profil') {
+        setOverlay('profile');
+        return;
+      }
+
+      if (cleanPath === '/moje-ogloszenia') {
+        setMyAdsOpen(true);
+        return;
+      }
+
+      if (cleanPath === '/wiadomosci') {
+        setConversationsOpen(true);
+        return;
+      }
+
+      if (cleanPath.startsWith('/sasiad/')) {
+        const slug = cleanPath.replace('/sasiad/', '');
+        const matchedStreet = streets.find((s) => slug.endsWith(`-${slugify(s.name)}`));
+        if (matchedStreet) {
+          const nameSlug = slug.slice(0, slug.length - slugify(matchedStreet.name).length - 1);
+          const formattedName = nameSlug
+            ? nameSlug.charAt(0).toUpperCase() + nameSlug.slice(1)
+            : 'Sąsiad';
+          setSellerProfile({ name: formattedName, street: matchedStreet.name });
+        } else {
+          setSellerProfile({ name: 'Sąsiad', street: 'Spacerowa' });
+        }
+        return;
+      }
+
+      // 5. Fallback 404 dla nieznanych ścieżek
+      setSelectedAd(null);
+      setRouteNotFound(true);
+    },
+    [adsList],
+  );
+
+  // Inicjalny odczyt URL oraz nasłuchiwanie zdarzeń popstate (przyciski Wstecz / Dalej)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    syncStateFromLocation(window.location.pathname);
+
+    const onPopState = () => {
+      syncStateFromLocation(window.location.pathname);
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [syncStateFromLocation]);
 
   // Navigation stack: layers ordered strictly from the topmost nesting level (Level 5 -> Level 1)
   const layers = [
@@ -401,40 +700,19 @@ export default function App() {
   const depth = layers.filter((l) => l.active).length;
   const layersRef = useRef(layers);
   layersRef.current = layers;
-  const prevDepth = useRef(0);
-  const closedByPop = useRef(false);
-  const ignorePops = useRef(0);
 
-  // Keep browser history in sync with the screen stack, so the system back
-  // button / gesture closes the top screen instead of leaving the app.
+  // Global Escape key handler to close top active layer on desktop
   useEffect(() => {
-    const diff = depth - prevDepth.current;
-    if (diff > 0) {
-      for (let i = 0; i < diff; i++) window.history.pushState({ layer: true }, '');
-    } else if (diff < 0) {
-      if (closedByPop.current) closedByPop.current = false;
-      else {
-        ignorePops.current += 1;
-        window.history.go(diff);
-      }
-    }
-    prevDepth.current = depth;
-  }, [depth]);
-
-  useEffect(() => {
-    const onPop = () => {
-      if (ignorePops.current > 0) {
-        ignorePops.current -= 1;
-        return;
-      }
-      const top = layersRef.current.find((l) => l.active);
-      if (top) {
-        closedByPop.current = true;
-        top.close();
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        const top = layersRef.current.find((l) => l.active);
+        if (top) {
+          top.close();
+        }
       }
     };
-    window.addEventListener('popstate', onPop);
-    return () => window.removeEventListener('popstate', onPop);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   // Swipe from the left screen edge = back
@@ -534,6 +812,12 @@ export default function App() {
 
   const handleTabChange = useCallback(
     (nextTab: TabId) => {
+      setRouteNotFound(false);
+      const targetUrl = TAB_PATHS[nextTab];
+      if (typeof window !== 'undefined' && window.location.pathname !== targetUrl) {
+        navigateTo(targetUrl);
+      }
+
       if (nextTab === tab) {
         if (mainRef.current) {
           mainRef.current.scrollTo({ top: 0, behavior: 'smooth' });
@@ -553,6 +837,192 @@ export default function App() {
     },
     [tab],
   );
+
+  // Dynamiczne obliczanie metadanych SEO i danych strukturalnych JSON-LD (Schema.org) dla aktualnej trasy
+  const seoProps = ((): SeoHeadProps => {
+    if (!user) {
+      return {
+        title: 'Dołącz do sąsiadów w Mińsku Mazowieckim — mójMińsk.app',
+        description:
+          'Zarejestruj swoje konto sąsiedzkie w Mińsku Mazowieckim i gminie Mińsk Mazowiecki. Zweryfikowana społeczność bez anonimowego hejtu.',
+        canonicalPath: '/dolacz',
+      };
+    }
+
+    if (routeNotFound) {
+      return {
+        title: 'Strona nie została znaleziona (404) — mójMińsk.app',
+        description: 'Szukana podstrona lub ogłoszenie w serwisie mójMińsk.app nie istnieje.',
+        noindex: true,
+      };
+    }
+
+    if (selectedAd) {
+      const canonical = buildAdUrl(selectedAd);
+      const priceLabel = selectedAd.kind === 'free' ? 'Za darmo' : `${selectedAd.price ?? 0} zł`;
+      return {
+        title: `${selectedAd.title} — ul. ${selectedAd.street} (${priceLabel})`,
+        description:
+          selectedAd.description ||
+          `${selectedAd.title} — ogłoszenie sąsiedzkie od ${selectedAd.author} z ul. ${selectedAd.street} w Mińsku Mazowieckim.`,
+        canonicalPath: canonical,
+        ogType: 'product',
+        ogImage: selectedAd.image,
+        noindex: selectedAd.status === 'sold',
+        jsonLd: [
+          {
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: 'Start', item: 'https://mojminsk.app/' },
+              {
+                '@type': 'ListItem',
+                position: 2,
+                name: 'Ogłoszenia Mińsk Mazowiecki',
+                item: 'https://mojminsk.app/ogloszenia',
+              },
+              {
+                '@type': 'ListItem',
+                position: 3,
+                name: selectedAd.title,
+                item: `https://mojminsk.app${canonical}`,
+              },
+            ],
+          },
+          {
+            '@context': 'https://schema.org',
+            '@type': 'Product',
+            name: selectedAd.title,
+            description:
+              selectedAd.description ||
+              `${selectedAd.title} — odbiór osobisty ul. ${selectedAd.street}, Mińsk Mazowiecki`,
+            image: selectedAd.images?.length ? selectedAd.images : [selectedAd.image],
+            offers: {
+              '@type': 'Offer',
+              priceCurrency: 'PLN',
+              price: selectedAd.kind === 'free' ? 0 : (selectedAd.price ?? 0),
+              availability:
+                selectedAd.status === 'sold'
+                  ? 'https://schema.org/SoldOut'
+                  : selectedAd.status === 'reserved'
+                    ? 'https://schema.org/LimitedAvailability'
+                    : 'https://schema.org/InStock',
+              url: `https://mojminsk.app${canonical}`,
+              areaServed: { '@type': 'City', name: 'Mińsk Mazowiecki' },
+            },
+          },
+        ],
+      };
+    }
+
+    if (overlay === 'zditm') {
+      const canonical = buildZditmUrl(selectedZditmLine, selectedZditmStop);
+      return {
+        title: selectedZditmStop
+          ? `Rozkład ZDiTM Linia ${selectedZditmLine} (${selectedZditmStop}) — Mińsk Mazowiecki`
+          : `Rozkład jazdy ZDiTM Mińsk Mazowiecki — Linie M2, M3, M4`,
+        description:
+          'Aktualny rozkład jazdy bezpłatnej komunikacji miejskiej ZDiTM w Mińsku Mazowieckim (linie M2, M3, M4). Sprawdź najbliższe odjazdy z Twojego przystanku.',
+        canonicalPath: canonical,
+      };
+    }
+
+    if (overlay === 'profile' || myAdsOpen || conversationsOpen || addAdOpen || editAd) {
+      return {
+        title: 'Panel mieszkańca — mójMińsk.app',
+        description: 'Zarządzaj swoim profilem sąsiedzkim, ogłoszeniami i wiadomościami.',
+        noindex: true,
+      };
+    }
+
+    if (sellerProfile) {
+      return {
+        title: `${sellerProfile.name} z ul. ${sellerProfile.street} — Profil sąsiada`,
+        description: `Zobacz ogłoszenia i aktywność sąsiedzką użytkownika ${sellerProfile.name} (ul. ${sellerProfile.street}) w Mińsku Mazowieckim.`,
+        canonicalPath: buildNeighborUrl(sellerProfile.name, sellerProfile.street),
+        noindex: true,
+      };
+    }
+
+    if (partnerOpen) {
+      return {
+        title: 'Strefa Partnera — Zniżki dla mieszkańców Mińska Mazowieckiego',
+        description:
+          'Ekskluzywne rabaty i oferty przygotowane przez lokalnych partnerów z Mińska Mazowieckiego dla zweryfikowanych sąsiadów.',
+        canonicalPath: '/partnerzy/jubiler-minsk',
+      };
+    }
+
+    if (pollsModalOpen) {
+      return {
+        title: 'Ankiety i plebiscyty miejskie — Mińsk Mazowiecki',
+        description:
+          'Głosuj w ankietach sąsiedzkich i sprawdzaj wyniki rankingów mieszkańców Mińska Mazowieckiego.',
+        canonicalPath: '/ankiety',
+      };
+    }
+
+    if (tab === 'ads') {
+      if (routeStreetName !== 'all') {
+        const streetCanonical = `/ogloszenia/ulica/${slugify(routeStreetName)}`;
+        return {
+          title: `Ogłoszenia sąsiedzkie: ul. ${routeStreetName} — Mińsk Mazowiecki`,
+          description: `Sprawdź ogłoszenia sprzedaży i oddam za darmo od sąsiadów z ulicy ${routeStreetName} w Mińsku Mazowieckim.`,
+          canonicalPath: streetCanonical,
+        };
+      }
+      const meta = CATEGORY_SEO_META[routeCategoryId] ?? CATEGORY_SEO_META.all;
+      const canonical = CATEGORY_URL_MAP[routeCategoryId] ?? '/ogloszenia';
+      return {
+        title: meta.title,
+        description: meta.description,
+        canonicalPath: canonical,
+        jsonLd: {
+          '@context': 'https://schema.org',
+          '@type': 'CollectionPage',
+          name: meta.title,
+          description: meta.description,
+          url: `https://mojminsk.app${canonical}`,
+        },
+      };
+    }
+
+    if (tab === 'rides') {
+      return {
+        title: 'Wspólne przejazdy (Carpooling) Mińsk Mazowiecki ↔ Warszawa & Nova Taxi',
+        description:
+          'Dojeżdżaj wygodnie z sąsiadami z Mińska Mazowieckiego do Warszawy i po powiecie mińskim lub zamów Nova Taxi z rabatem −10%.',
+        canonicalPath: '/przejazdy',
+      };
+    }
+
+    if (tab === 'talks') {
+      return {
+        title: 'Strefa Rozmów — Forum mieszkańców Mińska Mazowieckiego',
+        description:
+          'Lokalne dyskusje mieszkańców Mińska Mazowieckiego podpisane imieniem i ulicą. Sprawdź co dzieje się na Twoim osiedlu bez spamu i trolli.',
+        canonicalPath: '/rozmowy',
+      };
+    }
+
+    return {
+      title: 'mójMińsk — aplikacja mieszkańców Mińska Mazowieckiego',
+      description:
+        'Hiperlokalna platforma sąsiedzka dla mieszkańców Mińska Mazowieckiego i Gminy Mińsk Mazowiecki: ogłoszenia lokalne, rozkład ZDiTM M2/M3/M4, pogoda GIOŚ, przejazdy i rozmowy.',
+      canonicalPath: '/',
+      jsonLd: {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'mójMińsk.app',
+        url: 'https://mojminsk.app/',
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: 'https://mojminsk.app/ogloszenia?q={search_term_string}',
+          'query-input': 'required name=search_term_string',
+        },
+      },
+    };
+  })();
 
   // Preload async modal chunks in background so opening overlays has zero delay
   useEffect(() => {
@@ -582,23 +1052,90 @@ export default function App() {
   }, []);
 
   const showChrome = Boolean(user && !overlay);
-  const [isTestDesktopPreview] = useState(
-    () =>
-      typeof window !== 'undefined' &&
-      new URLSearchParams(window.location.search).get('test') === 'test',
-  );
 
   return (
     <div className="h-full h-[100dvh] w-full overflow-hidden bg-mist select-none">
-      {/* Infografika blokująca wejście z poziomu Desktopu (chyba że aktywny parametr ?test=test) */}
-      {!isTestDesktopPreview && <DesktopMobileOnlyBarrier />}
-
+      <SeoHead {...seoProps} />
       <div
         ref={setFrame}
-        className={`relative mx-auto flex h-full h-[100dvh] w-full max-w-md flex-col overflow-hidden bg-mist shadow-2xl ${
-          isTestDesktopPreview ? '' : 'md:hidden'
-        }`}
+        className="relative mx-auto flex h-full h-[100dvh] w-full max-w-md md:max-w-none flex-col overflow-hidden bg-mist shadow-2xl md:shadow-none"
       >
+        {/* TOP HORIZONTAL NAVBAR (Desktop Only >= 768px) */}
+        {user && (
+          <DesktopTopNavbar
+            currentTab={tab}
+            onTabChange={handleTabChange}
+            hasActiveSubpage={isChildScreenActive}
+            onCloseAllLayers={() => {
+              setOverlay(null);
+              setPartnerOpen(false);
+              setSelectedAd(null);
+              setMyAdsOpen(false);
+              setReportAd(null);
+              setAddAdOpen(false);
+              setAddRideOpen(false);
+              setChatAd(null);
+              setConversationsOpen(false);
+              setEditAd(null);
+              setSellerProfile(null);
+              setReserveAd(null);
+              setFiltersModalOpen(false);
+              setInstallModalOpen(false);
+              setAddFavBusOpen(false);
+              setPollsModalOpen(false);
+              setAddPollModalOpen(false);
+            }}
+            user={user}
+            unreadCount={unreadConversationsCount}
+            onOpenConversations={() =>
+              requireAuth(
+                'Wiadomości sąsiedzkie',
+                'Dostęp do czatu wymaga konta mieszkańca.',
+                () => {
+                  setConversationsOpen(true);
+                  navigateTo('/wiadomosci');
+                },
+              )
+            }
+            onAddNewAd={() =>
+              requireAuth(
+                'Dodaj ogłoszenie',
+                'Publikacja ogłoszeń na tablicy Mińska wymaga konta mieszkańca.',
+                () => {
+                  setAddAdOpen(true);
+                  navigateTo('/ogloszenia/dodaj');
+                },
+              )
+            }
+            onOpenZditm={() => {
+              setSelectedZditmLine('M2');
+              setSelectedZditmStop(undefined);
+              setOverlay('zditm');
+              navigateTo('/zditm/m2');
+            }}
+            onOpenPolls={() => {
+              setPollsModalOpen(true);
+              navigateTo('/ankiety');
+            }}
+            onProfileClick={() => {
+              setOverlay('profile');
+              navigateTo('/profil');
+            }}
+            onLogout={() => handleUpdateUser(null)}
+            searchQuery={desktopSearchQuery}
+            onSearchChange={(q) => {
+              setDesktopSearchQuery(q);
+              if (q && tab !== 'ads') {
+                setTab('ads');
+                setVisitedTabs((prev) => ({ ...prev, ads: true }));
+                navigateTo('/ogloszenia');
+              }
+            }}
+            onSearchClear={() => setDesktopSearchQuery('')}
+          />
+        )}
+
+        {/* FULL-WIDTH MAIN WORKSPACE */}
         <main
           ref={mainRef}
           className="h-full w-full flex-1 overflow-y-auto overscroll-contain"
@@ -607,18 +1144,30 @@ export default function App() {
             <div className="min-h-full">
               <OnboardingScreen onDone={handleUpdateUser} />
             </div>
+          ) : routeNotFound ? (
+            <div className="min-h-full">
+              <NotFoundScreen onBackHome={() => handleTabChange('home')} />
+            </div>
           ) : (
             <div className="min-h-full">
               <div className={tab === 'home' ? 'min-h-full' : 'hidden'}>
                 <HomeScreen
                   user={user}
                   onTab={handleTabChange}
-                  onProfile={() => setOverlay('profile')}
-                  onPartner={() => setPartnerOpen(true)}
+                  onProfile={() => {
+                    setOverlay('profile');
+                    navigateTo('/profil');
+                  }}
+                  onPartner={() => {
+                    setPartnerOpen(true);
+                    navigateTo('/partnerzy/jubiler-minsk');
+                  }}
                   onZditm={(line, stopName) => {
-                    setSelectedZditmLine(line ?? 'M2');
+                    const nextLine = line ?? 'M2';
+                    setSelectedZditmLine(nextLine);
                     setSelectedZditmStop(stopName);
                     setOverlay('zditm');
+                    navigateTo(buildZditmUrl(nextLine, stopName));
                   }}
                   favoriteBuses={favoriteBuses}
                   onAddFavoriteBus={() => setAddFavBusOpen(true)}
@@ -626,8 +1175,31 @@ export default function App() {
                   polls={polls}
                   userVotes={userVotes}
                   onVote={handleVote}
-                  onOpenPolls={() => setPollsModalOpen(true)}
+                  onOpenPolls={() => {
+                    setPollsModalOpen(true);
+                    navigateTo('/ankiety');
+                  }}
                   city={user.city || 'Mińsk Mazowiecki'}
+                  adsList={adsList}
+                  ridesList={ridesList}
+                  onAdClick={(ad) => {
+                    setSelectedAd(ad);
+                    navigateTo(buildAdUrl(ad));
+                  }}
+                  onAddAd={() =>
+                    requireAuth(
+                      'Dodaj ogłoszenie',
+                      'Publikacja ogłoszeń na tablicy Mińska wymaga konta mieszkańca.',
+                      () => {
+                        setAddAdOpen(true);
+                        navigateTo('/ogloszenia/dodaj');
+                      },
+                    )
+                  }
+                  onNeighborClick={(name, street) => {
+                    setSellerProfile({ name, street });
+                    navigateTo(buildNeighborUrl(name, street));
+                  }}
                 />
               </div>
 
@@ -635,11 +1207,17 @@ export default function App() {
                 <div className={tab === 'ads' ? 'min-h-full' : 'hidden'}>
                   <AdsScreen
                     user={user}
-                    onProfile={() => setOverlay('profile')}
+                    onProfile={() => {
+                      setOverlay('profile');
+                      navigateTo('/profil');
+                    }}
                     adsList={adsList}
                     likedAds={likedAds}
                     onToggleLike={handleToggleLike}
-                    onAdClick={(ad) => setSelectedAd(ad)}
+                    onAdClick={(ad) => {
+                      setSelectedAd(ad);
+                      navigateTo(buildAdUrl(ad));
+                    }}
                     onChatClick={(ad) =>
                       requireAuth(
                         'Napisz do sąsiada',
@@ -653,11 +1231,19 @@ export default function App() {
                       requireAuth(
                         'Wiadomości sąsiedzkie',
                         'Dostęp do czatu i historii rozmów z sąsiadami wymaga posiadania konta.',
-                        () => setConversationsOpen(true),
+                        () => {
+                          setConversationsOpen(true);
+                          navigateTo('/wiadomosci');
+                        },
                       )
                     }
                     conversationsUnreadCount={unreadConversationsCount}
                     filtersState={adFilters}
+                    externalSearchQuery={desktopSearchQuery}
+                    initialCategoryId={routeCategoryId}
+                    initialStreetName={routeStreetName}
+                    onCategoryRouteChange={setRouteCategoryId}
+                    onStreetRouteChange={setRouteStreetName}
                   />
                 </div>
               )}
@@ -666,7 +1252,10 @@ export default function App() {
                 <div className={tab === 'rides' ? 'min-h-full' : 'hidden'}>
                   <RidesScreen
                     user={user}
-                    onProfile={() => setOverlay('profile')}
+                    onProfile={() => {
+                      setOverlay('profile');
+                      navigateTo('/profil');
+                    }}
                     ridesList={ridesList}
                     onDeleteRide={handleDeleteRide}
                     onAuthRequired={(title, desc) =>
@@ -684,8 +1273,14 @@ export default function App() {
                 <div className={tab === 'talks' ? 'min-h-full' : 'hidden'}>
                   <TalksScreen
                     user={user}
-                    onProfile={() => setOverlay('profile')}
-                    onNeighborClick={(name, street) => setSellerProfile({ name, street })}
+                    onProfile={() => {
+                      setOverlay('profile');
+                      navigateTo('/profil');
+                    }}
+                    onNeighborClick={(name, street) => {
+                      setSellerProfile({ name, street });
+                      navigateTo(buildNeighborUrl(name, street));
+                    }}
                     onAuthRequired={(title, desc) =>
                       setAuthModal({
                         isOpen: true,
@@ -700,7 +1295,9 @@ export default function App() {
           )}
         </main>
 
-        {showChrome && !isChildScreenActive && <BottomNav tab={tab} onChange={handleTabChange} />}
+        <div className="md:hidden">
+          {showChrome && !isChildScreenActive && <BottomNav tab={tab} onChange={handleTabChange} />}
+        </div>
 
         {depth > 0 && (
           <div
@@ -728,19 +1325,28 @@ export default function App() {
                 handleUpdateUser(null);
                 closeOverlay();
               }}
-              onPartner={() => setPartnerOpen(true)}
+              onPartner={() => {
+                setPartnerOpen(true);
+                navigateTo('/partnerzy/jubiler-minsk');
+              }}
               onAddAd={() =>
                 requireAuth(
                   'Dodaj ogłoszenie',
                   'Publikacja ogłoszeń na tablicy Mińska wymaga konta mieszkańca.',
-                  () => setAddAdOpen(true),
+                  () => {
+                    setAddAdOpen(true);
+                    navigateTo('/ogloszenia/dodaj');
+                  },
                 )
               }
               onMyAds={() =>
                 requireAuth(
                   'Twoje ogłoszenia',
                   'Zarządzanie ogłoszeniami dostępne jest po zarejestrowaniu konta.',
-                  () => setMyAdsOpen(true),
+                  () => {
+                    setMyAdsOpen(true);
+                    navigateTo('/moje-ogloszenia');
+                  },
                 )
               }
               myAdsCount={userActiveAdsCount}
@@ -749,7 +1355,10 @@ export default function App() {
                 requireAuth(
                   'Wiadomości sąsiedzkie',
                   'Dostęp do czatu wymaga konta mieszkańca.',
-                  () => setConversationsOpen(true),
+                  () => {
+                    setConversationsOpen(true);
+                    navigateTo('/wiadomosci');
+                  },
                 )
               }
               conversations={conversations}
@@ -988,7 +1597,10 @@ export default function App() {
               onReportClick={(ad) => setReportAd(ad)}
               onStatusChange={handleStatusChange}
               onDelete={handleDeleteAd}
-              onSellerClick={(name, street) => setSellerProfile({ name, street })}
+              onSellerClick={(name, street) => {
+                setSellerProfile({ name, street });
+                navigateTo(buildNeighborUrl(name, street));
+              }}
               onEditClick={(ad) => setEditAd(ad)}
               onReserveClick={(ad) =>
                 requireAuth(
@@ -1070,6 +1682,7 @@ export default function App() {
               onOpenAd={(ad) => {
                 setSellerProfile(null);
                 setSelectedAd(ad);
+                navigateTo(buildAdUrl(ad));
               }}
               onStartChat={(ad) =>
                 requireAuth(

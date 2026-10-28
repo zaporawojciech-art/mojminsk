@@ -1,14 +1,15 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Car, House, Megaphone, MessagesSquare } from 'lucide-react';
+import { TAB_PATHS } from '../router/urlUtils';
 import { cn } from './ui';
 
 export type TabId = 'home' | 'ads' | 'rides' | 'talks';
 
-const items: { id: TabId; label: string; icon: typeof House }[] = [
-  { id: 'home', label: 'Start', icon: House },
-  { id: 'ads', label: 'Ogłoszenia', icon: Megaphone },
-  { id: 'rides', label: 'Przejazdy', icon: Car },
-  { id: 'talks', label: 'Rozmowy', icon: MessagesSquare },
+const items: { id: TabId; label: string; href: string; icon: typeof House }[] = [
+  { id: 'home', label: 'Start', href: TAB_PATHS.home, icon: House },
+  { id: 'ads', label: 'Ogłoszenia', href: TAB_PATHS.ads, icon: Megaphone },
+  { id: 'rides', label: 'Przejazdy', href: TAB_PATHS.rides, icon: Car },
+  { id: 'talks', label: 'Rozmowy', href: TAB_PATHS.talks, icon: MessagesSquare },
 ];
 
 const NAV_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)';
@@ -146,7 +147,7 @@ export function BottomNav({ tab, onChange }: { tab: TabId; onChange: (t: TabId) 
           className="pointer-events-none absolute top-1.5 bottom-1.5 left-0 z-0 rounded-full bg-coral shadow-coral will-change-[transform,width]"
         />
 
-        {items.map(({ id, label, icon: Icon }, idx) => {
+        {items.map(({ id, label, href, icon: Icon }, idx) => {
           const active = visualTab === id;
           const labelW = metrics.labelWidths[idx] ?? 48;
           const itemActiveW = 32 + 20 + 6 + labelW;
@@ -170,9 +171,13 @@ export function BottomNav({ tab, onChange }: { tab: TabId; onChange: (t: TabId) 
               }}
               className="absolute top-1.5 bottom-1.5 left-0 z-10 will-change-transform"
             >
-              <button
-                type="button"
-                onClick={() => handleSelect(id)}
+              <a
+                href={href}
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                  e.preventDefault();
+                  handleSelect(id);
+                }}
                 aria-label={label}
                 aria-current={active ? 'page' : undefined}
                 style={{
@@ -180,7 +185,7 @@ export function BottomNav({ tab, onChange }: { tab: TabId; onChange: (t: TabId) 
                   pointerEvents: 'auto',
                 }}
                 className={cn(
-                  'group relative h-12 rounded-full select-none active:scale-[0.94] transition-colors duration-150',
+                  'group relative block h-12 rounded-full select-none active:scale-[0.94] transition-colors duration-150',
                   active ? 'text-ink' : 'text-white/55 hover:text-white',
                 )}
               >
@@ -213,7 +218,7 @@ export function BottomNav({ tab, onChange }: { tab: TabId; onChange: (t: TabId) 
                 >
                   {label}
                 </span>
-              </button>
+              </a>
             </li>
           );
         })}

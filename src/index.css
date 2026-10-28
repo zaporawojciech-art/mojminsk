@@ -188,3 +188,25 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Desktop Web Refinement (>= 768px): Crisp 12px-14px corners & instant page transitions */
+@media (min-width: 768px) {
+  .rounded-4xl {
+    border-radius: 14px !important;
+  }
+  .rounded-3xl {
+    border-radius: 12px !important;
+  }
+  .rounded-2xl {
+    border-radius: 10px !important;
+  }
+  .native-view-shell.native-screen-slide {
+    animation: tabViewEnter 0.12s ease-out forwards !important;
+    transform: none !important;
+  }
+  .native-view-shell.native-screen-exit {
+    animation: none !important;
+    opacity: 0 !important;
+    transition: opacity 0.1s ease-out !important;
+  }
+}

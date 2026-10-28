@@ -84,11 +84,11 @@ export function MyAdsModal({
   return (
     <div
       className={cn(
-        'fixed inset-0 z-50 flex flex-col bg-mist select-none',
+        'fixed inset-0 md:relative md:inset-auto md:h-full md:w-full z-50 flex flex-col bg-mist select-none',
         isClosing ? 'native-screen-exit' : 'native-screen-slide',
       )}
     >
-      <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist">
+      <div className="mx-auto flex h-full w-full max-w-md md:max-w-none flex-col overflow-hidden bg-mist">
         {/* Native Top Navigation Bar */}
         <NativeHeader
           title="Moje ogłoszenia"
@@ -107,10 +107,10 @@ export function MyAdsModal({
           }
         />
 
-        {/* Compact Mobile Summary & Segmented Filter Control */}
-        <div className="border-b border-mist-300 bg-white px-4 pb-3 pt-1 shrink-0 space-y-2.5">
+        {/* Compact Summary & Segmented Filter Control */}
+        <div className="border-b border-mist-300 bg-white px-4 md:px-8 lg:px-12 pb-3 pt-1 md:py-3.5 shrink-0 space-y-2.5 md:space-y-0 md:flex md:items-center md:justify-between md:gap-6">
           {/* Slim stats strip */}
-          <div className="flex items-center justify-between rounded-2xl bg-mist/70 px-3.5 py-2 text-[11.5px] font-semibold text-ink-600">
+          <div className="flex items-center justify-between md:justify-start md:gap-6 rounded-2xl md:rounded-xl bg-mist/70 px-3.5 py-2 text-[11.5px] md:text-[12.5px] font-semibold text-ink-600">
             <span className="flex items-center gap-1.5">
               <Eye className="h-3.5 w-3.5 text-ink-400" />
               Łącznie wyświetleń: <strong className="font-extrabold text-ink">{totalViews}</strong>
@@ -122,8 +122,8 @@ export function MyAdsModal({
             </span>
           </div>
 
-          {/* 4-column Segmented Tabs fitting 100% mobile width */}
-          <div className="grid grid-cols-4 gap-1 rounded-2xl bg-mist p-1">
+          {/* 4-column Segmented Tabs */}
+          <div className="grid grid-cols-4 gap-1 rounded-2xl md:rounded-xl bg-mist p-1 md:w-auto md:min-w-[420px]">
             {tabs.map((tab) => {
               const active = filter === tab.id;
               return (
@@ -132,18 +132,18 @@ export function MyAdsModal({
                   type="button"
                   onClick={() => setFilter(tab.id)}
                   className={cn(
-                    'flex flex-col items-center justify-center rounded-xl py-1.5 px-1 transition-all active:scale-95',
+                    'flex flex-col md:flex-row md:gap-1.5 items-center justify-center rounded-xl md:rounded-lg py-1.5 px-1 md:px-3 transition-all active:scale-95 cursor-pointer',
                     active
                       ? 'bg-white text-ink shadow-xs'
                       : 'text-ink-500 hover:text-ink',
                   )}
                 >
-                  <span className="text-[11px] font-bold leading-tight truncate max-w-full">
+                  <span className="text-[11px] md:text-[12px] font-bold leading-tight truncate max-w-full">
                     {tab.label}
                   </span>
                   <span
                     className={cn(
-                      'mt-0.5 rounded-full px-1.5 text-[9.5px] font-extrabold leading-tight',
+                      'mt-0.5 md:mt-0 rounded-full px-1.5 text-[9.5px] md:text-[10.5px] font-extrabold leading-tight',
                       active ? 'bg-ink text-white' : 'bg-mist-300/80 text-ink-600',
                     )}
                   >
@@ -155,10 +155,10 @@ export function MyAdsModal({
           </div>
         </div>
 
-        {/* Clean List of User Ads (No bloated photos) */}
-        <div className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-2.5 pb-28">
+        {/* Clean List / Desktop Multi-Column Grid of User Ads */}
+        <div className="flex-1 overflow-y-auto overscroll-contain p-4 md:px-8 lg:px-12 md:py-6 space-y-2.5 md:space-y-0 md:grid md:grid-cols-2 xl:grid-cols-3 md:gap-4 md:items-start pb-28 md:pb-8">
           {filteredAds.length === 0 ? (
-            <div className="mt-4 rounded-3xl bg-white p-7 text-center shadow-card">
+            <div className="mt-4 md:mt-0 md:col-span-full rounded-3xl md:rounded-2xl bg-white p-7 md:p-10 text-center shadow-card md:shadow-xs md:border md:border-mist-200">
               <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-sand-100 text-ink">
                 <Tag className="h-5 w-5" />
               </div>
@@ -171,7 +171,7 @@ export function MyAdsModal({
               <button
                 type="button"
                 onClick={onAddNew}
-                className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-coral px-5 py-2.5 text-[13px] font-bold text-ink shadow-coral active:scale-95 transition-transform"
+                className="mt-4 inline-flex items-center gap-1.5 rounded-full md:rounded-xl bg-coral px-5 py-2.5 text-[13px] font-bold text-ink shadow-coral active:scale-95 transition-transform cursor-pointer"
               >
                 <Plus className="h-4 w-4" />
                 Wystaw ogłoszenie
@@ -186,14 +186,19 @@ export function MyAdsModal({
               return (
                 <article
                   key={ad.id}
-                  className="overflow-hidden rounded-3xl border border-transparent bg-white shadow-card transition-all"
+                  className="overflow-hidden rounded-3xl md:rounded-2xl border border-transparent md:border-mist-200 bg-white shadow-card md:shadow-xs transition-all"
                 >
                   {/* Main List Item Row -> Tapping opens Offer View */}
                   <button
                     type="button"
                     onClick={() => onOpenAd(ad)}
-                    className="flex w-full items-center justify-between gap-3 p-4 text-left transition-colors hover:bg-mist/30 active:bg-mist/50"
+                    className="flex w-full items-center justify-between gap-3 p-4 text-left transition-colors hover:bg-mist/30 active:bg-mist/50 cursor-pointer"
                   >
+                    <img
+                      src={ad.image}
+                      alt={ad.title}
+                      className="hidden md:block h-16 w-16 rounded-xl object-cover shrink-0 bg-mist"
+                    />
                     <div className="min-w-0 flex-1">
                       {/* Top badges: Status + Time */}
                       <div className="flex flex-wrap items-center gap-1.5">
@@ -239,20 +244,20 @@ export function MyAdsModal({
                     </div>
 
                     {/* Right Arrow CTA -> Go to Offer View */}
-                    <div className="flex shrink-0 items-center gap-1 rounded-2xl bg-mist px-3 py-2 text-[11.5px] font-bold text-ink">
+                    <div className="flex shrink-0 items-center gap-1 rounded-2xl md:rounded-xl bg-mist px-3 py-2 text-[11.5px] font-bold text-ink">
                       <span>Oferta</span>
                       <ChevronRight className="h-4 w-4 text-ink-500" />
                     </div>
                   </button>
 
-                  {/* 1-Tap Mobile Status Switcher */}
+                  {/* 1-Tap Status Switcher */}
                   <div className="px-4 pb-2.5">
                     <div className="grid grid-cols-3 gap-1 rounded-xl bg-mist p-1">
                       <button
                         type="button"
                         onClick={() => onStatusChange(ad.id, 'active')}
                         className={cn(
-                          'flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-[11px] font-bold transition-all active:scale-95',
+                          'flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-[11px] font-bold transition-all active:scale-95 cursor-pointer',
                           status === 'active'
                             ? 'bg-emerald-600 text-white shadow-xs'
                             : 'text-ink-500 hover:text-ink',
@@ -271,7 +276,7 @@ export function MyAdsModal({
                         type="button"
                         onClick={() => onStatusChange(ad.id, 'reserved')}
                         className={cn(
-                          'flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-[11px] font-bold transition-all active:scale-95',
+                          'flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-[11px] font-bold transition-all active:scale-95 cursor-pointer',
                           status === 'reserved'
                             ? 'bg-amber-500 text-ink shadow-xs'
                             : 'text-ink-500 hover:text-ink',
@@ -285,7 +290,7 @@ export function MyAdsModal({
                         type="button"
                         onClick={() => onStatusChange(ad.id, 'sold')}
                         className={cn(
-                          'flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-[11px] font-bold transition-all active:scale-95',
+                          'flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-[11px] font-bold transition-all active:scale-95 cursor-pointer',
                           status === 'sold'
                             ? 'bg-ink text-white shadow-xs'
                             : 'text-ink-500 hover:text-ink',
@@ -307,7 +312,7 @@ export function MyAdsModal({
                         <button
                           type="button"
                           onClick={() => setConfirmDeleteId(null)}
-                          className="rounded-xl bg-white px-3 py-1.5 text-[11.5px] font-bold text-ink shadow-xs active:scale-95"
+                          className="rounded-xl bg-white px-3 py-1.5 text-[11.5px] font-bold text-ink shadow-xs active:scale-95 cursor-pointer"
                         >
                           Anuluj
                         </button>
@@ -317,7 +322,7 @@ export function MyAdsModal({
                             setConfirmDeleteId(null);
                             onDeleteAd(ad.id);
                           }}
-                          className="rounded-xl bg-coral px-3 py-1.5 text-[11.5px] font-bold text-ink shadow-xs active:scale-95"
+                          className="rounded-xl bg-coral px-3 py-1.5 text-[11.5px] font-bold text-ink shadow-xs active:scale-95 cursor-pointer"
                         >
                           Tak, usuń
                         </button>
@@ -328,7 +333,7 @@ export function MyAdsModal({
                       <button
                         type="button"
                         onClick={() => onEditAd?.(ad)}
-                        className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl bg-mist text-[11.5px] font-bold text-ink active:scale-95 transition-transform hover:bg-mist-200"
+                        className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl bg-mist text-[11.5px] font-bold text-ink active:scale-95 transition-transform hover:bg-mist-200 cursor-pointer"
                       >
                         <Edit3 className="h-3.5 w-3.5 text-ink-600" />
                         Edytuj ogłoszenie
@@ -338,7 +343,7 @@ export function MyAdsModal({
                         type="button"
                         onClick={() => setConfirmDeleteId(ad.id)}
                         aria-label="Usuń ogłoszenie"
-                        className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-mist text-ink-400 hover:bg-coral-50 hover:text-coral active:scale-95 transition-colors"
+                        className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-mist text-ink-400 hover:bg-coral-50 hover:text-coral active:scale-95 transition-colors cursor-pointer"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -350,8 +355,8 @@ export function MyAdsModal({
           )}
         </div>
 
-        {/* Sticky Bottom CTA Bar */}
-        <div className="border-t border-mist-300 bg-white/95 px-5 py-3 pb-[max(env(safe-area-inset-bottom),14px)] backdrop-blur shrink-0">
+        {/* Sticky Bottom CTA Bar (Mobile only) */}
+        <div className="md:hidden border-t border-mist-300 bg-white/95 px-5 py-3 pb-[max(env(safe-area-inset-bottom),14px)] backdrop-blur shrink-0">
           <button
             type="button"
             onClick={onAddNew}

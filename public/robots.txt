@@ -1,0 +1,28 @@
+User-agent: *
+Allow: /
+Allow: /ogloszenia
+Allow: /ogloszenia/kategoria/
+Allow: /ogloszenia/ulica/
+Allow: /przejazdy
+Allow: /rozmowy
+Allow: /zditm
+Allow: /ankiety
+Allow: /partnerzy/
+
+# Blokada ścieżek prywatnych, sesyjnych i formularzy edycji
+Disallow: /profil
+Disallow: /moje-ogloszenia
+Disallow: /wiadomosci
+Disallow: /ogloszenia/dodaj
+Disallow: /sasiad/
+
+# Blokada indeksacji duplikatów wynikających z sortowania i wyszukiwania wewnętrznego
+Disallow: /*?q=*
+Disallow: /*?sort=*
+Disallow: /*?min=*
+Disallow: /*?max=*
+Disallow: /*?darmo=*
+Disallow: /*?utm_*
+Disallow: /*?fbclid=*
+
+Sitemap: https://mojminsk.app/sitemap.xml

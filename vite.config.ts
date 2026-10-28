@@ -12,6 +12,12 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [
+          /^\/api\//,
+          /^\/sitemap.*\.xml$/,
+          /^\/robots\.txt$/,
+        ],
       },
       includeAssets: ['apple-touch-icon.png', 'icons/*.png', 'icons/*.svg'],
       manifest: {

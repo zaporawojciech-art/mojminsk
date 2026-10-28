@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Check,
   ChevronLeft,
@@ -62,10 +62,10 @@ export function AdDetailModal({
   const currentStatus = ad.status ?? 'active';
   const scrollRef = useRef<HTMLDivElement>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
-
   const lightboxStageRef = useRef<HTMLDivElement>(null);
 
   const photos = ad.images && ad.images.length > 0 ? ad.images : [ad.image];
+  const sellerSeed = isOwner ? user.seed : `${ad.author}-${ad.street}`;
 
   useLayoutEffect(() => {
     setActivePhotoIdx(0);
@@ -105,16 +105,6 @@ export function AdDetailModal({
     }
   };
 
-  const handleLightboxScroll = () => {
-    if (!lightboxStageRef.current) return;
-    const { scrollLeft, clientWidth } = lightboxStageRef.current;
-    if (clientWidth === 0) return;
-    const idx = Math.round(scrollLeft / clientWidth);
-    if (idx !== activePhotoIdx && idx >= 0 && idx < photos.length) {
-      setActivePhotoIdx(idx);
-    }
-  };
-
   const handleShare = async () => {
     const shareData = {
       title: `${ad.title} — mójMińsk`,
@@ -134,18 +124,29 @@ export function AdDetailModal({
     }
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   const floatBtn =
     'grid h-10 w-10 place-items-center rounded-full bg-white/90 text-ink shadow-md backdrop-blur transition-transform active:scale-90';
 
   return (
     <div
       className={cn(
-        'fixed inset-0 z-50 flex flex-col bg-mist select-none',
+        'flex h-full w-full flex-col bg-mist select-none overflow-hidden',
         isClosing ? 'native-screen-exit' : 'native-screen-slide',
       )}
     >
-      <div className="relative mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist">
-        {/* Floating controls over the full-bleed photo (stay visible while scrolling) */}
+      {/* =====================================================================
+       * 1. MOBILE VIEW (< 768px) — Native Mobile Sheet & Carousel
+       * =================================================================== */}
+      <div className="relative mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist md:hidden">
+        {/* Floating controls over the full-bleed photo */}
         <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-center justify-between px-4 pt-[max(env(safe-area-inset-top),12px)]">
           <button
             type="button"
@@ -179,7 +180,6 @@ export function AdDetailModal({
 
         {/* Scrollable Screen Content */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain pb-24">
-          {/* OLX-Style Hero Carousel */}
           <div className="relative aspect-[4/4.3] w-full bg-ink-900 overflow-hidden">
             <div
               ref={carouselRef}
@@ -192,12 +192,6 @@ export function AdDetailModal({
                   onClick={() => {
                     setIsZoomed(false);
                     setIsLightboxOpen(true);
-                    setTimeout(() => {
-                      if (lightboxStageRef.current) {
-                        const width = lightboxStageRef.current.clientWidth;
-                        lightboxStageRef.current.scrollTo({ left: width * activePhotoIdx, behavior: 'auto' });
-                      }
-                    }, 0);
                   }}
                   className="relative h-full w-full shrink-0 snap-center cursor-zoom-in"
                 >
@@ -211,39 +205,6 @@ export function AdDetailModal({
               ))}
             </div>
 
-            {/* Prev / Next Carousel Arrows (when multiple photos) */}
-            {photos.length > 1 && (
-              <>
-                {activePhotoIdx > 0 && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      scrollToPhoto(activePhotoIdx - 1);
-                    }}
-                    aria-label="Poprzednie zdjęcie"
-                    className="absolute left-3 top-1/2 z-20 -translate-y-1/2 grid h-9 w-9 place-items-center rounded-full bg-black/45 text-white backdrop-blur-xs transition-transform active:scale-90 hover:bg-black/65"
-                  >
-                    <ChevronLeft className="h-5 w-5" />
-                  </button>
-                )}
-                {activePhotoIdx < photos.length - 1 && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      scrollToPhoto(activePhotoIdx + 1);
-                    }}
-                    aria-label="Następne zdjęcie"
-                    className="absolute right-3 top-1/2 z-20 -translate-y-1/2 grid h-9 w-9 place-items-center rounded-full bg-black/45 text-white backdrop-blur-xs transition-transform active:scale-90 hover:bg-black/65"
-                  >
-                    <ChevronRight className="h-5 w-5" />
-                  </button>
-                )}
-              </>
-            )}
-
-            {/* Badges & Photo Counter Bar (positioned above the -mt-7 rounded sheet overlap) */}
             <div className="pointer-events-none absolute inset-x-4 bottom-10 z-20 flex items-end justify-between gap-2">
               <div className="flex flex-wrap items-center gap-1.5">
                 {currentStatus === 'reserved' && (
@@ -261,21 +222,15 @@ export function AdDetailModal({
                     Oddam za darmo
                   </span>
                 )}
-                {ad.kind === 'lost' && (
-                  <span className="rounded-full bg-coral px-2.5 py-1 text-[10.5px] font-bold text-ink shadow">
-                    Zaginął / Pomóż
-                  </span>
-                )}
               </div>
 
-              {/* OLX-style Photo Counter + Fullscreen Trigger */}
               <button
                 type="button"
                 onClick={() => {
                   setIsZoomed(false);
                   setIsLightboxOpen(true);
                 }}
-                className="pointer-events-auto flex shrink-0 items-center gap-1.5 rounded-full bg-black/65 px-3 py-1 text-[11.5px] font-bold text-white backdrop-blur-md shadow transition-transform active:scale-95"
+                className="pointer-events-auto flex shrink-0 items-center gap-1.5 rounded-full bg-black/65 px-3 py-1 text-[11.5px] font-bold text-white backdrop-blur-md shadow"
               >
                 <span>
                   {activePhotoIdx + 1} / {photos.length}
@@ -283,29 +238,11 @@ export function AdDetailModal({
                 <Maximize2 className="h-3 w-3 opacity-85" />
               </button>
             </div>
-
-            {/* Carousel Pagination Dots */}
-            {photos.length > 1 && (
-              <div className="pointer-events-none absolute inset-x-0 bottom-9 z-10 flex justify-center gap-1.5">
-                {photos.map((_, idx) => (
-                  <span
-                    key={idx}
-                    className={cn(
-                      'h-1.5 rounded-full transition-all',
-                      idx === activePhotoIdx ? 'w-4 bg-white shadow-xs' : 'w-1.5 bg-white/50',
-                    )}
-                  />
-                ))}
-              </div>
-            )}
           </div>
 
-          {/* OLX-Style Overlapping Sheet: slides with rounded top corners directly onto the photo */}
           <div className="relative z-20 -mt-7 rounded-t-[28px] bg-white px-5 pb-5 pt-3.5 shadow-[0_-8px_24px_rgba(17,22,29,0.1)]">
-            {/* Subtle sheet handle */}
             <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-mist-300" />
 
-            {/* Thumbnail Strip (if multiple photos) */}
             {photos.length > 1 && (
               <div className="mb-3.5 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
                 {photos.map((thumb, idx) => (
@@ -317,33 +254,15 @@ export function AdDetailModal({
                       'relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border-2 transition-all',
                       idx === activePhotoIdx
                         ? 'border-coral ring-2 ring-coral/30 scale-[1.03]'
-                        : 'border-transparent opacity-65 hover:opacity-100',
+                        : 'border-transparent opacity-65',
                     )}
                   >
                     <Img src={thumb} alt="" className="h-full w-full object-cover" />
                   </button>
                 ))}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsZoomed(false);
-                    setIsLightboxOpen(true);
-                    setTimeout(() => {
-                      if (lightboxStageRef.current) {
-                        const width = lightboxStageRef.current.clientWidth;
-                        lightboxStageRef.current.scrollTo({ left: width * activePhotoIdx, behavior: 'auto' });
-                      }
-                    }, 0);
-                  }}
-                  className="flex h-12 shrink-0 items-center gap-1 rounded-xl bg-mist px-3 text-[11px] font-bold text-ink-600 active:scale-95"
-                >
-                  <Maximize2 className="h-3.5 w-3.5" />
-                  Pełny ekran
-                </button>
               </div>
             )}
 
-            {/* Timestamp & Category Row */}
             <div className="flex items-center justify-between gap-2 text-[11.5px] text-ink-400">
               <span className="flex items-center gap-1 font-medium">
                 <Clock className="h-3.5 w-3.5" />
@@ -357,10 +276,8 @@ export function AdDetailModal({
               )}
             </div>
 
-            {/* Title (OLX places title & big price prominently in the top sheet) */}
             <h1 className="mt-1.5 text-[18px] font-bold leading-snug text-ink">{ad.title}</h1>
 
-            {/* Price & Negotiable Badge */}
             <div className="mt-2 flex flex-wrap items-baseline gap-2.5">
               <span className="font-display text-[28px] font-extrabold leading-none text-ink">
                 {ad.price ? zl(ad.price) : ad.kind === 'free' ? 'Za darmo' : 'Zgłoszenie'}
@@ -372,7 +289,6 @@ export function AdDetailModal({
               )}
             </div>
 
-            {/* Street & Views Footer inside Top Sheet */}
             <div className="mt-4 flex items-center justify-between border-t border-mist pt-3">
               <StreetPill street={`ul. ${ad.street}`} className="bg-sand-100 text-ink-700 text-[12px]" />
               <span className="flex items-center gap-1 text-[11.5px] font-medium text-ink-400">
@@ -382,9 +298,7 @@ export function AdDetailModal({
             </div>
           </div>
 
-          {/* Remaining Details Body */}
           <div className="space-y-3.5 p-4">
-            {/* Description */}
             <div className="rounded-3xl bg-white p-4 shadow-card">
               <h3 className="text-[12px] font-bold uppercase tracking-wider text-ink-400">Opis ogłoszenia</h3>
               <p className="mt-2 text-[14px] leading-relaxed text-ink-700 whitespace-pre-line">
@@ -393,122 +307,39 @@ export function AdDetailModal({
               </p>
             </div>
 
-            {/* Neighbor Profile Card */}
-            {(() => {
-              const sellerSeed = isOwner ? user.seed : `${ad.author}-${ad.street}`;
-              return (
-                <div
-                  onClick={() => onSellerClick?.(ad.author, ad.street)}
-                  className="group cursor-pointer rounded-3xl bg-white p-4 shadow-card transition-all hover:shadow-float active:scale-[0.99]"
-                >
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-[12px] font-bold uppercase tracking-wider text-ink-400">Sprzedający sąsiad</h3>
-                    <span className="flex items-center gap-1 text-[11.5px] font-bold text-ink-500 group-hover:text-ink transition-colors">
-                      Zobacz profil
-                      <ChevronRight className="h-3.5 w-3.5" />
-                    </span>
-                  </div>
-                  <div className="mt-3 flex items-center gap-3">
-                    <div className="relative h-12 w-12 shrink-0">
-                      <img
-                        src={avatarUrl(sellerSeed)}
-                        alt={ad.author}
-                        className="h-12 w-12 rounded-2xl bg-sand-100 object-cover ring-1 ring-mist-300"
-                      />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[15px] font-bold text-ink">{ad.author}</p>
-                      <p className="text-[12px] text-ink-500">Mieszkaniec Mińska · ul. {ad.street}</p>
-                    </div>
-                    <span className="rounded-full bg-mist px-2.5 py-1 text-[10.5px] font-bold text-ink-500">
-                      Odpowiada w ~15 min
-                    </span>
-                  </div>
+            <div
+              onClick={() => onSellerClick?.(ad.author, ad.street)}
+              className="group cursor-pointer rounded-3xl bg-white p-4 shadow-card"
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="text-[12px] font-bold uppercase tracking-wider text-ink-400">Sprzedający sąsiad</h3>
+                <span className="flex items-center gap-1 text-[11.5px] font-bold text-ink-500">
+                  Zobacz profil
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </span>
+              </div>
+              <div className="mt-3 flex items-center gap-3">
+                <img
+                  src={avatarUrl(sellerSeed)}
+                  alt={ad.author}
+                  className="h-12 w-12 rounded-2xl bg-sand-100 object-cover ring-1 ring-mist-300"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[15px] font-bold text-ink">{ad.author}</p>
+                  <p className="text-[12px] text-ink-500">Mieszkaniec Mińska · ul. {ad.street}</p>
                 </div>
-              );
-            })()}
-
-            {/* Local Safety Card */}
-            <div className="flex items-start gap-3 rounded-3xl bg-sand-100 p-4">
-              <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-sand-700" />
-              <div className="text-[12px] leading-snug text-ink-700">
-                <p className="font-bold">Odbiór osobisty w Mińsku Mazowieckim</p>
-                <p className="mt-0.5 text-ink-500">
-                  Spotkajcie się na osiedlu, sprawdźcie przedmiot na żywo i rozliczcie się bezpośrednio bez żadnych opłat.
-                </p>
               </div>
             </div>
-
-            {/* Owner Management Controls */}
-            {isOwner && (
-              <div className="space-y-3 rounded-3xl bg-white p-4 shadow-card">
-                <h3 className="text-[12px] font-bold uppercase tracking-wider text-ink-400">
-                  Zarządzaj swoim ogłoszeniem
-                </h3>
-
-                {/* Edit Button */}
-                <button
-                  type="button"
-                  onClick={() => onEditClick?.(ad)}
-                  className="flex h-11 w-full items-center justify-center gap-1.5 rounded-2xl bg-mist px-3 text-[13px] font-bold text-ink hover:bg-mist-200 transition-all active:scale-95"
-                >
-                  <Edit3 className="h-4 w-4" />
-                  Edytuj treść ogłoszenia
-                </button>
-
-                <div className="grid grid-cols-2 gap-2 border-t border-mist pt-2">
-                  {currentStatus !== 'active' && (
-                    <button
-                      onClick={() => onStatusChange?.(ad.id, 'active')}
-                      className="rounded-2xl border border-mist bg-mist py-2.5 text-[12.5px] font-bold text-ink active:scale-95"
-                    >
-                      Przywróć aktywne
-                    </button>
-                  )}
-                  {currentStatus !== 'reserved' && (
-                    <button
-                      onClick={() => onStatusChange?.(ad.id, 'reserved')}
-                      className="rounded-2xl bg-amber-50 py-2.5 text-[12.5px] font-bold text-amber-900 border border-amber-200 active:scale-95"
-                    >
-                      Oznacz jako zarezerwowane
-                    </button>
-                  )}
-                  {currentStatus !== 'sold' && (
-                    <button
-                      onClick={() => onStatusChange?.(ad.id, 'sold')}
-                      className="rounded-2xl bg-mist-300 py-2.5 text-[12.5px] font-bold text-ink active:scale-95"
-                    >
-                      Oznacz jako sprzedane
-                    </button>
-                  )}
-                </div>
-                {onDelete && (
-                  <button
-                    onClick={() => {
-                      if (window.confirm('Czy na pewno chcesz usunąć to ogłoszenie?')) {
-                        onDelete(ad.id);
-                        onClose();
-                      }
-                    }}
-                    className="flex w-full items-center justify-center gap-1.5 rounded-2xl py-2 text-[12px] font-bold text-coral hover:bg-coral-50 active:scale-95"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Usuń ogłoszenie
-                  </button>
-                )}
-              </div>
-            )}
           </div>
         </div>
 
-        {/* Pinned Bottom Action Bar (Native App Style) */}
         {!isOwner && (
           <div className="border-t border-mist bg-white px-4 py-2.5 pb-[max(env(safe-area-inset-bottom),14px)] shrink-0 shadow-float space-y-2">
             <div className="flex items-center gap-2.5">
               {currentStatus !== 'sold' && (
                 <button
                   onClick={() => onReserveClick?.(ad)}
-                  className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-mist-300/80 bg-mist/70 text-[14px] font-bold text-ink hover:bg-mist active:scale-[0.98] transition-all"
+                  className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-mist-300/80 bg-mist/70 text-[14px] font-bold text-ink"
                 >
                   <HeartHandshake className="h-4.5 w-4.5 text-coral shrink-0" />
                   Zarezerwuj
@@ -519,146 +350,379 @@ export function AdDetailModal({
                   onClose();
                   onChatClick?.(ad);
                 }}
-                className={cn(
-                  'flex h-12 items-center justify-center gap-2 rounded-2xl text-[14px] font-bold transition-all active:scale-[0.98]',
-                  currentStatus === 'sold'
-                    ? 'w-full bg-mist text-ink-600'
-                    : 'flex-1 bg-ink text-white shadow-sm hover:bg-ink-700',
-                )}
+                className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-ink text-white text-[14px] font-bold"
               >
                 <MessageCircle className="h-4.5 w-4.5 shrink-0" />
                 Czat
               </button>
             </div>
-            <button
-              onClick={() => onReportClick?.(ad)}
-              className="flex w-full items-center justify-center gap-1.5 text-[11px] font-medium text-ink-400 hover:text-ink-600"
-            >
-              <ShieldAlert className="h-3 w-3" />
-              Zgłoś nieaktualne lub naruszenie
-            </button>
           </div>
         )}
+      </div>
 
-        {/* Full-Screen Photo Lightbox (OLX Style Full Display) */}
-        {isLightboxOpen && (
-          <div className="fixed inset-0 z-[80] flex flex-col bg-black/95 backdrop-blur-md">
-            <div className="mx-auto flex h-full w-full max-w-md flex-col justify-between overflow-hidden">
-              {/* Top Lightbox Bar */}
-              <div className="flex items-center justify-between px-4 pt-[max(env(safe-area-inset-top),14px)] pb-3 text-white">
-                <span className="rounded-full bg-white/15 px-3 py-1 text-[13px] font-bold">
-                  {activePhotoIdx + 1} / {photos.length}
-                </span>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsZoomed((z) => !z)}
-                    aria-label={isZoomed ? 'Pomniejsz zdjęcie' : 'Powiększ zdjęcie'}
-                    className="grid h-10 w-10 place-items-center rounded-full bg-white/15 text-white transition-transform active:scale-90 hover:bg-white/25"
-                  >
-                    {isZoomed ? <ZoomOut className="h-5 w-5" /> : <ZoomIn className="h-5 w-5" />}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsZoomed(false);
-                      setIsLightboxOpen(false);
-                    }}
-                    aria-label="Zamknij podgląd zdjęcia"
-                    className="grid h-10 w-10 place-items-center rounded-full bg-white/15 text-white transition-transform active:scale-90 hover:bg-white/25"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
-                </div>
-              </div>
+      {/* =====================================================================
+       * 2. DESKTOP VIEW (>= 768px) — Full-Width OLX / Allegro Product Subpage
+       * =================================================================== */}
+      <div className="hidden md:block flex-1 overflow-y-auto w-full px-8 lg:px-12 py-5">
+        {/* Top Breadcrumb & Action Bar */}
+        <div className="mb-5 flex items-center justify-between border-b border-mist-300 pb-3.5">
+          <div className="flex items-center gap-3 text-[13px]">
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3.5 py-1.5 font-bold text-ink shadow-card border border-mist-300 hover:bg-mist transition-colors"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span>Wróć do ogłoszeń</span>
+            </button>
+            <span className="text-ink-300">/</span>
+            <span className="font-semibold text-ink-500">{ad.category || 'Ogłoszenia sąsiedzkie'}</span>
+            <span className="text-ink-300">/</span>
+            <span className="font-semibold text-ink-700 truncate max-w-md">{ad.title}</span>
+          </div>
 
-              {/* Main Full-Screen Image Stage */}
-              <div className="relative flex flex-1 items-center justify-center overflow-hidden">
-                <div
-                  ref={lightboxStageRef}
-                  onScroll={handleLightboxScroll}
-                  className="flex h-full w-full snap-x snap-mandatory overflow-x-auto scrollbar-none"
-                >
-                  {photos.map((photoUrl, idx) => (
-                    <div
-                      key={idx}
-                      className="flex h-full w-full shrink-0 snap-center items-center justify-center p-2"
-                    >
-                      <img
-                        src={photoUrl}
-                        alt={`${ad.title} — pełny ekran ${idx + 1}`}
-                        onClick={() => setIsZoomed((z) => !z)}
-                        className={cn(
-                          'max-h-full max-w-full object-contain transition-transform duration-200 select-none',
-                          isZoomed && idx === activePhotoIdx ? 'scale-150 cursor-zoom-out' : 'scale-100 cursor-zoom-in',
-                        )}
-                      />
-                    </div>
-                  ))}
-                </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleShare}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-[12.5px] font-bold text-ink shadow-card border border-mist-300 hover:bg-mist transition-colors"
+            >
+              {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Share2 className="h-4 w-4 text-ink-600" />}
+              <span>{copied ? 'Skopiowano link' : 'Udostępnij'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onToggleLike?.(ad.id)}
+              className={cn(
+                'inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-[12.5px] font-bold shadow-card border transition-colors',
+                isLiked
+                  ? 'bg-coral-50 border-coral text-coral-800'
+                  : 'bg-white border-mist-300 text-ink hover:bg-mist',
+              )}
+            >
+              <Heart className={cn('h-4 w-4', isLiked && 'fill-coral text-coral')} />
+              <span>{isLiked ? 'Obserwujesz' : 'Obserwuj'}</span>
+            </button>
+          </div>
+        </div>
 
-                {photos.length > 1 && !isZoomed && (
+        {/* 12-Column Product Layout (Left 8 cols: Photo Stage + Description | Right 4 cols: Sticky Buy/Contact Box + Seller) */}
+        <div className="grid grid-cols-12 gap-6 items-start pb-12">
+          {/* LEFT COLUMN (7 or 8 cols): Large Gallery + Full Description */}
+          <div className="col-span-12 lg:col-span-7 xl:col-span-8 space-y-5">
+            {/* Photo Gallery Card */}
+            <div className="rounded-2xl bg-white p-4 shadow-card border border-mist-200">
+              <div className="relative aspect-[16/10] w-full overflow-hidden rounded-xl bg-ink-900">
+                <Img
+                  src={photos[activePhotoIdx]}
+                  alt={`${ad.title} — zdjęcie ${activePhotoIdx + 1}`}
+                  className="h-full w-full object-contain bg-ink-900 cursor-zoom-in"
+                />
+
+                {photos.length > 1 && (
                   <>
                     {activePhotoIdx > 0 && (
                       <button
                         type="button"
-                        onClick={() => scrollToPhoto(activePhotoIdx - 1)}
-                        aria-label="Poprzednie zdjęcie"
-                        className="absolute left-3 top-1/2 -translate-y-1/2 z-20 grid h-11 w-11 place-items-center rounded-full bg-white/20 text-white backdrop-blur-xs transition-transform active:scale-90 hover:bg-white/30"
+                        onClick={() => setActivePhotoIdx((i) => Math.max(0, i - 1))}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 grid h-10 w-10 place-items-center rounded-full bg-white/90 text-ink shadow-md hover:bg-white transition-all"
                       >
-                        <ChevronLeft className="h-6 w-6" />
+                        <ChevronLeft className="h-5 w-5" />
                       </button>
                     )}
                     {activePhotoIdx < photos.length - 1 && (
                       <button
                         type="button"
-                        onClick={() => scrollToPhoto(activePhotoIdx + 1)}
-                        aria-label="Następne zdjęcie"
-                        className="absolute right-3 top-1/2 -translate-y-1/2 z-20 grid h-11 w-11 place-items-center rounded-full bg-white/20 text-white backdrop-blur-xs transition-transform active:scale-90 hover:bg-white/30"
+                        onClick={() => setActivePhotoIdx((i) => Math.min(photos.length - 1, i + 1))}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 grid h-10 w-10 place-items-center rounded-full bg-white/90 text-ink shadow-md hover:bg-white transition-all"
                       >
-                        <ChevronRight className="h-6 w-6" />
+                        <ChevronRight className="h-5 w-5" />
                       </button>
                     )}
                   </>
                 )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsZoomed(false);
+                    setIsLightboxOpen(true);
+                  }}
+                  className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-lg bg-black/70 px-3 py-1.5 text-[12px] font-bold text-white backdrop-blur-md hover:bg-black/85 transition-colors"
+                >
+                  <Maximize2 className="h-3.5 w-3.5" />
+                  <span>Powiększ ({activePhotoIdx + 1}/{photos.length})</span>
+                </button>
               </div>
 
-              {/* Bottom Lightbox Thumbnails & Caption */}
-              <div className="space-y-3 bg-gradient-to-t from-black via-black/90 to-transparent px-4 pt-3 pb-[max(env(safe-area-inset-bottom),16px)]">
-                <div className="flex items-baseline justify-between gap-2 text-white">
-                  <p className="truncate text-[14px] font-bold">{ad.title}</p>
-                  <span className="shrink-0 font-display text-[16px] font-extrabold text-coral">
-                    {ad.price ? zl(ad.price) : ad.kind === 'free' ? 'Za darmo' : ''}
-                  </span>
+              {/* Thumbnails Strip */}
+              {photos.length > 1 && (
+                <div className="mt-3 flex items-center gap-2.5 overflow-x-auto pt-1">
+                  {photos.map((thumb, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setActivePhotoIdx(idx)}
+                      className={cn(
+                        'relative h-16 w-20 shrink-0 overflow-hidden rounded-lg border-2 transition-all',
+                        idx === activePhotoIdx
+                          ? 'border-ink ring-2 ring-ink/20'
+                          : 'border-transparent opacity-65 hover:opacity-100',
+                      )}
+                    >
+                      <Img src={thumb} alt="" className="h-full w-full object-cover" />
+                    </button>
+                  ))}
                 </div>
+              )}
+            </div>
 
-                {photos.length > 1 && (
-                  <div className="flex items-center justify-center gap-2 overflow-x-auto py-1 scrollbar-none">
-                    {photos.map((thumb, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => {
-                          setIsZoomed(false);
-                          scrollToPhoto(idx);
-                        }}
-                        className={cn(
-                          'relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border-2 transition-all',
-                          idx === activePhotoIdx
-                            ? 'border-coral scale-105 opacity-100'
-                            : 'border-white/20 opacity-50 hover:opacity-80',
-                        )}
-                      >
-                        <img src={thumb} alt="" className="h-full w-full object-cover" />
-                      </button>
-                    ))}
-                  </div>
+            {/* Full Description & Parameters Card */}
+            <div className="rounded-2xl bg-white p-6 shadow-card border border-mist-200">
+              <div className="flex flex-wrap items-center gap-3 border-b border-mist pb-4 mb-4">
+                <span className="rounded-lg bg-mist px-3 py-1 text-[12px] font-bold text-ink-700">
+                  Kategoria: {ad.category || 'Ogłoszenia lokalne'}
+                </span>
+                {ad.condition && (
+                  <span className="rounded-lg bg-mist px-3 py-1 text-[12px] font-bold text-ink-700">
+                    Stan: {ad.condition}
+                  </span>
                 )}
+                <span className="rounded-lg bg-mist px-3 py-1 text-[12px] font-bold text-ink-700">
+                  Lokalizacja: Mińsk Mazowiecki, ul. {ad.street}
+                </span>
+              </div>
+
+              <h2 className="font-display text-[17px] font-extrabold text-ink">
+                Opis ogłoszenia
+              </h2>
+              <p className="mt-2.5 text-[14px] leading-relaxed text-ink-700 whitespace-pre-line">
+                {ad.description ||
+                  'Ogłoszenie dodane przez mieszkańca Mińska Mazowieckiego. Skontaktuj się ze sprzedającym na czacie, aby ustalić dogodny termin i miejsce odbioru osobistego na osiedlu.'}
+              </p>
+
+              <div className="mt-6 flex items-center justify-between border-t border-mist pt-3 text-[11.5px] text-ink-400">
+                <span>ID ogłoszenia: #{ad.id.toUpperCase()}</span>
+                <span>Wyświetlenia: {ad.views ?? 38}</span>
               </div>
             </div>
           </div>
-        )}
+
+          {/* RIGHT COLUMN (5 or 4 cols): Sticky Offer Summary, Contact CTA & Neighbor Profile */}
+          <div className="col-span-12 lg:col-span-5 xl:col-span-4 space-y-4 sticky top-2">
+            {/* Main Offer & Actions Card */}
+            <div className="rounded-2xl bg-white p-5 shadow-card border border-mist-200">
+              <div className="flex items-center justify-between gap-2 text-[12px] text-ink-400">
+                <span className="flex items-center gap-1 font-semibold">
+                  <Clock className="h-3.5 w-3.5" />
+                  Dodano {ad.time}
+                </span>
+                {currentStatus === 'reserved' && (
+                  <span className="rounded-md bg-amber-400 px-2 py-0.5 text-[11px] font-extrabold text-ink">
+                    Zarezerwowane
+                  </span>
+                )}
+                {currentStatus === 'sold' && (
+                  <span className="rounded-md bg-ink px-2 py-0.5 text-[11px] font-extrabold text-white">
+                    Sprzedane
+                  </span>
+                )}
+              </div>
+
+              <h1 className="mt-2 font-display text-[21px] font-extrabold leading-snug text-ink">
+                {ad.title}
+              </h1>
+
+              <div className="mt-3 flex items-baseline gap-2.5">
+                <span className="font-display text-[30px] font-extrabold leading-none text-ink">
+                  {ad.price ? zl(ad.price) : ad.kind === 'free' ? 'Za darmo' : 'Zgłoszenie'}
+                </span>
+                {ad.negotiable && (
+                  <span className="rounded-md bg-sand-100 px-2 py-0.5 text-[11px] font-bold text-sand-900">
+                    Do negocjacji
+                  </span>
+                )}
+              </div>
+
+              <div className="mt-3 flex items-center gap-2">
+                <StreetPill street={`Mińsk Maz. · ul. ${ad.street}`} className="bg-sand-100 text-ink-800 text-[12px] py-1 px-2.5" />
+              </div>
+
+              {/* Action Buttons */}
+              {!isOwner ? (
+                <div className="mt-5 space-y-2.5 border-t border-mist pt-4">
+                  <button
+                    type="button"
+                    onClick={() => onChatClick?.(ad)}
+                    className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-ink text-[13.5px] font-bold text-white shadow-sm hover:bg-ink-700 transition-all active:scale-[0.99]"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    <span>Napisz wiadomość do sąsiada</span>
+                  </button>
+
+                  {currentStatus !== 'sold' && (
+                    <button
+                      type="button"
+                      onClick={() => onReserveClick?.(ad)}
+                      className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-mist-300 bg-mist/70 text-[13.5px] font-bold text-ink hover:bg-mist-300 transition-all active:scale-[0.99]"
+                    >
+                      <HeartHandshake className="h-4 w-4 text-coral-700" />
+                      <span>Zarezerwuj odbiór osobisty</span>
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="mt-5 space-y-2.5 border-t border-mist pt-4">
+                  <p className="text-[11px] font-extrabold uppercase tracking-wider text-ink-400">
+                    Zarządzaj swoim ogłoszeniem
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => onEditClick?.(ad)}
+                    className="flex h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-mist text-[12.5px] font-bold text-ink hover:bg-mist-300 transition-colors"
+                  >
+                    <Edit3 className="h-3.5 w-3.5" />
+                    <span>Edytuj ogłoszenie</span>
+                  </button>
+                  <div className="grid grid-cols-2 gap-2">
+                    {currentStatus !== 'reserved' && (
+                      <button
+                        type="button"
+                        onClick={() => onStatusChange?.(ad.id, 'reserved')}
+                        className="rounded-xl bg-amber-50 py-2 text-[12px] font-bold text-amber-900 border border-amber-200"
+                      >
+                        Oznacz zarezerwowane
+                      </button>
+                    )}
+                    {currentStatus !== 'sold' && (
+                      <button
+                        type="button"
+                        onClick={() => onStatusChange?.(ad.id, 'sold')}
+                        className="rounded-xl bg-mist-300 py-2 text-[12px] font-bold text-ink"
+                      >
+                        Oznacz sprzedane
+                      </button>
+                    )}
+                  </div>
+                  {onDelete && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (window.confirm('Czy na pewno chcesz usunąć to ogłoszenie?')) {
+                          onDelete(ad.id);
+                          onClose();
+                        }
+                      }}
+                      className="flex w-full items-center justify-center gap-1.5 rounded-xl py-2 text-[12px] font-bold text-coral hover:bg-coral-50"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      <span>Usuń ogłoszenie</span>
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Neighbor Seller Card */}
+            <div
+              onClick={() => onSellerClick?.(ad.author, ad.street)}
+              className="group cursor-pointer rounded-2xl bg-white p-5 shadow-card border border-mist-200 hover:border-ink/25 transition-all"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-ink-400">
+                  Sprzedający sąsiad
+                </span>
+                <span className="flex items-center gap-1 text-[12px] font-bold text-coral-700 group-hover:underline">
+                  Profil i inne oferty <ChevronRight className="h-3.5 w-3.5" />
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3.5">
+                <img
+                  src={avatarUrl(sellerSeed)}
+                  alt={ad.author}
+                  className="h-12 w-12 rounded-xl bg-sand-100 object-cover ring-1 ring-mist-300 shrink-0"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[15px] font-bold text-ink">{ad.author}</p>
+                  <p className="text-[12px] font-medium text-ink-500">
+                    Mieszkaniec Mińska · ul. {ad.street}
+                  </p>
+                  <p className="mt-1 inline-block rounded bg-emerald-50 px-2 py-0.5 text-[10.5px] font-bold text-emerald-800">
+                    Zwykle odpowiada w ~15 min
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Local Pickup Info + Report */}
+            <div className="rounded-2xl bg-sand-100/80 p-4 border border-sand-200 flex items-start gap-3">
+              <MapPin className="mt-0.5 h-4.5 w-4.5 shrink-0 text-sand-800" />
+              <div className="text-[12px] leading-snug text-ink-700">
+                <p className="font-bold text-ink">Bezpieczny odbiór po sąsiedzku</p>
+                <p className="mt-0.5 text-ink-500">
+                  Spotkajcie się bezpośrednio w Mińsku Mazowieckim bez pośredników i ukrytych kosztów wysyłki.
+                </p>
+              </div>
+            </div>
+
+            {!isOwner && (
+              <button
+                type="button"
+                onClick={() => onReportClick?.(ad)}
+                className="flex w-full items-center justify-center gap-1.5 py-1 text-[11.5px] font-semibold text-ink-400 hover:text-ink-600"
+              >
+                <ShieldAlert className="h-3.5 w-3.5" />
+                <span>Zgłoś nieaktualne ogłoszenie lub naruszenie</span>
+              </button>
+            )}
+          </div>
+        </div>
       </div>
+
+      {/* Full-Screen Photo Lightbox */}
+      {isLightboxOpen && (
+        <div className="fixed inset-0 z-[80] flex flex-col bg-black/95 backdrop-blur-md">
+          <div className="mx-auto flex h-full w-full max-w-6xl flex-col justify-between overflow-hidden">
+            <div className="flex items-center justify-between px-6 pt-4 pb-3 text-white">
+              <span className="rounded-full bg-white/15 px-3 py-1 text-[13px] font-bold">
+                {activePhotoIdx + 1} / {photos.length}
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsZoomed((z) => !z)}
+                  className="grid h-10 w-10 place-items-center rounded-full bg-white/15 text-white hover:bg-white/25"
+                >
+                  {isZoomed ? <ZoomOut className="h-5 w-5" /> : <ZoomIn className="h-5 w-5" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsZoomed(false);
+                    setIsLightboxOpen(false);
+                  }}
+                  className="grid h-10 w-10 place-items-center rounded-full bg-white/15 text-white hover:bg-white/25"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="relative flex flex-1 items-center justify-center overflow-hidden p-4">
+              <img
+                src={photos[activePhotoIdx]}
+                alt={ad.title}
+                onClick={() => setIsZoomed((z) => !z)}
+                className={cn(
+                  'max-h-full max-w-full object-contain transition-transform duration-200 select-none',
+                  isZoomed ? 'scale-150 cursor-zoom-out' : 'scale-100 cursor-zoom-in',
+                )}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

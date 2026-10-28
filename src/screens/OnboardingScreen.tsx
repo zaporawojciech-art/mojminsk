@@ -110,9 +110,10 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
   };
 
   return (
-    <div className="min-h-full flex flex-col justify-between pb-8 select-none">
-      {/* 1. Header z logo i przełącznikiem trybów */}
-      <div>
+    <div className="min-h-full md:min-h-screen flex flex-col justify-center items-center md:py-8 md:px-4 select-none bg-mist">
+      <div className="w-full max-w-md md:max-w-2xl md:bg-white md:rounded-4xl md:shadow-2xl md:overflow-hidden md:border md:border-mist-300 flex flex-col justify-between pb-8">
+        {/* 1. Header z logo i przełącznikiem trybów */}
+        <div>
         <header className="relative overflow-hidden rounded-b-[36px] bg-coral px-6 pb-6 pt-[max(env(safe-area-inset-top),20px)] shadow-sm">
           <div className="absolute -right-16 top-6 h-52 w-52 rounded-full bg-sand/90" aria-hidden />
           <div className="absolute -right-4 top-32 h-24 w-24 rounded-full bg-sky" aria-hidden />
@@ -612,6 +613,7 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
           Wszystkie dane osobowe są przetwarzane zgodnie z RODO.
         </p>
       </footer>
+      </div>
     </div>
   );
 }

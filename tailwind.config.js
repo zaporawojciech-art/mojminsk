@@ -18,6 +18,11 @@ export default {
       },
       borderRadius: { '4xl': '2rem' },
       spacing: {
+        '0.2': '0.05rem',
+        '4.5': '1.125rem', // 18px
+        '5.5': '1.375rem', // 22px
+        '7.5': '1.875rem', // 30px
+        '8.5': '2.125rem', // 34px
         13: '3.25rem', // 52px (standardowy touch target)
         14: '3.5rem',  // 56px (pełny mobilny CTA)
       },

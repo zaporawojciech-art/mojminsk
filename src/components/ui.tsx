@@ -106,7 +106,7 @@ export function StandardTopBar({
   className?: string;
 }) {
   return (
-    <header className={cn('px-5 pt-[max(env(safe-area-inset-top),16px)] pb-2 select-none', className)}>
+    <header className={cn('px-5 pt-[max(env(safe-area-inset-top),16px)] pb-2 select-none md:hidden', className)}>
       <div className="flex h-12 items-center justify-between gap-2.5">
         <div className="min-w-0 flex-1">
           {typeof title === 'string' ? (
@@ -345,30 +345,35 @@ export function NativeHeader({
   right?: ReactNode;
 }) {
   return (
-    <header className="z-20 shrink-0 border-b border-mist-300 bg-white pt-[max(env(safe-area-inset-top),12px)]">
-      <div className="relative flex h-14 items-center justify-between px-2">
+    <header className="z-20 shrink-0 border-b border-mist-300 bg-white pt-[max(env(safe-area-inset-top),12px)] md:pt-0">
+      <div className="relative flex h-14 items-center justify-between px-2 md:px-8 lg:px-12">
         {/* Lewa strona: Przycisk powrotu */}
-        <div className="z-10 flex min-w-11 items-center justify-start">
+        <div className="z-10 flex min-w-11 items-center justify-start gap-3">
           <button
             type="button"
             onClick={onBack}
             aria-label={`Wróć do: ${backLabel}`}
-            className="flex h-11 items-center gap-0.5 rounded-full pl-1 pr-3 text-[15px] font-semibold text-ink transition-colors active:bg-mist"
+            className="flex h-11 md:h-9 items-center gap-1 rounded-full md:rounded-lg pl-1 md:px-3 pr-3 text-[15px] md:text-[13px] font-semibold md:font-bold text-ink md:bg-mist/70 md:hover:bg-mist transition-colors active:bg-mist"
           >
-            <ChevronLeft className="h-6 w-6 shrink-0" aria-hidden />
-            <span className="max-w-[88px] truncate">{backLabel}</span>
+            <ChevronLeft className="h-6 w-6 md:h-4 md:w-4 shrink-0" aria-hidden />
+            <span className="max-w-[88px] md:max-w-none truncate">{backLabel}</span>
           </button>
+          {title && (
+            <h1 className="hidden md:block truncate font-display text-[18px] font-extrabold text-ink">
+              {title}
+            </h1>
+          )}
         </div>
 
-        {/* Centrum: Tytuł matematycznie wycentrowany względem całej szerokości ekranu */}
-        <div className="pointer-events-none absolute inset-x-0 flex items-center justify-center px-16 sm:px-20">
+        {/* Centrum: Tytuł matematycznie wycentrowany względem całej szerokości ekranu (Mobile) */}
+        <div className="pointer-events-none absolute inset-x-0 flex items-center justify-center px-16 sm:px-20 md:hidden">
           <h1 className="truncate font-display text-[16px] font-bold text-ink">
             {title}
           </h1>
         </div>
 
         {/* Prawa strona: Akcje lub pusty bufor */}
-        <div className="z-10 flex min-w-11 items-center justify-end gap-1">
+        <div className="z-10 flex min-w-11 items-center justify-end gap-1.5">
           {right}
         </div>
       </div>

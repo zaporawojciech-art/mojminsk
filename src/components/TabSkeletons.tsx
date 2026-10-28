@@ -436,12 +436,12 @@ export function AsyncViewBoundary({
     <div
       data-view-level={level}
       className={cn(
-        'native-view-shell fixed inset-0 flex flex-col overflow-hidden select-none',
+        'native-view-shell fixed inset-0 md:top-16 flex flex-col overflow-hidden select-none bg-mist',
         zClass,
         isClosing ? 'native-screen-exit' : 'native-screen-slide',
       )}
     >
-      <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist shadow-[-12px_0_32px_rgba(18,19,26,0.18)]">
+      <div className="mx-auto flex h-full w-full max-w-md md:max-w-none flex-col bg-mist shadow-[-12px_0_32px_rgba(18,19,26,0.18)] md:shadow-none">
         <Suspense fallback={skeleton}>
           <div className="flex h-full w-full flex-1 flex-col overflow-hidden">
             {children}

@@ -62,11 +62,11 @@ export function AdFiltersModal({
   return (
     <div
       className={cn(
-        'fixed inset-0 z-50 flex flex-col bg-mist select-none',
+        'fixed inset-0 md:relative md:inset-auto md:h-full md:w-full z-50 flex flex-col bg-mist select-none',
         isClosing ? 'native-screen-exit' : 'native-screen-slide',
       )}
     >
-      <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist">
+      <div className="mx-auto flex h-full w-full max-w-md md:max-w-none flex-col overflow-hidden bg-mist">
         {/* Top Header */}
         <NativeHeader
           title="Filtry i sortowanie"

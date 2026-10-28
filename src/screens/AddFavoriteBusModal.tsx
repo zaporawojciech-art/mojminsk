@@ -56,11 +56,11 @@ export function AddFavoriteBusModal({
   return (
     <div
       className={cn(
-        'fixed inset-0 z-50 flex flex-col bg-mist select-none',
+        'fixed inset-0 md:relative md:inset-auto md:h-full md:w-full z-50 flex flex-col bg-mist select-none',
         isClosing ? 'native-screen-exit' : 'native-screen-slide',
       )}
     >
-      <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden bg-mist">
+      <div className="mx-auto flex h-full w-full max-w-md md:max-w-none flex-col overflow-hidden bg-mist">
         <NativeHeader
           title="Wybierz przystanek z listy"
           backLabel="Wróć"
@@ -68,15 +68,15 @@ export function AddFavoriteBusModal({
         />
 
         {/* Search Bar */}
-        <div className="border-b border-mist-300 bg-white px-5 py-3 shadow-xs">
-          <div className="relative flex items-center">
+        <div className="border-b border-mist-300 bg-white px-5 md:px-8 lg:px-12 py-3 shadow-xs">
+          <div className="relative flex items-center max-w-xl">
             <Search className="pointer-events-none absolute left-3.5 h-4 w-4 text-ink-400" />
             <input
               type="text"
               placeholder="Wpisz nazwę przystanku (np. Spacerowa, PKP)..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-2xl bg-mist py-2.5 pl-10 pr-4 text-[13px] font-medium text-ink placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-ink"
+              className="w-full rounded-2xl md:rounded-xl bg-mist py-2.5 pl-10 pr-4 text-[13px] font-medium text-ink placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-ink"
             />
             {search && (
               <button
@@ -89,14 +89,14 @@ export function AddFavoriteBusModal({
             )}
           </div>
           <p className="mt-2 text-[11.5px] text-ink-500 font-medium">
-            Dotknij przystanek, a następnie wybierz kierunek, by dodać go do obserwowanych.
+            Wybierz przystanek i kierunek, aby przypiąć go do obserwowanych odjazdów ZDiTM.
           </p>
         </div>
 
-        {/* Stops List */}
-        <div className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-2.5 pb-24">
+        {/* Stops List / Desktop Grid */}
+        <div className="flex-1 overflow-y-auto overscroll-contain p-4 md:px-8 lg:px-12 md:py-6 space-y-2.5 md:space-y-0 md:grid md:grid-cols-2 xl:grid-cols-3 md:gap-4 md:items-start pb-24 md:pb-8">
           {filteredStops.length === 0 ? (
-            <div className="p-8 text-center text-ink-500">
+            <div className="md:col-span-full p-8 text-center text-ink-500">
               <MapPin className="mx-auto h-8 w-8 text-ink-300" />
               <p className="mt-2 font-display text-[15px] font-bold text-ink">Nie znaleziono przystanku</p>
               <p className="mt-1 text-[12px]">Spróbuj wpisać inną nazwę ulicy lub węzła w Mińsku.</p>
