@@ -5,7 +5,6 @@ import {
   AdDetailSkeleton,
   AsyncViewBoundary,
   ChatSkeleton,
-  CheckoutSkeleton,
   ConversationsSkeleton,
   ModalFormSkeleton,
   MyAdsSkeleton,
@@ -15,10 +14,7 @@ import {
   SellerProfileSkeleton,
   ZditmSkeleton,
 } from './components/TabSkeletons';
-import { ProductSheet } from './components/ProductSheet';
-import { CartPill, CartSheet, type CartLine } from './components/Cart';
 import {
-  allProducts,
   ads as initialAds,
   initialAdConversations,
   rides as initialRides,
@@ -27,7 +23,6 @@ import {
   type FavoriteBusStop,
   FAVORITE_BUS_STOPS_KEY,
   type LineId,
-  type Product,
   type Ride,
   type User,
   type PollItem,
@@ -36,7 +31,6 @@ import {
 } from './data/mockData';
 import { OnboardingScreen } from './screens/OnboardingScreen';
 import { HomeScreen } from './screens/HomeScreen';
-import { ShopScreen } from './screens/ShopScreen';
 import { AdsScreen } from './screens/AdsScreen';
 import { RidesScreen } from './screens/RidesScreen';
 import { TalksScreen } from './screens/TalksScreen';
@@ -47,7 +41,6 @@ import { DesktopMobileOnlyBarrier } from './components/DesktopMobileOnlyBarrier'
 // Asynchronicznie ładowane widoki podstron i modali (Lazy Modals)
 const ProfileScreen = lazy(() => import('./screens/ProfileScreen').then((m) => ({ default: m.ProfileScreen })));
 const PartnerScreen = lazy(() => import('./screens/PartnerScreen').then((m) => ({ default: m.PartnerScreen })));
-const CheckoutScreen = lazy(() => import('./screens/CheckoutScreen').then((m) => ({ default: m.CheckoutScreen })));
 const ZditmScreen = lazy(() => import('./screens/ZditmScreen').then((m) => ({ default: m.ZditmScreen })));
 const AddAdModal = lazy(() => import('./screens/AddAdModal').then((m) => ({ default: m.AddAdModal })));
 const AddRideModal = lazy(() => import('./screens/AddRideModal').then((m) => ({ default: m.AddRideModal })));
@@ -65,14 +58,19 @@ const AddFavoriteBusModal = lazy(() => import('./screens/AddFavoriteBusModal').t
 const PollsModal = lazy(() => import('./screens/PollsModal').then((m) => ({ default: m.PollsModal })));
 const AddPollModal = lazy(() => import('./screens/AddPollModal').then((m) => ({ default: m.AddPollModal })));
 
-type Overlay = null | 'profile' | 'checkout' | 'motylek' | 'zditm';
+type Overlay = null | 'profile' | 'zditm';
 
 export default function App() {
   const [user, setUser] = useState<User | null>(() => {
     if (typeof window !== 'undefined') {
       try {
         const stored = localStorage.getItem('mojminsk_user');
-        if (stored) return JSON.parse(stored);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed && typeof parsed === 'object') {
+            return { ...parsed, verified: true };
+          }
+        }
       } catch {
         // fallback
       }
@@ -97,14 +95,12 @@ export default function App() {
   const [tab, setTab] = useState<TabId>('home');
   const [visitedTabs, setVisitedTabs] = useState<Record<TabId, boolean>>({
     home: true,
-    shop: false,
     ads: false,
     rides: false,
     talks: false,
   });
   const scrollPositions = useRef<Record<TabId, number>>({
     home: 0,
-    shop: 0,
     ads: 0,
     rides: 0,
     talks: 0,
@@ -125,9 +121,6 @@ export default function App() {
     return [];
   });
   const [addFavBusOpen, setAddFavBusOpen] = useState(false);
-  const [cart, setCart] = useState<Record<string, number>>({});
-  const [sheet, setSheet] = useState<Product | null>(null);
-  const [cartOpen, setCartOpen] = useState(false);
   const [frame, setFrame] = useState<HTMLDivElement | null>(null);
   const mainRef = useRef<HTMLElement>(null);
 
@@ -226,7 +219,7 @@ export default function App() {
     (pollId: string, optionId: string) => {
       requireAuth(
         'Głosowanie w ankietach',
-        'Głosować mogą wyłącznie zweryfikowani mieszkańcy Mińska Mazowieckiego, aby zapewnić rzetelne i reprezentatywne wyniki.',
+        'Głosować mogą wyłącznie mieszkańcy Mińska Mazowieckiego, aby zapewnić rzetelne i reprezentatywne wyniki.',
         () => {
           setUserVotes((prev) => ({ ...prev, [pollId]: optionId }));
           setPolls((prev) =>
@@ -530,26 +523,6 @@ export default function App() {
 
   const unreadConversationsCount = conversations.reduce((acc, c) => acc + c.unreadCount, 0);
 
-  const add = useCallback((p: Product, qty = 1) => setCart((c) => ({ ...c, [p.id]: (c[p.id] ?? 0) + qty })), []);
-  const setQty = useCallback(
-    (id: string, qty: number) =>
-      setCart((c) => {
-        const next = { ...c };
-        if (qty <= 0) delete next[id];
-        else next[id] = qty;
-        return next;
-      }),
-    [],
-  );
-
-  const lines: CartLine[] = Object.entries(cart).map(([id, qty]) => ({
-    product: allProducts.find((p) => p.id === id)!,
-    qty,
-  })).filter((l) => Boolean(l.product));
-
-  const count = lines.reduce((s, l) => s + l.qty, 0);
-  const total = lines.reduce((s, l) => s + l.qty * l.product.price, 0);
-
   const userAds = user
     ? adsList.filter((a) => a.isOwner || a.author.toLowerCase().includes(user.name.toLowerCase()))
     : [];
@@ -589,7 +562,6 @@ export default function App() {
       void import('./screens/MyAdsModal');
       void import('./screens/ZditmScreen');
       void import('./screens/PartnerScreen');
-      void import('./screens/CheckoutScreen');
       void import('./screens/AddAdModal');
       void import('./screens/AddRideModal');
       void import('./screens/EditAdModal');
@@ -648,7 +620,6 @@ export default function App() {
                     setSelectedZditmStop(stopName);
                     setOverlay('zditm');
                   }}
-                  onMotylek={() => handleTabChange('shop')}
                   favoriteBuses={favoriteBuses}
                   onAddFavoriteBus={() => setAddFavBusOpen(true)}
                   onRemoveFavoriteBus={handleRemoveFavoriteBus}
@@ -659,19 +630,6 @@ export default function App() {
                   city={user.city || 'Mińsk Mazowiecki'}
                 />
               </div>
-
-              {visitedTabs.shop && (
-                <div className={tab === 'shop' ? 'min-h-full' : 'hidden'}>
-                  <ShopScreen
-                    user={user}
-                    onProfile={() => setOverlay('profile')}
-                    onOpenProduct={setSheet}
-                    onAdd={(p) => add(p)}
-                    qtyOf={(id) => cart[id] ?? 0}
-                    totalCartValue={total}
-                  />
-                </div>
-              )}
 
               {visitedTabs.ads && (
                 <div className={tab === 'ads' ? 'min-h-full' : 'hidden'}>
@@ -742,9 +700,6 @@ export default function App() {
           )}
         </main>
 
-        {showChrome && !isChildScreenActive && count > 0 && (tab === 'shop' || tab === 'home') && (
-          <CartPill count={count} total={total} onOpen={() => setCartOpen(true)} />
-        )}
         {showChrome && !isChildScreenActive && <BottomNav tab={tab} onChange={handleTabChange} />}
 
         {depth > 0 && (
@@ -755,23 +710,6 @@ export default function App() {
             className="fixed inset-y-0 left-0 z-[70] w-4"
           />
         )}
-
-        <ProductSheet product={sheet} onClose={() => setSheet(null)} onAdd={add} container={frame} />
-        <CartSheet
-          open={cartOpen}
-          onOpenChange={setCartOpen}
-          lines={lines}
-          setQty={setQty}
-          onPaid={() => setCart({})}
-          onProceedToCheckout={() =>
-            requireAuth(
-              'Dostawa z Motylka',
-              'Aby zamówić zakupy spożywcze z dostawą pod drzwi, zarejestruj swoje konto i adres.',
-              () => setOverlay('checkout'),
-            )
-          }
-          container={frame}
-        />
 
         {/* LEVEL 1 (z-[50]): Root Pushed Screens from Tabs */}
         {user && overlay === 'profile' && (
@@ -843,7 +781,7 @@ export default function App() {
               onAddRide={() =>
                 requireAuth(
                   'Dodaj wspólny przejazd',
-                  'Tylko zweryfikowani mieszkańcy mogą oferować carpooling.',
+                  'Tylko mieszkańcy mogą oferować carpooling.',
                   () => setAddRideOpen(true),
                 )
               }
@@ -878,26 +816,6 @@ export default function App() {
               onRemoveFavorite={handleRemoveFavoriteBus}
               onBack={closeOverlay}
               isClosing={!!exitingScreens['overlay']}
-            />
-          </AsyncViewBoundary>
-        )}
-
-        {user && overlay === 'checkout' && (
-          <AsyncViewBoundary
-            viewKey="overlay-checkout"
-            level={1}
-            isClosing={!!exitingScreens['overlay']}
-            skeleton={<CheckoutSkeleton />}
-          >
-            <CheckoutScreen
-              lines={lines}
-              user={user}
-              onBack={closeOverlay}
-              isClosing={!!exitingScreens['overlay']}
-              onSuccess={() => {
-                setCart({});
-                closeOverlay();
-              }}
             />
           </AsyncViewBoundary>
         )}

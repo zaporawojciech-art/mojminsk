@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { CheckCheck, Send, ShieldCheck } from 'lucide-react';
+import { CheckCheck, Send } from 'lucide-react';
 import { Img, NativeHeader, cn, zl } from '../components/ui';
 import type { Ad, User } from '../data/mockData';
 
@@ -89,12 +89,6 @@ export function ChatModal({ ad, user, onClose }: ChatModalProps) {
         title={ad.author}
         backLabel="Wróć"
         onBack={onClose}
-        right={
-          <span className="mr-2 flex items-center gap-1 rounded-full bg-sky-100 px-2.5 py-1 text-[11px] font-bold text-sky-700">
-            <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
-            Weryfikowany
-          </span>
-        }
       />
 
       {/* Ad Context Bar */}

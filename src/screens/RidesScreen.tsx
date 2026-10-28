@@ -61,7 +61,7 @@ export function RidesScreen({
     if (user?.isGuest) {
       onAuthRequired?.(
         'Rezerwacja miejsca w przejeździe',
-        'Sąsiedzki carpooling jest dostępny dla zweryfikowanych mieszkańców. Zarejestruj się, aby wspólnie dojeżdżać do Warszawy.',
+        'Sąsiedzki carpooling jest dostępny dla mieszkańców Mińska. Zarejestruj się, aby wspólnie dojeżdżać do Warszawy.',
       );
       return;
     }

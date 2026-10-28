@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Check, ChevronDown, ChevronLeft, ChevronRight, MapPin, Search, ShieldCheck, SlidersHorizontal } from 'lucide-react';
+import { Check, ChevronDown, ChevronLeft, ChevronRight, MapPin, Search, SlidersHorizontal } from 'lucide-react';
 import { avatarUrl, gminaCities, type Tone, type User } from '../data/mockData';
 
 export const cn = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(' ');
@@ -403,7 +403,7 @@ export function ProfileAvatarButton({ user, onClick }: { user: User; onClick: ()
     <button
       type="button"
       onClick={onClick}
-      aria-label={`Profil: ${user.name} (${user.verified ? 'Zweryfikowany' : `Konto tymczasowe – zostało ${user.trialDaysLeft} dni`})`}
+      aria-label={`Profil: ${user.name}`}
       title="Twój profil mieszkańca"
       className="relative grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white p-0.5 shadow-card transition-transform active:scale-95"
     >
@@ -412,20 +412,6 @@ export function ProfileAvatarButton({ user, onClick }: { user: User; onClick: ()
         alt={user.name}
         className="h-full w-full rounded-full bg-sand-100 object-cover"
       />
-      {user.verified ? (
-        <span
-          className="absolute -bottom-0.5 -right-0.5 grid h-4 w-4 place-items-center rounded-full bg-emerald-600 text-white ring-2 ring-white"
-          aria-hidden
-        >
-          <ShieldCheck className="h-2.5 w-2.5" />
-        </span>
-      ) : (
-        <span
-          className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-amber-500 ring-2 ring-white"
-          title={`Konto tymczasowe – zostało ${user.trialDaysLeft} dni`}
-          aria-hidden
-        />
-      )}
     </button>
   );
 }

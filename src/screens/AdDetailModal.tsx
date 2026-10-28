@@ -13,7 +13,6 @@ import {
   MessageCircle,
   Share2,
   ShieldAlert,
-  ShieldCheck,
   Tag,
   Trash2,
   X,
@@ -396,7 +395,6 @@ export function AdDetailModal({
 
             {/* Neighbor Profile Card */}
             {(() => {
-              const isSellerVerified = isOwner ? user.verified : true;
               const sellerSeed = isOwner ? user.seed : `${ad.author}-${ad.street}`;
               return (
                 <div
@@ -405,15 +403,8 @@ export function AdDetailModal({
                 >
                   <div className="flex items-center justify-between">
                     <h3 className="text-[12px] font-bold uppercase tracking-wider text-ink-400">Sprzedający sąsiad</h3>
-                    <span
-                      className={cn(
-                        'flex items-center gap-1 text-[11.5px] font-bold transition-colors',
-                        isSellerVerified
-                          ? 'text-emerald-700 group-hover:text-emerald-800'
-                          : 'text-amber-700 group-hover:text-coral',
-                      )}
-                    >
-                      {isSellerVerified ? 'Adres zweryfikowany' : 'Konto tymczasowe'}
+                    <span className="flex items-center gap-1 text-[11.5px] font-bold text-ink-500 group-hover:text-ink transition-colors">
+                      Zobacz profil
                       <ChevronRight className="h-3.5 w-3.5" />
                     </span>
                   </div>
@@ -424,24 +415,9 @@ export function AdDetailModal({
                         alt={ad.author}
                         className="h-12 w-12 rounded-2xl bg-sand-100 object-cover ring-1 ring-mist-300"
                       />
-                      {isSellerVerified && (
-                        <span
-                          title="Adres zweryfikowany listem z PIN-em"
-                          className="absolute -bottom-1 -right-1 grid h-5 w-5 place-items-center rounded-full bg-emerald-600 text-white ring-2 ring-white"
-                        >
-                          <ShieldCheck className="h-3 w-3" />
-                        </span>
-                      )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5">
-                        <p className="text-[15px] font-bold text-ink">{ad.author}</p>
-                        {isSellerVerified && (
-                          <span title="Zweryfikowany adres">
-                            <ShieldCheck className="h-4 w-4 text-sky-700" />
-                          </span>
-                        )}
-                      </div>
+                      <p className="text-[15px] font-bold text-ink">{ad.author}</p>
                       <p className="text-[12px] text-ink-500">Mieszkaniec Mińska · ul. {ad.street}</p>
                     </div>
                     <span className="rounded-full bg-mist px-2.5 py-1 text-[10.5px] font-bold text-ink-500">

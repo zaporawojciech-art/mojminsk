@@ -1,5 +1,5 @@
 import { Fragment, useState } from 'react';
-import { BadgeCheck, BarChart2, Heart, ImageIcon, MessageCircle, Repeat2 } from 'lucide-react';
+import { BarChart2, Heart, ImageIcon, MessageCircle, Repeat2 } from 'lucide-react';
 import { avatarUrl, posts as seedPosts, streets, talkTags, type Post, type User } from '../data/mockData';
 import { Chip, Img, StandardTopBar, cn } from '../components/ui';
 
@@ -74,7 +74,7 @@ export function TalksScreen({
         user={user}
         onProfile={onProfile}
         title="Rozmowy"
-        subtitle="Piszą tylko zweryfikowani mieszkańcy"
+        subtitle="Forum mieszkańców Mińska"
       />
 
       <div className="mx-5 rounded-4xl bg-white p-4 shadow-card">
@@ -133,7 +133,6 @@ export function TalksScreen({
                   <b>
                     {p.author} {p.authorAs}
                   </b>
-                  <BadgeCheck className="h-4 w-4 fill-sky text-white" aria-label="Zweryfikowany" />
                   <span className="text-ink-400">· {p.time}</span>
                 </button>
                 <p className="mt-1 text-[14.5px] leading-relaxed text-ink-700">

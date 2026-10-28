@@ -66,30 +66,6 @@ export function HomeSkeleton() {
   );
 }
 
-export function ShopSkeleton() {
-  return (
-    <div className="space-y-6 pb-36" role="status" aria-label="Ładowanie Sklepu Motylek">
-      <HeaderSkeleton hasSearch />
-
-      {/* Alejki i gazetka */}
-      <div className="flex gap-3 overflow-hidden px-5">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="flex flex-col items-center gap-2 shrink-0">
-            <Bone className="h-10 w-24 rounded-full" />
-          </div>
-        ))}
-      </div>
-
-      {/* Deals / Products grid */}
-      <div className="grid grid-cols-2 gap-3 px-5">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Bone key={i} className="h-52 w-full rounded-3xl" />
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export function AdsSkeleton() {
   return (
     <div className="space-y-4 pb-36" role="status" aria-label="Ładowanie Ogłoszeń">
@@ -173,8 +149,6 @@ export function TabSkeleton({ tab }: { tab: TabId }) {
   switch (tab) {
     case 'home':
       return <HomeSkeleton />;
-    case 'shop':
-      return <ShopSkeleton />;
     case 'ads':
       return <AdsSkeleton />;
     case 'rides':
@@ -203,15 +177,9 @@ export function ProfileSkeleton() {
           <Bone className="mt-3.5 h-9 w-44 rounded-full" />
           <Bone className="mt-3.5 h-7 w-28 rounded-xl" />
           <Bone className="mt-1.5 h-6 w-48 rounded-full" />
-          <Bone className="mt-3.5 h-6 w-44 rounded-full" />
         </section>
 
-        {/* 2. 14-Day Postal Verification Banner */}
-        <div className="mx-5 mt-5">
-          <Bone className="h-40 w-full rounded-4xl" />
-        </div>
-
-        {/* 3. Moja aktywność i ogłoszenia (iOS Grouped List) */}
+        {/* 2. Moja aktywność i ogłoszenia (iOS Grouped List) */}
         <div className="mx-5 mt-6 space-y-2">
           <Bone className="ml-3 h-3.5 w-48 rounded-full" />
           <div className="overflow-hidden rounded-4xl bg-white shadow-card divide-y divide-mist">
@@ -334,20 +302,6 @@ export function PartnerSkeleton() {
           <Bone className="h-48 rounded-3xl opacity-20" />
           <Bone className="h-48 rounded-3xl opacity-20" />
         </div>
-      </div>
-    </div>
-  );
-}
-
-/** Skeleton widoku „Kasa / Podsumowanie zamówienia” (CheckoutScreen) */
-export function CheckoutSkeleton() {
-  return (
-    <div className="flex h-full w-full flex-col overflow-hidden bg-mist" role="status" aria-label="Ładowanie zamówienia">
-      <NativeBarSkeleton />
-      <div className="flex-1 overflow-hidden p-5 space-y-4">
-        <Bone className="h-28 w-full rounded-3xl" />
-        <Bone className="h-36 w-full rounded-3xl" />
-        <Bone className="h-32 w-full rounded-3xl" />
       </div>
     </div>
   );

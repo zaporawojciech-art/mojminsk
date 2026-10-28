@@ -279,7 +279,7 @@ export function PollsModal({
                       ) : isExpired ? (
                         <span className="font-bold text-ink-500">Głosowanie zakończone</span>
                       ) : (
-                        'Głosują tylko zweryfikowani mieszkańcy'
+                        'Głosują mieszkańcy Mińska'
                       )}
                     </span>
                     {isExpired && winningOptionId && (

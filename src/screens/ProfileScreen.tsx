@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {
-  BadgeCheck,
   Car,
   Check,
   ChevronRight,
@@ -10,11 +9,9 @@ import {
   Gem,
   Lock,
   LogOut,
-  Mail,
   Megaphone,
   MessageCircle,
   Plus,
-  ReceiptText,
   ShieldCheck,
   Smartphone,
   Vote,
@@ -77,8 +74,6 @@ export function ProfileScreen({
   userAds: _userAds = [],
   isClosing = false,
 }: ProfileScreenProps) {
-  const [pin, setPin] = useState('');
-  const [showOrdersDrawer, setShowOrdersDrawer] = useState(false);
   const [showBlikSupport, setShowBlikSupport] = useState(false);
   const [supportAmount, setSupportAmount] = useState<number>(10);
   const [supportBlikCode, setSupportBlikCode] = useState('');
@@ -94,17 +89,7 @@ export function ProfileScreen({
           tone: 'bg-sand-200 text-ink border-sand-300',
         },
       ]
-    : [
-        {
-          id: 'verified',
-          label: user.verified ? 'Zweryfikowany mieszkaniec' : 'Weryfikacja w toku (list)',
-          icon: user.verified ? ShieldCheck : Clock,
-          unlocked: true,
-          tone: user.verified
-            ? 'bg-sky-100 text-sky-900 border-sky-200'
-            : 'bg-amber-100 text-amber-900 border-amber-200',
-        },
-      ];
+    : [];
 
   const adsMetaLabel = [
     `${myAdsCount} aktywne`,
@@ -165,21 +150,6 @@ export function ProfileScreen({
               className="h-full w-full rounded-[36px] bg-white object-cover"
             />
           </div>
-          {user.verified ? (
-            <span
-              className="absolute -bottom-1 -right-1 grid h-10 w-10 place-items-center rounded-full bg-emerald-600 text-white ring-4 ring-mist shadow-card"
-              title="Zweryfikowany mieszkaniec"
-            >
-              <ShieldCheck className="h-5 w-5" aria-label="Zweryfikowany" />
-            </span>
-          ) : (
-            <span
-              className="absolute -bottom-1 -right-1 grid h-9 w-9 place-items-center rounded-full bg-amber-500 text-ink ring-4 ring-mist shadow-card"
-              title="Konto tymczasowe – oczekuje na kod PIN z listu"
-            >
-              <Clock className="h-4 w-4" aria-label="Konto tymczasowe" />
-            </span>
-          )}
         </div>
 
         {/* 3D Avatar Reroll - Bez limitów */}
@@ -207,26 +177,28 @@ export function ProfileScreen({
           />
         </div>
 
-        {/* Neighbor Reputation Badges (Decision #6) */}
-        <div className="mt-3.5 flex flex-wrap items-center justify-center gap-1.5">
-          {badges.map(({ id, label, icon: Icon, unlocked, tone }) => (
-            <span
-              key={id}
-              className={cn(
-                'inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold transition-opacity',
-                tone,
-                !unlocked && 'opacity-65',
-              )}
-            >
-              <Icon className="h-3.5 w-3.5" aria-hidden />
-              {label}
-            </span>
-          ))}
-        </div>
+        {/* Neighbor Badges */}
+        {badges.length > 0 && (
+          <div className="mt-3.5 flex flex-wrap items-center justify-center gap-1.5">
+            {badges.map(({ id, label, icon: Icon, unlocked, tone }) => (
+              <span
+                key={id}
+                className={cn(
+                  'inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold transition-opacity',
+                  tone,
+                  !unlocked && 'opacity-65',
+                )}
+              >
+                <Icon className="h-3.5 w-3.5" aria-hidden />
+                {label}
+              </span>
+            ))}
+          </div>
+        )}
       </section>
 
-      {/* 2. 14-Day Postal Verification Banner OR Guest Registration Promo */}
-      {user.isGuest ? (
+      {/* Guest Registration Promo */}
+      {user.isGuest && (
         <div className="mx-5 mt-5 rounded-4xl border border-sand-200 bg-sand-100 p-5 shadow-card text-center">
           <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-white shadow-xs text-ink mb-3">
             <ShieldCheck className="h-6 w-6 text-coral" />
@@ -246,60 +218,6 @@ export function ProfileScreen({
               Zarejestruj konto mieszkańca
             </button>
           )}
-        </div>
-      ) : user.verified ? (
-        <div className="mx-5 mt-5 flex items-center gap-3 rounded-4xl bg-sky p-4 shadow-card">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/80 text-emerald-700">
-            <BadgeCheck className="h-6 w-6" aria-hidden />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-[14.5px] font-bold text-ink">Zweryfikowany mieszkaniec Mińska</p>
-            <p className="text-[12px] text-ink/75">
-              Adres potwierdzony listem · pełne uprawnienia społecznościowe
-            </p>
-          </div>
-        </div>
-      ) : (
-        <div className="mx-5 mt-5 rounded-4xl border border-sand-200 bg-sand-100 p-4 shadow-card">
-          <div className="flex items-center gap-3">
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-sand text-ink">
-              <Mail className="h-5 w-5" aria-hidden />
-            </span>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-[14.5px] font-bold text-ink">Konto tymczasowe</p>
-                <span className="rounded-full bg-white px-2.5 py-0.5 text-[11px] font-extrabold text-ink">
-                  Zostało {user.trialDaysLeft} z 14 dni
-                </span>
-              </div>
-              <p className="mt-0.5 text-[12px] text-ink-500">
-                Przesyłka z 6-cyfrowym kodem PIN i książeczką kuponów przyjdzie na Twój adres zamieszkania.
-              </p>
-            </div>
-          </div>
-          <div className="mt-3 h-2 overflow-hidden rounded-full bg-white">
-            <div
-              className="h-full rounded-full bg-coral transition-all"
-              style={{ width: `${(user.trialDaysLeft / 14) * 100}%` }}
-            />
-          </div>
-          <div className="mt-3 flex gap-2">
-            <input
-              value={pin}
-              onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              inputMode="numeric"
-              placeholder="6-cyfrowy PIN z listu"
-              aria-label="6-cyfrowy kod z listu"
-              className="h-12 min-w-0 flex-1 rounded-full bg-white px-4 text-center font-display text-[17px] font-semibold tracking-[.3em] outline-none placeholder:font-sans placeholder:text-[13px] placeholder:font-medium placeholder:tracking-normal placeholder:text-ink-400 focus:ring-2 focus:ring-ink"
-            />
-            <button
-              disabled={pin.length !== 6}
-              onClick={() => onUpdate({ ...user, verified: true })}
-              className="h-12 rounded-full bg-ink px-5 text-[13.5px] font-bold text-white transition-transform active:scale-95 disabled:opacity-40"
-            >
-              Aktywuj
-            </button>
-          </div>
         </div>
       )}
 
@@ -507,47 +425,6 @@ export function ProfileScreen({
               </span>
               <ChevronRight className="h-4 w-4 text-ink-300" aria-hidden />
             </button>
-          </li>
-
-          {/* Moje zamówienia (Motylek Market & Strefa Kuchni) */}
-          <li className="border-b border-mist">
-            <button
-              onClick={() => setShowOrdersDrawer((v) => !v)}
-              className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-mist/50 active:bg-mist"
-            >
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-coral-100 text-ink">
-                <ReceiptText className="h-[18px] w-[18px]" aria-hidden />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-[14.5px] font-semibold text-ink">Moje zamówienia</p>
-                <p className="text-[11.5px] text-ink-400">Motylek Market i lokalne restauracje</p>
-              </div>
-              <span className="text-[12px] font-semibold text-coral-700">1 w drodze</span>
-              <ChevronRight className={cn('h-4 w-4 text-ink-300 transition-transform', showOrdersDrawer && 'rotate-90')} aria-hidden />
-            </button>
-            {showOrdersDrawer && (
-              <div className="space-y-2 bg-mist/60 px-4 py-3 text-[12.5px]">
-                <div className="flex items-center justify-between rounded-2xl bg-white p-3 shadow-card">
-                  <div>
-                    <span className="inline-block rounded-full bg-coral-100 px-2 py-0.5 text-[10px] font-extrabold text-coral-700">
-                      W DRODZE · 12 MIN
-                    </span>
-                    <p className="mt-1 font-bold text-ink">#2481 · Pizzeria Bella Ciao</p>
-                    <p className="text-[11.5px] text-ink-500">Kurier Kamil (rower mójMińsk) · 48,00 zł</p>
-                  </div>
-                  <span className="font-display text-[14px] font-bold text-ink">ul. {user.street.name}</span>
-                </div>
-                <div className="flex items-center justify-between rounded-2xl bg-white p-3 opacity-80">
-                  <div>
-                    <span className="inline-block rounded-full bg-mist px-2 py-0.5 text-[10px] font-bold text-ink-500">
-                      DORĘCZONO WCZORAJ
-                    </span>
-                    <p className="mt-1 font-bold text-ink">#2419 · Motylek Market (e-zakupy)</p>
-                    <p className="text-[11.5px] text-ink-500">Torba papierowa · 124,50 zł (dostawa 0 zł)</p>
-                  </div>
-                </div>
-              </div>
-            )}
           </li>
 
           {/* Dodaj przejazd sąsiedzki (Carpooling) -> AddRideModal */}

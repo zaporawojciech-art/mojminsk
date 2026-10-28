@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   ArrowRight, Bus, Car, Check, Cloud, CloudMoon, CloudRain, CloudSun, Coffee, Droplets, Eye, Gauge, MapPin, Megaphone,
-  Moon, Plus, ShieldCheck, ShoppingBag, Sparkles, Sun, TriangleAlert, Umbrella, Vote, Wind, X,
+  MessagesSquare, Moon, Plus, ShieldCheck, Sparkles, Sun, TriangleAlert, Umbrella, Vote, Wind, X,
 } from 'lucide-react';
 import {
   getUpcomingDepartures, liveAlert, news, partner, weather,
@@ -460,7 +460,7 @@ function FeaturedPollCard({
       </div>
 
       <div className="mt-3 flex items-center justify-between text-[11.5px] text-ink-500">
-        <span>{isVoted ? 'Dziękujemy! Twój głos został zapisany.' : 'Głosują tylko zweryfikowani mieszkańcy.'}</span>
+        <span>{isVoted ? 'Dziękujemy! Twój głos został zapisany.' : 'Głos oddają mieszkańcy Mińska.'}</span>
       </div>
 
       {/* Wyraźne CTA do przejścia do wszystkich ankiet */}
@@ -499,7 +499,6 @@ interface HomeScreenProps {
   onProfile: () => void;
   onPartner: () => void;
   onZditm?: (line?: LineId, stopName?: string) => void;
-  onMotylek?: () => void;
   favoriteBuses?: FavoriteBusStop[];
   onAddFavoriteBus?: () => void;
   onRemoveFavoriteBus?: (id: string) => void;
@@ -516,7 +515,6 @@ export function HomeScreen({
   onProfile,
   onPartner,
   onZditm,
-  onMotylek,
   favoriteBuses = [],
   onAddFavoriteBus,
   onRemoveFavoriteBus,
@@ -532,10 +530,10 @@ export function HomeScreen({
   const featuredPoll = activePolls[0] ?? null;
   const userVoteForFeatured = featuredPoll ? userVotes[featuredPoll.id] : undefined;
   const quick = [
-    { label: 'Motylek', icon: ShoppingBag, cls: 'bg-sand text-ink', onClick: () => (onMotylek ? onMotylek() : onTab('shop')) },
     { label: 'Rozkład', icon: Bus, cls: 'bg-sky-100 text-ink', onClick: () => (onZditm ? onZditm('M2') : onTab('home')) },
-    { label: 'Przejazd', icon: Car, cls: 'bg-coral-100 text-ink', onClick: () => onTab('rides') },
     { label: 'Ogłoszenia', icon: Megaphone, cls: 'bg-white text-ink', onClick: () => onTab('ads') },
+    { label: 'Przejazd', icon: Car, cls: 'bg-coral-100 text-ink', onClick: () => onTab('rides') },
+    { label: 'Rozmowy', icon: MessagesSquare, cls: 'bg-sand text-ink', onClick: () => onTab('talks') },
   ];
 
   return (

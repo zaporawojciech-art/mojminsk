@@ -1,10 +1,7 @@
 import {
-  CheckCircle2,
-  Clock,
   Lock,
   MapPin,
   MessageCircle,
-  ShieldCheck,
 } from 'lucide-react';
 import { NativeHeader, cn } from '../components/ui';
 import { avatarUrl, type Ad, type User } from '../data/mockData';
@@ -33,7 +30,6 @@ export function SellerProfileModal({
     sellerName.toLowerCase() === currentUser.name.toLowerCase() &&
     sellerStreet.toLowerCase() === currentUser.street.name.toLowerCase();
 
-  const isVerified = isSelf ? currentUser.verified : true;
   const avatarSeed = isSelf ? currentUser.seed : `${sellerName}-${sellerStreet}`;
 
   // Find any active ad from this seller to allow initiating chat
@@ -66,21 +62,6 @@ export function SellerProfileModal({
                 alt={sellerName}
                 className="h-full w-full rounded-3xl bg-sand-100 object-cover shadow-float ring-4 ring-white"
               />
-              {isVerified ? (
-                <div
-                  title="Zweryfikowany listem z PIN-em"
-                  className="absolute -bottom-1 -right-1 grid h-8 w-8 place-items-center rounded-full bg-emerald-600 text-white shadow ring-2 ring-white"
-                >
-                  <ShieldCheck className="h-5 w-5" />
-                </div>
-              ) : (
-                <div
-                  title="Oczekuje na kod z listu"
-                  className="absolute -bottom-1 -right-1 grid h-8 w-8 place-items-center rounded-full bg-amber-500 text-ink shadow ring-2 ring-white"
-                >
-                  <Clock className="h-4 w-4" />
-                </div>
-              )}
             </div>
 
             <h1 className="mt-3.5 font-display text-[22px] font-bold text-ink">
@@ -89,32 +70,6 @@ export function SellerProfileModal({
             <div className="mt-1 flex items-center justify-center gap-1.5 text-[13px] text-ink-500">
               <MapPin className="h-4 w-4 text-coral-700" />
               <span>ul. {sellerStreet} · Mińsk Mazowiecki</span>
-            </div>
-
-            <div className="mt-3.5 inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-100 px-3 py-1 text-[11.5px] font-bold text-sky-900">
-              <ShieldCheck className="h-4 w-4" />
-              {isVerified ? 'Zweryfikowany mieszkaniec' : 'Weryfikacja w toku'}
-            </div>
-          </div>
-
-          {/* Verification info banner */}
-          <div className="rounded-3xl bg-sand-100 p-4 shadow-sm border border-sand-200">
-            <div className="flex items-start gap-3">
-              {isVerified ? (
-                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" />
-              ) : (
-                <Clock className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
-              )}
-              <div className="text-[12.5px] leading-relaxed text-ink-700">
-                <p className="font-bold text-ink">
-                  {isVerified ? 'Adres zamieszkania zweryfikowany' : 'Konto w okresie próbnym (14 dni)'}
-                </p>
-                <p className="mt-1 text-ink-600">
-                  {isVerified
-                    ? `Sąsiad mieszka w Mińsku Mazowieckim przy ul. ${sellerStreet}. Adres został potwierdzony tradycyjnym listem powitalnym z jednorazowym kodem PIN.`
-                    : `Użytkownik zadeklarował zamieszkanie przy ul. ${sellerStreet} i oczekuje na doręczenie listu powitalnego z kodem aktywacyjnym PIN.`}
-                </p>
-              </div>
             </div>
           </div>
 
