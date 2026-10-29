@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowRight,
   CheckCircle2,
@@ -11,8 +11,17 @@ import {
   Sparkles,
   Users,
 } from 'lucide-react';
-import { avatarUrl, demoUser, gminaLocalityAs, streets, type Street, type User } from '../data/mockData';
+import {
+  avatarUrl,
+  demoUser,
+  formatNeighborCount,
+  gminaLocalityAs,
+  streets,
+  type Street,
+  type User,
+} from '../data/mockData';
 import { CityDropdown, cn } from '../components/ui';
+import { fetchStreetsFromSupabase } from '../lib/supabase';
 
 interface OnboardingScreenProps {
   onDone: (user: User) => void;
@@ -21,6 +30,21 @@ interface OnboardingScreenProps {
 export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
   // Tryb: Rejestracja ('register') lub Logowanie ('login')
   const [authMode, setAuthMode] = useState<'register' | 'login'>('register');
+
+  // Dynamiczna lista ulic (zsynchronizowana z bazą Supabase)
+  const [allStreets, setAllStreets] = useState<Street[]>(streets);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetchStreetsFromSupabase().then((data) => {
+      if (isMounted && data && data.length > 0) {
+        setAllStreets(data);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // --- STAN REJESTRACJI ---
   const [registerStep, setRegisterStep] = useState<1 | 2 | 3>(1);
@@ -43,10 +67,10 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
       setStreet({
         name: selectedCity,
         as: asForm,
-        neighbors: 35,
+        neighbors: 0,
       });
     } else {
-      setStreet(streets[0]);
+      setStreet(allStreets[0] || streets[0]);
     }
   };
 
@@ -55,13 +79,23 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
 
+  // 3 przykładowe ulice (lub z największą liczbą zarejestrowanych sąsiadów)
+  const topStreets = useMemo(() => {
+    const list = [...allStreets];
+    // Jeśli są ulice z mieszkańcami, promuj je na start; inaczej wybierz popularne ulice
+    const hasNeighbors = list.some((s) => s.neighbors > 0);
+    if (hasNeighbors) {
+      return list.sort((a, b) => b.neighbors - a.neighbors).slice(0, 3);
+    }
+    return list.slice(0, 3);
+  }, [allStreets]);
+
   // Filtrowanie i podpowiedzi ulic (pełna baza Mińska Mazowieckiego)
-  const topStreets = streets.slice(0, 3);
   const filteredStreets = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
-    return streets.filter((s) => s.name.toLowerCase().includes(q)).slice(0, 30);
-  }, [query]);
+    return allStreets.filter((s) => s.name.toLowerCase().includes(q)).slice(0, 30);
+  }, [query, allStreets]);
 
   const displayName = name.trim() || 'Sąsiad';
   const avatarSeed = `${displayName}-${seedN}`;
@@ -446,7 +480,11 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
                                     <span
                                       className={cn(
                                         'rounded px-1 text-[9px] font-bold',
-                                        active ? 'bg-coral text-ink' : 'bg-sand-100 text-sand-700',
+                                        active
+                                          ? 'bg-coral text-ink'
+                                          : s.neighbors > 0
+                                          ? 'bg-coral-100 text-coral-800'
+                                          : 'bg-sand-100 text-sand-700',
                                       )}
                                     >
                                       {s.neighbors}
@@ -477,7 +515,16 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
                                     className="flex w-full items-center justify-between px-2.5 py-1.5 text-left hover:bg-mist/60 text-[12px] font-bold text-ink cursor-pointer"
                                   >
                                     <span>ul. {s.name}</span>
-                                    <span className="text-[10px] text-ink-400 font-normal">{s.neighbors} sąsiadów</span>
+                                    <span
+                                      className={cn(
+                                        'text-[10px]',
+                                        s.neighbors > 0
+                                          ? 'text-ink-500 font-semibold'
+                                          : 'text-coral-600 font-bold italic',
+                                      )}
+                                    >
+                                      {formatNeighborCount(s.neighbors)}
+                                    </span>
                                   </button>
                                 </li>
                               ))}
@@ -491,7 +538,7 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
                                   const customStreet: Street = {
                                     name: qClean,
                                     as: `z ${qClean}`,
-                                    neighbors: 1,
+                                    neighbors: 0,
                                   };
                                   setStreet(customStreet);
                                   setQuery('');
@@ -526,14 +573,14 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
                                 setStreet({
                                   name: `${q.trim()}, ${city}`,
                                   as: `z ${q.trim()} (${city})`,
-                                  neighbors: 1,
+                                  neighbors: 0,
                                 });
                               } else {
                                 const asForm = gminaLocalityAs[city] || `z ${city}`;
                                 setStreet({
                                   name: city,
                                   as: asForm,
-                                  neighbors: 35,
+                                  neighbors: 0,
                                 });
                               }
                             }}

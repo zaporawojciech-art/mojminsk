@@ -71,6 +71,7 @@ export async function registerNeighborInSupabase(user: User): Promise<{
     body: JSON.stringify({
       p_name: user.name,
       p_surname: user.surname ?? '',
+      p_email: user.email ?? '',
       p_street_name: user.street.name,
       p_street_as: user.street.as,
       p_house_number: user.houseNumber ?? '',
