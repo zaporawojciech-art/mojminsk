@@ -714,13 +714,21 @@ function BusWidget({
     return (
       <Card className="mx-5 p-3.5">
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5 min-w-0">
+          <div
+            onClick={() => onOpenFull?.()}
+            className="flex items-center gap-2.5 min-w-0 cursor-pointer flex-1 active:opacity-75"
+          >
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-ink text-white">
               <Bus className="h-4.5 w-4.5" aria-hidden />
             </span>
-            <p className="font-display text-[15px] font-bold leading-tight text-ink">
-              Komunikacja miejska
-            </p>
+            <div className="min-w-0">
+              <p className="font-display text-[15px] font-bold leading-tight text-ink">
+                Komunikacja miejska
+              </p>
+              <p className="text-[11px] text-sky-700 font-semibold mt-0.5">
+                Rozkład & odjazdy na żywo ➔
+              </p>
+            </div>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">

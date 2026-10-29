@@ -735,7 +735,7 @@ export default function App() {
         const parts = cleanPath.split('/').filter(Boolean); // ['zditm', 'm2', 'plac-dworcowy']
         const lineUpper = parts[1]?.toUpperCase();
         const validLine: LineId =
-          lineUpper === 'M2' || lineUpper === 'M3' || lineUpper === 'M4' ? lineUpper : 'M2';
+          lineUpper === 'M1' || lineUpper === 'M2' || lineUpper === 'M3' || lineUpper === 'M4' ? lineUpper : 'M2';
         setSelectedZditmLine(validLine);
         setSelectedZditmStop(parts[2] ? parts[2].replace(/-/g, ' ') : undefined);
         setOverlay('zditm');
@@ -1632,7 +1632,7 @@ export default function App() {
           </AsyncViewBoundary>
         )}
 
-        {user && overlay === 'zditm' && (
+        {overlay === 'zditm' && (
           <AsyncViewBoundary
             viewKey={`overlay-zditm-${selectedZditmLine}-${selectedZditmStop ?? 'all'}`}
             level={1}
@@ -1677,7 +1677,7 @@ export default function App() {
         )}
 
         {/* LEVEL 2 (z-[52]): Views opened from Tabs OR nested inside Level 1 (e.g. from Profile / ZDiTM) */}
-        {user && partnerOpen && (
+        {partnerOpen && (
           <AsyncViewBoundary
             viewKey="overlay-partner"
             level={2}
@@ -1740,7 +1740,7 @@ export default function App() {
           </AsyncViewBoundary>
         )}
 
-        {user && filtersModalOpen && (
+        {filtersModalOpen && (
           <AsyncViewBoundary
             viewKey="modal-filters"
             level={2}
@@ -1767,7 +1767,7 @@ export default function App() {
           </AsyncViewBoundary>
         )}
 
-        {user && addFavBusOpen && (
+        {addFavBusOpen && (
           <AsyncViewBoundary
             viewKey="modal-add-fav-bus"
             level={2}
