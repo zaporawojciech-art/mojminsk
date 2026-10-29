@@ -861,15 +861,92 @@ export const posts: Post[] = [];
 export const talkTags = ['Wszystko', '#Spacerowa', '#Centrum', '#Serbinów', '#Drogi', '#Kultura'];
 
 /* ---------------- Strefa Partnera ---------------- */
+export interface PartnerProduct {
+  id: string;
+  name: string;
+  category: string;
+  material: string;
+  specs: string;
+  badge?: string;
+  image: string;
+  priceFrom?: number;
+}
+
 export const partner = {
-  name: 'Pracownia Złota Nić',
-  address: 'ul. Warszawska 12, Mińsk Mazowiecki',
-  code: 'MOJMINSK15',
-  hero: img('photo-1515562141207-7a88fb7ce338', 800),
+  name: 'Grupa ADK — Okna, Drzwi, Pergole',
+  shortName: 'Grupa ADK',
+  tagline: 'Nowoczesna stolarka budowlana i konstrukcje aluminiowe w Mińsku Mazowieckim',
+  description:
+    'Lokalny lider nowoczesnej stolarki otworowej, wielkoformatowych przeszkleń HST, energooszczędnych drzwi i całorocznych pergoli bioklimatycznych. Salon pokazowy i doradztwo techniczne na miejscu w Mińsku.',
+  address: 'ul. Siennicka 47, Mińsk Mazowiecki',
+  phone: '514 481 473',
+  phoneSecondary: '505 750 825',
+  email: 'kontakt@adkokna.pl',
+  website: 'https://grupaadk.pl',
+  openingHours: 'Pn – Pt: 08:00 – 16:00',
+  code: 'ADK-MINSK',
+  discount: '−10%',
+  hero: img('photo-1600585154340-be6161a56a0c', 1000),
+  perks: [
+    'Bezpłatny profesjonalny pomiar laserowy na posesji w Mińsku i powiecie',
+    'Certyfikowane profile Uw ≤ 0,72 W/m²K do programu „Czyste Powietrze”',
+    'Własne, wykwalifikowane ekipy montażowe z Mińska Mazowieckiego',
+    'Salon stacjonarny przy ul. Siennickiej 47 z ekspozycją profili i automatyki',
+  ],
   products: [
-    { id: 'pp1', name: 'Pierścionek z cyrkonią', material: 'Złoto 585', price: 890, image: img('photo-1605100804763-247f67b3557e', 400) },
-    { id: 'pp2', name: 'Naszyjnik Perła', material: 'Srebro 925', price: 340, image: img('photo-1599643478518-a784e5dc4c8f', 400) },
-    { id: 'pp3', name: 'Kolczyki Kropla', material: 'Złoto 375', price: 520, image: img('photo-1535632066927-ab7c9ab60908', 400) },
-    { id: 'pp4', name: 'Bransoletka Mińsk', material: 'Srebro 925', price: 260, image: img('photo-1611591437281-460bfbe1220a', 400) },
+    {
+      id: 'adk-p1',
+      name: 'Okna Pasywne & Energooszczędne',
+      category: 'Okna PCV / ALU',
+      material: 'System 3-szybowy 7-komorowy',
+      specs: 'Współczynnik Uw od 0,72 W/m²K · Ciepłe ramki międzyszybowe',
+      badge: 'Czyste Powietrze',
+      image: img('photo-1600566753376-12c8ab7fb75b', 600),
+    },
+    {
+      id: 'adk-p2',
+      name: 'Przeszklenia Panoramiczne HST',
+      category: 'Systemy Tarasowe',
+      material: 'Aluminium Ciepłe Slim',
+      specs: 'Próg bezbarierowy 0 mm · Przesuwne skrzydła do 400 kg · Panoramiczny widok',
+      badge: 'Bestseller',
+      image: img('photo-1600607687939-ce8a6c25118c', 600),
+    },
+    {
+      id: 'adk-p3',
+      name: 'Drzwi Zewnętrzne Premium & Smart',
+      category: 'Drzwi Wejściowe',
+      material: 'Aluminium / Kompozyt RC3',
+      specs: 'Zasuwnica wielopunktowa · Czytnik linii papilarnych · Izolacja termiczna Ud < 0,8',
+      badge: 'Smart Home',
+      image: img('photo-1513694203232-719a280e022f', 600),
+    },
+    {
+      id: 'adk-p4',
+      name: 'Pergole Bioklimatyczne & Tarasy',
+      category: 'Architektura Ogrodu',
+      material: 'Aluminium Ekstrudowane',
+      specs: 'Obrotowe lamele dachowe · Odprowadzanie wody · Oświetlenie LED · Sensory wiatru',
+      badge: 'Całoroczne',
+      image: img('photo-1512917774080-9991f1c4c750', 600),
+    },
+    {
+      id: 'adk-p5',
+      name: 'Rolety Podtynkowe & Żaluzje Fasad.',
+      category: 'Osłony Przeciwsłoneczne',
+      material: 'Lamele Z90 / Pancerz Alu',
+      specs: 'Ochrona przed nagrzewaniem · Wyciszenie akustyczne · Sterowanie Somfy IO',
+      badge: 'Komfort Termiczny',
+      image: img('photo-1582582494705-f8ce0b0c24f0', 600),
+    },
+    {
+      id: 'adk-p6',
+      name: 'Bramy Garażowe & Ogrodzenia',
+      category: 'Bramy i Posesja',
+      material: 'Panel 40/60 mm & Profil Alu',
+      specs: 'Automatyka zintegrowana z pilotem / smartfonem · Spójny design posesji',
+      badge: 'Bezpieczeństwo',
+      image: img('photo-1590381105924-c72589b9ef3f', 600),
+    },
   ],
 };

@@ -1467,20 +1467,20 @@ export function HomeScreen({
         >
           <Img
             src={partner.hero}
-            alt=""
-            className="absolute inset-y-0 right-0 h-full w-1/2 opacity-90 [mask-image:linear-gradient(to_left,black_40%,transparent)]"
+            alt={partner.name}
+            className="absolute inset-y-0 right-0 h-full w-1/2 opacity-80 object-cover [mask-image:linear-gradient(to_left,black_50%,transparent)]"
           />
-          <span className="relative text-[10.5px] font-bold uppercase tracking-[.16em] text-sand">
-            Strefa Partnera
+          <span className="relative inline-flex items-center gap-1 text-[10.5px] font-bold uppercase tracking-[.16em] text-sand">
+            Partner Tygodnia
           </span>
-          <p className="relative mt-1 max-w-[62%] font-display text-[23px] font-semibold leading-tight text-white">
-            {partner.name}
+          <p className="relative mt-1 max-w-[62%] font-display text-[22px] font-bold leading-tight text-white">
+            {partner.shortName}
           </p>
-          <p className="relative mt-1 max-w-[58%] text-[12px] text-white/70">
-            −15% na biżuterię dla sąsiadów z mójMińsk
+          <p className="relative mt-1 max-w-[60%] text-[12px] text-white/80">
+            {partner.discount} na okna, drzwi i pergole + darmowy pomiar z kodem {partner.code}
           </p>
-          <span className="relative mt-4 inline-flex items-center gap-1 rounded-full bg-sand px-3.5 py-2 text-[12.5px] font-bold text-ink">
-            Zobacz kolekcję <ArrowRight className="h-4 w-4" aria-hidden />
+          <span className="relative mt-4 inline-flex items-center gap-1 rounded-full bg-sand px-3.5 py-2 text-[12px] font-bold text-ink">
+            Otwórz Strefę Partnera <ArrowRight className="h-4 w-4" aria-hidden />
           </span>
         </button>
 
@@ -1651,7 +1651,7 @@ export function HomeScreen({
                 </div>
                 <div className="min-w-0">
                   <h3 className="font-display text-[15px] font-bold text-white leading-tight truncate">
-                    {partner.name}
+                    {partner.shortName}
                   </h3>
                   <p className="mt-0.5 text-[11px] text-white/65 truncate">
                     {partner.address}
@@ -1662,10 +1662,10 @@ export function HomeScreen({
               <div className="mt-3 rounded-xl bg-white/[.07] border border-white/10 p-2.5 flex items-center justify-between gap-2">
                 <div>
                   <span className="block text-[10px] font-bold uppercase tracking-wider text-sand">
-                    Zniżka dla sąsiadów
+                    Rabat dla mieszkańców
                   </span>
                   <span className="font-display text-[18px] font-extrabold text-white leading-none">
-                    −15% <span className="text-[11px] font-medium text-white/70">z kodem {partner.code}</span>
+                    {partner.discount} <span className="text-[11px] font-medium text-white/70">z kodem {partner.code}</span>
                   </span>
                 </div>
               </div>

@@ -6,7 +6,6 @@ import {
   ChevronRight,
   Coffee,
   Dices,
-  Gem,
   Lock,
   LogOut,
   Megaphone,
@@ -14,10 +13,12 @@ import {
   Plus,
   ShieldCheck,
   Smartphone,
+  Sparkles,
   Vote,
 } from 'lucide-react';
 import {
   avatarUrl,
+  partner,
   type Ad,
   type AdConversation,
   type User,
@@ -783,12 +784,12 @@ export function ProfileScreen({
                   className="flex w-full items-center justify-between rounded-xl bg-mist/50 p-3 text-left hover:bg-mist transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-coral-100 text-ink">
-                      <Gem className="h-4 w-4" />
+                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-sand/20 text-ink">
+                      <Sparkles className="h-4 w-4 text-ink" />
                     </span>
                     <div>
-                      <p className="text-[13px] font-bold text-ink">Strefa Partnera Miesiąca</p>
-                      <p className="text-[11px] text-ink-500">Jubiler Złota Nić · rabat −15%</p>
+                      <p className="text-[13px] font-bold text-ink">Partner Tygodnia: {partner.shortName}</p>
+                      <p className="text-[11px] text-ink-500">{partner.address} · rabat {partner.discount}</p>
                     </div>
                   </div>
                   <ChevronRight className="h-4 w-4 text-ink-400" />

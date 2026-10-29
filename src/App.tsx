@@ -1181,10 +1181,10 @@ export default function App() {
 
     if (partnerOpen) {
       return {
-        title: 'Strefa Partnera — Zniżki dla mieszkańców Mińska Mazowieckiego',
+        title: 'Grupa ADK — Partner Tygodnia mójMińsk | Okna, Drzwi, Pergole Mińsk Mazowiecki',
         description:
-          'Ekskluzywne rabaty i oferty przygotowane przez lokalnych partnerów z Mińska Mazowieckiego dla zweryfikowanych sąsiadów.',
-        canonicalPath: '/partnerzy/jubiler-minsk',
+          'Skorzystaj z rabatu −10% oraz darmowego pomiaru laserowego z kodem ADK-MINSK w salonie Grupy ADK przy ul. Siennickiej 47 w Mińsku Mazowieckim.',
+        canonicalPath: '/partnerzy/grupa-adk',
       };
     }
 
@@ -1424,7 +1424,7 @@ export default function App() {
                   onProfile={handleOpenProfileOrAuth}
                   onPartner={() => {
                     setPartnerOpen(true);
-                    navigateTo('/partnerzy/jubiler-minsk');
+                    navigateTo('/partnerzy/grupa-adk');
                   }}
                   onZditm={(line, stopName) => {
                     const nextLine = line ?? 'M2';
@@ -1623,7 +1623,7 @@ export default function App() {
               }}
               onPartner={() => {
                 setPartnerOpen(true);
-                navigateTo('/partnerzy/jubiler-minsk');
+                navigateTo('/partnerzy/grupa-adk');
               }}
               onAddAd={() =>
                 requireAuth(
