@@ -1,6 +1,7 @@
 import type { TabId } from './BottomNav';
 import type { LineId } from '../data/mockData';
 import { TAB_PATHS } from '../router/urlUtils';
+import { AppLink } from './AppLink';
 
 export interface FooterProps {
   onTabChange?: (tab: TabId) => void;
@@ -8,6 +9,7 @@ export interface FooterProps {
   onOpenPolls?: () => void;
   onAddNewAd?: () => void;
   onOpenInstallApp?: () => void;
+  onOpenLegal?: (doc: 'terms' | 'privacy') => void;
 }
 
 const EMERGENCY_NUMBERS = [
@@ -23,6 +25,7 @@ export function Footer({
   onOpenZditm,
   onOpenPolls,
   onOpenInstallApp,
+  onOpenLegal,
 }: FooterProps) {
   const handleNavClick = (tabId: TabId, e: React.MouseEvent) => {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
@@ -46,9 +49,6 @@ export function Footer({
                 <span className="text-sand-600">.</span>
               </span>
             </a>
-            <p className="text-xs text-ink-500 mt-1">
-              Hiperlokalna platforma mieszkańców Mińska Mazowieckiego i Gminy.
-            </p>
           </div>
 
           <nav className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-medium text-ink-600">
@@ -135,17 +135,21 @@ export function Footer({
           </div>
 
           <div className="flex items-center gap-4 text-ink-500">
-            <a href="/regulamin" className="hover:text-ink-900 transition-colors">
+            <AppLink
+              to="/regulamin"
+              onClick={() => onOpenLegal?.('terms')}
+              className="hover:text-ink-900 transition-colors"
+            >
               Regulamin
-            </a>
+            </AppLink>
             <span>•</span>
-            <a href="/polityka-prywatnosci" className="hover:text-ink-900 transition-colors">
-              Prywatność
-            </a>
-            <span>•</span>
-            <a href="/standardy" className="hover:text-ink-900 transition-colors">
-              Standardy
-            </a>
+            <AppLink
+              to="/polityka-prywatnosci"
+              onClick={() => onOpenLegal?.('privacy')}
+              className="hover:text-ink-900 transition-colors"
+            >
+              Polityka prywatności
+            </AppLink>
           </div>
         </div>
       </div>

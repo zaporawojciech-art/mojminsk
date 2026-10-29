@@ -89,6 +89,8 @@ const InstallAppModal = lazy(() => import('./screens/InstallAppModal').then((m) 
 const AddFavoriteBusModal = lazy(() => import('./screens/AddFavoriteBusModal').then((m) => ({ default: m.AddFavoriteBusModal })));
 const PollsModal = lazy(() => import('./screens/PollsModal').then((m) => ({ default: m.PollsModal })));
 const AddPollModal = lazy(() => import('./screens/AddPollModal').then((m) => ({ default: m.AddPollModal })));
+const LegalScreen = lazy(() => import('./screens/LegalScreen').then((m) => ({ default: m.LegalScreen })));
+import type { LegalDocType } from './screens/LegalScreen';
 
 type Overlay = null | 'profile' | 'zditm';
 
@@ -124,6 +126,15 @@ export default function App() {
       return p === '/dolacz' || p === '/rejestracja' ? 'register' : 'login';
     }
     return 'login';
+  });
+
+  const [legalView, setLegalView] = useState<LegalDocType | null>(() => {
+    if (typeof window !== 'undefined') {
+      const p = window.location.pathname;
+      if (p === '/regulamin') return 'terms';
+      if (p === '/polityka-prywatnosci') return 'privacy';
+    }
+    return null;
   });
 
   const handleUpdateUser = useCallback((nextUser: User | null) => {
@@ -590,6 +601,19 @@ export default function App() {
       setAddAdOpen(false);
       setSellerProfile(null);
 
+      // 1b. Regulamin & Polityka prywatności
+      if (cleanPath === '/regulamin') {
+        setSelectedAd(null);
+        setLegalView('terms');
+        return;
+      }
+      if (cleanPath === '/polityka-prywatnosci') {
+        setSelectedAd(null);
+        setLegalView('privacy');
+        return;
+      }
+      setLegalView(null);
+
       // 2. Główne zakładki
       if (cleanPath === '/') {
         setSelectedAd(null);
@@ -896,6 +920,7 @@ export default function App() {
   const handleTabChange = useCallback(
     (nextTab: TabId) => {
       setRouteNotFound(false);
+      setLegalView(null);
       const targetUrl = TAB_PATHS[nextTab];
       if (typeof window !== 'undefined' && window.location.pathname !== targetUrl) {
         navigateTo(targetUrl);
@@ -923,6 +948,24 @@ export default function App() {
 
   // Dynamiczne obliczanie metadanych SEO i danych strukturalnych JSON-LD (Schema.org) dla aktualnej trasy
   const seoProps = ((): SeoHeadProps => {
+    if (legalView === 'terms') {
+      return {
+        title: 'Regulamin serwisu — mójMińsk.app',
+        description:
+          'Regulamin korzystania ze zweryfikowanej platformy sąsiedzkiej mójMińsk dla mieszkańców Mińska Mazowieckiego i Gminy Mińsk Mazowiecki.',
+        canonicalPath: '/regulamin',
+      };
+    }
+
+    if (legalView === 'privacy') {
+      return {
+        title: 'Polityka Prywatności i RODO — mójMińsk.app',
+        description:
+          'Zasady ochrony prywatności, szyfrowania adresów AES-256 oraz przetwarzania danych osobowych w aplikacji mójMińsk.app w Mińsku Mazowieckim.',
+        canonicalPath: '/polityka-prywatnosci',
+      };
+    }
+
     if (!user) {
       return {
         title: 'Dołącz do sąsiadów w Mińsku Mazowieckim — mójMińsk.app',
@@ -1128,6 +1171,7 @@ export default function App() {
       void import('./screens/InstallAppModal');
       void import('./screens/PollsModal');
       void import('./screens/AddPollModal');
+      void import('./screens/LegalScreen');
     }, 100);
     return () => {
       window.clearTimeout(id);
@@ -1150,6 +1194,7 @@ export default function App() {
           hasActiveSubpage={isChildScreenActive}
           onCloseAllLayers={() => {
             setOverlay(null);
+            setLegalView(null);
             setPartnerOpen(false);
             setSelectedAd(null);
             setMyAdsOpen(false);
@@ -1237,6 +1282,25 @@ export default function App() {
                   }
                 }}
               />
+            </div>
+          ) : legalView ? (
+            <div className="min-h-full">
+              <Suspense
+                fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center p-8 text-ink-400">
+                    Wczytywanie dokumentu...
+                  </div>
+                }
+              >
+                <LegalScreen
+                  activeDoc={legalView}
+                  onBack={() => handleTabChange('home')}
+                  onSelectDoc={(doc) => {
+                    setLegalView(doc);
+                    navigateTo(doc === 'terms' ? '/regulamin' : '/polityka-prywatnosci');
+                  }}
+                />
+              </Suspense>
             </div>
           ) : routeNotFound ? (
             <div className="min-h-full">
@@ -1400,6 +1464,10 @@ export default function App() {
                 )
               }
               onOpenInstallApp={() => setInstallModalOpen(true)}
+              onOpenLegal={(doc) => {
+                setLegalView(doc);
+                navigateTo(doc === 'terms' ? '/regulamin' : '/polityka-prywatnosci');
+              }}
             />
           )}
         </main>
