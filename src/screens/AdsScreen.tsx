@@ -23,6 +23,7 @@ import {
   Search,
   SlidersHorizontal,
   Sparkles,
+  Tag,
   X,
   type LucideIcon,
 } from 'lucide-react';
@@ -200,6 +201,7 @@ interface AdsScreenProps {
   externalSearchQuery?: string;
   initialCategoryId?: string;
   initialStreetName?: string;
+  onAddAd?: () => void;
   onCategoryRouteChange?: (categoryId: string) => void;
   onStreetRouteChange?: (streetName: string) => void;
 }
@@ -220,6 +222,7 @@ export function AdsScreen({
   externalSearchQuery = '',
   initialCategoryId = 'all',
   initialStreetName = 'all',
+  onAddAd,
   onCategoryRouteChange,
   onStreetRouteChange,
 }: AdsScreenProps) {
@@ -993,24 +996,43 @@ export function AdsScreen({
 
           {/* Ads Listing */}
           {filteredAds.length === 0 ? (
-            <div className="mx-5 md:mx-0 mt-4 rounded-2xl bg-white p-8 text-center shadow-card">
-              <div className="mx-auto grid h-11 w-11 place-items-center rounded-full bg-coral-50 text-coral">
-                <Heart className="h-5 w-5" />
+            <div className="mx-5 md:mx-0 mt-4 rounded-2xl bg-white p-8 text-center shadow-card border border-mist-200">
+              <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-coral-50 text-coral">
+                {quickFilter === 'saved' ? <Heart className="h-6 w-6" /> : <Tag className="h-6 w-6" />}
               </div>
-              <p className="mt-2.5 font-display text-[17px] font-bold text-ink">
-                {quickFilter === 'saved' ? 'Brak obserwowanych ogłoszeń' : 'Brak wyników'}
+              <p className="mt-3 font-display text-[17px] font-bold text-ink">
+                {quickFilter === 'saved'
+                  ? 'Brak obserwowanych ogłoszeń'
+                  : adsList.length === 0
+                  ? 'Bądź pierwszym, który wystawi ogłoszenie!'
+                  : 'Brak wyników wyszukiwania'}
               </p>
-              <p className="mt-1 text-[13px] text-ink-500">
+              <p className="mt-1 text-[13px] text-ink-500 max-w-md mx-auto">
                 {quickFilter === 'saved'
                   ? 'Kliknij serduszko na dowolnym ogłoszeniu sąsiada, aby zapisać je na później.'
+                  : adsList.length === 0
+                  ? 'Tablica ogłoszeń w Mińsku Mazowieckim czeka na oferty. Wystawiaj meble, sprzęt, ubrania lub usługi bez prowizji.'
                   : 'Nie znaleźliśmy ogłoszeń spełniających wybrane kryteria w Mińsku.'}
               </p>
-              <button
-                onClick={resetAllLocalFilters}
-                className="mt-3.5 rounded-lg bg-ink px-4 py-2 text-[12.5px] font-bold text-white shadow-card active:scale-95"
-              >
-                Przeglądaj wszystkie
-              </button>
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                {adsList.length === 0 && onAddAd ? (
+                  <button
+                    type="button"
+                    onClick={onAddAd}
+                    className="rounded-xl bg-coral px-4 py-2 text-[12.5px] font-extrabold text-ink shadow-xs hover:bg-coral-600 active:scale-95 cursor-pointer"
+                  >
+                    Dodaj pierwsze ogłoszenie
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={resetAllLocalFilters}
+                    className="rounded-lg bg-ink px-4 py-2 text-[12.5px] font-bold text-white shadow-card active:scale-95 cursor-pointer"
+                  >
+                    Przeglądaj wszystkie
+                  </button>
+                )}
+              </div>
             </div>
           ) : viewMode === 'grid' ? (
             /* Wide Dense Mosaic Grid (2 cols mobile, 3 cols md, 4 cols lg, 5 cols xl, 6 cols 2xl) */

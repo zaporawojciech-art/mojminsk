@@ -173,63 +173,86 @@ export function TalksScreen({
             ))}
           </div>
 
-          <div className="mx-5 md:mx-0 mt-4 divide-y divide-mist overflow-hidden rounded-4xl bg-white shadow-card border border-mist-200">
-            {visible.map((p) => {
-              const isLiked = !!liked[p.id];
-              const matchedStreet = streets.find((s) => s.as === p.authorAs)?.name ?? p.authorAs.replace(/^ze?\s+/i, '');
-              return (
-                <article key={p.id} className="flex gap-4 p-4 md:p-6 hover:bg-mist/25 transition-colors">
-                  <button
-                    type="button"
-                    onClick={() => onNeighborClick?.(p.author, matchedStreet)}
-                    className="shrink-0 self-start transition-transform active:scale-95"
-                    title={`Zobacz profil: ${p.author}`}
-                  >
-                    <img src={avatarUrl(p.author)} alt="" className="h-12 w-12 rounded-2xl bg-sand-100" />
-                  </button>
-                  <div className="min-w-0 flex-1">
+          {visible.length === 0 ? (
+            <div className="mx-5 md:mx-0 mt-4 rounded-4xl bg-white p-8 text-center shadow-card border border-mist-200">
+              <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-coral-50 text-coral">
+                <MessageCircle className="h-6 w-6" />
+              </div>
+              <p className="mt-3 font-display text-[17px] font-bold text-ink">
+                Strefa Rozmów czeka na pierwszy wpis
+              </p>
+              <p className="mt-1 text-[13px] text-ink-500 max-w-md mx-auto">
+                Bądź pierwszą osobą, która przywita się z sąsiadami lub podzieli się informacją ze swojej ulicy!
+              </p>
+              {tag !== 'Wszystko' && (
+                <button
+                  type="button"
+                  onClick={() => setTag('Wszystko')}
+                  className="mt-3.5 rounded-lg bg-ink px-4 py-2 text-[12.5px] font-bold text-white shadow-card active:scale-95 cursor-pointer"
+                >
+                  Pokaż wszystkie wpisy
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="mx-5 md:mx-0 mt-4 divide-y divide-mist overflow-hidden rounded-4xl bg-white shadow-card border border-mist-200">
+              {visible.map((p) => {
+                const isLiked = !!liked[p.id];
+                const matchedStreet = streets.find((s) => s.as === p.authorAs)?.name ?? p.authorAs.replace(/^ze?\s+/i, '');
+                return (
+                  <article key={p.id} className="flex gap-4 p-4 md:p-6 hover:bg-mist/25 transition-colors">
                     <button
                       type="button"
                       onClick={() => onNeighborClick?.(p.author, matchedStreet)}
-                      className="flex flex-wrap items-center gap-x-1.5 text-left text-[14.5px] hover:underline"
+                      className="shrink-0 self-start transition-transform active:scale-95"
+                      title={`Zobacz profil: ${p.author}`}
                     >
-                      <b className="text-ink">
-                        {p.author} {p.authorAs}
-                      </b>
-                      <span className="text-ink-400 text-[13px]">· {p.time}</span>
+                      <img src={avatarUrl(p.author)} alt="" className="h-12 w-12 rounded-2xl bg-sand-100" />
                     </button>
-                    <p className="mt-1.5 text-[15px] leading-relaxed text-ink-700">
-                      <RichText text={p.content} />
-                    </p>
-                    {p.image && <Img src={p.image} alt="" className="mt-3.5 h-56 md:h-72 w-full rounded-3xl object-cover" />}
-                    <div className="mt-4 flex items-center justify-between max-w-md pr-2 text-[13px] text-ink-400">
-                      <button className="flex items-center gap-1.5 hover:text-ink transition-colors" aria-label="Odpowiedz">
-                        <MessageCircle className="h-[18px] w-[18px]" aria-hidden />
-                        {p.replies}
-                      </button>
-                      <button className="flex items-center gap-1.5 hover:text-ink transition-colors" aria-label="Udostępnij dalej">
-                        <Repeat2 className="h-[18px] w-[18px]" aria-hidden />
-                        {p.reposts}
-                      </button>
+                    <div className="min-w-0 flex-1">
                       <button
-                        onClick={() => toggleLike(p.id)}
-                        aria-pressed={isLiked}
-                        aria-label="Polub"
-                        className={cn('flex items-center gap-1.5 transition-transform active:scale-90', isLiked ? 'font-bold text-coral-700' : 'hover:text-ink')}
+                        type="button"
+                        onClick={() => onNeighborClick?.(p.author, matchedStreet)}
+                        className="flex flex-wrap items-center gap-x-1.5 text-left text-[14.5px] hover:underline"
                       >
-                        <Heart className={cn('h-[18px] w-[18px]', isLiked && 'fill-coral text-coral')} aria-hidden />
-                        {p.likes + (isLiked ? 1 : 0)}
+                        <b className="text-ink">
+                          {p.author} {p.authorAs}
+                        </b>
+                        <span className="text-ink-400 text-[13px]">· {p.time}</span>
                       </button>
-                      <span className="flex items-center gap-1.5">
-                        <BarChart2 className="h-[18px] w-[18px]" aria-hidden />
-                        {p.views}
-                      </span>
+                      <p className="mt-1.5 text-[15px] leading-relaxed text-ink-700">
+                        <RichText text={p.content} />
+                      </p>
+                      {p.image && <Img src={p.image} alt="" className="mt-3.5 h-56 md:h-72 w-full rounded-3xl object-cover" />}
+                      <div className="mt-4 flex items-center justify-between max-w-md pr-2 text-[13px] text-ink-400">
+                        <button className="flex items-center gap-1.5 hover:text-ink transition-colors" aria-label="Odpowiedz">
+                          <MessageCircle className="h-[18px] w-[18px]" aria-hidden />
+                          {p.replies}
+                        </button>
+                        <button className="flex items-center gap-1.5 hover:text-ink transition-colors" aria-label="Udostępnij dalej">
+                          <Repeat2 className="h-[18px] w-[18px]" aria-hidden />
+                          {p.reposts}
+                        </button>
+                        <button
+                          onClick={() => toggleLike(p.id)}
+                          aria-pressed={isLiked}
+                          aria-label="Polub"
+                          className={cn('flex items-center gap-1.5 transition-transform active:scale-90', isLiked ? 'font-bold text-coral-700' : 'hover:text-ink')}
+                        >
+                          <Heart className={cn('h-[18px] w-[18px]', isLiked && 'fill-coral text-coral')} aria-hidden />
+                          {p.likes + (isLiked ? 1 : 0)}
+                        </button>
+                        <span className="flex items-center gap-1.5">
+                          <BarChart2 className="h-[18px] w-[18px]" aria-hidden />
+                          {p.views}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* RIGHT SIDEBAR: Trending Street Hashtags & Active Streets (Desktop Only) */}

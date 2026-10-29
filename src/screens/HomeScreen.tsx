@@ -14,12 +14,14 @@ import {
   Megaphone,
   MessageCircle,
   MessagesSquare,
+  Newspaper,
   Phone,
   Plus,
   RefreshCw,
   Search,
   ShieldCheck,
   Sparkles,
+  Tag,
   TriangleAlert,
   Users,
   Vote,
@@ -659,7 +661,7 @@ function DesktopWeatherWidget({
 function LiveAlert() {
   const [dismissed, setDismissed] = useState(false);
 
-  if (dismissed) return null;
+  if (!liveAlert || dismissed) return null;
 
   return (
     <div className="relative mx-5 flex gap-3.5 rounded-3xl border-l-4 border-coral bg-white p-4 shadow-card" role="status">
@@ -1427,27 +1429,29 @@ export function HomeScreen({
           onRemoveFavorite={onRemoveFavoriteBus}
         />
 
-        <section>
-          <SectionHeader title="Co słychać w Mińsku" action="Wszystkie" />
-          <div className="flex gap-3 overflow-x-auto px-5 pb-1 no-scrollbar">
-            {news.map((n) => (
-              <article key={n.id} className="w-[250px] shrink-0 overflow-hidden rounded-3xl bg-white shadow-card">
-                <div className="relative">
-                  <Img src={n.image} alt="" className="h-32 w-full" />
-                  <span className="absolute left-3 top-3 rounded-full bg-white px-2.5 py-1 text-[10.5px] font-bold">
-                    {n.tag}
-                  </span>
-                </div>
-                <div className="p-3.5">
-                  <p className="line-clamp-2 text-[14px] font-bold leading-snug">{n.title}</p>
-                  <p className="mt-2 text-[11px] font-medium text-ink-400">
-                    {n.source} · {n.time}
-                  </p>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
+        {news.length > 0 && (
+          <section>
+            <SectionHeader title="Co słychać w Mińsku" action="Wszystkie" />
+            <div className="flex gap-3 overflow-x-auto px-5 pb-1 no-scrollbar">
+              {news.map((n) => (
+                <article key={n.id} className="w-[250px] shrink-0 overflow-hidden rounded-3xl bg-white shadow-card">
+                  <div className="relative">
+                    <Img src={n.image} alt="" className="h-32 w-full" />
+                    <span className="absolute left-3 top-3 rounded-full bg-white px-2.5 py-1 text-[10.5px] font-bold">
+                      {n.tag}
+                    </span>
+                  </div>
+                  <div className="p-3.5">
+                    <p className="line-clamp-2 text-[14px] font-bold leading-snug">{n.title}</p>
+                    <p className="mt-2 text-[11px] font-medium text-ink-400">
+                      {n.source} · {n.time}
+                    </p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
 
         <FeaturedPollCard
           pollItem={featuredPoll}
@@ -1499,7 +1503,7 @@ export function HomeScreen({
        * =================================================================== */}
       <div className="hidden md:block w-full px-8 lg:px-12 py-5 space-y-6">
         {/* OPTIONAL COMPACT CRISIS ALERT BAR */}
-        {!desktopAlertDismissed && (
+        {!desktopAlertDismissed && liveAlert && (
           <div className="flex items-center justify-between gap-4 rounded-xl border-l-4 border-coral bg-white px-4 py-2.5 shadow-card text-[12.5px]">
             <div className="flex items-center gap-3 min-w-0">
               <span className="inline-flex items-center gap-1.5 rounded-md bg-coral-100 px-2 py-0.5 text-[10.5px] font-extrabold uppercase tracking-wider text-coral-800 shrink-0">
@@ -1564,35 +1568,43 @@ export function HomeScreen({
                 </span>
               </div>
 
-              <div className="divide-y divide-mist-100">
-                {news.map((n) => (
-                  <article
-                    key={n.id}
-                    className="group flex items-center gap-3 py-2.5 first:pt-3 last:pb-1 cursor-pointer"
-                  >
-                    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-mist border border-mist-200/60">
-                      <Img
-                        src={n.image}
-                        alt={n.title}
-                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5 text-[10.5px]">
-                        <span className="rounded bg-mist px-1.5 py-0.2 font-bold text-ink-600">
-                          {n.tag}
-                        </span>
-                        <span className="text-ink-400 font-medium truncate">
-                          {n.source} · {n.time}
-                        </span>
+              {news.length === 0 ? (
+                <div className="py-8 text-center text-ink-400">
+                  <Newspaper className="mx-auto h-7 w-7 text-ink-300" />
+                  <p className="mt-2 text-[13px] font-bold text-ink-700">Brak nowych wiadomości</p>
+                  <p className="mt-0.5 text-[11px] text-ink-400">Najświeższe artykuły z lokalnych portali pojawią się wkrótce.</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-mist-100">
+                  {news.map((n) => (
+                    <article
+                      key={n.id}
+                      className="group flex items-center gap-3 py-2.5 first:pt-3 last:pb-1 cursor-pointer"
+                    >
+                      <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-mist border border-mist-200/60">
+                        <Img
+                          src={n.image}
+                          alt={n.title}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
                       </div>
-                      <h3 className="mt-0.5 line-clamp-1 font-display text-[13px] font-bold text-ink group-hover:text-coral-700 transition-colors">
-                        {n.title}
-                      </h3>
-                    </div>
-                  </article>
-                ))}
-              </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 text-[10.5px]">
+                          <span className="rounded bg-mist px-1.5 py-0.2 font-bold text-ink-600">
+                            {n.tag}
+                          </span>
+                          <span className="text-ink-400 font-medium truncate">
+                            {n.source} · {n.time}
+                          </span>
+                        </div>
+                        <h3 className="mt-0.5 line-clamp-1 font-display text-[13px] font-bold text-ink group-hover:text-coral-700 transition-colors">
+                          {n.title}
+                        </h3>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
             </div>
 
             <button
@@ -1706,79 +1718,101 @@ export function HomeScreen({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3.5 items-stretch">
-            {latestAds.map((ad) => {
-              const adHref = buildAdUrl(ad);
-              return (
-                <article
-                  key={ad.id}
-                  className="group flex flex-col justify-between rounded-xl bg-mist/35 p-2.5 border border-mist-200 hover:bg-white hover:border-ink/25 hover:shadow-card transition-all h-full"
-                >
-                  <AppLink
-                    to={adHref}
-                    onClick={() => (onAdClick ? onAdClick(ad) : onTab('ads'))}
-                    className="block cursor-pointer"
+          {latestAds.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-mist-300 bg-white/70 p-8 text-center shadow-xs">
+              <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-coral-100 text-coral-700">
+                <Tag className="h-6 w-6" />
+              </div>
+              <h3 className="mt-3 font-display text-[16px] font-extrabold text-ink">
+                Tablica ogłoszeń czeka na pierwsze oferty sąsiadów
+              </h3>
+              <p className="mt-1 text-[12.5px] text-ink-500 max-w-md mx-auto">
+                Wystawiaj meble, elektronikę, ubrania lub usługi bez prowizji i zbędnych pośredników.
+              </p>
+              <button
+                type="button"
+                onClick={() => onTab('ads')}
+                className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-coral px-4 py-2 text-[12.5px] font-extrabold text-ink hover:bg-coral-600 transition-colors cursor-pointer shadow-xs"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Dodaj ogłoszenie jako pierwszy</span>
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3.5 items-stretch">
+              {latestAds.map((ad) => {
+                const adHref = buildAdUrl(ad);
+                return (
+                  <article
+                    key={ad.id}
+                    className="group flex flex-col justify-between rounded-xl bg-mist/35 p-2.5 border border-mist-200 hover:bg-white hover:border-ink/25 hover:shadow-card transition-all h-full"
                   >
-                    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-mist">
-                      <Img
-                        src={ad.image}
-                        alt={ad.title}
-                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
-                      {ad.kind === 'free' && (
-                        <span className="absolute left-2 top-2 rounded bg-emerald-600 px-2 py-0.5 text-[9.5px] font-extrabold text-white shadow">
-                          Za darmo
-                        </span>
-                      )}
-                      {ad.kind === 'lost' && (
-                        <span className="absolute left-2 top-2 rounded bg-coral px-2 py-0.5 text-[9.5px] font-extrabold text-ink shadow">
-                          Zgubiono
-                        </span>
-                      )}
-                    </div>
+                    <AppLink
+                      to={adHref}
+                      onClick={() => (onAdClick ? onAdClick(ad) : onTab('ads'))}
+                      className="block cursor-pointer"
+                    >
+                      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-mist">
+                        <Img
+                          src={ad.image}
+                          alt={ad.title}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                        {ad.kind === 'free' && (
+                          <span className="absolute left-2 top-2 rounded bg-emerald-600 px-2 py-0.5 text-[9.5px] font-extrabold text-white shadow">
+                            Za darmo
+                          </span>
+                        )}
+                        {ad.kind === 'lost' && (
+                          <span className="absolute left-2 top-2 rounded bg-coral px-2 py-0.5 text-[9.5px] font-extrabold text-ink shadow">
+                            Zgubiono
+                          </span>
+                        )}
+                      </div>
 
-                    <div className="mt-2.5 px-0.5">
-                      <div className="flex items-baseline justify-between gap-1">
-                        <p className="font-display text-[15px] font-extrabold text-ink leading-none">
-                          {ad.price ? zl(ad.price) : ad.kind === 'free' ? 'Za darmo' : 'Pomóż'}
+                      <div className="mt-2.5 px-0.5">
+                        <div className="flex items-baseline justify-between gap-1">
+                          <p className="font-display text-[15px] font-extrabold text-ink leading-none">
+                            {ad.price ? zl(ad.price) : ad.kind === 'free' ? 'Za darmo' : 'Pomóż'}
+                          </p>
+                          <span className="text-[10px] font-medium text-ink-400 shrink-0">{ad.time}</span>
+                        </div>
+                        <h3 className="mt-1 line-clamp-2 min-h-[2.6em] text-[12.5px] font-bold leading-snug text-ink group-hover:text-coral-700 transition-colors">
+                          {ad.title}
+                        </h3>
+                        <p className="mt-1 line-clamp-2 min-h-[2.5em] text-[11px] leading-relaxed text-ink-500">
+                          {ad.description || `Odbiór osobisty w Mińsku Mazowieckim (ul. ${ad.street}).`}
                         </p>
-                        <span className="text-[10px] font-medium text-ink-400 shrink-0">{ad.time}</span>
                       </div>
-                      <h3 className="mt-1 line-clamp-2 min-h-[2.6em] text-[12.5px] font-bold leading-snug text-ink group-hover:text-coral-700 transition-colors">
-                        {ad.title}
-                      </h3>
-                      <p className="mt-1 line-clamp-2 min-h-[2.5em] text-[11px] leading-relaxed text-ink-500">
-                        {ad.description || `Odbiór osobisty w Mińsku Mazowieckim (ul. ${ad.street}).`}
-                      </p>
-                    </div>
-                  </AppLink>
+                    </AppLink>
 
-                  <AppLink
-                    to={adHref}
-                    onClick={() => (onAdClick ? onAdClick(ad) : onTab('ads'))}
-                    className="mt-2.5 flex items-center justify-between gap-2 border-t border-mist-200/80 pt-2 px-0.5"
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <img
-                        src={avatarUrl(ad.author)}
-                        alt={ad.author}
-                        width={22}
-                        height={22}
-                        className="h-5.5 w-5.5 shrink-0 rounded-full bg-sand-100 object-cover ring-1 ring-mist-300"
-                      />
-                      <div className="min-w-0 leading-tight">
-                        <p className="truncate text-[11px] font-bold text-ink">{ad.author}</p>
-                        <p className="truncate text-[10px] font-medium text-ink-400">ul. {ad.street}</p>
+                    <AppLink
+                      to={adHref}
+                      onClick={() => (onAdClick ? onAdClick(ad) : onTab('ads'))}
+                      className="mt-2.5 flex items-center justify-between gap-2 border-t border-mist-200/80 pt-2 px-0.5"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <img
+                          src={avatarUrl(ad.author)}
+                          alt={ad.author}
+                          width={22}
+                          height={22}
+                          className="h-5.5 w-5.5 shrink-0 rounded-full bg-sand-100 object-cover ring-1 ring-mist-300"
+                        />
+                        <div className="min-w-0 leading-tight">
+                          <p className="truncate text-[11px] font-bold text-ink">{ad.author}</p>
+                          <p className="truncate text-[10px] font-medium text-ink-400">ul. {ad.street}</p>
+                        </div>
                       </div>
-                    </div>
-                    <span className="shrink-0 rounded-md bg-white px-2 py-0.5 text-[10px] font-bold text-ink-600 border border-mist-200 group-hover:border-ink group-hover:bg-ink group-hover:text-white transition-colors">
-                      Oferta
-                    </span>
-                  </AppLink>
-                </article>
-              );
-            })}
-          </div>
+                      <span className="shrink-0 rounded-md bg-white px-2 py-0.5 text-[10px] font-bold text-ink-600 border border-mist-200 group-hover:border-ink group-hover:bg-ink group-hover:text-white transition-colors">
+                        Oferta
+                      </span>
+                    </AppLink>
+                  </article>
+                );
+              })}
+            </div>
+          )}
         </section>
 
         {/* ROW 4: BOTTOM 2-COLUMN PORTAL ROW (Left 7 cols: Ostatnie wpisy z Rozmów | Right 5 cols: Wspólne przejazdy) */}
@@ -1805,55 +1839,75 @@ export function HomeScreen({
                 </button>
               </div>
 
-              <div className="divide-y divide-mist">
-                {latestPosts.map((p) => {
-                  const matchedStreet =
-                    streets.find((s) => s.as === p.authorAs)?.name ??
-                    p.authorAs.replace(/^ze?\s+/i, '');
-                  return (
-                    <article
-                      key={p.id}
-                      onClick={() => onTab('talks')}
-                      className="flex gap-3.5 py-3 first:pt-0 last:pb-0 cursor-pointer hover:bg-mist/30 rounded-lg px-2 -mx-2 transition-colors"
-                    >
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onNeighborClick?.(p.author, matchedStreet);
-                        }}
-                        className="shrink-0 self-start"
+              {latestPosts.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-mist-300 bg-mist/20 p-6 text-center">
+                  <div className="mx-auto grid h-10 w-10 place-items-center rounded-xl bg-white text-ink-400 shadow-2xs">
+                    <MessageCircle className="h-5 w-5 text-coral-600" />
+                  </div>
+                  <p className="mt-2.5 text-[13px] font-bold text-ink">Strefa dyskusji jest otwarta</p>
+                  <p className="mt-1 text-[11.5px] text-ink-500 max-w-sm mx-auto">
+                    Bądź pierwszym mieszkańcem, który zada pytanie lub podzieli się wieścią ze swojej ulicy.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => onTab('talks')}
+                    className="mt-3.5 inline-flex items-center gap-1.5 rounded-lg bg-ink px-3.5 py-1.5 text-[12px] font-bold text-white hover:bg-ink-700 transition-colors cursor-pointer"
+                  >
+                    <span>Napisz na forum</span>
+                    <ArrowRight className="h-3 w-3" />
+                  </button>
+                </div>
+              ) : (
+                <div className="divide-y divide-mist">
+                  {latestPosts.map((p) => {
+                    const matchedStreet =
+                      streets.find((s) => s.as === p.authorAs)?.name ??
+                      p.authorAs.replace(/^ze?\s+/i, '');
+                    return (
+                      <article
+                        key={p.id}
+                        onClick={() => onTab('talks')}
+                        className="flex gap-3.5 py-3 first:pt-0 last:pb-0 cursor-pointer hover:bg-mist/30 rounded-lg px-2 -mx-2 transition-colors"
                       >
-                        <img
-                          src={avatarUrl(p.author)}
-                          alt={p.author}
-                          className="h-9 w-9 rounded-full bg-sand-100 object-cover ring-1 ring-mist-300"
-                        />
-                      </button>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-[13px] font-bold text-ink">
-                            {p.author}{' '}
-                            <span className="font-semibold text-ink-500">{p.authorAs}</span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onNeighborClick?.(p.author, matchedStreet);
+                          }}
+                          className="shrink-0 self-start"
+                        >
+                          <img
+                            src={avatarUrl(p.author)}
+                            alt={p.author}
+                            className="h-9 w-9 rounded-full bg-sand-100 object-cover ring-1 ring-mist-300"
+                          />
+                        </button>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-[13px] font-bold text-ink">
+                              {p.author}{' '}
+                              <span className="font-semibold text-ink-500">{p.authorAs}</span>
+                            </p>
+                            <span className="text-[11px] font-medium text-ink-400">{p.time}</span>
+                          </div>
+                          <p className="mt-0.5 text-[13px] leading-snug text-ink-700 line-clamp-2">
+                            {p.content}
                           </p>
-                          <span className="text-[11px] font-medium text-ink-400">{p.time}</span>
+                          <div className="mt-1.5 flex items-center gap-4 text-[11.5px] font-semibold text-ink-400">
+                            <span className="inline-flex items-center gap-1">
+                              <MessageCircle className="h-3.5 w-3.5" /> {p.replies} odpowiedzi
+                            </span>
+                            <span className="inline-flex items-center gap-1">
+                              <Heart className="h-3.5 w-3.5" /> {p.likes} polubień
+                            </span>
+                          </div>
                         </div>
-                        <p className="mt-0.5 text-[13px] leading-snug text-ink-700 line-clamp-2">
-                          {p.content}
-                        </p>
-                        <div className="mt-1.5 flex items-center gap-4 text-[11.5px] font-semibold text-ink-400">
-                          <span className="inline-flex items-center gap-1">
-                            <MessageCircle className="h-3.5 w-3.5" /> {p.replies} odpowiedzi
-                          </span>
-                          <span className="inline-flex items-center gap-1">
-                            <Heart className="h-3.5 w-3.5" /> {p.likes} polubień
-                          </span>
-                        </div>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             <div className="mt-4 pt-3 border-t border-mist flex items-center justify-between">
@@ -1889,40 +1943,60 @@ export function HomeScreen({
                 </button>
               </div>
 
-              <div className="space-y-2.5">
-                {upcomingRides.map((r) => (
-                  <div
-                    key={r.id}
+              {upcomingRides.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-mist-300 bg-mist/20 p-6 text-center">
+                  <div className="mx-auto grid h-10 w-10 place-items-center rounded-xl bg-white text-ink-400 shadow-2xs">
+                    <Car className="h-5 w-5 text-sky-600" />
+                  </div>
+                  <p className="mt-2.5 text-[13px] font-bold text-ink">Brak zaplanowanych przejazdów</p>
+                  <p className="mt-1 text-[11.5px] text-ink-500 max-w-sm mx-auto">
+                    Dojeżdżasz do Warszawy, szkoły lub pracy? Zaoferuj wolne miejsca sąsiadom!
+                  </p>
+                  <button
+                    type="button"
                     onClick={() => onTab('rides')}
-                    className="flex items-center justify-between gap-3 rounded-xl bg-mist/45 p-3 border border-mist-200 hover:bg-mist/80 cursor-pointer transition-colors"
+                    className="mt-3.5 inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-3.5 py-1.5 text-[12px] font-bold text-white hover:bg-sky-700 transition-colors cursor-pointer"
                   >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <img
-                        src={avatarUrl(r.driver)}
-                        alt={r.driver}
-                        className="h-8 w-8 shrink-0 rounded-full bg-sand-100 object-cover"
-                      />
-                      <div className="min-w-0">
-                        <p className="truncate text-[13px] font-bold text-ink">
-                          {r.from} ➔ {r.to}
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>Dodaj przejazd</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {upcomingRides.map((r) => (
+                    <div
+                      key={r.id}
+                      onClick={() => onTab('rides')}
+                      className="flex items-center justify-between gap-3 rounded-xl bg-mist/45 p-3 border border-mist-200 hover:bg-mist/80 cursor-pointer transition-colors"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <img
+                          src={avatarUrl(r.driver)}
+                          alt={r.driver}
+                          className="h-8 w-8 shrink-0 rounded-full bg-sand-100 object-cover"
+                        />
+                        <div className="min-w-0">
+                          <p className="truncate text-[13px] font-bold text-ink">
+                            {r.from} ➔ {r.to}
+                          </p>
+                          <p className="truncate text-[11px] font-medium text-ink-500">
+                            {r.driver} {r.driverAs} · wyjazd <b className="text-ink">{r.depart}</b>
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="text-right shrink-0">
+                        <p className="font-display text-[14.5px] font-extrabold text-ink leading-none">
+                          {r.price} zł
                         </p>
-                        <p className="truncate text-[11px] font-medium text-ink-500">
-                          {r.driver} {r.driverAs} · wyjazd <b className="text-ink">{r.depart}</b>
+                        <p className="mt-0.5 text-[10.5px] font-semibold text-ink-400 flex items-center justify-end gap-0.5">
+                          <Users className="h-3 w-3" /> {r.seats} msc.
                         </p>
                       </div>
                     </div>
-
-                    <div className="text-right shrink-0">
-                      <p className="font-display text-[14.5px] font-extrabold text-ink leading-none">
-                        {r.price} zł
-                      </p>
-                      <p className="mt-0.5 text-[10.5px] font-semibold text-ink-400 flex items-center justify-end gap-0.5">
-                        <Users className="h-3 w-3" /> {r.seats} msc.
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Compact Nova Taxi Bar */}

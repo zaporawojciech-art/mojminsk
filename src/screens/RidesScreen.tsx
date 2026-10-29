@@ -245,12 +245,17 @@ export function RidesScreen({
           {/* Matching Rides List */}
           <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4 px-5 md:px-0">
             {filteredRides.length === 0 ? (
-              <div className="col-span-full rounded-4xl bg-white p-8 text-center shadow-card">
+              <div className="col-span-full rounded-4xl bg-white p-8 text-center shadow-card border border-mist-200">
+                <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-sky-50 text-sky-600 mb-3">
+                  <Car className="h-6 w-6" />
+                </div>
                 <p className="font-display text-[18px] font-bold text-ink">
-                  Brak przejazdów spełniających kryteria
+                  {ridesList.length === 0 ? 'Bądź pierwszym kierowcą w Mińsku!' : 'Brak przejazdów spełniających kryteria'}
                 </p>
-                <p className="mt-1 text-[13px] text-ink-500">
-                  Zmień kierunek lub zmniejsz liczbę miejsc, aby wyświetlić dostępne przejazdy sąsiadów.
+                <p className="mt-1 text-[13px] text-ink-500 max-w-md mx-auto">
+                  {ridesList.length === 0
+                    ? 'Dojeżdżasz codziennie do Warszawy, Halinowa lub szkół? Zaoferuj wolne miejsca sąsiadom i podziel się kosztami paliwa.'
+                    : 'Zmień kierunek lub zmniejsz liczbę miejsc, aby wyświetlić dostępne przejazdy sąsiadów.'}
                 </p>
                 <button
                   type="button"
@@ -259,7 +264,7 @@ export function RidesScreen({
                     setSearchTo('');
                     setSeatsNeeded(1);
                   }}
-                  className="mt-4 inline-flex h-10 items-center justify-center rounded-full bg-ink px-5 text-[12.5px] font-bold text-white active:scale-95"
+                  className="mt-4 inline-flex h-10 items-center justify-center rounded-full bg-ink px-5 text-[12.5px] font-bold text-white active:scale-95 cursor-pointer"
                 >
                   Pokaż wszystkie przejazdy
                 </button>

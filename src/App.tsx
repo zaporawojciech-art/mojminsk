@@ -1473,6 +1473,16 @@ export default function App() {
                     adsList={adsList}
                     likedAds={likedAds}
                     onToggleLike={handleToggleLike}
+                    onAddAd={() =>
+                      requireAuth(
+                        'Dodaj ogłoszenie',
+                        'Publikacja ogłoszeń na tablicy Mińska wymaga konta mieszkańca.',
+                        () => {
+                          setAddAdOpen(true);
+                          navigateTo('/ogloszenia/dodaj');
+                        },
+                      )
+                    }
                     onAdClick={(ad) => {
                       setSelectedAd(ad);
                       navigateTo(buildAdUrl(ad));

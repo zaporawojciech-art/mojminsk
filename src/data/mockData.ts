@@ -704,17 +704,20 @@ export const busLines: BusLine[] = [
 ];
 
 /* ---------------- Alert i newsy ---------------- */
-export const liveAlert = {
-  title: 'Kolizja na rondzie Dziąga',
-  description: 'Ul. Warszawska / Budowlana — ruch wahadłowy w kierunku Kałuszyna. Omijaj przez Kościelną.',
-  time: '12 min temu',
-};
+export const liveAlert: {
+  title: string;
+  description: string;
+  time: string;
+} | null = null;
 
-export const news = [
-  { id: 'n1', source: 'minskmaz.com', time: '1 godz.', tag: 'Drogi', title: 'Remont ul. Warszawskiej — objazdy potrwają do końca listopada', image: img('photo-1449824913935-59a10b8d2000', 500) },
-  { id: 'n2', source: 'Urząd Miasta', time: '3 godz.', tag: 'Kultura', title: 'Jarmark i kino plenerowe w Parku Dernałowiczów w sobotę', image: img('photo-1441974231531-c6227db76b6e', 500) },
-  { id: 'n3', source: 'Mińsk Info', time: '5 godz.', tag: 'Inwestycje', title: 'Nowe ścieżki rowerowe połączą Serbinów z centrum', image: img('photo-1485965120184-e220f721d03e', 500) },
-];
+export const news: {
+  id: string;
+  source: string;
+  time: string;
+  tag: string;
+  title: string;
+  image: string;
+}[] = [];
 
 export interface PollOption {
   id: string;
@@ -736,97 +739,7 @@ export interface PollItem {
   isOfficial?: boolean;
 }
 
-const now = Date.now();
-const dayMs = 86400000;
-
-export const initialPolls: PollItem[] = [
-  {
-    id: 'poll_1',
-    title: 'Gdzie zjesz najlepszą pizzę w Mińsku?',
-    author: 'Redakcja mójMińsk',
-    authorStreet: 'Centrum',
-    createdAt: new Date(now - 4 * dayMs).toISOString(),
-    expiresAt: new Date(now + 3 * dayMs).toISOString(),
-    durationDays: 7,
-    isOfficial: true,
-    category: 'city',
-    totalVotes: 384,
-    options: [
-      { id: 'o1', name: 'Pizzeria Bella Ciao', votes: 168 },
-      { id: 'o2', name: 'Da Grasso', votes: 104 },
-      { id: 'o3', name: 'Biesiadowo', votes: 65 },
-      { id: 'o4', name: 'Pod Strzechą', votes: 47 },
-    ],
-  },
-  {
-    id: 'poll_2',
-    title: 'Czy Park Dernałowiczów powinien mieć nowe oświetlenie alejek?',
-    author: 'Marek',
-    authorStreet: 'ze Spacerowej',
-    createdAt: new Date(now - 2 * dayMs).toISOString(),
-    expiresAt: new Date(now + 5 * dayMs).toISOString(),
-    durationDays: 7,
-    isOfficial: false,
-    category: 'investments',
-    totalVotes: 354,
-    options: [
-      { id: 'o1', name: 'Tak, zdecydowanie (bezpieczeństwo po zmroku)', votes: 214 },
-      { id: 'o2', name: 'Lepszy byłby stały monitoring miejski', votes: 98 },
-      { id: 'o3', name: 'Wystarczy obecne oświetlenie', votes: 42 },
-    ],
-  },
-  {
-    id: 'poll_3',
-    title: 'Czy autobus linii M2 powinien kursować częściej w szczycie?',
-    author: 'Kasia',
-    authorStreet: 'z Sosnkowskiego',
-    createdAt: new Date(now - 6 * dayMs).toISOString(),
-    expiresAt: new Date(now + 1 * dayMs).toISOString(),
-    durationDays: 7,
-    isOfficial: false,
-    category: 'city',
-    totalVotes: 296,
-    options: [
-      { id: 'o1', name: 'Tak, co 15 minut rano i po południu', votes: 189 },
-      { id: 'o2', name: 'Więcej kursów w weekendy i niedziele', votes: 76 },
-      { id: 'o3', name: 'Obecny rozkład co 30 min jest w porządku', votes: 31 },
-    ],
-  },
-  {
-    id: 'poll_4',
-    title: 'Najlepsze lody rzemieślnicze w Mińsku na upalne dni',
-    author: 'Piotr',
-    authorStreet: 'z Warszawskiej',
-    createdAt: new Date(now - 14 * dayMs).toISOString(),
-    expiresAt: new Date(now - 7 * dayMs).toISOString(),
-    durationDays: 7,
-    isOfficial: false,
-    category: 'culture',
-    totalVotes: 453,
-    options: [
-      { id: 'o1', name: 'Lodziarnia U Lodziarzy (Kościuszki)', votes: 245 },
-      { id: 'o2', name: 'Cukiernia Janek', votes: 120 },
-      { id: 'o3', name: 'Lody Tradycyjne przy Pałacu', votes: 88 },
-    ],
-  },
-  {
-    id: 'poll_5',
-    title: 'Gdzie zorganizować piknik sąsiedzki na zakończenie lata?',
-    author: 'Ania',
-    authorStreet: 'z Kościuszki',
-    createdAt: new Date(now - 20 * dayMs).toISOString(),
-    expiresAt: new Date(now - 6 * dayMs).toISOString(),
-    durationDays: 14,
-    isOfficial: false,
-    category: 'neighborhood',
-    totalVotes: 314,
-    options: [
-      { id: 'o1', name: 'Polana w Parku Dernałowiczów', votes: 182 },
-      { id: 'o2', name: 'Tereny zielone MOSiR przy basenie', votes: 94 },
-      { id: 'o3', name: 'Skwer przy fontannie na Placu Kilińskiego', votes: 38 },
-    ],
-  },
-];
+export const initialPolls: PollItem[] = [];
 
 export const isPollActive = (p: PollItem): boolean => {
   return new Date(p.expiresAt).getTime() > Date.now();
@@ -841,12 +754,12 @@ export const getPollTimeLeftLabel = (p: PollItem): string => {
   return `Zostało: ${diffDays} ${diffDays === 1 ? 'dzień' : diffDays < 5 ? 'dni' : 'dni'}`;
 };
 
-export const poll = {
-  title: initialPolls[0].title,
-  total: initialPolls[0].totalVotes,
-  daysLeft: 3,
-  options: initialPolls[0].options,
-};
+export const poll: {
+  title: string;
+  total: number;
+  daysLeft: number;
+  options: PollOption[];
+} | null = null;
 
 /* ---------------- Ogłoszenia ---------------- */
 export interface Ad {
@@ -906,171 +819,7 @@ export function formatRelativeChatTime(isoString?: string | null): string {
   return new Date(ts).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit' });
 }
 
-export const ads: Ad[] = [
-  {
-    id: 'a1',
-    title: 'Rower dziecięcy 16", stan bardzo dobry',
-    price: 150,
-    kind: 'sell',
-    author: 'Ania',
-    street: 'Kościuszki',
-    time: '2 godz.',
-    image: img('photo-1485965120184-e220f721d03e', 800),
-    images: [
-      img('photo-1485965120184-e220f721d03e', 1000),
-      img('photo-1532298229144-0ec0c57515c7', 1000),
-      img('photo-1507035895480-2b3156c31fc8', 1000),
-      img('photo-1571068316344-75bc76f77890', 1000),
-    ],
-    description: 'Rower po jednym dziecku, 100% sprawny technicznie. Nowy dzwonek, hamulce wyregulowane, opony bez zużycia. Gratis dorzucam kask w rozmiarze S. Odbiór osobisty przy ul. Kościuszki, niedaleko SP nr 1.',
-    category: 'Sport & Rowery',
-    condition: 'Bardzo dobry',
-    status: 'active',
-    views: 42,
-    negotiable: true,
-  },
-  {
-    id: 'a2',
-    title: 'Sofa 3-osobowa — do odbioru własnego',
-    price: null,
-    kind: 'free',
-    author: 'Marek',
-    street: 'Siennicka',
-    time: '4 godz.',
-    image: img('photo-1555041469-a586c61ea9bc', 800),
-    images: [
-      img('photo-1555041469-a586c61ea9bc', 1000),
-      img('photo-1493663284031-b7e3aefcae8e', 1000),
-      img('photo-1540574163026-643ea20ade25', 1000),
-    ],
-    description: 'Oddam za darmo rozkładaną sofę w kolorze szarym. Czysta, bez plam, drobne przetarcie z tyłu oparcia. 2. piętro bez windy, potrzebne 2 osoby do zniesienia. Chcę zwolnić miejsce do piątku.',
-    category: 'Meble & Dom',
-    condition: 'Używane',
-    status: 'active',
-    views: 89,
-  },
-  {
-    id: 'a3',
-    title: 'Biurko dębowe 120×60 cm',
-    price: 220,
-    kind: 'sell',
-    author: 'Wojtek',
-    street: 'Spacerowa',
-    time: '6 godz.',
-    image: img('photo-1518455027359-f3f8164ba6bd', 800),
-    images: [
-      img('photo-1518455027359-f3f8164ba6bd', 1000),
-      img('photo-1593062096033-9a26b09da705', 1000),
-      img('photo-1524758631624-e2822e304c36', 1000),
-      img('photo-1505843490538-5133c6c7d0e1', 1000),
-    ],
-    description: 'Solidne biurko wykonane z klejonki dębowej z czarnymi nogami w stylu loft. Idealne do pracy z laptopem lub nauki. Używane przez rok, stan gabinetowy. Odbiór ul. Spacerowa (pomogę znieść do auta).',
-    category: 'Meble & Dom',
-    condition: 'Bardzo dobry',
-    status: 'active',
-    views: 67,
-    isOwner: true,
-  },
-  {
-    id: 'a4',
-    title: 'Zaginął pies Bruno — okolice Serbinowa',
-    price: null,
-    kind: 'lost',
-    author: 'Ola',
-    street: 'Dąbrówki',
-    time: '1 godz.',
-    image: img('photo-1543466835-00a7907e9de1', 800),
-    images: [
-      img('photo-1543466835-00a7907e9de1', 1000),
-      img('photo-1583511655857-d19b40a7a54e', 1000),
-      img('photo-1537151608828-ea2b11777ee8', 1000),
-    ],
-    description: 'Dziś około godz. 8:30 w rejonie ul. Dąbrówki i osiedla Serbinów wystraszył się klaksonu i uciekł. Ma czerwoną obrożę z adresatką i chip. Bardzo przyjazny dla ludzi. Dla znalazcy przewidziana nagroda!',
-    category: 'Zgubiłem / Znalazłem',
-    status: 'active',
-    views: 154,
-  },
-  {
-    id: 'a5',
-    title: 'Klocki LEGO City, komplet 4 zestawów',
-    price: 90,
-    kind: 'sell',
-    author: 'Piotr',
-    street: 'Sosnkowskiego',
-    time: 'wczoraj',
-    image: img('photo-1587654780291-39c9404d746b', 800),
-    images: [
-      img('photo-1587654780291-39c9404d746b', 1000),
-      img('photo-1560961911-ba7ef651a56c', 1000),
-      img('photo-1585366119957-e9730b6d0f60', 1000),
-    ],
-    description: 'Zestawy policja, straż i 2 małe pojazdy. Kompletne w 100%, z papierowymi instrukcjami w bardzo dobrym stanie. Zapakowane w woreczki strunowe. Świetny prezent dla dziecka.',
-    category: 'Dziecięce',
-    condition: 'Bardzo dobry',
-    status: 'active',
-    views: 33,
-  },
-  {
-    id: 'a6',
-    title: 'Monstera Deliciosa 120 cm z doniczką',
-    price: 40,
-    kind: 'sell',
-    author: 'Kasia',
-    street: 'Mickiewicza',
-    time: 'wczoraj',
-    image: img('photo-1485955900006-10f4d324d411', 800),
-    images: [
-      img('photo-1485955900006-10f4d324d411', 1000),
-      img('photo-1614594975525-e45190c55d0b', 1000),
-      img('photo-1459411552884-841db9b3cc2a', 1000),
-    ],
-    description: 'Zdrowa roślina z 7 dużymi liśćmi z dziurami, regularnie nawożona biohumusem. Sprzedaję wraz z nową doniczką ceramiczną i podstawkiem, bo po remoncie zabrakło dla niej miejsca.',
-    category: 'Ogród & Narzędzia',
-    condition: 'Nowe',
-    status: 'active',
-    views: 51,
-  },
-  {
-    id: 'a7',
-    title: 'Słuchawki bezprzewodowe Sony WH-1000XM4 ANC',
-    price: 580,
-    kind: 'sell',
-    author: 'Michał',
-    street: 'Warszawska',
-    time: '3 godz.',
-    image: img('photo-1505740420928-5e560c06d30e', 800),
-    images: [
-      img('photo-1505740420928-5e560c06d30e', 1000),
-      img('photo-1484704849700-f032a568e944', 1000),
-    ],
-    description: 'Oryginalne słuchawki z redukcją hałasu ANC, idealne do pociągu Kolei Mazowieckich do Warszawy. W zestawie twarde etui oraz przewód USB-C. Bateria trzyma pełne 30 godzin.',
-    category: 'Elektronika',
-    condition: 'Bardzo dobry',
-    status: 'active',
-    views: 94,
-    negotiable: true,
-  },
-  {
-    id: 'a8',
-    title: 'Komplet opon zimowych 205/55 R16 Michelin (4 szt.)',
-    price: 450,
-    kind: 'sell',
-    author: 'Krzysztof',
-    street: 'Kazikowskiego',
-    time: '5 godz.',
-    image: img('photo-1578844251758-2f71da64c96f', 800),
-    images: [
-      img('photo-1578844251758-2f71da64c96f', 1000),
-      img('photo-1580273916550-e323be2ae537', 1000),
-    ],
-    description: 'Bieżnik ponad 6,5 mm, równe, nieklejone, przechowywane w suchym garażu przy ul. Kazikowskiego. Sprzedaję po zmianie samochodu.',
-    category: 'Motoryzacja',
-    condition: 'Używane',
-    status: 'active',
-    views: 78,
-    negotiable: true,
-  },
-];
+export const ads: Ad[] = [];
 
 export const initialAdConversations: AdConversation[] = [];
 
@@ -1091,12 +840,7 @@ export interface Ride {
   car: string;
 }
 
-export const rides: Ride[] = [
-  { id: 'rd1', driver: 'Ania', driverAs: 'z Kościuszki', rating: 4.9, rides: 32, from: 'Mińsk · Kościuszki', to: 'Warszawa · Rondo Wiatraczna', dest: 'Warszawa', depart: '07:15', arrive: '07:55', seats: 2, price: 15, car: 'Toyota Corolla' },
-  { id: 'rd2', driver: 'Marek', driverAs: 'z Siennickiej', rating: 4.8, rides: 18, from: 'Mińsk · PKP Anielina', to: 'Warszawa · Mokotów', dest: 'Warszawa', depart: '07:40', arrive: '08:35', seats: 3, price: 18, car: 'Skoda Octavia' },
-  { id: 'rd3', driver: 'Kasia', driverAs: 'ze Spacerowej', rating: 5.0, rides: 9, from: 'Mińsk · Spacerowa', to: 'Halinów · Centrum', dest: 'Halinów', depart: '16:20', arrive: '16:45', seats: 1, price: 8, car: 'Kia Ceed' },
-  { id: 'rd4', driver: 'Tomek', driverAs: 'z Osiedlowej', rating: 4.7, rides: 14, from: 'Mińsk · Osiedlowa', to: 'Sulejówek · Dworzec', dest: 'Sulejówek', depart: '17:05', arrive: '17:25', seats: 3, price: 6, car: 'VW Golf' },
-];
+export const rides: Ride[] = [];
 
 /* ---------------- Strefa Rozmów ---------------- */
 export interface Post {
@@ -1112,12 +856,7 @@ export interface Post {
   views: number;
 }
 
-export const posts: Post[] = [
-  { id: 'p1', author: 'Ania', authorAs: 'z Kościuszki', time: '14 min', content: 'Przejście na Spacerowej przy Szpitalnej wreszcie doświetlone! Wieczorem z dziećmi czuć ogromną różnicę 👏 #Spacerowa', likes: 24, replies: 6, reposts: 2, views: 812 },
-  { id: 'p2', author: 'Marek', authorAs: 'z Siennickiej', time: '38 min', content: 'Uwaga kierowcy: od jutra frezowanie na Siennickiej, objazd przez Kościelną. Planujcie poranne wyjazdy 10 min wcześniej. #Drogi', image: img('photo-1449824913935-59a10b8d2000', 700), likes: 41, replies: 12, reposts: 9, views: 1904 },
-  { id: 'p3', author: 'Piotr', authorAs: 'z Dąbrówki', time: '2 godz.', content: 'W sobotę kino letnie w Parku Dernałowiczów — grają „Misia” o 20:30. Kto idzie? Bierzcie koce 🎬 #Kultura #Centrum', likes: 67, replies: 21, reposts: 14, views: 2410 },
-  { id: 'p4', author: 'Ola', authorAs: 'z Osiedlowej', time: '3 godz.', content: 'Polecacie przedszkole na Serbinowie? Szukamy miejsca od września dla 3-latka. #Serbinów', likes: 9, replies: 17, reposts: 1, views: 640 },
-];
+export const posts: Post[] = [];
 
 export const talkTags = ['Wszystko', '#Spacerowa', '#Centrum', '#Serbinów', '#Drogi', '#Kultura'];
 
