@@ -183,10 +183,7 @@ export function DesktopTopNavbar({
             <div className="flex items-center gap-2 pl-2.5 ml-0.5 border-l border-mist-300 shrink-0">
               <button
                 type="button"
-                onClick={() => {
-                  onCloseAllLayers?.();
-                  onProfileClick();
-                }}
+                onClick={onProfileClick}
                 className="flex items-center gap-2.5 rounded-xl bg-mist/70 py-1 pl-1.5 pr-3 border border-mist-300/70 hover:bg-mist transition-colors text-left cursor-pointer"
               >
                 <img

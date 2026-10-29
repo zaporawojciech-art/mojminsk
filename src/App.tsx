@@ -67,6 +67,7 @@ import {
 } from './lib/supabase';
 import {
   fetchMyProfile,
+  getAuthSession,
   onAuthSessionChange,
   signOut,
   updateMyProfileInSupabase,
@@ -102,20 +103,67 @@ import type { LegalDocType } from './screens/LegalScreen';
 type Overlay = null | 'profile' | 'zditm';
 
 export default function App() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const raw = localStorage.getItem('mojminsk_profile_v1');
+      if (raw) return JSON.parse(raw);
+    } catch {
+      // fallback
+    }
+    return null;
+  });
+
+  const userRef = useRef<User | null>(user);
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   // Załaduj zweryfikowany profil jeśli istnieje aktywna sesja w Supabase Auth
   useEffect(() => {
     void fetchMyProfile().then((profile) => {
-      if (profile) setUser(profile);
+      if (profile) {
+        setUser(profile);
+        userRef.current = profile;
+        try {
+          localStorage.setItem('mojminsk_profile_v1', JSON.stringify(profile));
+        } catch {
+          // ignore
+        }
+      } else {
+        const session = getAuthSession();
+        if (!session) {
+          setUser(null);
+          userRef.current = null;
+          try {
+            localStorage.removeItem('mojminsk_profile_v1');
+          } catch {
+            // ignore
+          }
+        }
+      }
     });
 
     const unsub = onAuthSessionChange((session) => {
       if (!session) {
         setUser(null);
+        userRef.current = null;
+        try {
+          localStorage.removeItem('mojminsk_profile_v1');
+        } catch {
+          // ignore
+        }
       } else {
         void fetchMyProfile().then((profile) => {
-          if (profile) setUser(profile);
+          if (profile) {
+            setUser(profile);
+            userRef.current = profile;
+            try {
+              localStorage.setItem('mojminsk_profile_v1', JSON.stringify(profile));
+            } catch {
+              // ignore
+            }
+          }
         });
       }
     });
@@ -150,10 +198,21 @@ export default function App() {
 
   const handleUpdateUser = useCallback((nextUser: User | null) => {
     setUser(nextUser);
+    userRef.current = nextUser;
     if (!nextUser) {
       void signOut();
+      try {
+        localStorage.removeItem('mojminsk_profile_v1');
+      } catch {
+        // ignore
+      }
       navigateTo('/dolacz');
     } else {
+      try {
+        localStorage.setItem('mojminsk_profile_v1', JSON.stringify(nextUser));
+      } catch {
+        // ignore
+      }
       void updateMyProfileInSupabase(nextUser);
       if (
         typeof window !== 'undefined' &&
@@ -587,15 +646,19 @@ export default function App() {
   );
 
   const handleOpenProfileOrAuth = useCallback(() => {
-    if (!user) {
+    const currentUser = userRef.current;
+    if (!currentUser) {
       setAuthScreenMode('login');
       setAuthScreenOpen(true);
       navigateTo('/dolacz');
+    } else if (overlay === 'profile') {
+      closeOverlay();
     } else {
+      setAuthScreenOpen(false);
       setOverlay('profile');
       navigateTo('/profil');
     }
-  }, [user, navigateTo]);
+  }, [overlay, closeOverlay, navigateTo]);
 
   const handlePollCreated = useCallback((newPoll: PollItem) => {
     setPolls((prev) => [newPoll, ...prev]);
@@ -754,10 +817,12 @@ export default function App() {
       }
 
       if (cleanPath === '/profil') {
-        if (!user) {
+        const currentUser = userRef.current;
+        if (!currentUser) {
           setAuthScreenMode('login');
           setAuthScreenOpen(true);
         } else {
+          setAuthScreenOpen(false);
           setOverlay('profile');
         }
         return;
@@ -815,7 +880,7 @@ export default function App() {
       setSelectedAd(null);
       setRouteNotFound(true);
     },
-    [adsList],
+    [adsList, user, conversations],
   );
 
   // Inicjalny odczyt URL oraz nasłuchiwanie zdarzeń popstate (przyciski Wstecz / Dalej)
