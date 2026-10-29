@@ -100,131 +100,133 @@ export function AddFavoriteBusModal({
           </p>
         </div>
 
-        {/* Stops List / Desktop Grid */}
-        <div className="flex-1 overflow-y-auto overscroll-contain p-4 md:px-8 lg:px-12 md:py-6 space-y-3 md:space-y-0 md:grid md:grid-cols-2 xl:grid-cols-3 md:gap-4 md:items-start pb-24 md:pb-8">
-          {filteredStops.length === 0 ? (
-            <div className="md:col-span-full p-8 text-center text-ink-500">
-              <MapPin className="mx-auto h-8 w-8 text-ink-300" />
-              <p className="mt-2 font-display text-[15px] font-bold text-ink">Nie znaleziono przystanku</p>
-              <p className="mt-1 text-[12px]">Spróbuj wpisać inną nazwę ulicy lub węzła w Mińsku.</p>
-            </div>
-          ) : (
-            filteredStops.map((stop) => {
-              const isExpanded = expandedStop === stop.name;
+        {/* Stops List */}
+        <div className="flex-1 overflow-y-auto overscroll-contain p-4 md:px-6 lg:px-8 py-4 md:py-6 pb-24 md:pb-12">
+          <div className="mx-auto max-w-2xl space-y-3">
+            {filteredStops.length === 0 ? (
+              <div className="rounded-3xl bg-white p-8 text-center text-ink-500 shadow-card">
+                <MapPin className="mx-auto h-8 w-8 text-ink-300" />
+                <p className="mt-2 font-display text-[15px] font-bold text-ink">Nie znaleziono przystanku</p>
+                <p className="mt-1 text-[12px]">Spróbuj wpisać inną nazwę ulicy lub węzła w Mińsku.</p>
+              </div>
+            ) : (
+              filteredStops.map((stop) => {
+                const isExpanded = expandedStop === stop.name;
 
-              return (
-                <div
-                  key={stop.name}
-                  className={cn(
-                    'rounded-3xl bg-white shadow-card transition-all border overflow-hidden',
-                    isExpanded ? 'border-ink shadow-md' : 'border-transparent hover:border-mist-300'
-                  )}
-                >
-                  {/* Stop Header Row */}
-                  <button
-                    type="button"
-                    onClick={() => setExpandedStop(isExpanded ? null : stop.name)}
-                    className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-mist/30 active:bg-mist/50 cursor-pointer"
+                return (
+                  <div
+                    key={stop.name}
+                    className={cn(
+                      'rounded-2xl md:rounded-3xl bg-white shadow-card transition-all border overflow-hidden',
+                      isExpanded ? 'border-ink shadow-md' : 'border-transparent hover:border-mist-300'
+                    )}
                   >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-mist text-ink-700">
-                        <MapPin className="h-5 w-5 text-coral-700" />
-                      </span>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-display text-[16px] font-bold text-ink truncate">
-                            {stop.name}
-                          </p>
-                          {stop.isTransfer && (
-                            <span className="rounded-md bg-sky-100 px-1.5 py-0.5 text-[9.5px] font-extrabold text-sky-800 shrink-0">
-                              Węzeł PKP
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[11.5px] text-ink-400">
-                          {stop.zone} · {stop.routes.length} {stop.routes.length === 1 ? 'kierunek' : 'kierunki'}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0 pl-2">
-                      <div className="flex -space-x-1">
-                        {Array.from(new Set(stop.routes.map((r) => r.lineId))).map((lid) => (
-                          <span
-                            key={lid}
-                            className={cn(
-                              'rounded-md px-1.5 py-0.5 text-[10.5px] font-extrabold border border-white',
-                              lineTone[lid].badge,
+                    {/* Stop Header Row */}
+                    <button
+                      type="button"
+                      onClick={() => setExpandedStop(isExpanded ? null : stop.name)}
+                      className="flex w-full items-center justify-between p-3.5 md:p-4 text-left transition-colors hover:bg-mist/30 active:bg-mist/50 cursor-pointer"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-mist text-ink-700">
+                          <MapPin className="h-5 w-5 text-coral-700" />
+                        </span>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="font-display text-[15.5px] md:text-[16px] font-bold text-ink truncate">
+                              {stop.name}
+                            </p>
+                            {stop.isTransfer && (
+                              <span className="rounded-md bg-sky-100 px-1.5 py-0.5 text-[9.5px] font-extrabold text-sky-800 shrink-0">
+                                Węzeł PKP
+                              </span>
                             )}
-                          >
-                            {lid}
-                          </span>
-                        ))}
+                          </div>
+                          <p className="text-[11.5px] text-ink-400">
+                            {stop.zone} · {stop.routes.length} {stop.routes.length === 1 ? 'kierunek' : 'kierunki'}
+                          </p>
+                        </div>
                       </div>
-                      <span
-                        className={cn(
-                          'grid h-7 w-7 place-items-center rounded-full bg-mist/60 text-ink-500 transition-transform duration-200',
-                          isExpanded && 'rotate-90 bg-ink text-white'
-                        )}
-                      >
-                        <ChevronRight className="h-4 w-4" />
-                      </span>
-                    </div>
-                  </button>
 
-                  {/* Expanded Directions / Routes */}
-                  {isExpanded && (
-                    <div className="border-t border-mist-200 bg-sand-50/70 p-3.5 space-y-2.5">
-                      <div className="flex items-center justify-between px-1">
-                        <p className="text-[11.5px] font-extrabold text-ink">
-                          Wybierz kierunek odjazdu:
-                        </p>
-                        <span className="text-[10.5px] text-ink-400 font-semibold">
-                          Kliknij, by przypiąć
+                      <div className="flex items-center gap-2 shrink-0 pl-2">
+                        <div className="flex -space-x-1">
+                          {Array.from(new Set(stop.routes.map((r) => r.lineId))).map((lid) => (
+                            <span
+                              key={lid}
+                              className={cn(
+                                'rounded-md px-1.5 py-0.5 text-[10.5px] font-extrabold border border-white',
+                                lineTone[lid].badge,
+                              )}
+                            >
+                              {lid}
+                            </span>
+                          ))}
+                        </div>
+                        <span
+                          className={cn(
+                            'grid h-7 w-7 place-items-center rounded-full bg-mist/60 text-ink-500 transition-transform duration-200',
+                            isExpanded && 'rotate-90 bg-ink text-white'
+                          )}
+                        >
+                          <ChevronRight className="h-4 w-4" />
                         </span>
                       </div>
-                      <div className="space-y-2">
-                        {stop.routes.map((r) => {
-                          const upcoming = getUpcomingDepartures(r.lineId, stop.name, r.directionIdx);
-                          return (
-                            <button
-                              key={`${r.lineId}-${r.destination}-${r.directionIdx}`}
-                              type="button"
-                              onClick={() => handleSelectRoute(stop.name, r)}
-                              className="group flex w-full items-center justify-between rounded-2xl bg-white p-3.5 text-left shadow-xs border border-mist-200 transition-all active:scale-[.98] hover:border-ink hover:shadow-sm cursor-pointer"
-                            >
-                              <div className="flex items-center gap-3 min-w-0 pr-2">
-                                <span className={cn('shrink-0 rounded-lg px-2.5 py-1 text-[12px] font-black', lineTone[r.lineId].badge)}>
-                                  {r.lineId}
-                                </span>
-                                <div className="min-w-0">
-                                  <p className="truncate text-[13.5px] font-bold text-ink group-hover:text-ink-700">
-                                    ➔ {r.destination}
-                                  </p>
-                                  <p className="text-[11.5px] text-ink-500 truncate mt-0.5">
-                                    {r.directionName}
+                    </button>
+
+                    {/* Expanded Directions / Routes */}
+                    {isExpanded && (
+                      <div className="border-t border-mist-200 bg-sand-50/70 p-3 md:p-4 space-y-2.5">
+                        <div className="flex items-center justify-between px-1">
+                          <p className="text-[11.5px] font-extrabold text-ink">
+                            Wybierz kierunek, by dodać do obserwowanych:
+                          </p>
+                          <span className="text-[10.5px] text-ink-400 font-semibold">
+                            Dotknij wybraną trasę
+                          </span>
+                        </div>
+                        <div className="space-y-2">
+                          {stop.routes.map((r) => {
+                            const upcoming = getUpcomingDepartures(r.lineId, stop.name, r.directionIdx);
+                            return (
+                              <button
+                                key={`${r.lineId}-${r.destination}-${r.directionIdx}`}
+                                type="button"
+                                onClick={() => handleSelectRoute(stop.name, r)}
+                                className="group flex w-full items-center justify-between rounded-xl md:rounded-2xl bg-white p-3 md:p-3.5 text-left shadow-xs border border-mist-200 transition-all active:scale-[.98] hover:border-ink hover:shadow-sm cursor-pointer"
+                              >
+                                <div className="flex items-center gap-3 min-w-0 pr-2">
+                                  <span className={cn('shrink-0 rounded-lg px-2.5 py-1 text-[12px] font-black', lineTone[r.lineId].badge)}>
+                                    {r.lineId}
+                                  </span>
+                                  <div className="min-w-0">
+                                    <p className="truncate text-[13.5px] font-bold text-ink group-hover:text-ink-700">
+                                      ➔ {r.destination}
+                                    </p>
+                                    <p className="text-[11.5px] text-ink-500 truncate mt-0.5">
+                                      {r.directionName}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="text-right shrink-0">
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-coral-100 border border-coral-200 px-2.5 py-1 text-[11px] font-extrabold text-coral-800">
+                                    za {upcoming[0]} min
+                                  </span>
+                                  <p className="text-[10px] text-ink-400 font-semibold mt-0.5">
+                                    potem za {upcoming[1]} min
                                   </p>
                                 </div>
-                              </div>
-
-                              <div className="text-right shrink-0">
-                                <span className="inline-flex items-center gap-1 rounded-full bg-coral-100 border border-coral-200 px-2.5 py-1 text-[11px] font-extrabold text-coral-800">
-                                  za {upcoming[0]} min
-                                </span>
-                                <p className="text-[10px] text-ink-400 font-semibold mt-0.5">
-                                  potem za {upcoming[1]} min
-                                </p>
-                              </div>
-                            </button>
-                          );
-                        })}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })
-          )}
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
       </div>
     </div>
