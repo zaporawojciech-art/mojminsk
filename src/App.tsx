@@ -295,7 +295,8 @@ export default function App() {
   const [polls, setPolls] = useState<PollItem[]>(() => {
     if (typeof window !== 'undefined') {
       try {
-        const stored = localStorage.getItem('mojminsk_polls');
+        localStorage.removeItem('mojminsk_polls');
+        const stored = localStorage.getItem('mojminsk_polls_v2');
         if (stored) return JSON.parse(stored);
       } catch {
         // fallback
@@ -307,7 +308,8 @@ export default function App() {
   const [userVotes, setUserVotes] = useState<Record<string, string>>(() => {
     if (typeof window !== 'undefined') {
       try {
-        const stored = localStorage.getItem('mojminsk_poll_votes');
+        localStorage.removeItem('mojminsk_poll_votes');
+        const stored = localStorage.getItem('mojminsk_poll_votes_v2');
         if (stored) return JSON.parse(stored);
       } catch {
         // fallback
@@ -343,13 +345,13 @@ export default function App() {
   // Inicjalna synchronizacja danych z bazy Supabase (PostgreSQL)
   useEffect(() => {
     void fetchAdsFromSupabase().then((remoteAds) => {
-      if (remoteAds && remoteAds.length > 0) setAdsList(remoteAds);
+      if (remoteAds !== null) setAdsList(remoteAds);
     });
     void fetchRidesFromSupabase().then((remoteRides) => {
-      if (remoteRides && remoteRides.length > 0) setRidesList(remoteRides);
+      if (remoteRides !== null) setRidesList(remoteRides);
     });
     void fetchPollsFromSupabase().then((remotePolls) => {
-      if (remotePolls && remotePolls.length > 0) setPolls(remotePolls);
+      if (remotePolls !== null) setPolls(remotePolls);
     });
   }, []);
 
@@ -385,13 +387,13 @@ export default function App() {
 
   useEffect(() => {
     try {
-      localStorage.setItem('mojminsk_polls', JSON.stringify(polls));
+      localStorage.setItem('mojminsk_polls_v2', JSON.stringify(polls));
     } catch {}
   }, [polls]);
 
   useEffect(() => {
     try {
-      localStorage.setItem('mojminsk_poll_votes', JSON.stringify(userVotes));
+      localStorage.setItem('mojminsk_poll_votes_v2', JSON.stringify(userVotes));
     } catch {}
   }, [userVotes]);
 

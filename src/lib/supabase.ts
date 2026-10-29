@@ -56,7 +56,7 @@ interface DbAd {
 
 export async function fetchAdsFromSupabase(): Promise<Ad[] | null> {
   const rows = await restFetch<DbAd[]>('ads?select=*&order=created_at.desc');
-  if (!rows || rows.length === 0) return null;
+  if (!rows) return null;
   return rows.map((r) => ({
     id: r.id,
     title: r.title,
@@ -208,7 +208,7 @@ export async function fetchPollsFromSupabase(): Promise<PollItem[] | null> {
   const rows = await restFetch<DbPoll[]>(
     'polls?select=*,poll_options(option_id,name,votes,sort_order)&order=created_at.desc',
   );
-  if (!rows || rows.length === 0) return null;
+  if (!rows) return null;
   return rows.map((r) => ({
     id: r.id,
     title: r.title,
@@ -306,7 +306,7 @@ interface DbRide {
 
 export async function fetchRidesFromSupabase(): Promise<Ride[] | null> {
   const rows = await restFetch<DbRide[]>('rides?select=*&order=created_at.desc');
-  if (!rows || rows.length === 0) return null;
+  if (!rows) return null;
   return rows.map((r) => ({
     id: r.id,
     driver: r.driver,
