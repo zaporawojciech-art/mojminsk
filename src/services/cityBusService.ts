@@ -4,6 +4,8 @@
  * Proxy backendowe: Supabase Edge Function `trapeze-proxy` (CORS + in-memory cache)
  */
 
+import { REAL_BUS_STOPS } from '../data/realBusStops';
+
 export interface BusStop {
   id: string;
   altId: string;
@@ -53,7 +55,7 @@ export interface PassingTimesResult {
 const EDGE_PROXY_URL = 'https://jqortivwlvsjuiiexvro.supabase.co/functions/v1/trapeze-proxy';
 const STOPS_STORAGE_KEY = 'mojminsk_bus_stops_cache_v1';
 
-let inMemoryStops: BusStop[] | null = null;
+let inMemoryStops: BusStop[] = [...REAL_BUS_STOPS];
 
 /**
  * Oblicza ile minut pozostało do planowanego odjazdu (np. "22:18")
