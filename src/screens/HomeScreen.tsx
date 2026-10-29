@@ -5,6 +5,7 @@ import {
   Car,
   Check,
   ChevronDown,
+  ChevronUp,
   Coffee,
   Droplets,
   Gauge,
@@ -91,180 +92,234 @@ function WeatherCard({
   onRefresh?: () => void;
   refreshing?: boolean;
 }) {
-  const [tab, setTab] = useState<'today' | 'daily' | 'biomet'>('today');
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const [expandedTab, setExpandedTab] = useState<'indicators' | 'daily' | 'biomet'>('indicators');
 
   return (
     <section className="px-5">
-      <div className="relative overflow-hidden rounded-4xl bg-gradient-to-br from-sky via-sky/80 to-sky-100 p-5 shadow-card">
-        <div className="absolute -right-12 -top-12 h-52 w-52 rounded-full bg-white/15 pointer-events-none" aria-hidden />
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-sky via-sky/85 to-sky-100 p-4 shadow-card">
+        <div className="absolute -right-12 -top-12 h-44 w-44 rounded-full bg-white/15 pointer-events-none" aria-hidden />
 
-        {/* TOP: CURRENT WEATHER & ILLUSTRATION */}
-        <div className="flex items-start justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <p className="flex items-center gap-1 text-[12.5px] font-semibold text-ink/70">
-                <MapPin className="h-3.5 w-3.5" aria-hidden />
-                {city}
-              </p>
+        {/* 1. COMPACT HERO: CURRENT CONDITIONS & QUICK STATUS */}
+        <div className="relative flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 text-[11.5px] font-semibold text-ink/75">
+              <MapPin className="h-3 w-3 text-coral-600 shrink-0" aria-hidden />
+              <span className="truncate">{city}</span>
               {onRefresh && (
                 <button
                   type="button"
                   onClick={onRefresh}
                   disabled={refreshing}
-                  className="grid h-6 w-6 place-items-center rounded-full bg-white/50 text-ink-600 hover:text-ink transition-all cursor-pointer disabled:opacity-50"
+                  className="grid h-5 w-5 place-items-center rounded-full bg-white/60 hover:bg-white text-ink-600 transition-all cursor-pointer disabled:opacity-50"
                   title="Odśwież pogodę"
                 >
-                  <RefreshCw className={cn('h-3 w-3', refreshing && 'animate-spin text-sky-700')} />
+                  <RefreshCw className={cn('h-2.5 w-2.5', refreshing && 'animate-spin text-sky-700')} />
                 </button>
               )}
             </div>
-            <p className="mt-2 font-display text-[64px] font-semibold leading-none tracking-tighter">
-              {weather.temp}°
-            </p>
-            <p className="mt-1 text-[15px] font-bold">{weather.condition}</p>
-            <p className="text-[12px] font-medium text-ink/70">
-              Odczuwalna {weather.feels}° · ↑{weather.max}° ↓{weather.min}°
-            </p>
-          </div>
-          <WeatherIllustration icon={weather.icon} isDay={weather.isDay} className="h-28 w-28 -mr-1" />
-        </div>
 
-        {/* INLINE SEGMENTED TABS ON MOBILE */}
-        <div className="relative mt-4 flex items-center gap-1 rounded-2xl bg-white/60 p-1 border border-white/60 shadow-2xs">
-          <button
-            type="button"
-            onClick={() => setTab('today')}
-            className={cn(
-              'flex-1 rounded-xl py-1.5 text-[11.5px] font-bold transition-all cursor-pointer',
-              tab === 'today' ? 'bg-ink text-white shadow-xs' : 'text-ink-600 hover:text-ink'
-            )}
-          >
-            Dziś & 24h
-          </button>
-          <button
-            type="button"
-            onClick={() => setTab('daily')}
-            className={cn(
-              'flex-1 rounded-xl py-1.5 text-[11.5px] font-bold transition-all cursor-pointer',
-              tab === 'daily' ? 'bg-ink text-white shadow-xs' : 'text-ink-600 hover:text-ink'
-            )}
-          >
-            7 dni
-          </button>
-          <button
-            type="button"
-            onClick={() => setTab('biomet')}
-            className={cn(
-              'flex-1 rounded-xl py-1.5 text-[11.5px] font-bold transition-all cursor-pointer',
-              tab === 'biomet' ? 'bg-ink text-white shadow-xs' : 'text-ink-600 hover:text-ink'
-            )}
-          >
-            Smog & Biomet
-          </button>
-        </div>
-
-        {/* TAB 1: TODAY */}
-        {tab === 'today' && (
-          <div className="relative mt-3 space-y-3">
-            <WeatherInfographicsRow weather={weather} className="grid-cols-2" />
-
-            <div className="-mx-5 flex gap-2.5 overflow-x-auto px-5 pb-1 no-scrollbar pt-1">
-              {weather.hourly.slice(0, 12).map((item, i) => (
-                <div
-                  key={i}
-                  className={cn(
-                    'flex w-[68px] shrink-0 flex-col items-center justify-between rounded-2xl p-2.5 text-center shadow-sm',
-                    i === 0 ? 'bg-ink text-white shadow-card' : 'bg-white/75 text-ink',
-                  )}
-                >
-                  <p className={cn('text-[10px] font-semibold', i === 0 ? 'text-white/75' : 'text-ink-500')}>
-                    {i === 0 ? 'Teraz' : item.timeStr}
-                  </p>
-                  <div className="my-1.5 flex flex-col items-center gap-0.5">
-                    <HourlyWeatherIcon icon={item.icon} isDay={item.isDay} />
-                    {item.rainChance >= 20 ? (
-                      <span className={cn('text-[9px] font-extrabold', i === 0 ? 'text-sky-300' : 'text-sky-700')}>
-                        {item.rainChance}%
-                      </span>
-                    ) : null}
-                  </div>
-                  <p className="font-display text-[16px] font-extrabold leading-none">{item.temp}°</p>
-                </div>
-              ))}
+            <div className="mt-1 flex items-baseline gap-2.5">
+              <span className="font-display text-[42px] font-bold leading-none tracking-tight text-ink">
+                {weather.temp}°
+              </span>
+              <div className="min-w-0">
+                <p className="text-[13px] font-bold text-ink leading-tight truncate">
+                  {weather.condition}
+                </p>
+                <p className="text-[11px] font-medium text-ink/70 leading-tight mt-0.5">
+                  odcz. {weather.feels}° · ↑{weather.max}° ↓{weather.min}°
+                </p>
+              </div>
             </div>
           </div>
-        )}
 
-        {/* TAB 2: 7 DAYS INLINE ON MOBILE */}
-        {tab === 'daily' && (
-          <div className="relative mt-3 divide-y divide-white/40 rounded-2xl bg-white/70 backdrop-blur-xs p-2 shadow-xs">
-            {weather.daily.map((d, idx) => (
-              <div key={d.date} className="flex items-center justify-between py-2 px-1 text-[12px]">
-                <div className="flex items-center gap-2 w-28 shrink-0">
-                  <WeatherIllustration icon={d.icon} isDay animated={false} className="h-7 w-7" />
-                  <span className="font-bold text-ink">{d.dayName}</span>
-                  {idx === 0 && <span className="text-[9px] text-sky-700 font-extrabold">dziś</span>}
-                </div>
-                <div className="text-[11px] text-ink-500 truncate flex-1 px-1">
-                  {d.rainChance > 0 ? (
-                    <span className="text-sky-700 font-bold">{d.rainChance}% ({d.rainSum} mm)</span>
-                  ) : (
-                    <span>Bez opadów</span>
-                  )}
-                </div>
-                <div className="text-right shrink-0">
-                  <span className="text-slate-600 font-bold text-[13px]">{d.minTemp}°</span>{' '}
-                  <span className="text-slate-400 font-normal text-[11px]">/</span>{' '}
-                  <span className="text-ink font-black font-display text-[15px]">{d.maxTemp}°</span>
-                </div>
-              </div>
-            ))}
+          {/* Right: Weather icon + interactive AQI badge */}
+          <div className="flex flex-col items-end gap-1 shrink-0">
+            <WeatherIllustration icon={weather.icon} isDay={weather.isDay} className="h-16 w-16 -mr-1" />
+            <button
+              type="button"
+              onClick={() => {
+                setIsExpanded(true);
+                setExpandedTab('biomet');
+              }}
+              className={cn(
+                'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-extrabold border bg-white/80 backdrop-blur-xs transition-transform active:scale-95 shadow-2xs cursor-pointer',
+                weather.aqi.color
+              )}
+              title="Szczegóły jakości powietrza GIOŚ"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-current" />
+              <span>Smog: {weather.aqi.label}</span>
+            </button>
           </div>
-        )}
+        </div>
 
-        {/* TAB 3: BIOMET & AIR ON MOBILE */}
-        {tab === 'biomet' && (
-          <div className="relative mt-3 space-y-2">
-            <div className="rounded-2xl bg-white/80 p-3 shadow-xs">
-              <div className="flex items-center justify-between border-b border-mist-100 pb-1.5">
-                <span className="text-[11px] font-bold text-ink">Jakość Powietrza GIOŚ</span>
-                <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-extrabold border', weather.aqi.color)}>
-                  {weather.aqi.label}
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-[12px] pt-2">
-                <span>PM2.5: <b>{weather.aqi.pm25} µg/m³</b></span>
-                <span>PM10: <b>{weather.aqi.pm10} µg/m³</b></span>
-              </div>
-              <p className="mt-1.5 text-[11px] text-ink-600 leading-snug">
-                {weather.aqi.recommendation}
+        {/* 2. COMPACT HOURLY FORECAST STRIP */}
+        <div className="relative mt-3 -mx-4 flex gap-1.5 overflow-x-auto px-4 pb-0.5 no-scrollbar">
+          {weather.hourly.slice(0, 10).map((item, i) => (
+            <div
+              key={i}
+              className={cn(
+                'flex w-[52px] shrink-0 flex-col items-center justify-between rounded-xl py-1.5 px-1 text-center transition-all',
+                i === 0 ? 'bg-ink text-white shadow-xs' : 'bg-white/70 text-ink'
+              )}
+            >
+              <p className={cn('text-[9.5px] font-semibold leading-none', i === 0 ? 'text-white/80' : 'text-ink-500')}>
+                {i === 0 ? 'Teraz' : item.timeStr}
               </p>
+              <div className="my-1 flex flex-col items-center gap-0.5">
+                <HourlyWeatherIcon icon={item.icon} isDay={item.isDay} />
+                {item.rainChance >= 20 ? (
+                  <span className={cn('text-[8.5px] font-extrabold leading-none', i === 0 ? 'text-sky-300' : 'text-sky-700')}>
+                    {item.rainChance}%
+                  </span>
+                ) : null}
+              </div>
+              <p className="font-display text-[13px] font-extrabold leading-none">{item.temp}°</p>
             </div>
+          ))}
+        </div>
 
-            <div className="grid grid-cols-2 gap-2 text-[11.5px]">
-              <div className="rounded-2xl bg-white/80 p-2.5 shadow-xs">
-                <span className="text-[10px] text-ink-400 font-bold uppercase">Ciśnienie</span>
-                <p className="font-bold text-ink mt-0.5">{weather.pressure} hPa</p>
-                <p className="text-[10px] text-ink-500">
-                  {weather.pressureTrend === 'rising' ? '↑ Rośnie' : weather.pressureTrend === 'falling' ? '↓ Spada' : 'Stabilne'}
-                </p>
-              </div>
-              <div className="rounded-2xl bg-white/80 p-2.5 shadow-xs">
-                <span className="text-[10px] text-ink-400 font-bold uppercase">Indeks UV</span>
-                <p className="font-bold text-amber-700 mt-0.5">{weather.uv} ({weather.uvLabel})</p>
-                <p className="text-[10px] text-ink-500">
-                  {weather.uv >= 3 ? 'Krem z filtrem' : 'Ochrona zbędna'}
-                </p>
-              </div>
-            </div>
+        {/* 3. ALERTS (ALWAYS VISIBLE IF ACTIVE) */}
+        {weather.alerts.length > 0 && (
+          <div className="relative mt-2.5 flex items-start gap-2 rounded-xl bg-coral-50/90 border border-coral-200/80 p-2 text-[11px] text-coral-950 shadow-2xs">
+            <TriangleAlert className="h-3.5 w-3.5 shrink-0 text-coral-600 mt-0.5" />
+            <span className="font-semibold leading-tight">{weather.alerts[0].title}</span>
           </div>
         )}
 
-        {/* ALERTS */}
-        {weather.alerts.length > 0 && (
-          <div className="relative mt-3 flex items-start gap-2 rounded-2xl bg-coral-50 border border-coral-200 p-2.5 text-[11.5px] text-coral-900">
-            <TriangleAlert className="h-4 w-4 shrink-0 text-coral-700" />
-            <span className="font-bold">{weather.alerts[0].title}</span>
+        {/* 4. PROGRESSIVE INLINE DISCLOSURE (NO MODALS) */}
+        {!isExpanded ? (
+          <button
+            type="button"
+            onClick={() => setIsExpanded(true)}
+            className="w-full mt-2.5 py-1.5 px-3 rounded-xl bg-white/70 hover:bg-white/90 active:bg-white text-ink-700 font-bold text-[11px] flex items-center justify-center gap-1.5 border border-white/60 shadow-2xs transition-all cursor-pointer"
+          >
+            <span>Szczegóły: wiatr, 7 dni, biomet</span>
+            <ChevronDown className="w-3.5 h-3.5 text-ink-500" />
+          </button>
+        ) : (
+          <div className="relative mt-3 pt-3 border-t border-white/40 space-y-3">
+            {/* Segmented control inside expanded view */}
+            <div className="flex items-center gap-1 rounded-xl bg-white/60 p-1 border border-white/60 shadow-2xs">
+              <button
+                type="button"
+                onClick={() => setExpandedTab('indicators')}
+                className={cn(
+                  'flex-1 rounded-lg py-1.5 text-[11px] font-bold transition-all cursor-pointer text-center',
+                  expandedTab === 'indicators' ? 'bg-ink text-white shadow-xs' : 'text-ink-600 hover:text-ink'
+                )}
+              >
+                Wskaźniki & Wiatr
+              </button>
+              <button
+                type="button"
+                onClick={() => setExpandedTab('daily')}
+                className={cn(
+                  'flex-1 rounded-lg py-1.5 text-[11px] font-bold transition-all cursor-pointer text-center',
+                  expandedTab === 'daily' ? 'bg-ink text-white shadow-xs' : 'text-ink-600 hover:text-ink'
+                )}
+              >
+                Prognoza 7 dni
+              </button>
+              <button
+                type="button"
+                onClick={() => setExpandedTab('biomet')}
+                className={cn(
+                  'flex-1 rounded-lg py-1.5 text-[11px] font-bold transition-all cursor-pointer text-center',
+                  expandedTab === 'biomet' ? 'bg-ink text-white shadow-xs' : 'text-ink-600 hover:text-ink'
+                )}
+              >
+                Smog & Biomet
+              </button>
+            </div>
+
+            {/* TAB CONTENT: WSKAŹNIKI & WIATR */}
+            {expandedTab === 'indicators' && (
+              <div className="space-y-2">
+                <WeatherInfographicsRow weather={weather} className="grid-cols-2" />
+              </div>
+            )}
+
+            {/* TAB CONTENT: 7 DNI */}
+            {expandedTab === 'daily' && (
+              <div className="divide-y divide-white/40 rounded-2xl bg-white/70 backdrop-blur-xs p-2 shadow-xs">
+                {weather.daily.map((d, idx) => (
+                  <div key={d.date} className="flex items-center justify-between py-2 px-1 text-[11.5px]">
+                    <div className="flex items-center gap-2 w-28 shrink-0">
+                      <WeatherIllustration icon={d.icon} isDay animated={false} className="h-6 w-6" />
+                      <span className="font-bold text-ink">{d.dayName}</span>
+                      {idx === 0 && <span className="text-[9px] text-sky-700 font-extrabold">dziś</span>}
+                    </div>
+                    <div className="text-[11px] text-ink-500 truncate flex-1 px-1">
+                      {d.rainChance > 0 ? (
+                        <span className="text-sky-700 font-bold">{d.rainChance}% ({d.rainSum} mm)</span>
+                      ) : (
+                        <span>Bez opadów</span>
+                      )}
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span className="text-slate-600 font-bold text-[12.5px]">{d.minTemp}°</span>{' '}
+                      <span className="text-slate-400 font-normal text-[10.5px]">/</span>{' '}
+                      <span className="text-ink font-black font-display text-[14px]">{d.maxTemp}°</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* TAB CONTENT: SMOG & BIOMET */}
+            {expandedTab === 'biomet' && (
+              <div className="space-y-2">
+                <div className="rounded-2xl bg-white/80 p-3 shadow-xs">
+                  <div className="flex items-center justify-between border-b border-mist-100 pb-1.5">
+                    <span className="text-[11px] font-bold text-ink">Stacja pomiarowa GIOŚ Mińsk Maz.</span>
+                    <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-extrabold border', weather.aqi.color)}>
+                      {weather.aqi.label}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-[11.5px] pt-2">
+                    <span>PM2.5: <b>{weather.aqi.pm25} µg/m³</b></span>
+                    <span>PM10: <b>{weather.aqi.pm10} µg/m³</b></span>
+                  </div>
+                  <p className="mt-1.5 text-[11px] text-ink-600 leading-snug">
+                    {weather.aqi.recommendation}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-[11px]">
+                  <div className="rounded-xl bg-white/80 p-2.5 shadow-xs">
+                    <span className="text-[9.5px] text-ink-400 font-bold uppercase">Ciśnienie atmosferyczne</span>
+                    <p className="font-bold text-ink mt-0.5 text-[13px]">{weather.pressure} hPa</p>
+                    <p className="text-[10px] text-ink-500">
+                      {weather.pressureTrend === 'rising' ? '↑ Rośnie (dobry biomet)' : weather.pressureTrend === 'falling' ? '↓ Spada (meteopatia)' : 'Stabilne'}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-white/80 p-2.5 shadow-xs">
+                    <span className="text-[9.5px] text-ink-400 font-bold uppercase">Indeks UV</span>
+                    <p className="font-bold text-amber-700 mt-0.5 text-[13px]">{weather.uv} ({weather.uvLabel})</p>
+                    <p className="text-[10px] text-ink-500">
+                      {weather.uv >= 3 ? 'Zalecany krem z filtrem' : 'Ochrona zbędna'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="text-[10px] text-ink-400 text-center pt-0.5">
+                  Wschód: {weather.sunrise} · Zachód: {weather.sunset} · Długość dnia: {weather.dayLength}
+                </div>
+              </div>
+            )}
+
+            {/* Close button */}
+            <button
+              type="button"
+              onClick={() => setIsExpanded(false)}
+              className="w-full mt-2 py-1.5 px-3 rounded-xl bg-white/70 hover:bg-white/90 active:bg-white text-ink-700 font-bold text-[11px] flex items-center justify-center gap-1.5 border border-white/60 shadow-2xs transition-all cursor-pointer"
+            >
+              <span>Zwiń szczegóły</span>
+              <ChevronUp className="w-3.5 h-3.5 text-ink-500" />
+            </button>
           </div>
         )}
       </div>
