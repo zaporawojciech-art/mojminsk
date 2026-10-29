@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   ArrowRight,
   Bus,
@@ -25,7 +25,7 @@ import {
 import {
   ads as initialAds,
   avatarUrl,
-  busLines,
+  getAllBusStopsList,
   getPollTimeLeftLabel,
   getUpcomingDepartures,
   initialPolls,
@@ -45,7 +45,7 @@ import {
 } from '../data/mockData';
 import { Card, Img, SectionHeader, StandardTopBar, cn, zl } from '../components/ui';
 import { AppLink } from '../components/AppLink';
-import { buildAdUrl, buildZditmUrl, TAB_PATHS } from '../router/urlUtils';
+import { buildAdUrl, TAB_PATHS } from '../router/urlUtils';
 import type { TabId } from '../components/BottomNav';
 import { useWeather } from '../hooks/useWeather';
 import {
@@ -762,6 +762,257 @@ function BusWidget({
   );
 }
 
+interface DesktopZditmWidgetProps {
+  favoriteBuses?: FavoriteBusStop[];
+  onOpenFull?: (lineId?: LineId, stopName?: string) => void;
+  onAddFavorite?: () => void;
+  onRemoveFavorite?: (id: string) => void;
+}
+
+function DesktopZditmWidget({
+  favoriteBuses = [],
+  onOpenFull,
+  onAddFavorite,
+  onRemoveFavorite,
+}: DesktopZditmWidgetProps) {
+  const allStops = useMemo(() => getAllBusStopsList(), []);
+  const [selectedStop, setSelectedStop] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem('mojminsk_desktop_zditm_stop');
+      if (saved && allStops.some((s) => s.name === saved)) return saved;
+    } catch {
+      // ignore
+    }
+    return favoriteBuses[0]?.stopName || 'Spacerowa';
+  });
+
+  const hasFavorites = favoriteBuses.length > 0;
+  const [viewMode, setViewMode] = useState<'selected' | 'favorites'>(() =>
+    hasFavorites ? 'favorites' : 'selected'
+  );
+
+  const effectiveMode = hasFavorites && viewMode === 'favorites' ? 'favorites' : 'selected';
+
+  const currentStopData = useMemo(() => {
+    return allStops.find((s) => s.name === selectedStop) || allStops[0];
+  }, [allStops, selectedStop]);
+
+  const handleStopChange = (stopName: string) => {
+    setSelectedStop(stopName);
+    setViewMode('selected');
+    try {
+      localStorage.setItem('mojminsk_desktop_zditm_stop', stopName);
+    } catch {
+      // ignore
+    }
+  };
+
+  return (
+    <div className="rounded-2xl bg-white p-4 shadow-xs border border-mist-200 flex flex-col justify-between h-full">
+      <div>
+        {/* HEADER */}
+        <div className="flex items-center justify-between gap-2 border-b border-mist-100 pb-2.5">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-sky-100 text-sky-800">
+              <Bus className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <h3 className="text-[13px] font-extrabold text-ink leading-tight truncate">
+                ZDiTM Mińsk Mazowiecki
+              </h3>
+              <p className="text-[10px] text-ink-400 font-medium flex items-center gap-1.5">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Odjazdy na żywo
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 shrink-0">
+            {onAddFavorite && (
+              <button
+                type="button"
+                onClick={onAddFavorite}
+                className="inline-flex items-center gap-1 rounded-full bg-sky-50 hover:bg-sky-100 border border-sky-200/80 px-2.5 py-1 text-[11px] font-extrabold text-sky-800 transition-colors cursor-pointer"
+                title="Wybierz i dodaj swój przystanek do obserwowanych"
+              >
+                <Plus className="h-3 w-3" />
+                <span>Dodaj przystanek</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* CONTROLS BAR: TABS & STOP PICKER */}
+        <div className="mt-2.5 flex items-center gap-1.5">
+          {hasFavorites && (
+            <div className="flex rounded-lg bg-mist/80 p-0.5 border border-mist-200 shrink-0">
+              <button
+                type="button"
+                onClick={() => setViewMode('favorites')}
+                className={cn(
+                  'rounded-md px-2 py-1 text-[10.5px] font-bold transition-all cursor-pointer',
+                  effectiveMode === 'favorites' ? 'bg-white text-ink shadow-2xs' : 'text-ink-500 hover:text-ink'
+                )}
+              >
+                Ulubione ({favoriteBuses.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('selected')}
+                className={cn(
+                  'rounded-md px-2 py-1 text-[10.5px] font-bold transition-all cursor-pointer',
+                  effectiveMode === 'selected' ? 'bg-white text-ink shadow-2xs' : 'text-ink-500 hover:text-ink'
+                )}
+              >
+                Wszystkie
+              </button>
+            </div>
+          )}
+
+          {/* STOP DROPDOWN */}
+          <div className="relative flex items-center flex-1 min-w-0 rounded-lg bg-mist/60 px-2 py-1 border border-mist-200 hover:border-mist-300">
+            <MapPin className="h-3.5 w-3.5 shrink-0 text-sky-700 mr-1.5" />
+            <select
+              value={selectedStop}
+              onChange={(e) => handleStopChange(e.target.value)}
+              className="w-full bg-transparent text-[11.5px] font-bold text-ink focus:outline-none cursor-pointer truncate"
+              title="Zmień obserwowany przystanek"
+            >
+              {allStops.map((st) => (
+                <option key={st.name} value={st.name} className="text-ink">
+                  {st.name} ({st.routes.map((r) => r.lineId).join(', ')})
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* LIST OF DEPARTURES */}
+        <div className="mt-2.5 space-y-1.5">
+          {effectiveMode === 'favorites' ? (
+            /* User's custom favorite bus stops */
+            favoriteBuses.slice(0, 3).map((fav) => {
+              const upcoming = getUpcomingDepartures(fav.lineId, fav.stopName, fav.directionIdx);
+              return (
+                <div
+                  key={fav.id}
+                  onClick={() => onOpenFull?.(fav.lineId, fav.stopName)}
+                  className="group flex items-center justify-between rounded-xl bg-mist/40 hover:bg-mist/90 p-2.5 border border-mist-100 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
+                    <span
+                      className={cn(
+                        'shrink-0 rounded px-1.5 py-0.5 text-[10.5px] font-black',
+                        lineTone[fav.lineId],
+                      )}
+                    >
+                      {fav.lineId}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate text-[12.5px] font-extrabold text-ink group-hover:text-sky-800">
+                        {fav.stopName}
+                      </p>
+                      <p className="truncate text-[11px] text-ink-500 font-medium">
+                        ➔ {fav.destination}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="text-right">
+                      <span className="inline-block rounded-md bg-white border border-mist-200 px-2 py-0.5 font-display text-[13.5px] font-extrabold text-coral-700 shadow-2xs">
+                        za {upcoming[0]} min
+                      </span>
+                      <p className="text-[10px] text-ink-400 font-semibold mt-0.5">
+                        potem {clock(upcoming[1])}
+                      </p>
+                    </div>
+                    {onRemoveFavorite && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRemoveFavorite(fav.id);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 p-1 text-ink-400 hover:text-coral transition-opacity"
+                        title="Usuń z obserwowanych"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            /* Passing routes for selected stop */
+            currentStopData?.routes && currentStopData.routes.length > 0 ? (
+              currentStopData.routes.slice(0, 3).map((route, i) => {
+                const deps = getUpcomingDepartures(route.lineId, selectedStop, route.directionIdx);
+                return (
+                  <div
+                    key={`${route.lineId}-${route.destination}-${i}`}
+                    onClick={() => onOpenFull?.(route.lineId, selectedStop)}
+                    className="group flex items-center justify-between rounded-xl bg-mist/40 hover:bg-mist/90 p-2.5 border border-mist-100 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
+                      <span
+                        className={cn(
+                          'shrink-0 rounded px-1.5 py-0.5 text-[10.5px] font-black',
+                          lineTone[route.lineId],
+                        )}
+                      >
+                        {route.lineId}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="truncate text-[12px] font-bold text-ink group-hover:text-sky-800">
+                          ➔ {route.destination}
+                        </p>
+                        <p className="text-[10.5px] text-ink-400 font-medium">
+                          następne: {clock(deps[1])}, {clock(deps[2])}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="text-right shrink-0">
+                      <span className="inline-block rounded-md bg-white border border-mist-200 px-2 py-0.5 font-display text-[13.5px] font-extrabold text-coral-700 shadow-2xs">
+                        za {deps[0]} min
+                      </span>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="p-4 text-center text-[12px] text-ink-400">
+                Brak zdefiniowanych odjazdów dla tego przystanku.
+              </div>
+            )
+          )}
+        </div>
+      </div>
+
+      {/* FOOTER */}
+      <div className="flex items-center justify-between text-[11px] pt-2.5 mt-2.5 border-t border-mist-100">
+        <span className="text-ink-500 font-medium truncate max-w-[170px]">
+          {effectiveMode === 'favorites' ? (
+            <span>Twoje zapisane przystanki</span>
+          ) : (
+            <span>Przystanek: <b>{selectedStop}</b></span>
+          )}
+        </span>
+        <button
+          type="button"
+          onClick={() => onOpenFull?.(undefined, selectedStop)}
+          className="font-bold text-sky-700 hover:text-sky-900 flex items-center gap-0.5 shrink-0 cursor-pointer"
+        >
+          <span>Pełny rozkład jazdy</span>
+          <ArrowRight className="h-3 w-3" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function FeaturedPollCard({
   pollItem,
   userVoteId,
@@ -959,11 +1210,6 @@ export function HomeScreen({
   const featuredPoll = activePolls[0] ?? null;
   const userVoteForFeatured = featuredPoll ? userVotes[featuredPoll.id] : undefined;
 
-  // Quick ZDiTM departures for the 1-line desktop status bar
-  const m2Deps = getUpcomingDepartures('M2', busLines[0].stops[0], 0);
-  const m3Deps = getUpcomingDepartures('M3', busLines[1].stops[0], 0);
-  const m4Deps = getUpcomingDepartures('M4', busLines[2].stops[0], 0);
-
   const quick = [
     { label: 'Rozkład', href: '/zditm/m2', icon: Bus, cls: 'bg-sky-100 text-ink', onClick: () => (onZditm ? onZditm('M2') : onTab('home')) },
     { label: 'Ogłoszenia', href: TAB_PATHS.ads, icon: Megaphone, cls: 'bg-white text-ink', onClick: () => onTab('ads') },
@@ -1131,59 +1377,13 @@ export function HomeScreen({
           </div>
 
           {/* NEAREST ZDiTM DEPARTURES (4 cols) */}
-          <div className="lg:col-span-4 rounded-2xl bg-white p-3.5 shadow-xs border border-mist-200 flex flex-col justify-between">
-            <div className="flex items-center justify-between gap-2 border-b border-mist-100 pb-2">
-              <div className="flex items-center gap-2">
-                <span className="grid h-6 w-6 place-items-center rounded-lg bg-sky-100 text-sky-800">
-                  <Bus className="h-3.5 w-3.5" />
-                </span>
-                <h3 className="text-[12.5px] font-extrabold text-ink leading-tight">
-                  ZDiTM Mińsk Mazowiecki
-                </h3>
-              </div>
-              <span className="text-[10.5px] font-semibold text-ink-400">Centrum</span>
-            </div>
-
-            <div className="grid grid-cols-3 gap-2 my-2">
-              <AppLink
-                to="/zditm/m2"
-                onClick={() => onZditm?.('M2')}
-                className="flex flex-col items-center rounded-xl bg-mist/60 hover:bg-mist p-2 text-center transition-colors group cursor-pointer"
-              >
-                <span className="rounded bg-sky px-1.5 py-0.2 text-[9.5px] font-extrabold text-ink">M2</span>
-                <span className="text-[11.5px] font-bold text-ink mt-1 group-hover:text-sky-700">za {m2Deps[0]} min</span>
-              </AppLink>
-
-              <AppLink
-                to="/zditm/m3"
-                onClick={() => onZditm?.('M3')}
-                className="flex flex-col items-center rounded-xl bg-mist/60 hover:bg-mist p-2 text-center transition-colors group cursor-pointer"
-              >
-                <span className="rounded bg-sand px-1.5 py-0.2 text-[9.5px] font-extrabold text-ink">M3</span>
-                <span className="text-[11.5px] font-bold text-ink mt-1 group-hover:text-sand-700">za {m3Deps[0]} min</span>
-              </AppLink>
-
-              <AppLink
-                to="/zditm/m4"
-                onClick={() => onZditm?.('M4')}
-                className="flex flex-col items-center rounded-xl bg-mist/60 hover:bg-mist p-2 text-center transition-colors group cursor-pointer"
-              >
-                <span className="rounded bg-coral px-1.5 py-0.2 text-[9.5px] font-extrabold text-ink">M4</span>
-                <span className="text-[11.5px] font-bold text-ink mt-1 group-hover:text-coral-700">za {m4Deps[0]} min</span>
-              </AppLink>
-            </div>
-
-            <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-mist-100">
-              <span className="text-ink-400 font-medium">Odjazdy z Placu Dworcowego</span>
-              <AppLink
-                to={buildZditmUrl('M2')}
-                onClick={() => onZditm?.('M2')}
-                className="font-bold text-sky-700 hover:underline flex items-center gap-0.5"
-              >
-                <span>Rozkład jazdy</span>
-                <ArrowRight className="h-3 w-3" />
-              </AppLink>
-            </div>
+          <div className="lg:col-span-4">
+            <DesktopZditmWidget
+              favoriteBuses={favoriteBuses}
+              onOpenFull={onZditm}
+              onAddFavorite={onAddFavoriteBus}
+              onRemoveFavorite={onRemoveFavoriteBus}
+            />
           </div>
         </div>
 
