@@ -1463,24 +1463,32 @@ export function HomeScreen({
 
         <button
           onClick={onPartner}
-          className="relative mx-5 block w-[calc(100%-2.5rem)] overflow-hidden rounded-4xl bg-ink p-5 text-left shadow-card"
+          className="relative mx-5 block w-[calc(100%-2.5rem)] overflow-hidden rounded-4xl bg-gradient-to-br from-[#162438] via-[#0e243f] to-[#0a1b30] p-5 text-left shadow-card border border-[#4abbc3]/30"
         >
           <Img
             src={partner.hero}
             alt={partner.name}
-            className="absolute inset-y-0 right-0 h-full w-1/2 opacity-80 object-cover [mask-image:linear-gradient(to_left,black_50%,transparent)]"
+            className="absolute inset-y-0 right-0 h-full w-3/5 opacity-40 object-cover [mask-image:linear-gradient(to_left,black_60%,transparent)]"
           />
-          <span className="relative inline-flex items-center gap-1 text-[10.5px] font-bold uppercase tracking-[.16em] text-sand">
-            Partner Tygodnia
-          </span>
-          <p className="relative mt-1 max-w-[62%] font-display text-[22px] font-bold leading-tight text-white">
-            {partner.shortName}
+          <div className="relative z-10 flex items-center gap-2">
+            <span className="inline-flex items-center gap-1 rounded-md bg-[#4abbc3] px-2 py-0.5 text-[9.5px] font-extrabold uppercase tracking-wider text-[#0e243f]">
+              Partner Tygodnia
+            </span>
+            <span className="text-[10.5px] font-bold text-[#4abbc3]">grupaadk.pl</span>
+          </div>
+          <div className="relative z-10 mt-2 flex items-center gap-2.5">
+            <div className="h-8 w-8 shrink-0 overflow-hidden rounded-lg bg-white/10 p-1 border border-white/15">
+              <Img src={partner.logo} alt="" className="h-full w-full object-contain" />
+            </div>
+            <p className="font-display text-[21px] font-bold leading-tight text-white">
+              {partner.shortName}
+            </p>
+          </div>
+          <p className="relative z-10 mt-1 max-w-[65%] text-[12px] text-white/80">
+            <strong className="text-[#4abbc3]">{partner.discount}</strong> na okna, drzwi i pergole + darmowy pomiar z kodem <strong className="text-[#4abbc3]">{partner.code}</strong>
           </p>
-          <p className="relative mt-1 max-w-[60%] text-[12px] text-white/80">
-            {partner.discount} na okna, drzwi i pergole + darmowy pomiar z kodem {partner.code}
-          </p>
-          <span className="relative mt-4 inline-flex items-center gap-1 rounded-full bg-sand px-3.5 py-2 text-[12px] font-bold text-ink">
-            Otwórz Strefę Partnera <ArrowRight className="h-4 w-4" aria-hidden />
+          <span className="relative z-10 mt-3.5 inline-flex items-center gap-1.5 rounded-full bg-[#4abbc3] hover:bg-[#3daab2] px-4 py-2 text-[12px] font-extrabold text-[#0e243f] shadow-sm">
+            Otwórz Strefę Partnera <ArrowRight className="h-3.5 w-3.5" aria-hidden />
           </span>
         </button>
 
@@ -1634,38 +1642,38 @@ export function HomeScreen({
           </div>
 
           {/* 3. PARTNER TYGODNIA (3 cols): Equal Height Right Card */}
-          <div className="lg:col-span-3 flex flex-col justify-between rounded-2xl bg-ink p-4 text-white shadow-xs border border-ink">
+          <div className="lg:col-span-3 flex flex-col justify-between rounded-2xl bg-gradient-to-b from-[#162438] to-[#0e243f] p-4 text-white shadow-xs border border-[#4abbc3]/30">
             <div>
               <div className="flex items-center justify-between gap-2">
-                <span className="inline-flex items-center rounded-full bg-sand px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-ink">
+                <span className="inline-flex items-center rounded-full bg-[#4abbc3] px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-[#0e243f]">
                   Partner Tygodnia
                 </span>
-                <span className="text-[10.5px] font-semibold text-white/60">
-                  Mińsk Maz.
+                <span className="text-[10.5px] font-bold text-[#4abbc3]">
+                  grupaadk.pl
                 </span>
               </div>
 
               <div className="mt-3 flex items-center gap-3">
-                <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-white/15 bg-white/10">
-                  <Img src={partner.hero} alt={partner.name} className="h-full w-full object-cover" />
+                <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-[#4abbc3]/30 bg-white/10 p-1">
+                  <Img src={partner.logo} alt={partner.name} className="h-full w-full object-contain" />
                 </div>
                 <div className="min-w-0">
                   <h3 className="font-display text-[15px] font-bold text-white leading-tight truncate">
                     {partner.shortName}
                   </h3>
-                  <p className="mt-0.5 text-[11px] text-white/65 truncate">
+                  <p className="mt-0.5 text-[11px] text-white/70 truncate">
                     {partner.address}
                   </p>
                 </div>
               </div>
 
-              <div className="mt-3 rounded-xl bg-white/[.07] border border-white/10 p-2.5 flex items-center justify-between gap-2">
+              <div className="mt-3 rounded-xl bg-white/[.06] border border-[#4abbc3]/20 p-2.5 flex items-center justify-between gap-2">
                 <div>
-                  <span className="block text-[10px] font-bold uppercase tracking-wider text-sand">
+                  <span className="block text-[10px] font-extrabold uppercase tracking-wider text-[#4abbc3]">
                     Rabat dla mieszkańców
                   </span>
                   <span className="font-display text-[18px] font-extrabold text-white leading-none">
-                    {partner.discount} <span className="text-[11px] font-medium text-white/70">z kodem {partner.code}</span>
+                    {partner.discount} <span className="text-[11px] font-medium text-white/70">z kodem <strong className="text-[#4abbc3]">{partner.code}</strong></span>
                   </span>
                 </div>
               </div>
@@ -1674,9 +1682,9 @@ export function HomeScreen({
             <button
               type="button"
               onClick={onPartner}
-              className="mt-3 flex w-full items-center justify-between rounded-xl bg-sand px-3 py-2 text-ink hover:bg-sand-200 transition-colors cursor-pointer"
+              className="mt-3 flex w-full items-center justify-between rounded-xl bg-[#4abbc3] px-3.5 py-2 text-[#0e243f] hover:bg-[#3daab2] transition-colors cursor-pointer font-extrabold shadow-sm"
             >
-              <span className="text-[11.5px] font-bold">Strefa Partnera</span>
+              <span className="text-[11.5px] font-extrabold">Strefa Partnera</span>
               <span className="flex items-center gap-1 text-[11px] font-extrabold">
                 Odbierz rabat <ArrowRight className="h-3.5 w-3.5" />
               </span>
@@ -1955,7 +1963,7 @@ export function HomeScreen({
                   <button
                     type="button"
                     onClick={() => onTab('rides')}
-                    className="mt-3.5 inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-3.5 py-1.5 text-[12px] font-bold text-white hover:bg-sky-700 transition-colors cursor-pointer"
+                    className="mt-3.5 inline-flex items-center gap-1.5 rounded-lg bg-ink px-3.5 py-1.5 text-[12px] font-bold text-white hover:bg-ink-700 transition-colors cursor-pointer"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     <span>Dodaj przejazd</span>

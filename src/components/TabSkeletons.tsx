@@ -289,7 +289,7 @@ export function ZditmSkeleton() {
 /** Skeleton widoku „Strefa Partnera” (PartnerScreen — ciemne tło bg-ink) */
 export function PartnerSkeleton() {
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden bg-ink" role="status" aria-label="Ładowanie Strefy Partnera">
+    <div className="flex h-full w-full flex-col overflow-hidden bg-[#0e243f]" role="status" aria-label="Ładowanie Strefy Partnera">
       <div className="p-5 pt-[max(env(safe-area-inset-top),16px)] space-y-5">
         <Bone className="h-11 w-11 rounded-full opacity-25" />
         <div className="pt-16 space-y-2.5">

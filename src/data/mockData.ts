@@ -875,7 +875,8 @@ export interface PartnerProduct {
 export const partner = {
   name: 'Grupa ADK — Okna, Drzwi, Pergole',
   shortName: 'Grupa ADK',
-  tagline: 'Nowoczesna stolarka budowlana i konstrukcje aluminiowe w Mińsku Mazowieckim',
+  tagline: 'Ty wybierasz nas, My robimy resztę.',
+  subtagline: 'Stolarka budowlana | Konstrukcje aluminiowe | Zabudowy tarasów | Ogrodzenia | Systemy przeciwsłoneczne',
   description:
     'Lokalny lider nowoczesnej stolarki otworowej, wielkoformatowych przeszkleń HST, energooszczędnych drzwi i całorocznych pergoli bioklimatycznych. Salon pokazowy i doradztwo techniczne na miejscu w Mińsku.',
   address: 'ul. Siennicka 47, Mińsk Mazowiecki',
@@ -886,7 +887,11 @@ export const partner = {
   openingHours: 'Pn – Pt: 08:00 – 16:00',
   code: 'ADK-MINSK',
   discount: '−10%',
-  hero: img('photo-1600585154340-be6161a56a0c', 1000),
+  hero: '/partners/grupa-adk-hero.jpg',
+  logo: '/partners/grupa-adk-logo.png',
+  brandColor: '#4abbc3',
+  brandDark: '#162438',
+  brandNavy: '#0e243f',
   perks: [
     'Bezpłatny profesjonalny pomiar laserowy na posesji w Mińsku i powiecie',
     'Certyfikowane profile Uw ≤ 0,72 W/m²K do programu „Czyste Powietrze”',
