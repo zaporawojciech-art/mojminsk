@@ -239,40 +239,41 @@ function DesktopWeatherWidget({ city = 'Mińsk Mazowiecki' }: { city?: string })
   const h = new Date().getHours();
 
   return (
-    <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-sky/35 via-sky/20 to-white/85 p-3.5 shadow-xs border border-sky-200/80 text-ink">
-      <div className="flex flex-col lg:flex-row items-center justify-between gap-3 lg:gap-5">
+    <section className="h-full rounded-2xl bg-gradient-to-r from-sky/35 via-sky/20 to-white/90 p-3.5 shadow-xs border border-sky-200/80 text-ink flex flex-col justify-between">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 h-full">
         {/* 1. LEFT: CURRENT WEATHER SUMMARY */}
-        <div className="flex items-center gap-4 shrink-0 w-full lg:w-auto justify-between lg:justify-start">
-          <div className="flex items-center gap-3">
-            <span className="font-display text-[36px] font-bold leading-none tracking-tight text-ink">
-              {weather.temp}°
-            </span>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-[13.5px] font-extrabold text-ink leading-tight">
-                  {weather.condition}
-                </span>
-                <span className="text-ink-300">·</span>
-                <span className="text-[11.5px] font-medium text-ink-600">
-                  odcz. {weather.feels}°
-                </span>
-              </div>
-              <p className="flex items-center gap-1 text-[11px] font-semibold text-ink-500 mt-0.5">
-                <MapPin className="h-3 w-3 text-coral-700" aria-hidden />
-                {city} <span className="text-ink-300">·</span> ↑{weather.max}° ↓{weather.min}°
-              </p>
+        <div className="flex items-center gap-3 shrink-0">
+          <span className="font-display text-[32px] font-bold leading-none tracking-tight text-ink">
+            {weather.temp}°
+          </span>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[13px] font-extrabold text-ink leading-tight">
+                {weather.condition}
+              </span>
+              <span className="text-ink-300">·</span>
+              <span className="text-[11px] font-medium text-ink-600">
+                odcz. {weather.feels}°
+              </span>
+            </div>
+            <p className="flex items-center gap-1 text-[10.5px] font-semibold text-ink-500 mt-0.5">
+              <MapPin className="h-3 w-3 text-coral-700" aria-hidden />
+              {city} · ↑{weather.max}° ↓{weather.min}°
+            </p>
+            <div className="mt-1">
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold text-ink shadow-2xs border border-mist-200/60">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden />
+                PM2.5: {weather.aqi.pm25} ({weather.aqi.label})
+              </span>
             </div>
           </div>
-
-          {/* Air Quality Badge */}
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-bold text-ink shadow-2xs border border-mist-200/60 shrink-0">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
-            PM2.5: {weather.aqi.pm25} ({weather.aqi.label})
-          </span>
         </div>
 
-        {/* 2. CENTER: COMPACT HOURLY FORECAST PILLS */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full lg:w-auto py-0.5 justify-start lg:justify-center">
+        {/* Vertical divider */}
+        <div className="hidden sm:block h-12 w-px bg-ink/10 shrink-0" aria-hidden />
+
+        {/* 2. RIGHT: 8 HOURLY FORECAST PILLS */}
+        <div className="grid grid-cols-8 gap-1.5 flex-1 w-full min-w-0">
           {weather.hourly.map((item, i) => {
             const hourNum = (h + i) % 24;
             const isDay = hourNum >= 6 && hourNum < 20;
@@ -280,29 +281,29 @@ function DesktopWeatherWidget({ city = 'Mińsk Mazowiecki' }: { city?: string })
               <div
                 key={i}
                 className={cn(
-                  'flex w-[62px] shrink-0 flex-col items-center justify-between rounded-xl py-1.5 px-1 text-center transition-all',
+                  'flex flex-col items-center justify-between rounded-xl py-1.5 px-0.5 text-center transition-all',
                   i === 0
                     ? 'bg-ink text-white shadow-sm ring-1 ring-white/20'
                     : 'bg-white/85 hover:bg-white text-ink shadow-2xs border border-white/60'
                 )}
               >
-                <p className={cn('text-[9.5px] font-bold', i === 0 ? 'text-white/80' : 'text-ink-500')}>
+                <p className={cn('text-[9px] font-bold', i === 0 ? 'text-white/80' : 'text-ink-500')}>
                   {i === 0 ? 'Teraz' : `${String(hourNum).padStart(2, '0')}:00`}
                 </p>
 
                 <div className="my-1 flex items-center justify-center gap-0.5 h-4">
                   <HourlyWeatherIcon icon={item.icon} isDay={isDay} />
                   {item.rainChance && item.rainChance >= 20 ? (
-                    <span className={cn('text-[8.5px] font-extrabold', i === 0 ? 'text-sky-300' : 'text-sky-700')}>
+                    <span className={cn('text-[8px] font-extrabold', i === 0 ? 'text-sky-300' : 'text-sky-700')}>
                       {item.rainChance}%
                     </span>
                   ) : null}
                 </div>
 
-                <p className="font-display text-[13px] font-bold leading-none">{item.temp}°</p>
+                <p className="font-display text-[12.5px] font-bold leading-none">{item.temp}°</p>
                 <p
                   className={cn(
-                    'mt-0.5 truncate max-w-[56px] text-[8.5px] font-medium leading-tight',
+                    'mt-0.5 truncate max-w-[48px] text-[8px] font-medium leading-tight',
                     i === 0 ? 'text-white/70' : 'text-ink-500'
                   )}
                   title={item.condition}
@@ -312,30 +313,6 @@ function DesktopWeatherWidget({ city = 'Mińsk Mazowiecki' }: { city?: string })
               </div>
             );
           })}
-        </div>
-
-        {/* 3. RIGHT: COMPACT MICRO-METRICS */}
-        <div className="hidden xl:flex items-center gap-3 border-l border-ink/10 pl-4 text-[11px] font-medium text-ink-600 shrink-0">
-          <div className="space-y-0.5">
-            <p className="flex items-center gap-1">
-              <Wind className="h-3 w-3 text-ink-400" />
-              <span>{weather.wind} km/h</span>
-            </p>
-            <p className="flex items-center gap-1">
-              <Droplets className="h-3 w-3 text-ink-400" />
-              <span>{weather.humidity}%</span>
-            </p>
-          </div>
-          <div className="space-y-0.5">
-            <p className="flex items-center gap-1">
-              <Gauge className="h-3 w-3 text-ink-400" />
-              <span>{weather.pressure} hPa</span>
-            </p>
-            <p className="flex items-center gap-1">
-              <Sun className="h-3 w-3 text-amber-500" />
-              <span>UV: {weather.uv}</span>
-            </p>
-          </div>
         </div>
       </div>
     </section>
@@ -877,57 +854,67 @@ export function HomeScreen({
           </div>
         )}
 
-        {/* FULL DESKTOP WEATHER CARD WITH HOURLY FORECAST CAPSULES */}
-        <DesktopWeatherWidget city={city} />
-
-        {/* NEAREST ZDiTM DEPARTURES STRIP */}
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white px-5 py-3 shadow-card border border-mist-200 text-[12.5px]">
-          <div className="flex items-center gap-2.5">
-            <span className="grid h-8 w-8 place-items-center rounded-xl bg-sky-100 text-sky-800">
-              <Bus className="h-4 w-4" />
-            </span>
-            <div>
-              <p className="font-extrabold text-ink leading-tight">Komunikacja miejska ZDiTM Mińsk Mazowiecki</p>
-              <p className="text-[11px] text-ink-500">Najbliższe planowane odjazdy z centrum miasta</p>
-            </div>
+        {/* ROW 1: CITY STATUS & MOBILITY (Weather & Forecast 8 cols + ZDiTM Departures 4 cols) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+          {/* WEATHER & HOURLY FORECAST (8 cols) */}
+          <div className="lg:col-span-8">
+            <DesktopWeatherWidget city={city} />
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
-            <AppLink
-              to="/zditm/m2"
-              onClick={() => onZditm?.('M2')}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-mist/80 hover:bg-mist px-3 py-1.5 text-[12px] font-bold text-ink transition-colors"
-            >
-              <span className="rounded-md bg-sky px-1.5 py-0.5 text-[10px] font-extrabold text-ink">M2</span>
-              <span>za {m2Deps[0]} min</span>
-            </AppLink>
+          {/* NEAREST ZDiTM DEPARTURES (4 cols) */}
+          <div className="lg:col-span-4 rounded-2xl bg-white p-3.5 shadow-xs border border-mist-200 flex flex-col justify-between">
+            <div className="flex items-center justify-between gap-2 border-b border-mist-100 pb-2">
+              <div className="flex items-center gap-2">
+                <span className="grid h-6 w-6 place-items-center rounded-lg bg-sky-100 text-sky-800">
+                  <Bus className="h-3.5 w-3.5" />
+                </span>
+                <h3 className="text-[12.5px] font-extrabold text-ink leading-tight">
+                  ZDiTM Mińsk Mazowiecki
+                </h3>
+              </div>
+              <span className="text-[10.5px] font-semibold text-ink-400">Centrum</span>
+            </div>
 
-            <AppLink
-              to="/zditm/m3"
-              onClick={() => onZditm?.('M3')}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-mist/80 hover:bg-mist px-3 py-1.5 text-[12px] font-bold text-ink transition-colors"
-            >
-              <span className="rounded-md bg-sand px-1.5 py-0.5 text-[10px] font-extrabold text-ink">M3</span>
-              <span>za {m3Deps[0]} min</span>
-            </AppLink>
+            <div className="grid grid-cols-3 gap-2 my-2">
+              <AppLink
+                to="/zditm/m2"
+                onClick={() => onZditm?.('M2')}
+                className="flex flex-col items-center rounded-xl bg-mist/60 hover:bg-mist p-2 text-center transition-colors group cursor-pointer"
+              >
+                <span className="rounded bg-sky px-1.5 py-0.2 text-[9.5px] font-extrabold text-ink">M2</span>
+                <span className="text-[11.5px] font-bold text-ink mt-1 group-hover:text-sky-700">za {m2Deps[0]} min</span>
+              </AppLink>
 
-            <AppLink
-              to="/zditm/m4"
-              onClick={() => onZditm?.('M4')}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-mist/80 hover:bg-mist px-3 py-1.5 text-[12px] font-bold text-ink transition-colors"
-            >
-              <span className="rounded-md bg-coral px-1.5 py-0.5 text-[10px] font-extrabold text-ink">M4</span>
-              <span>za {m4Deps[0]} min</span>
-            </AppLink>
+              <AppLink
+                to="/zditm/m3"
+                onClick={() => onZditm?.('M3')}
+                className="flex flex-col items-center rounded-xl bg-mist/60 hover:bg-mist p-2 text-center transition-colors group cursor-pointer"
+              >
+                <span className="rounded bg-sand px-1.5 py-0.2 text-[9.5px] font-extrabold text-ink">M3</span>
+                <span className="text-[11.5px] font-bold text-ink mt-1 group-hover:text-sand-700">za {m3Deps[0]} min</span>
+              </AppLink>
 
-            <AppLink
-              to={buildZditmUrl('M2')}
-              onClick={() => onZditm?.('M2')}
-              className="text-[12px] font-bold text-sky-700 hover:underline ml-2 flex items-center gap-1"
-            >
-              <span>Pełny rozkład jazdy</span>
-              <ArrowRight className="h-3.5 w-3.5" />
-            </AppLink>
+              <AppLink
+                to="/zditm/m4"
+                onClick={() => onZditm?.('M4')}
+                className="flex flex-col items-center rounded-xl bg-mist/60 hover:bg-mist p-2 text-center transition-colors group cursor-pointer"
+              >
+                <span className="rounded bg-coral px-1.5 py-0.2 text-[9.5px] font-extrabold text-ink">M4</span>
+                <span className="text-[11.5px] font-bold text-ink mt-1 group-hover:text-coral-700">za {m4Deps[0]} min</span>
+              </AppLink>
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-mist-100">
+              <span className="text-ink-400 font-medium">Odjazdy z Placu Dworcowego</span>
+              <AppLink
+                to={buildZditmUrl('M2')}
+                onClick={() => onZditm?.('M2')}
+                className="font-bold text-sky-700 hover:underline flex items-center gap-0.5"
+              >
+                <span>Rozkład jazdy</span>
+                <ArrowRight className="h-3 w-3" />
+              </AppLink>
+            </div>
           </div>
         </div>
 
