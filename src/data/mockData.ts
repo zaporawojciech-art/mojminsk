@@ -23,6 +23,7 @@ export interface UserPrivacy {
 export interface User {
   name: string;
   surname?: string;
+  email?: string;
   street: Street;
   houseNumber?: string;
   flatNumber?: string;

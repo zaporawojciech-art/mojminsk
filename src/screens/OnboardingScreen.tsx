@@ -4,8 +4,9 @@ import {
   CheckCircle2,
   ChevronLeft,
   Dices,
+  KeyRound,
   Lock,
-  Phone,
+  Mail,
   ShieldCheck,
   Sparkles,
   Users,
@@ -27,7 +28,8 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
   const [street, setStreet] = useState<Street | null>(streets[0]);
   const [query, setQuery] = useState('');
   const [seedN, setSeedN] = useState(1);
-  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [postalCode, setPostalCode] = useState('05-300');
   const [city, setCity] = useState('Mińsk Mazowiecki');
 
@@ -49,9 +51,8 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
   };
 
   // --- STAN LOGOWANIA ---
-  const [loginPhone, setLoginPhone] = useState('');
-  const [loginSmsStep, setLoginSmsStep] = useState(false);
-  const [loginSmsCode, setLoginSmsCode] = useState('');
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
 
   // Filtrowanie i podpowiedzi ulic (pełna baza Mińska Mazowieckiego)
@@ -76,8 +77,8 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
 
     const newUser: User = {
       name: name.trim(),
+      email: email.trim(),
       street,
-      phone: phone.trim() || undefined,
       postalCode: postalCode.trim() || '05-300',
       city: city.trim() || 'Mińsk Mazowiecki',
       seed: avatarSeed,
@@ -94,17 +95,27 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
     onDone(newUser);
   };
 
-  // Logowanie kodem SMS (symulacja)
-  const handleVerifySmsCode = (e: React.FormEvent) => {
+  // Logowanie standardowe: e-mail + hasło
+  const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (loginSmsCode.length < 4) {
-      setLoginError('Wprowadź 4-cyfrowy kod SMS');
+    const trimmedEmail = loginEmail.trim();
+    if (!trimmedEmail || !trimmedEmail.includes('@') || !trimmedEmail.includes('.')) {
+      setLoginError('Wprowadź prawidłowy adres e-mail');
       return;
     }
-    // Zalogowanie przykładowego lub wcześniej zarejestrowanego użytkownika
+    if (loginPassword.length < 6) {
+      setLoginError('Hasło musi mieć co najmniej 6 znaków');
+      return;
+    }
+    setLoginError('');
+
+    const emailPrefix = trimmedEmail.split('@')[0];
+    const formattedName = emailPrefix ? emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1) : demoUser.name;
+
     const loggedUser: User = {
       ...demoUser,
-      phone: loginPhone || demoUser.phone,
+      name: formattedName,
+      email: trimmedEmail,
       verified: true,
     };
     onDone(loggedUser);
@@ -257,7 +268,7 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
                   {authMode === 'register' ? 'Dołącz do społeczności' : 'Zaloguj się do konta'}
                 </h2>
                 <p className="text-[11.5px] text-ink-500">
-                  {authMode === 'register' ? 'Rejestracja zajmuje mniej niż 30 sekund.' : 'Wprowadź numer powiązany z kontem.'}
+                  {authMode === 'register' ? 'Rejestracja zajmuje mniej niż 30 sekund.' : 'Wprowadź e-mail i hasło powiązane z kontem.'}
                 </p>
               </div>
 
@@ -293,93 +304,55 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
             </div>
 
             {/* =========================================================================
-                LOGOWANIE
+                LOGOWANIE: STANDARDOWY E-MAIL I HASŁO
                 ========================================================================= */}
             {authMode === 'login' ? (
               <div className="space-y-3 pt-2">
-                {!loginSmsStep ? (
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      if (!loginPhone.trim()) {
-                        setLoginError('Wprowadź numer telefonu');
-                        return;
-                      }
-                      setLoginError('');
-                      setLoginSmsStep(true);
-                    }}
-                    className="space-y-3 max-w-sm"
-                  >
-                    <div className="rounded-2xl bg-white p-3.5 shadow-2xs border border-mist-300 space-y-2">
+                <form onSubmit={handleLoginSubmit} className="space-y-3 max-w-sm">
+                  <div className="rounded-2xl bg-white p-3.5 shadow-2xs border border-mist-300 space-y-3">
+                    <div className="space-y-1">
                       <label className="text-[12px] font-bold text-ink-700 flex items-center gap-1.5">
-                        <Phone className="h-3.5 w-3.5 text-coral" />
-                        Twój numer telefonu
+                        <Mail className="h-3.5 w-3.5 text-coral" />
+                        Adres e-mail
                       </label>
                       <input
-                        type="tel"
+                        type="email"
                         required
-                        value={loginPhone}
-                        onChange={(e) => setLoginPhone(e.target.value)}
-                        placeholder="np. 500 123 456"
+                        value={loginEmail}
+                        onChange={(e) => setLoginEmail(e.target.value)}
+                        placeholder="np. jan.kowalski@example.com"
                         className="h-10 w-full rounded-xl border border-mist-300 bg-mist/40 px-3 text-[14px] font-bold text-ink outline-none focus:ring-2 focus:ring-ink"
                       />
-                      <p className="text-[11px] text-ink-500">
-                        Wyślemy jednorazowy 4-cyfrowy kod SMS.
-                      </p>
                     </div>
 
-                    {loginError && (
-                      <p className="text-[11.5px] font-bold text-coral">{loginError}</p>
-                    )}
-
-                    <button
-                      type="submit"
-                      className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-ink text-[13.5px] font-bold text-white shadow-xs hover:bg-ink-700 active:scale-[0.98] transition-all cursor-pointer"
-                    >
-                      Wyślij kod SMS
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-                  </form>
-                ) : (
-                  <form onSubmit={handleVerifySmsCode} className="space-y-3 max-w-sm">
-                    <div className="rounded-2xl bg-white p-3.5 shadow-2xs border border-mist-300 space-y-2.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[12px] font-bold text-ink">Kod z wiadomości SMS</span>
-                        <button
-                          type="button"
-                          onClick={() => setLoginSmsStep(false)}
-                          className="text-[11px] font-bold text-coral hover:underline cursor-pointer"
-                        >
-                          Zmień numer
-                        </button>
-                      </div>
+                    <div className="space-y-1">
+                      <label className="text-[12px] font-bold text-ink-700 flex items-center gap-1.5">
+                        <KeyRound className="h-3.5 w-3.5 text-coral" />
+                        Hasło
+                      </label>
                       <input
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={6}
-                        value={loginSmsCode}
-                        onChange={(e) => setLoginSmsCode(e.target.value)}
-                        placeholder="1234"
-                        className="h-11 w-full rounded-xl border border-mist-300 bg-mist/40 text-center font-display text-[18px] font-bold tracking-[0.25em] text-ink outline-none focus:ring-2 focus:ring-ink"
+                        type="password"
+                        required
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
+                        placeholder="Twoje hasło"
+                        className="h-10 w-full rounded-xl border border-mist-300 bg-mist/40 px-3 text-[14px] font-bold text-ink outline-none focus:ring-2 focus:ring-ink"
                       />
-                      <p className="text-[10.5px] text-center text-ink-500">
-                        Wpisz dowolny kod (np. <b>1234</b>).
-                      </p>
                     </div>
+                  </div>
 
-                    {loginError && (
-                      <p className="text-[11.5px] font-bold text-coral">{loginError}</p>
-                    )}
+                  {loginError && (
+                    <p className="text-[11.5px] font-bold text-coral">{loginError}</p>
+                  )}
 
-                    <button
-                      type="submit"
-                      className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-ink text-[13.5px] font-bold text-white shadow-xs hover:bg-ink-700 active:scale-[0.98] transition-all cursor-pointer"
-                    >
-                      Zaloguj się do aplikacji
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-                  </form>
-                )}
+                  <button
+                    type="submit"
+                    className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-ink text-[13.5px] font-bold text-white shadow-xs hover:bg-ink-700 active:scale-[0.98] transition-all cursor-pointer"
+                  >
+                    Zaloguj się do konta
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                </form>
               </div>
             ) : (
               /* =========================================================================
@@ -603,33 +576,43 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
                       onClick={() => setRegisterStep(2)}
                       className="flex h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-ink text-[13.5px] font-bold text-white shadow-xs hover:bg-ink-700 active:scale-[0.98] transition-all disabled:opacity-40 cursor-pointer mt-1"
                     >
-                      Dalej: Weryfikacja kontaktu
+                      Dalej: Dane logowania
                       <ArrowRight className="h-4 w-4" />
                     </button>
                   </div>
                 )}
 
-                {/* --- KROK 2: DANE KONTAKTOWE (TELEFON) --- */}
+                {/* --- KROK 2: DANE LOGOWANIA (STANDARDOWY E-MAIL I HASŁO) --- */}
                 {registerStep === 2 && (
                   <div className="space-y-3 pt-1">
-                    <div className="rounded-2xl bg-white p-3.5 shadow-2xs border border-mist-300 space-y-2">
-                      <label className="text-[12px] font-bold text-ink block">
-                        Twój numer telefonu
-                      </label>
-                      <p className="text-[11px] text-ink-500 leading-snug">
-                        Służy do logowania na nowym telefonie oraz kontaktu w sprawach sąsiedzkich.
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <span className="flex h-10 items-center rounded-xl border border-mist-300 bg-mist/60 px-2.5 text-[13px] font-bold text-ink">
-                          🇵🇱 +48
-                        </span>
+                    <div className="rounded-2xl bg-white p-3.5 shadow-2xs border border-mist-300 space-y-3">
+                      <div className="space-y-1">
+                        <label className="text-[12px] font-bold text-ink-700 flex items-center gap-1.5">
+                          <Mail className="h-3.5 w-3.5 text-coral" />
+                          Adres e-mail
+                        </label>
                         <input
-                          type="tel"
+                          type="email"
                           required
-                          value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
-                          placeholder="np. 500 123 456"
-                          className="h-10 flex-1 rounded-xl border border-mist-300 bg-mist/40 px-3 text-[14px] font-bold text-ink outline-none focus:ring-2 focus:ring-ink"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="np. jan.kowalski@example.com"
+                          className="h-10 w-full rounded-xl border border-mist-300 bg-mist/40 px-3 text-[14px] font-bold text-ink outline-none focus:ring-2 focus:ring-ink"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[12px] font-bold text-ink-700 flex items-center gap-1.5">
+                          <KeyRound className="h-3.5 w-3.5 text-coral" />
+                          Hasło (min. 6 znaków)
+                        </label>
+                        <input
+                          type="password"
+                          required
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="Wpisz bezpieczne hasło"
+                          className="h-10 w-full rounded-xl border border-mist-300 bg-mist/40 px-3 text-[14px] font-bold text-ink outline-none focus:ring-2 focus:ring-ink"
                         />
                       </div>
                     </div>
@@ -637,13 +620,13 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
                     <div className="rounded-2xl bg-sand-50 p-3 border border-sand-200 text-[11px] text-sand-800 leading-relaxed flex items-start gap-2">
                       <ShieldCheck className="h-4 w-4 text-sand-700 shrink-0 mt-0.5" />
                       <span>
-                        Numer telefonu <b>nie jest upubliczniany w internecie</b>. Kontakt odbywa się przez wewnętrzny czat.
+                        Adres e-mail <b>nie jest upubliczniany w serwisie</b>. Sąsiedzi widzą wyłącznie Twoje imię i ulicę.
                       </span>
                     </div>
 
                     <button
                       type="button"
-                      disabled={!phone.trim() || phone.replace(/\D/g, '').length < 7}
+                      disabled={!email.trim() || !email.includes('@') || password.length < 6}
                       onClick={() => setRegisterStep(3)}
                       className="flex h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-ink text-[13.5px] font-bold text-white shadow-xs hover:bg-ink-700 active:scale-[0.98] transition-all disabled:opacity-40 cursor-pointer"
                     >
