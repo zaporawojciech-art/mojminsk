@@ -4,11 +4,6 @@ import {
   Bus,
   Car,
   Check,
-  Cloud,
-  CloudLightning,
-  CloudMoon,
-  CloudRain,
-  CloudSun,
   Coffee,
   Droplets,
   Gauge,
@@ -17,14 +12,11 @@ import {
   Megaphone,
   MessageCircle,
   MessagesSquare,
-  Moon,
   Phone,
   Plus,
   RefreshCw,
   ShieldCheck,
-  Snowflake,
   Sparkles,
-  Sun,
   TriangleAlert,
   Users,
   Vote,
@@ -56,7 +48,11 @@ import { AppLink } from '../components/AppLink';
 import { buildAdUrl, buildZditmUrl, TAB_PATHS } from '../router/urlUtils';
 import type { TabId } from '../components/BottomNav';
 import { useWeather } from '../hooks/useWeather';
-import { WeatherIllustration, WeatherInfographicsRow } from '../components/WeatherInfographics';
+import {
+  WeatherIllustration,
+  WeatherInfographicsRow,
+  type WeatherIconKind,
+} from '../components/WeatherInfographics';
 import type { WeatherData } from '../services/weatherService';
 
 const lineTone: Record<LineId, string> = { M2: 'bg-sky', M3: 'bg-sand', M4: 'bg-coral' };
@@ -71,32 +67,14 @@ const clock = (minsFromNow: number) => {
 };
 
 function HourlyWeatherIcon({ icon, isDay }: { icon: string; isDay: boolean }) {
-  switch (icon) {
-    case 'sun':
-      return <Sun className="h-4 w-4 text-amber-500" aria-hidden />;
-    case 'partly-cloudy':
-      return isDay ? (
-        <CloudSun className="h-4 w-4 text-amber-500" aria-hidden />
-      ) : (
-        <CloudMoon className="h-4 w-4 text-sky-300" aria-hidden />
-      );
-    case 'cloudy':
-      return <Cloud className="h-4 w-4 text-ink-600" aria-hidden />;
-    case 'rain':
-      return <CloudRain className="h-4 w-4 text-sky-600" aria-hidden />;
-    case 'thunderstorm':
-      return <CloudLightning className="h-4 w-4 text-amber-600" aria-hidden />;
-    case 'snow':
-      return <Snowflake className="h-4 w-4 text-sky-400" aria-hidden />;
-    case 'moon':
-      return <Moon className="h-4 w-4 text-sky-300" aria-hidden />;
-    default:
-      return isDay ? (
-        <Sun className="h-4 w-4 text-amber-500" aria-hidden />
-      ) : (
-        <Moon className="h-4 w-4 text-sky-300" aria-hidden />
-      );
-  }
+  return (
+    <WeatherIllustration
+      icon={(icon as WeatherIconKind) || 'sun'}
+      isDay={isDay}
+      animated={false}
+      className="h-6 w-6"
+    />
+  );
 }
 
 function WeatherCard({
@@ -220,7 +198,7 @@ function WeatherCard({
             {weather.daily.map((d, idx) => (
               <div key={d.date} className="flex items-center justify-between py-2 px-1 text-[12px]">
                 <div className="flex items-center gap-2 w-28 shrink-0">
-                  <WeatherIllustration icon={d.icon} isDay className="h-6 w-6" />
+                  <WeatherIllustration icon={d.icon} isDay animated={false} className="h-7 w-7" />
                   <span className="font-bold text-ink">{d.dayName}</span>
                   {idx === 0 && <span className="text-[9px] text-sky-700 font-extrabold">dziś</span>}
                 </div>
@@ -377,7 +355,7 @@ function DesktopWeatherWidget({
         <div className="flex flex-col gap-3">
           <div className="flex flex-col xl:flex-row xl:items-center gap-4">
             <div className="flex items-center gap-3 shrink-0">
-              <WeatherIllustration icon={weather.icon} isDay={weather.isDay} className="h-[72px] w-[72px]" />
+              <WeatherIllustration icon={weather.icon} isDay={weather.isDay} className="h-20 w-20 2xl:h-22 2xl:w-22" />
               <div>
                 <div className="flex items-baseline gap-2">
                   <span className="font-display text-[40px] font-bold leading-none tracking-tight">{weather.temp}°</span>
@@ -421,7 +399,7 @@ function DesktopWeatherWidget({
                   <span className={cn('text-[9.5px] font-bold', i === 0 ? 'text-white/80' : 'text-ink-500')}>
                     {i === 0 ? 'Teraz' : item.timeStr}
                   </span>
-                  <span className="my-1 h-4 flex items-center">
+                  <span className="my-0.5 h-6 w-6 flex items-center justify-center">
                     <HourlyWeatherIcon icon={item.icon} isDay={item.isDay} />
                   </span>
                   <span className="font-display text-[13px] font-bold leading-none">{item.temp}°</span>
@@ -468,16 +446,16 @@ function DesktopWeatherWidget({
                 </div>
 
                 <div className="my-1.5 flex flex-col items-center">
-                  <WeatherIllustration icon={d.icon} isDay className="h-8 w-8" />
-                  <p className="text-[9.5px] font-semibold text-ink line-clamp-1 mt-0.5 max-w-[80px]" title={d.condition}>
+                  <WeatherIllustration icon={d.icon} isDay animated={false} className="h-11 w-11" />
+                  <p className="text-[10px] font-bold text-ink line-clamp-1 mt-1 max-w-[85px]" title={d.condition}>
                     {d.condition}
                   </p>
                   {d.rainChance > 0 ? (
-                    <span className="text-[9px] font-bold text-sky-700 mt-0.5">
+                    <span className="text-[9.5px] font-extrabold text-sky-700 mt-0.5">
                       {d.rainChance}% ({d.rainSum} mm)
                     </span>
                   ) : (
-                    <span className="text-[9px] text-ink-400 mt-0.5">Bez opadów</span>
+                    <span className="text-[9px] font-semibold text-ink-400 mt-0.5">Bez opadów</span>
                   )}
                 </div>
 

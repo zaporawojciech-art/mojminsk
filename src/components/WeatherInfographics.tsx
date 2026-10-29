@@ -1,231 +1,371 @@
 /**
- * Infografiki pogodowe mójMińsk – lekkie, animowane SVG bez zewnętrznych bibliotek.
- * - WeatherIllustration: animowana scena aktualnej pogody (słońce, chmury, deszcz, śnieg, burza, mgła, noc)
- * - CloudCoverTile / RainTile / WindTile / UvTile / SunTile / AirTile: mini-infografiki kluczowych parametrów
+ * Infografiki pogodowe mójMińsk – wysokiej jakości wektorowe SVG z bogatą kolorystyką,
+ * wyraźnymi obrysami (nigdy nie znikającymi na białym tle) oraz animacjami.
+ *
+ * - WeatherIllustration / WeatherIcon: słońce, księżyc, częściowe zachmurzenie,
+ *   chmury (pochmurno), deszcz / mżawka, burza, śnieg, mgła.
+ * - CloudCoverTile / RainTile / WindTile / UvTile / SunTile / AirTile:
+ *   nowoczesne mini-infografiki kluczowych parametrów meteo.
  */
+import { useId } from 'react';
 import { cn } from './ui';
 import type { WeatherData } from '../services/weatherService';
 
-type IconKind = WeatherData['icon'];
+export type WeatherIconKind = WeatherData['icon'];
 
-/* ------------------------------------------------------------------ */
-/* 1. Animowana ilustracja aktualnej pogody                            */
-/* ------------------------------------------------------------------ */
-
-function Sun({ cx = 38, cy = 34, r = 15 }: { cx?: number; cy?: number; r?: number }) {
-  return (
-    <g>
-      <g className="wx-spin" style={{ transformOrigin: `${cx}px ${cy}px` }}>
-        {Array.from({ length: 8 }).map((_, i) => {
-          const a = (i * Math.PI) / 4;
-          return (
-            <line
-              key={i}
-              x1={cx + Math.cos(a) * (r + 4)}
-              y1={cy + Math.sin(a) * (r + 4)}
-              x2={cx + Math.cos(a) * (r + 10)}
-              y2={cy + Math.sin(a) * (r + 10)}
-              stroke="#F2B544"
-              strokeWidth="3"
-              strokeLinecap="round"
-            />
-          );
-        })}
-      </g>
-      <circle cx={cx} cy={cy} r={r} fill="url(#wxSun)" />
-    </g>
-  );
-}
-
-function Moon({ cx = 40, cy = 32 }: { cx?: number; cy?: number }) {
-  return (
-    <g>
-      <circle cx={cx} cy={cy} r="14" fill="#F4E7C5" />
-      <circle cx={cx + 7} cy={cy - 5} r="12" fill="url(#wxNightBg)" />
-      <circle cx={cx - 22} cy={cy - 14} r="1.3" fill="#fff" className="wx-twinkle" />
-      <circle cx={cx + 22} cy={cy + 10} r="1" fill="#fff" className="wx-twinkle" style={{ animationDelay: '0.8s' }} />
-    </g>
-  );
-}
-
-function CloudShape({
-  x,
-  y,
-  scale = 1,
-  tone = 'light',
-  drift = true,
-}: {
-  x: number;
-  y: number;
-  scale?: number;
-  tone?: 'light' | 'grey' | 'dark';
-  drift?: boolean;
-}) {
-  const fill = tone === 'dark' ? 'url(#wxCloudDark)' : tone === 'grey' ? 'url(#wxCloudGrey)' : 'url(#wxCloudLight)';
-  return (
-    <g className={drift ? 'wx-drift' : undefined}>
-      <g transform={`translate(${x} ${y}) scale(${scale})`}>
-        <path
-          d="M10 30 a10 10 0 0 1 2-19.8 A14 14 0 0 1 39 8 a11 11 0 0 1 11 22 z"
-          fill={fill}
-          stroke={tone === 'light' ? '#8E9BB0' : tone === 'grey' ? '#6B788D' : '#3B4558'}
-          strokeWidth="1.4"
-          strokeLinejoin="round"
-          filter="url(#wxShadow)"
-        />
-      </g>
-    </g>
-  );
-}
-
-function RainDrops({ heavy = false }: { heavy?: boolean }) {
-  const drops = heavy ? [24, 34, 44, 54, 64, 29, 49, 59] : [30, 44, 58, 37, 51];
-  return (
-    <g>
-      {drops.map((x, i) => (
-        <line
-          key={i}
-          x1={x}
-          y1={62}
-          x2={x - 3}
-          y2={70}
-          stroke="#4A8FD9"
-          strokeWidth="2.4"
-          strokeLinecap="round"
-          className="wx-rain"
-          style={{ animationDelay: `${(i * 0.17) % 0.9}s` }}
-        />
-      ))}
-    </g>
-  );
-}
-
-function SnowFlakes() {
-  return (
-    <g>
-      {[28, 42, 56, 35, 50].map((x, i) => (
-        <circle
-          key={i}
-          cx={x}
-          cy={64}
-          r="2.2"
-          fill="#fff"
-          stroke="#9CC3EC"
-          strokeWidth="0.8"
-          className="wx-snow"
-          style={{ animationDelay: `${i * 0.35}s` }}
-        />
-      ))}
-    </g>
-  );
-}
+/* ================================================================== */
+/* 1. GŁÓWNA ILUSTRACJA / IKONA POGODY                                */
+/* ================================================================== */
 
 export function WeatherIllustration({
   icon,
   isDay = true,
+  animated = true,
   className,
 }: {
-  icon: IconKind;
+  icon: WeatherIconKind;
   isDay?: boolean;
+  animated?: boolean;
   className?: string;
 }) {
+  const uid = useId().replace(/:/g, '_');
   const night = !isDay;
+
   return (
-    <svg viewBox="0 0 90 84" className={cn('h-20 w-20 shrink-0 overflow-visible', className)} aria-hidden>
+    <svg
+      viewBox="0 0 64 64"
+      className={cn('h-10 w-10 shrink-0 overflow-visible select-none', className)}
+      aria-hidden="true"
+    >
       <defs>
-        <radialGradient id="wxSun" cx="35%" cy="35%" r="70%">
-          <stop offset="0%" stopColor="#FFF4D6" />
-          <stop offset="55%" stopColor="#F7C15A" />
-          <stop offset="100%" stopColor="#E9A23B" />
+        {/* Słońce: promienisty, ciepły gradient */}
+        <radialGradient id={`sunGrad_${uid}`} cx="35%" cy="35%" r="65%">
+          <stop offset="0%" stopColor="#FFF275" />
+          <stop offset="50%" stopColor="#FBBF24" />
+          <stop offset="100%" stopColor="#F59E0B" />
         </radialGradient>
-        <linearGradient id="wxCloudLight" x1="0" y1="0" x2="0" y2="1">
+
+        {/* Księżyc */}
+        <linearGradient id={`moonGrad_${uid}`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#FEF08A" />
+          <stop offset="100%" stopColor="#F59E0B" />
+        </linearGradient>
+
+        {/* Jasna chmura (front): wysoki kontrast na białym tle dzięki ciemniejszej bazie */}
+        <linearGradient id={`cloudFront_${uid}`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#FFFFFF" />
-          <stop offset="100%" stopColor="#D3DCEA" />
+          <stop offset="60%" stopColor="#E2E8F0" />
+          <stop offset="100%" stopColor="#CBD5E1" />
         </linearGradient>
-        <linearGradient id="wxCloudGrey" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#C3CCDA" />
-          <stop offset="100%" stopColor="#8D9AAF" />
+
+        {/* Tylna chmura (głębia 3D, pochmurno) */}
+        <linearGradient id={`cloudBack_${uid}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#94A3B8" />
+          <stop offset="100%" stopColor="#64748B" />
         </linearGradient>
-        <linearGradient id="wxCloudDark" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#7A869A" />
-          <stop offset="100%" stopColor="#465267" />
+
+        {/* Ciemna chmura deszczowa / burzowa */}
+        <linearGradient id={`cloudRain_${uid}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#64748B" />
+          <stop offset="60%" stopColor="#475569" />
+          <stop offset="100%" stopColor="#334155" />
         </linearGradient>
-        <filter id="wxShadow" x="-20%" y="-20%" width="140%" height="160%">
-          <feDropShadow dx="0" dy="2.5" stdDeviation="2" floodColor="#1F1D2B" floodOpacity="0.22" />
-        </filter>
-        <linearGradient id="wxNightBg" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#C7D6EC" />
-          <stop offset="100%" stopColor="#B7C9E3" />
+
+        {/* Błyskawica */}
+        <linearGradient id={`boltGrad_${uid}`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#FEF08A" />
+          <stop offset="50%" stopColor="#FACC15" />
+          <stop offset="100%" stopColor="#F97316" />
+        </linearGradient>
+
+        {/* Krople deszczu */}
+        <linearGradient id={`dropGrad_${uid}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#38BDF8" />
+          <stop offset="100%" stopColor="#0284C7" />
         </linearGradient>
       </defs>
 
-      {icon === 'sun' && <Sun cx={45} cy={40} r={18} />}
+      {/* 1. SŁOŃCE (BEZCHMURNIE DZIEŃ) */}
+      {icon === 'sun' && (
+        <g>
+          {/* Promienie */}
+          <g className={animated ? 'wx-spin' : undefined} style={{ transformOrigin: '32px 32px' }}>
+            {Array.from({ length: 8 }).map((_, i) => {
+              const a = (i * Math.PI) / 4;
+              return (
+                <line
+                  key={i}
+                  x1={32 + Math.cos(a) * 16}
+                  y1={32 + Math.sin(a) * 16}
+                  x2={32 + Math.cos(a) * 23}
+                  y2={32 + Math.sin(a) * 23}
+                  stroke="#F59E0B"
+                  strokeWidth="3.2"
+                  strokeLinecap="round"
+                />
+              );
+            })}
+          </g>
+          {/* Korona i dysk */}
+          <circle cx="32" cy="32" r="14.5" fill={`url(#sunGrad_${uid})`} stroke="#EA580C" strokeWidth="1.2" />
+          <circle cx="28" cy="28" r="4.5" fill="#FFFFFF" fillOpacity="0.45" />
+        </g>
+      )}
 
-      {icon === 'moon' && <Moon cx={45} cy={40} />}
+      {/* 2. KSIĘŻYC (BEZCHMURNIE NOC) */}
+      {icon === 'moon' && (
+        <g>
+          <path
+            d="M37 15 C26 15 18 23 18 33 C18 43 26 51 36 51 C39 51 42 50 45 48 C37 46 31 39 31 31 C31 22 37 17 45 17 C42 15 39 15 37 15 Z"
+            fill={`url(#moonGrad_${uid})`}
+            stroke="#D97706"
+            strokeWidth="1.2"
+          />
+          {/* Gwiazdy */}
+          <g className={animated ? 'wx-twinkle' : undefined}>
+            <polygon points="17,17 18.5,13 20,17 24,18.5 20,20 18.5,24 17,20 13,18.5" fill="#F8FAFC" />
+            <polygon points="46,38 47,35 48,38 51,39 48,40 47,43 46,40 43,39" fill="#F8FAFC" />
+          </g>
+        </g>
+      )}
 
+      {/* 3. CZĘŚCIOWO ZACHMURZONE (SŁOŃCE / KSIĘŻYC + CHMURA) */}
       {icon === 'partly-cloudy' && (
-        <>
-          {night ? <Moon cx={34} cy={30} /> : <Sun cx={34} cy={30} r={14} />}
-          <CloudShape x={22} y={34} scale={1.15} />
-        </>
-      )}
-
-      {icon === 'cloudy' && (
-        <>
-          <CloudShape x={6} y={20} scale={0.9} tone="grey" />
-          <CloudShape x={24} y={32} scale={1.15} />
-        </>
-      )}
-
-      {icon === 'fog' && (
-        <>
-          <CloudShape x={18} y={18} scale={1.1} tone="grey" drift={false} />
-          {[56, 64, 72].map((y, i) => (
-            <line
-              key={y}
-              x1={14 + i * 4}
-              y1={y}
-              x2={76 - i * 4}
-              y2={y}
-              stroke="#8D9AAF"
-              strokeWidth="3"
-              strokeLinecap="round"
-              className="wx-drift"
-              style={{ animationDelay: `${i * 0.6}s` }}
+        <g>
+          {/* Słońce / Księżyc w tle po prawej stronie */}
+          {night ? (
+            <path
+              d="M40 14 C33 14 27 19 27 26 C27 32 32 38 39 38 C41 38 43 37 45 36 C39 34 35 29 35 23 C35 17 39 13 45 13 C43 14 41 14 40 14 Z"
+              fill={`url(#moonGrad_${uid})`}
+              stroke="#D97706"
+              strokeWidth="1"
             />
-          ))}
-        </>
+          ) : (
+            <g>
+              <g className={animated ? 'wx-spin' : undefined} style={{ transformOrigin: '40px 22px' }}>
+                {[0, 45, 90, 135, 180, 225, 270, 315].map((deg, i) => {
+                  const rad = (deg * Math.PI) / 180;
+                  return (
+                    <line
+                      key={i}
+                      x1={40 + Math.cos(rad) * 12}
+                      y1={22 + Math.sin(rad) * 12}
+                      x2={40 + Math.cos(rad) * 17}
+                      y2={22 + Math.sin(rad) * 17}
+                      stroke="#F59E0B"
+                      strokeWidth="2.6"
+                      strokeLinecap="round"
+                    />
+                  );
+                })}
+              </g>
+              <circle cx="40" cy="22" r="10.5" fill={`url(#sunGrad_${uid})`} stroke="#EA580C" strokeWidth="1" />
+            </g>
+          )}
+
+          {/* Wyraźna, mięsista chmura na pierwszym planie */}
+          <g className={animated ? 'wx-drift' : undefined}>
+            {/* Cień pod chmurą */}
+            <path
+              d="M18 47 a9 9 0 0 1 1-17.8 A13 13 0 0 1 43 27 a10 10 0 0 1 9 19 z"
+              fill="#64748B"
+              fillOpacity="0.22"
+              transform="translate(0 2)"
+            />
+            {/* Chmura */}
+            <path
+              d="M18 46 a9 9 0 0 1 1-17.8 A13 13 0 0 1 43 26 a10 10 0 0 1 9 19 z"
+              fill={`url(#cloudFront_${uid})`}
+              stroke="#64748B"
+              strokeWidth="1.8"
+              strokeLinejoin="round"
+            />
+            {/* Biały refleks na grzbiecie chmury */}
+            <path
+              d="M21 28.5 A11.5 11.5 0 0 1 39 25.5"
+              fill="none"
+              stroke="#FFFFFF"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+            />
+          </g>
+        </g>
       )}
 
+      {/* 4. POCHMURNO (DWIE WARSTWY CHMUR, 100% WIDOCZNE NA BIAŁYM TLE) */}
+      {icon === 'cloudy' && (
+        <g>
+          {/* Tylna ciemniejsza chmura */}
+          <g transform="translate(6 -4) scale(0.9)">
+            <path
+              d="M18 45 a9 9 0 0 1 1-17.8 A13 13 0 0 1 43 25 a10 10 0 0 1 9 19 z"
+              fill={`url(#cloudBack_${uid})`}
+              stroke="#475569"
+              strokeWidth="1.6"
+              strokeLinejoin="round"
+            />
+          </g>
+
+          {/* Przednia jasna chmura z mocnym obrysem i cieniem */}
+          <g className={animated ? 'wx-drift' : undefined} transform="translate(-2 2)">
+            <path
+              d="M16 46 a9.5 9.5 0 0 1 1-18.8 A14 14 0 0 1 44 25 a11 11 0 0 1 10 20 z"
+              fill="#64748B"
+              fillOpacity="0.25"
+              transform="translate(0 2.5)"
+            />
+            <path
+              d="M16 46 a9.5 9.5 0 0 1 1-18.8 A14 14 0 0 1 44 25 a11 11 0 0 1 10 20 z"
+              fill={`url(#cloudFront_${uid})`}
+              stroke="#475569"
+              strokeWidth="1.8"
+              strokeLinejoin="round"
+            />
+            {/* Światło na chmurze */}
+            <path
+              d="M20 27.5 A12 12 0 0 1 40 24.5"
+              fill="none"
+              stroke="#FFFFFF"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </g>
+        </g>
+      )}
+
+      {/* 5. DESZCZ / MŻAWKA */}
       {icon === 'rain' && (
-        <>
-          <CloudShape x={6} y={14} scale={0.85} tone="grey" />
-          <CloudShape x={20} y={24} scale={1.15} tone="grey" />
-          <RainDrops />
-        </>
+        <g>
+          {/* Ciemna chmura deszczowa */}
+          <g className={animated ? 'wx-drift' : undefined}>
+            <path
+              d="M15 39 a8.5 8.5 0 0 1 1-16.8 A13 13 0 0 1 41 20 a10 10 0 0 1 10 18 z"
+              fill="#334155"
+              fillOpacity="0.25"
+              transform="translate(0 2)"
+            />
+            <path
+              d="M15 38 a8.5 8.5 0 0 1 1-16.8 A13 13 0 0 1 41 19 a10 10 0 0 1 10 18 z"
+              fill={`url(#cloudRain_${uid})`}
+              stroke="#334155"
+              strokeWidth="1.8"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M18 21.5 A11 11 0 0 1 37 19"
+              fill="none"
+              stroke="#94A3B8"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+            />
+          </g>
+
+          {/* Wyraziste, krople deszczu ze skośnym spadem */}
+          <g className={animated ? 'wx-rain' : undefined}>
+            {[
+              { x: 20, y: 44 },
+              { x: 30, y: 43 },
+              { x: 40, y: 44 },
+              { x: 25, y: 51 },
+              { x: 35, y: 51 },
+            ].map((drop, i) => (
+              <line
+                key={i}
+                x1={drop.x}
+                y1={drop.y}
+                x2={drop.x - 3}
+                y2={drop.y + 7}
+                stroke="#0284C7"
+                strokeWidth="2.8"
+                strokeLinecap="round"
+              />
+            ))}
+          </g>
+        </g>
       )}
 
-      {icon === 'snow' && (
-        <>
-          <CloudShape x={18} y={22} scale={1.15} tone="grey" />
-          <SnowFlakes />
-        </>
-      )}
-
+      {/* 6. BURZA Z PIORUNAMI */}
       {icon === 'thunderstorm' && (
-        <>
-          <CloudShape x={18} y={20} scale={1.2} tone="dark" />
-          <path d="M46 54 L38 68 L45 68 L40 80 L54 63 L47 63 L52 54 Z" fill="#F7C15A" className="wx-flash" />
-          <RainDrops heavy />
-        </>
+        <g>
+          {/* Ciemna burzowa chmura */}
+          <path
+            d="M14 36 a8.5 8.5 0 0 1 1-16.8 A13 13 0 0 1 41 17 a10 10 0 0 1 10 18 z"
+            fill="#1E293B"
+            stroke="#0F172A"
+            strokeWidth="1.8"
+            strokeLinejoin="round"
+          />
+
+          {/* Błyskawica wychodząca z chmury */}
+          <polygon
+            points="33,26 24,40 31,40 26,56 42,38 35,38"
+            fill={`url(#boltGrad_${uid})`}
+            stroke="#CA8A04"
+            strokeWidth="1.2"
+            className={animated ? 'wx-flash' : undefined}
+          />
+
+          {/* Dwie krople deszczu po bokach */}
+          <line x1="18" y1="44" x2="15" y2="52" stroke="#0284C7" strokeWidth="2.4" strokeLinecap="round" />
+          <line x1="46" y1="43" x2="43" y2="51" stroke="#0284C7" strokeWidth="2.4" strokeLinecap="round" />
+        </g>
+      )}
+
+      {/* 7. ŚNIEG */}
+      {icon === 'snow' && (
+        <g>
+          {/* Chmura */}
+          <path
+            d="M15 37 a8.5 8.5 0 0 1 1-16.8 A13 13 0 0 1 41 18 a10 10 0 0 1 10 18 z"
+            fill={`url(#cloudRain_${uid})`}
+            stroke="#334155"
+            strokeWidth="1.8"
+            strokeLinejoin="round"
+          />
+
+          {/* Gwiazdki śniegu / płatki */}
+          <g className={animated ? 'wx-snow' : undefined}>
+            {[
+              { cx: 20, cy: 46 },
+              { cx: 32, cy: 45 },
+              { cx: 44, cy: 46 },
+              { cx: 26, cy: 53 },
+              { cx: 38, cy: 53 },
+            ].map((p, i) => (
+              <g key={i}>
+                <circle cx={p.cx} cy={p.cy} r="2.2" fill="#38BDF8" stroke="#FFFFFF" strokeWidth="0.8" />
+              </g>
+            ))}
+          </g>
+        </g>
+      )}
+
+      {/* 8. MGŁA */}
+      {icon === 'fog' && (
+        <g>
+          <path
+            d="M17 31 a7.5 7.5 0 0 1 1-14.8 A11.5 11.5 0 0 1 39 14 a9 9 0 0 1 9 16 z"
+            fill={`url(#cloudFront_${uid})`}
+            stroke="#64748B"
+            strokeWidth="1.6"
+            strokeLinejoin="round"
+          />
+          {/* Wyraźne poziome pasy mgły */}
+          <line x1="12" y1="38" x2="52" y2="38" stroke="#64748B" strokeWidth="3" strokeLinecap="round" />
+          <line x1="16" y1="45" x2="48" y2="45" stroke="#94A3B8" strokeWidth="3" strokeLinecap="round" />
+          <line x1="20" y1="52" x2="44" y2="52" stroke="#CBD5E1" strokeWidth="3" strokeLinecap="round" />
+        </g>
       )}
     </svg>
   );
 }
 
-/* ------------------------------------------------------------------ */
-/* 2. Mini-infografiki parametrów                                       */
-/* ------------------------------------------------------------------ */
+/** Kompatybilny alias dla czytelności */
+export const WeatherIcon = WeatherIllustration;
+
+/* ================================================================== */
+/* 2. MINI-INFOGRAFIKI PARAMETRÓW METEO                               */
+/* ================================================================== */
 
 function Tile({
   label,
@@ -243,87 +383,111 @@ function Tile({
   return (
     <div
       className={cn(
-        'flex items-center gap-2.5 rounded-xl bg-white/80 border border-white/70 px-2.5 py-2 shadow-2xs min-w-0',
+        'group flex items-center gap-3 rounded-xl bg-white/90 border border-white/80 p-2.5 shadow-2xs transition-all hover:bg-white hover:shadow-xs min-w-0',
         className,
       )}
     >
       <div className="shrink-0">{children}</div>
-      <div className="min-w-0">
-        <p className="text-[9.5px] font-bold uppercase tracking-wide text-ink-400 leading-none">{label}</p>
-        <p className="mt-1 font-display text-[14px] font-extrabold text-ink leading-none truncate">{value}</p>
-        {sub && <p className="mt-0.5 text-[10px] font-medium text-ink-500 leading-tight truncate">{sub}</p>}
+      <div className="min-w-0 flex-1">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400 leading-none">{label}</p>
+        <p className="mt-1 font-display text-[15px] font-extrabold text-ink leading-tight truncate">{value}</p>
+        {sub && <p className="mt-0.5 text-[10.5px] font-semibold text-ink-500 leading-tight truncate">{sub}</p>}
       </div>
     </div>
   );
 }
 
-/** Pierścień postępu z ikoną chmury w środku */
+/** Pierścień postępu zachmurzenia z chmurą w centrum */
 export function CloudCoverTile({ value }: { value: number }) {
-  const r = 15;
+  const r = 14;
   const c = 2 * Math.PI * r;
+  const clamped = Math.min(100, Math.max(0, value));
   const label =
-    value < 15 ? 'Bezchmurnie' : value < 40 ? 'Małe zachm.' : value < 75 ? 'Umiarkowane' : 'Całkowite';
+    clamped < 15 ? 'Bezchmurnie' : clamped < 45 ? 'Małe zachmurzenie' : clamped < 75 ? 'Umiarkowane' : 'Całkowite';
+
   return (
-    <Tile label="Zachmurzenie" value={`${value}%`} sub={label}>
-      <svg viewBox="0 0 40 40" className="h-10 w-10">
-        <circle cx="20" cy="20" r={r} fill="none" stroke="#E4EBF5" strokeWidth="4" />
-        <circle
-          cx="20"
-          cy="20"
-          r={r}
-          fill="none"
-          stroke="#8CA9D3"
-          strokeWidth="4"
-          strokeLinecap="round"
-          strokeDasharray={`${(value / 100) * c} ${c}`}
-          transform="rotate(-90 20 20)"
-          className="transition-all duration-700"
-        />
-        <path
-          d="M14 25 a4 4 0 0 1 .8-7.9 A5.6 5.6 0 0 1 25.6 16 a4.4 4.4 0 0 1 .4 9 z"
-          fill="#7F8DA3"
-        />
-      </svg>
+    <Tile label="Zachmurzenie" value={`${clamped}%`} sub={label}>
+      <div className="relative h-11 w-11 flex items-center justify-center">
+        <svg viewBox="0 0 36 36" className="h-11 w-11 -rotate-90">
+          <circle cx="18" cy="18" r={r} fill="none" stroke="#E2E8F0" strokeWidth="3.6" />
+          <circle
+            cx="18"
+            cy="18"
+            r={r}
+            fill="none"
+            stroke="#0284C7"
+            strokeWidth="3.6"
+            strokeLinecap="round"
+            strokeDasharray={`${(clamped / 100) * c} ${c}`}
+            className="transition-all duration-700"
+          />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <svg viewBox="0 0 24 24" className="h-5 w-5">
+            <path
+              d="M7 16 a3 3 0 0 1 .4-5.9 A4.5 4.5 0 0 1 15.5 9 a3.5 3.5 0 0 1 3.5 7 z"
+              fill="#64748B"
+            />
+          </svg>
+        </div>
+      </div>
     </Tile>
   );
 }
 
-/** Kropla wypełniona proporcjonalnie do prawdopodobieństwa opadów */
+/** Kropla deszczu z wypełnieniem płynem i wolumenem opadów */
 export function RainTile({ chance, next12h }: { chance: number; next12h: number }) {
-  const fillY = 36 - (Math.min(100, Math.max(0, chance)) / 100) * 30;
+  const uid = useId().replace(/:/g, '_');
+  const clampedChance = Math.min(100, Math.max(0, chance));
+  const fillHeight = (clampedChance / 100) * 32;
+  const fillY = 36 - fillHeight;
+
   return (
     <Tile
       label="Opady"
-      value={`${chance}%`}
+      value={`${clampedChance}%`}
       sub={next12h > 0 ? `${next12h} mm w 12h` : 'Brak opadów w 12h'}
     >
-      <svg viewBox="0 0 40 40" className="h-10 w-10">
+      <svg viewBox="0 0 36 36" className="h-11 w-11">
         <defs>
-          <clipPath id="dropClip">
-            <path d="M20 4 C20 4 9 17 9 25 a11 11 0 0 0 22 0 C31 17 20 4 20 4 z" />
+          <clipPath id={`dropClip_${uid}`}>
+            <path d="M18 3 C18 3 7 15 7 23 a11 11 0 0 0 22 0 C29 15 18 3 18 3 z" />
           </clipPath>
         </defs>
-        <path d="M20 4 C20 4 9 17 9 25 a11 11 0 0 0 22 0 C31 17 20 4 20 4 z" fill="#E4EEF9" />
-        <g clipPath="url(#dropClip)">
-          <rect x="0" y={fillY} width="40" height="40" fill="#4A8FD9" className="transition-all duration-700" />
+
+        {/* Tło kropli */}
+        <path d="M18 3 C18 3 7 15 7 23 a11 11 0 0 0 22 0 C29 15 18 3 18 3 z" fill="#E0F2FE" />
+
+        {/* Poziom wody z falą */}
+        <g clipPath={`url(#dropClip_${uid})`}>
+          <rect
+            x="0"
+            y={fillY}
+            width="36"
+            height="36"
+            fill="#0284C7"
+            className="transition-all duration-700"
+          />
           <path
-            d={`M0 ${fillY} q5 -2 10 0 t10 0 t10 0 t10 0 v4 h-40 z`}
-            fill="#7DB1E8"
+            d={`M0 ${fillY} q4.5 -2.5 9 0 t9 0 t9 0 t9 0 v5 h-36 z`}
+            fill="#38BDF8"
             className="wx-wave"
           />
         </g>
+
+        {/* Wyrazisty kontur kropli */}
         <path
-          d="M20 4 C20 4 9 17 9 25 a11 11 0 0 0 22 0 C31 17 20 4 20 4 z"
+          d="M18 3 C18 3 7 15 7 23 a11 11 0 0 0 22 0 C29 15 18 3 18 3 z"
           fill="none"
-          stroke="#4A8FD9"
-          strokeWidth="1.5"
+          stroke="#0284C7"
+          strokeWidth="1.8"
         />
       </svg>
     </Tile>
   );
 }
 
-/** Kompas z animowaną strzałką kierunku wiatru */
+/** Kompas z aerodynamiczną igłą wiatru i porywami */
 export function WindTile({
   speed,
   gusts,
@@ -336,126 +500,165 @@ export function WindTile({
   directionLabel: string;
 }) {
   const shortDir = directionLabel.match(/\(([^)]+)\)/)?.[1] ?? '';
+
   return (
-    <Tile label="Wiatr" value={`${speed} km/h`} sub={`${shortDir} · porywy ${gusts}`}>
-      <svg viewBox="0 0 40 40" className="h-10 w-10">
-        <circle cx="20" cy="20" r="16" fill="#F3F6FA" stroke="#D5DDE8" strokeWidth="1.5" />
-        {['N', 'E', 'S', 'W'].map((d, i) => {
-          const pos = [
-            [20, 8.5],
-            [32, 21.5],
-            [20, 34.5],
-            [8, 21.5],
-          ][i];
-          return (
-            <text
-              key={d}
-              x={pos[0]}
-              y={pos[1]}
-              textAnchor="middle"
-              fontSize="5"
-              fontWeight="700"
-              fill="#8A93A3"
-            >
-              {['Pn', 'W', 'Pd', 'Z'][i]}
-            </text>
-          );
-        })}
-        {/* Strzałka wskazuje, DOKĄD wieje wiatr (kierunek meteorologiczny + 180°) */}
+    <Tile label="Wiatr" value={`${speed} km/h`} sub={`${shortDir} · porywy do ${gusts}`}>
+      <svg viewBox="0 0 40 40" className="h-11 w-11">
+        {/* Tarcza kompasu */}
+        <circle cx="20" cy="20" r="17" fill="#F8FAFC" stroke="#CBD5E1" strokeWidth="1.6" />
+
+        {/* Kierunki świata */}
+        <text x="20" y="8" textAnchor="middle" fontSize="5" fontWeight="800" fill="#64748B">
+          N
+        </text>
+        <text x="33.5" y="21.5" textAnchor="middle" fontSize="5" fontWeight="800" fill="#64748B">
+          E
+        </text>
+        <text x="20" y="35" textAnchor="middle" fontSize="5" fontWeight="800" fill="#64748B">
+          S
+        </text>
+        <text x="6.5" y="21.5" textAnchor="middle" fontSize="5" fontWeight="800" fill="#64748B">
+          W
+        </text>
+
+        {/* Igła kompasu: wskazuje dokąd wieje wiatr */}
         <g
           style={{ transform: `rotate(${direction + 180}deg)`, transformOrigin: '20px 20px' }}
           className="transition-transform duration-700"
         >
-          <path d="M20 9 L24 21 L20 18.5 L16 21 Z" fill="#E7735C" />
-          <line x1="20" y1="18.5" x2="20" y2="29" stroke="#1F1D2B" strokeWidth="1.6" strokeLinecap="round" />
+          {/* Czerwony grot */}
+          <polygon points="20,7 24,19 20,16.5 16,19" fill="#EF4444" stroke="#DC2626" strokeWidth="0.6" />
+          {/* Ciemny trzon */}
+          <line x1="20" y1="16.5" x2="20" y2="30" stroke="#1E293B" strokeWidth="2.2" strokeLinecap="round" />
         </g>
-        <circle cx="20" cy="20" r="1.8" fill="#1F1D2B" />
+        <circle cx="20" cy="20" r="2.2" fill="#0F172A" />
       </svg>
     </Tile>
   );
 }
 
-/** Półokrągły wskaźnik UV z gradientem i igłą */
+/** Tarcza indeksu UV ze spektrum barw i igłą wskaźnika */
 export function UvTile({ uv, label }: { uv: number; label: string }) {
+  const uid = useId().replace(/:/g, '_');
   const clamped = Math.min(11, Math.max(0, uv));
   const angle = -90 + (clamped / 11) * 180;
+
   return (
-    <Tile label="Indeks UV" value={`${uv}`} sub={label}>
-      <svg viewBox="0 0 40 40" className="h-10 w-10">
+    <Tile label="Indeks UV" value={`${uv} / 11`} sub={label}>
+      <svg viewBox="0 0 40 40" className="h-11 w-11">
         <defs>
-          <linearGradient id="uvGrad" x1="0" x2="1" y1="0" y2="0">
-            <stop offset="0%" stopColor="#5BBE7A" />
-            <stop offset="35%" stopColor="#F2D04B" />
-            <stop offset="60%" stopColor="#F29D38" />
-            <stop offset="80%" stopColor="#E7735C" />
-            <stop offset="100%" stopColor="#9B5DE5" />
+          <linearGradient id={`uvGrad_${uid}`} x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0%" stopColor="#22C55E" />
+            <stop offset="30%" stopColor="#EAB308" />
+            <stop offset="60%" stopColor="#F97316" />
+            <stop offset="85%" stopColor="#EF4444" />
+            <stop offset="100%" stopColor="#A855F7" />
           </linearGradient>
         </defs>
-        <path d="M6 28 A14 14 0 0 1 34 28" fill="none" stroke="url(#uvGrad)" strokeWidth="5" strokeLinecap="round" />
-        <g style={{ transform: `rotate(${angle}deg)`, transformOrigin: '20px 28px' }} className="transition-transform duration-700">
-          <line x1="20" y1="28" x2="20" y2="16" stroke="#1F1D2B" strokeWidth="2" strokeLinecap="round" />
+
+        {/* Łuk indeksu UV */}
+        <path
+          d="M6 29 A14 14 0 0 1 34 29"
+          fill="none"
+          stroke={`url(#uvGrad_${uid})`}
+          strokeWidth="5.5"
+          strokeLinecap="round"
+        />
+
+        {/* Wskaźnik igłowy */}
+        <g
+          style={{ transform: `rotate(${angle}deg)`, transformOrigin: '20px 29px' }}
+          className="transition-transform duration-700"
+        >
+          <line x1="20" y1="29" x2="20" y2="15" stroke="#0F172A" strokeWidth="2.4" strokeLinecap="round" />
         </g>
-        <circle cx="20" cy="28" r="2.5" fill="#1F1D2B" />
+        <circle cx="20" cy="29" r="3" fill="#0F172A" />
       </svg>
     </Tile>
   );
 }
 
-/** Łuk słońca z aktualną pozycją, wschodem i zachodem */
+/** Łuk słońca z aktualną pozycją, wschodem, zachodem i czasem dnia */
 export function SunTile({ sunrise, sunset, dayLength }: { sunrise: string; sunset: string; dayLength: string }) {
   const now = new Date();
   const toMin = (s: string) => Number(s.slice(0, 2)) * 60 + Number(s.slice(3, 5));
   const nowMin = now.getHours() * 60 + now.getMinutes();
-  const span = Math.max(1, toMin(sunset) - toMin(sunrise));
-  const t = Math.min(1, Math.max(0, (nowMin - toMin(sunrise)) / span));
-  const isUp = nowMin >= toMin(sunrise) && nowMin <= toMin(sunset);
-  // punkt na łuku kwadratowym (4,30) -> ctrl (24,-2) -> (44,30)
-  const x = (1 - t) ** 2 * 4 + 2 * (1 - t) * t * 24 + t ** 2 * 44;
-  const y = (1 - t) ** 2 * 30 + 2 * (1 - t) * t * -2 + t ** 2 * 30;
-  const minsToSunset = toMin(sunset) - nowMin;
+  const riseMin = toMin(sunrise);
+  const setMin = toMin(sunset);
+  const span = Math.max(1, setMin - riseMin);
+  const t = Math.min(1, Math.max(0, (nowMin - riseMin) / span));
+  const isUp = nowMin >= riseMin && nowMin <= setMin;
+
+  // Pozycja słońca na łuku parabolicznym
+  const x = (1 - t) ** 2 * 5 + 2 * (1 - t) * t * 24 + t ** 2 * 43;
+  const y = (1 - t) ** 2 * 28 + 2 * (1 - t) * t * 2 + t ** 2 * 28;
+
+  const minsToSunset = setMin - nowMin;
   const sub = isUp
     ? minsToSunset < 120
       ? `Zachód za ${Math.floor(minsToSunset / 60)}h ${minsToSunset % 60}m`
-      : `Dzień: ${dayLength}`
-    : `Wschód ${sunrise}`;
+      : `Dzień trwa ${dayLength}`
+    : `Wschód słońca o ${sunrise}`;
 
   return (
     <Tile label="Słońce" value={`${sunrise} – ${sunset}`} sub={sub}>
-      <svg viewBox="0 0 48 36" className="h-10 w-12">
-        <path d="M4 30 Q24 -2 44 30" fill="none" stroke="#C9B48A" strokeWidth="1.3" strokeDasharray="2.5 2.5" />
+      <svg viewBox="0 0 48 36" className="h-11 w-12">
+        {/* Horyzont */}
+        <line x1="2" y1="29" x2="46" y2="29" stroke="#CBD5E1" strokeWidth="1.5" strokeLinecap="round" />
+
+        {/* Trajektoria dzienna */}
+        <path
+          d="M5 29 Q24 2 43 29"
+          fill="none"
+          stroke="#E2E8F0"
+          strokeWidth="2.2"
+          strokeDasharray="3 3"
+        />
+
+        {/* Przebyta część dnia */}
         {isUp && (
           <path
-            d={`M4 30 Q24 -2 44 30`}
+            d="M5 29 Q24 2 43 29"
             fill="none"
-            stroke="#F2B544"
-            strokeWidth="2"
-            strokeDasharray={`${t * 56} 100`}
+            stroke="#F59E0B"
+            strokeWidth="2.8"
+            strokeDasharray={`${t * 54} 100`}
             strokeLinecap="round"
           />
         )}
-        <line x1="1" y1="30" x2="47" y2="30" stroke="#D5DDE8" strokeWidth="1.2" />
-        <circle cx={x} cy={y} r="4" fill={isUp ? '#F7C15A' : '#B7C9E3'} stroke="#fff" strokeWidth="1.5" />
+
+        {/* Słońce na niebie */}
+        <circle
+          cx={x}
+          cy={y}
+          r="4.8"
+          fill={isUp ? '#FBBF24' : '#94A3B8'}
+          stroke="#EA580C"
+          strokeWidth="1.2"
+        />
+        <circle cx={x - 1} cy={y - 1} r="1.5" fill="#FFFFFF" />
       </svg>
     </Tile>
   );
 }
 
-/** Skala jakości powietrza (PM2.5) z markerem */
+/** Wskaźnik jakości powietrza ze stacji GIOŚ w Mińsku Mazowieckim */
 export function AirTile({ pm25, pm10, label }: { pm25: number; pm10: number; label: string }) {
-  // skala 0–110 µg/m³ (indeks GIOŚ dla PM2.5)
-  const pos = Math.min(100, (pm25 / 110) * 100);
+  // Skala GIOŚ dla PM2.5 (0 do 110 µg/m³)
+  const pos = Math.min(100, Math.max(0, (pm25 / 110) * 100));
+
   return (
-    <Tile label="Powietrze" value={label} sub={`PM2.5 ${pm25} · PM10 ${pm10}`}>
-      <div className="w-12">
-        <div className="relative h-2 w-full rounded-full bg-gradient-to-r from-emerald-400 via-amber-300 via-60% to-coral">
+    <Tile label="Powietrze (GIOŚ)" value={label} sub={`PM2.5: ${pm25} · PM10: ${pm10} µg/m³`}>
+      <div className="w-12 py-1">
+        <div className="relative h-2.5 w-full rounded-full bg-gradient-to-r from-emerald-500 via-amber-400 via-55% to-rose-500 shadow-inner">
           <span
-            className="absolute -top-1 h-4 w-1.5 -translate-x-1/2 rounded-full bg-ink ring-2 ring-white transition-all duration-700"
+            className="absolute -top-0.5 h-3.5 w-2 -translate-x-1/2 rounded-sm bg-ink ring-2 ring-white shadow-xs transition-all duration-700"
             style={{ left: `${pos}%` }}
           />
         </div>
-        <div className="mt-1.5 flex justify-between text-[7.5px] font-bold text-ink-400">
+        <div className="mt-1 flex justify-between text-[7.5px] font-extrabold text-ink-400">
           <span>0</span>
-          <span>55</span>
+          <span>norma 15</span>
           <span>110</span>
         </div>
       </div>
@@ -463,7 +666,7 @@ export function AirTile({ pm25, pm10, label }: { pm25: number; pm10: number; lab
   );
 }
 
-/** Zestaw 6 kluczowych infografik dla bieżącej pogody */
+/** Zestaw 6 infografik bieżących warunków */
 export function WeatherInfographicsRow({ weather, className }: { weather: WeatherData; className?: string }) {
   return (
     <div className={cn('grid gap-2', className)}>
