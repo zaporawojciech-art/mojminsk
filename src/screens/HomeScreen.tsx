@@ -4,6 +4,7 @@ import {
   Bus,
   Car,
   Check,
+  Clock,
   Cloud,
   CloudMoon,
   CloudRain,
@@ -230,6 +231,132 @@ function WeatherCard({ city = 'Mińsk Mazowiecki' }: { city?: string }) {
             <p className="text-[10.5px] font-medium text-ink/60">Dane: Open-Meteo · stacja GIOŚ Mińsk Mazowiecki</p>
           </div>
         )}
+      </div>
+    </section>
+  );
+}
+
+function DesktopWeatherWidget({ city = 'Mińsk Mazowiecki' }: { city?: string }) {
+  const h = new Date().getHours();
+  const metrics = [
+    { icon: Wind, label: 'Wiatr', value: `${weather.wind} km/h` },
+    { icon: Droplets, label: 'Wilgotność', value: `${weather.humidity}%` },
+    { icon: Sun, label: 'Indeks UV', value: `${weather.uv} niski` },
+    { icon: Gauge, label: 'Ciśnienie', value: `${weather.pressure} hPa` },
+    { icon: Umbrella, label: 'Opady', value: `${weather.rain} mm` },
+    { icon: Eye, label: 'Widoczność', value: `${weather.visibility} km` },
+  ];
+
+  return (
+    <section className="relative overflow-hidden rounded-3xl bg-sky p-6 shadow-card text-ink">
+      {/* Decorative ambient background circle */}
+      <div className="absolute -right-16 -top-16 h-72 w-72 rounded-full bg-white/15 pointer-events-none" aria-hidden />
+
+      {/* TOP ROW: Current weather overview & micro metrics */}
+      <div className="relative flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+        {/* Left: Location, big temp, condition & AQI badge */}
+        <div className="flex items-center gap-6">
+          <div>
+            <p className="flex items-center gap-1.5 text-[13px] font-bold text-ink/75">
+              <MapPin className="h-4 w-4 text-ink-700" aria-hidden />
+              {city}
+            </p>
+            <div className="mt-1 flex items-baseline gap-3">
+              <span className="font-display text-[64px] font-semibold leading-none tracking-tighter">
+                {weather.temp}°
+              </span>
+              <div>
+                <p className="text-[18px] font-extrabold leading-tight">{weather.condition}</p>
+                <p className="text-[12.5px] font-medium text-ink/70">
+                  Odczuwalna {weather.feels}° · ↑{weather.max}° ↓{weather.min}°
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-[12px] font-bold shadow-2xs">
+                <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
+                Powietrze: {weather.aqi.label} · PM2.5 {weather.aqi.pm25} µg/m³
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/50 px-2.5 py-1 text-[11.5px] font-semibold text-ink-800">
+                Wschód {weather.sunrise} · Zachód {weather.sunset}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Center / Right: 6 Weather Metrics grid */}
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 w-full lg:w-auto">
+          {metrics.map(({ icon: Icon, label, value }) => (
+            <div key={label} className="rounded-2xl bg-white/45 p-2.5 text-center min-w-[85px] backdrop-blur-xs">
+              <Icon className="h-4 w-4 mx-auto text-ink-700" aria-hidden />
+              <p className="mt-1 font-display text-[13px] font-bold leading-none">{value}</p>
+              <p className="mt-1 text-[10.5px] font-medium text-ink/70">{label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Far Right: Weather Art Illustration */}
+        <div className="hidden xl:block shrink-0">
+          <WeatherArt />
+        </div>
+      </div>
+
+      {/* BOTTOM ROW: HOURLY FORECAST CAPSULES */}
+      <div className="relative mt-5 pt-4 border-t border-ink/10">
+        <div className="flex items-center justify-between mb-3">
+          <p className="flex items-center gap-1.5 text-[12.5px] font-extrabold text-ink/80">
+            <Clock className="h-3.5 w-3.5 text-ink/60" aria-hidden />
+            Prognoza godzinowa na dziś
+          </p>
+          <span className="text-[11px] font-medium text-ink/60">
+            Stacja GIOŚ Mińsk Mazowiecki · Open-Meteo
+          </span>
+        </div>
+
+        <div className="flex lg:grid gap-2.5 overflow-x-auto pb-1 no-scrollbar lg:grid-cols-8">
+          {weather.hourly.map((item, i) => {
+            const hourNum = (h + i) % 24;
+            const isDay = hourNum >= 6 && hourNum < 20;
+            return (
+              <div
+                key={i}
+                className={cn(
+                  'flex min-w-[84px] lg:min-w-0 flex-1 shrink-0 flex-col items-center justify-between rounded-2xl py-3 px-2 text-center transition-all',
+                  i === 0
+                    ? 'bg-ink text-white shadow-card ring-2 ring-white/20'
+                    : 'bg-white/70 hover:bg-white text-ink shadow-2xs backdrop-blur-xs'
+                )}
+              >
+                <p className={cn('text-[10.5px] font-bold', i === 0 ? 'text-white/80' : 'text-ink-500')}>
+                  {i === 0 ? 'Teraz' : `${String(hourNum).padStart(2, '0')}:00`}
+                </p>
+
+                <div className="my-2 flex flex-col items-center gap-0.5 min-h-[36px] justify-center">
+                  <HourlyWeatherIcon icon={item.icon} isDay={isDay} />
+                  {item.rainChance && item.rainChance >= 20 ? (
+                    <span className={cn('text-[9.5px] font-extrabold', i === 0 ? 'text-sky-300' : 'text-sky-700')}>
+                      {item.rainChance}%
+                    </span>
+                  ) : (
+                    <span className="h-3" />
+                  )}
+                </div>
+
+                <p className="font-display text-[16px] font-bold leading-none">{item.temp}°</p>
+                <p
+                  className={cn(
+                    'mt-1.5 line-clamp-1 text-[9.5px] font-semibold leading-tight px-1',
+                    i === 0 ? 'text-white/75' : 'text-ink-600'
+                  )}
+                  title={item.condition}
+                >
+                  {item.condition}
+                </p>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </section>
   );
@@ -741,73 +868,6 @@ export function HomeScreen({
        * 2. DESKTOP VIEW (>= 768px) — 100% Full-Width City Portal & Magazine
        * =================================================================== */}
       <div className="hidden md:block w-full px-8 lg:px-12 py-5 space-y-6">
-        {/* ROW 1: COMPACT 1-LINE CITY STATUS BAR (Weather + GIOŚ Air + ZDiTM Live + Alert) */}
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white px-4 py-2.5 shadow-card border border-mist-200 text-[12.5px]">
-          {/* Weather & GIOŚ Air Quality */}
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 font-bold text-ink">
-              <MapPin className="h-3.5 w-3.5 text-coral-700" />
-              {city}
-            </span>
-            <span className="text-mist-300">|</span>
-            <span className="inline-flex items-center gap-1.5 font-semibold text-ink-700">
-              <Sun className="h-4 w-4 text-amber-500" />
-              <b className="text-ink">{weather.temp}°C</b> {weather.condition}
-              <span className="hidden xl:inline text-ink-400">
-                (odczuwalna {weather.feels}°C · wiatr {weather.wind} km/h)
-              </span>
-            </span>
-            <span className="text-mist-300">|</span>
-            <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-50 px-2 py-0.5 text-[11.5px] font-bold text-emerald-800 border border-emerald-200/70">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              GIOŚ PM2.5: {weather.aqi.pm25} µg/m³ ({weather.aqi.label})
-            </span>
-          </div>
-
-          {/* Nearest ZDiTM Departures 1-Line Strip */}
-          <div className="flex flex-wrap items-center gap-2.5">
-            <div className="flex items-center gap-1.5 text-[12px] font-semibold text-ink-600">
-              <Bus className="h-3.5 w-3.5 text-sky-700" />
-              <span className="hidden lg:inline font-bold text-ink">Odjazdy ZDiTM:</span>
-            </div>
-
-            <AppLink
-              to="/zditm/m2"
-              onClick={() => onZditm?.('M2')}
-              className="inline-flex items-center gap-1 rounded-md bg-mist/80 px-2 py-1 text-[11.5px] font-bold text-ink hover:bg-mist-300 transition-colors"
-            >
-              <span className="rounded bg-sky px-1.5 py-0.2 text-[10px] font-extrabold text-ink">M2</span>
-              <span>za {m2Deps[0]} min</span>
-            </AppLink>
-
-            <AppLink
-              to="/zditm/m3"
-              onClick={() => onZditm?.('M3')}
-              className="inline-flex items-center gap-1 rounded-md bg-mist/80 px-2 py-1 text-[11.5px] font-bold text-ink hover:bg-mist-300 transition-colors"
-            >
-              <span className="rounded bg-sand px-1.5 py-0.2 text-[10px] font-extrabold text-ink">M3</span>
-              <span>za {m3Deps[0]} min</span>
-            </AppLink>
-
-            <AppLink
-              to="/zditm/m4"
-              onClick={() => onZditm?.('M4')}
-              className="inline-flex items-center gap-1 rounded-md bg-mist/80 px-2 py-1 text-[11.5px] font-bold text-ink hover:bg-mist-300 transition-colors"
-            >
-              <span className="rounded bg-coral px-1.5 py-0.2 text-[10px] font-extrabold text-ink">M4</span>
-              <span>za {m4Deps[0]} min</span>
-            </AppLink>
-
-            <AppLink
-              to={buildZditmUrl('M2')}
-              onClick={() => onZditm?.('M2')}
-              className="text-[11.5px] font-bold text-sky-700 hover:underline ml-1"
-            >
-              Rozkład ➔
-            </AppLink>
-          </div>
-        </div>
-
         {/* OPTIONAL COMPACT CRISIS ALERT BAR */}
         {!desktopAlertDismissed && (
           <div className="flex items-center justify-between gap-4 rounded-xl border-l-4 border-coral bg-white px-4 py-2.5 shadow-card text-[12.5px]">
@@ -828,7 +888,7 @@ export function HomeScreen({
               <button
                 type="button"
                 onClick={() => setDesktopAlertDismissed(true)}
-                className="grid h-6 w-6 place-items-center rounded-md text-ink-400 hover:bg-mist hover:text-ink"
+                className="grid h-6 w-6 place-items-center rounded-md text-ink-400 hover:bg-mist hover:text-ink cursor-pointer"
                 aria-label="Ukryj alert"
               >
                 <X className="h-3.5 w-3.5" />
@@ -836,6 +896,60 @@ export function HomeScreen({
             </div>
           </div>
         )}
+
+        {/* FULL DESKTOP WEATHER CARD WITH HOURLY FORECAST CAPSULES */}
+        <DesktopWeatherWidget city={city} />
+
+        {/* NEAREST ZDiTM DEPARTURES STRIP */}
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white px-5 py-3 shadow-card border border-mist-200 text-[12.5px]">
+          <div className="flex items-center gap-2.5">
+            <span className="grid h-8 w-8 place-items-center rounded-xl bg-sky-100 text-sky-800">
+              <Bus className="h-4 w-4" />
+            </span>
+            <div>
+              <p className="font-extrabold text-ink leading-tight">Komunikacja miejska ZDiTM Mińsk Mazowiecki</p>
+              <p className="text-[11px] text-ink-500">Najbliższe planowane odjazdy z centrum miasta</p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            <AppLink
+              to="/zditm/m2"
+              onClick={() => onZditm?.('M2')}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-mist/80 hover:bg-mist px-3 py-1.5 text-[12px] font-bold text-ink transition-colors"
+            >
+              <span className="rounded-md bg-sky px-1.5 py-0.5 text-[10px] font-extrabold text-ink">M2</span>
+              <span>za {m2Deps[0]} min</span>
+            </AppLink>
+
+            <AppLink
+              to="/zditm/m3"
+              onClick={() => onZditm?.('M3')}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-mist/80 hover:bg-mist px-3 py-1.5 text-[12px] font-bold text-ink transition-colors"
+            >
+              <span className="rounded-md bg-sand px-1.5 py-0.5 text-[10px] font-extrabold text-ink">M3</span>
+              <span>za {m3Deps[0]} min</span>
+            </AppLink>
+
+            <AppLink
+              to="/zditm/m4"
+              onClick={() => onZditm?.('M4')}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-mist/80 hover:bg-mist px-3 py-1.5 text-[12px] font-bold text-ink transition-colors"
+            >
+              <span className="rounded-md bg-coral px-1.5 py-0.5 text-[10px] font-extrabold text-ink">M4</span>
+              <span>za {m4Deps[0]} min</span>
+            </AppLink>
+
+            <AppLink
+              to={buildZditmUrl('M2')}
+              onClick={() => onZditm?.('M2')}
+              className="text-[12px] font-bold text-sky-700 hover:underline ml-2 flex items-center gap-1"
+            >
+              <span>Pełny rozkład jazdy</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </AppLink>
+          </div>
+        </div>
 
         {/* ROW 2: 3 EQUAL-HEIGHT CARDS IN ONE ROW (1. News Feed List | 2. Poll of the Week | 3. Partner Card) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
