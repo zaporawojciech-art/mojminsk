@@ -1839,6 +1839,20 @@ export default function App() {
                   () => setReserveAd(ad),
                 )
               }
+              onQuickApply={(ad, details) =>
+                requireAuth(
+                  'Aplikacja na stanowisko',
+                  'Aplikowanie o pracę wymaga tożsamości mieszkańca Mińska.',
+                  () => {
+                    void handleReservationSuccess(ad, {
+                      spot: 'Aplikacja o pracę (1-Click)',
+                      time: 'Oferta pracy',
+                      phone: details.phone,
+                      note: details.note,
+                    });
+                  },
+                )
+              }
             />
           </AsyncViewBoundary>
         )}

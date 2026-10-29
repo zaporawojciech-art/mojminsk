@@ -1,13 +1,17 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
+  Camera,
   CheckCircle2,
   DollarSign,
   Gift,
   HelpCircle,
+  Loader2,
   Save,
+  Trash2,
 } from 'lucide-react';
 import { NativeHeader, cn } from '../components/ui';
 import type { Ad, User } from '../data/mockData';
+import { uploadAdImage } from '../lib/storage';
 
 interface EditAdModalProps {
   ad: Ad;
@@ -17,7 +21,7 @@ interface EditAdModalProps {
   isClosing?: boolean;
 }
 
-export function EditAdModal({ ad, user: _user, onClose, onAdUpdated, isClosing = false }: EditAdModalProps) {
+export function EditAdModal({ ad, user, onClose, onAdUpdated, isClosing = false }: EditAdModalProps) {
   const [kind, setKind] = useState<'sell' | 'free' | 'lost'>(ad.kind);
   const [title, setTitle] = useState(ad.title);
   const [price, setPrice] = useState(ad.price !== null ? String(ad.price) : '');
@@ -29,22 +33,36 @@ export function EditAdModal({ ad, user: _user, onClose, onAdUpdated, isClosing =
   const [selectedImages, setSelectedImages] = useState<string[]>(initialPhotos);
   const [isSaved, setIsSaved] = useState(false);
 
-  const rawPool = [
-    ...initialPhotos,
-    'https://images.unsplash.com/photo-1532298229144-0ec0c57515c7?auto=format&fit=crop&w=900&q=80', // bike
-    'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=900&q=80', // sofa
-    'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=900&q=80', // book
-    'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=900&q=80', // pet
-    'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=900&q=80', // toys
-  ];
-  const sampleImages = Array.from(new Set(rawPool)).slice(0, 6);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const toggleImage = (imgUrl: string) => {
-    setSelectedImages((prev) => {
-      if (prev.includes(imgUrl)) {
-        return prev.length > 1 ? prev.filter((item) => item !== imgUrl) : prev;
+  const handleFilesSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    setUploading(true);
+    setUploadError(null);
+
+    try {
+      const uploadedUrls: string[] = [];
+      for (const file of files.slice(0, 5)) {
+        const url = await uploadAdImage(file, user.profileId);
+        uploadedUrls.push(url);
       }
-      return [...prev, imgUrl];
+      setSelectedImages((prev) => [...uploadedUrls, ...prev].slice(0, 6));
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Nie udało się wgrać zdjęcia.');
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const removeImage = (indexToRemove: number) => {
+    setSelectedImages((prev) => {
+      const next = prev.filter((_, i) => i !== indexToRemove);
+      return next.length > 0 ? next : [ad.image];
     });
   };
 
@@ -54,6 +72,8 @@ export function EditAdModal({ ad, user: _user, onClose, onAdUpdated, isClosing =
     'Elektronika',
     'Sport & Rowery',
     'Ogród & Narzędzia',
+    'Motoryzacja',
+    'Praca',
     'Oddam za darmo',
     'Zgubiłem / Znalazłem',
   ];
@@ -283,50 +303,98 @@ export function EditAdModal({ ad, user: _user, onClose, onAdUpdated, isClosing =
               <div className="space-y-4 md:col-span-5 lg:col-span-4 md:sticky md:top-2">
                 {/* Photo Selector */}
                 <div className="rounded-3xl md:rounded-2xl md:border md:border-mist-200 bg-white p-4 md:p-5 shadow-card md:shadow-xs">
-                  <label className="text-[12px] font-bold uppercase tracking-wider text-ink-400 flex items-center justify-between">
-                    <span>Zdjęcia w ofercie ({selectedImages.length})</span>
-                    <span className="text-[11px] font-normal text-ink-500">Kliknij, aby dodać / usunąć</span>
-                  </label>
-                  <div className="mt-2.5 grid grid-cols-3 gap-2">
-                    {sampleImages.map((imgUrl, i) => {
-                      const orderIdx = selectedImages.indexOf(imgUrl);
-                      const isSelected = orderIdx !== -1;
-                      return (
-                        <div
-                          key={i}
-                          onClick={() => toggleImage(imgUrl)}
-                          className={cn(
-                            'relative aspect-square cursor-pointer overflow-hidden rounded-2xl md:rounded-xl border-2 transition-all',
-                            isSelected ? 'border-coral ring-2 ring-coral/40' : 'border-transparent opacity-70 hover:opacity-100',
-                          )}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[12px] font-bold text-ink-700">
+                      Zdjęcia ogłoszenia ({selectedImages.length}/6)
+                    </span>
+                    <span className="text-[11px] font-medium text-ink-400">
+                      Zmień lub dodaj nowe
+                    </span>
+                  </div>
+
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleFilesSelected}
+                    className="hidden"
+                  />
+
+                  <div className="mt-2.5">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                      className={cn(
+                        'w-full flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed p-3 text-[12.5px] font-bold transition-all cursor-pointer',
+                        uploading
+                          ? 'border-mist-300 bg-mist/60 text-ink-400 cursor-not-allowed'
+                          : 'border-mist-300 bg-sand-50/70 text-ink hover:border-coral hover:bg-sand-100',
+                      )}
+                    >
+                      {uploading ? (
+                        <>
+                          <Loader2 className="h-4.5 w-4.5 text-coral animate-spin" />
+                          <span>Wgrywanie zdjęć...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Camera className="h-4.5 w-4.5 text-coral shrink-0" />
+                          <span>Dodaj nowe zdjęcia z telefonu</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {uploadError && (
+                    <div className="mt-2 rounded-xl bg-coral/15 p-2.5 text-[12px] font-medium text-coral-800">
+                      {uploadError}
+                    </div>
+                  )}
+
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    {selectedImages.map((imgUrl, i) => (
+                      <div
+                        key={i}
+                        className="relative aspect-square overflow-hidden rounded-2xl md:rounded-xl border border-mist-200 ring-1 ring-mist-300 group"
+                      >
+                        <img src={imgUrl} alt="" className="h-full w-full object-cover" />
+                        {i === 0 && (
+                          <span className="absolute inset-x-1 bottom-1 rounded-lg bg-black/75 py-0.5 text-center text-[9.5px] font-bold text-white backdrop-blur-xs">
+                            Główne
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => removeImage(i)}
+                          aria-label="Usuń zdjęcie"
+                          className="absolute top-1 right-1 grid h-6 w-6 place-items-center rounded-full bg-ink/80 text-white hover:bg-coral transition-colors"
                         >
-                          <img src={imgUrl} alt="" className="h-full w-full object-cover" />
-                          {isSelected && (
-                            <>
-                              <div className="absolute right-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full bg-coral text-ink text-[10.5px] font-extrabold shadow">
-                                {orderIdx + 1}
-                              </div>
-                              {orderIdx === 0 && (
-                                <span className="absolute inset-x-1 bottom-1 rounded-lg bg-black/70 py-0.5 text-center text-[9.5px] font-bold text-white backdrop-blur-xs">
-                                  Główne
-                                </span>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      );
-                    })}
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
                   </div>
 
                   {/* Desktop Save Button */}
                   <div className="hidden md:block mt-4 pt-4 border-t border-mist-200">
                     <button
                       type="submit"
-                      disabled={!title.trim()}
+                      disabled={uploading || !title.trim()}
                       className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-ink text-[13.5px] font-bold text-white shadow-sm hover:bg-ink-800 transition-all disabled:opacity-50 cursor-pointer"
                     >
-                      <Save className="h-4 w-4" />
-                      Zapisz zmiany
+                      {uploading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Zapisywanie...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="h-4 w-4" />
+                          Zapisz zmiany
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
@@ -337,11 +405,20 @@ export function EditAdModal({ ad, user: _user, onClose, onAdUpdated, isClosing =
             <div className="md:hidden border-t border-mist bg-white px-4 py-2.5 pb-[max(env(safe-area-inset-bottom),14px)] shrink-0 shadow-float">
               <button
                 type="submit"
-                disabled={!title.trim()}
+                disabled={uploading || !title.trim()}
                 className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-ink text-[14.5px] font-bold text-white shadow-sm hover:bg-ink-700 active:scale-[0.98] transition-all disabled:opacity-50"
               >
-                <Save className="h-4.5 w-4.5" />
-                Zapisz zmiany
+                {uploading ? (
+                  <>
+                    <Loader2 className="h-4.5 w-4.5 animate-spin" />
+                    Zapisywanie...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4.5 w-4.5" />
+                    Zapisz zmiany
+                  </>
+                )}
               </button>
             </div>
           </form>

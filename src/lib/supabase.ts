@@ -5,7 +5,7 @@ import type {
   Ride,
   Street,
 } from '../data/mockData';
-import { supabaseRest } from './supabaseClient';
+import { supabaseRest, supabaseRpc } from './supabaseClient';
 
 async function restFetch<T>(
   path: string,
@@ -174,6 +174,11 @@ export async function reportAdInSupabase(
     },
     'return=minimal',
   );
+}
+
+export async function incrementAdViewsInSupabase(adId: string): Promise<number | null> {
+  const res = await supabaseRpc<number>('increment_ad_views', { p_ad_id: adId });
+  return res.data;
 }
 
 /* ---------------- 3. Ankiety Społecznościowe (Polls) ---------------- */

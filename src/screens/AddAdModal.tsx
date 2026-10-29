@@ -1,14 +1,18 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   ArrowRight,
+  Camera,
   CheckCircle2,
   DollarSign,
   Gift,
   HelpCircle,
+  Loader2,
   MapPin,
+  Trash2,
 } from 'lucide-react';
 import { NativeHeader, cn } from '../components/ui';
 import type { Ad, User } from '../data/mockData';
+import { uploadAdImage } from '../lib/storage';
 
 interface AddAdModalProps {
   user: User;
@@ -32,6 +36,10 @@ export function AddAdModal({
   const [category, setCategory] = useState('Meble & Dom');
   const [isCreated, setIsCreated] = useState(false);
 
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const sampleImages = [
     'https://images.unsplash.com/photo-1532298229144-0ec0c57515c7?auto=format&fit=crop&w=900&q=80', // bike
     'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=900&q=80', // sofa
@@ -41,17 +49,40 @@ export function AddAdModal({
     'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=900&q=80', // lego
   ];
 
-  const [selectedImages, setSelectedImages] = useState<string[]>([
-    sampleImages[0],
-    sampleImages[1],
-  ]);
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
+
+  const handleFilesSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    setUploading(true);
+    setUploadError(null);
+
+    try {
+      const uploadedUrls: string[] = [];
+      for (const file of files.slice(0, 5)) {
+        const url = await uploadAdImage(file, user.profileId);
+        uploadedUrls.push(url);
+      }
+      setSelectedImages((prev) => [...uploadedUrls, ...prev].slice(0, 6));
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Nie udało się wgrać zdjęcia.');
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const removeImage = (indexToRemove: number) => {
+    setSelectedImages((prev) => prev.filter((_, i) => i !== indexToRemove));
+  };
 
   const toggleSampleImage = (src: string) => {
     setSelectedImages((prev) => {
       if (prev.includes(src)) {
-        return prev.length > 1 ? prev.filter((item) => item !== src) : prev;
+        return prev.filter((item) => item !== src);
       }
-      return [...prev, src];
+      return [...prev, src].slice(0, 6);
     });
   };
 
@@ -62,13 +93,14 @@ export function AddAdModal({
     'Sport & Rowery',
     'Ogród & Narzędzia',
     'Motoryzacja',
+    'Praca',
     'Oddam za darmo',
     'Zgubiłem / Znalazłem',
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) return;
+    if (!title.trim() || uploading) return;
 
     const photos = selectedImages.length > 0 ? selectedImages : [sampleImages[0]];
     const newAd: Ad = {
@@ -81,9 +113,10 @@ export function AddAdModal({
       image: photos[0],
       images: photos,
       author: user.name,
+      authorId: user.profileId,
       description: description.trim() || undefined,
       category,
-      condition: kind !== 'lost' ? condition : undefined,
+      condition: kind !== 'lost' && category !== 'Praca' ? condition : undefined,
       negotiable: kind === 'sell' ? negotiable : undefined,
       status: 'active',
       views: 1,
@@ -293,45 +326,110 @@ export function AddAdModal({
                 <div className="rounded-3xl md:rounded-2xl md:border md:border-mist-200 bg-white p-4 md:p-5 shadow-card md:shadow-xs">
                   <div className="flex items-center justify-between">
                     <span className="text-[12px] font-bold text-ink-700">
-                      Zdjęcia w ofercie ({selectedImages.length})
+                      Zdjęcia ogłoszenia ({selectedImages.length}/6)
                     </span>
                     <span className="text-[11px] font-medium text-ink-400">
-                      Wybierz zdjęcia do galerii
+                      Z aparatu lub galerii
                     </span>
                   </div>
-                  <div className="mt-2.5 grid grid-cols-3 gap-2">
-                    {sampleImages.map((src, i) => {
-                      const orderIdx = selectedImages.indexOf(src);
-                      const isSelected = orderIdx !== -1;
-                      return (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => toggleSampleImage(src)}
-                          className={cn(
-                            'relative aspect-square overflow-hidden rounded-2xl md:rounded-xl border-2 transition-all cursor-pointer',
-                            isSelected
-                              ? 'border-coral ring-2 ring-coral/40'
-                              : 'border-transparent opacity-60 hover:opacity-90',
-                          )}
-                        >
-                          <img src={src} alt="Podgląd" className="h-full w-full object-cover" />
-                          {isSelected && (
-                            <>
-                              <span className="absolute right-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full bg-coral text-ink text-[10.5px] font-extrabold shadow">
-                                {orderIdx + 1}
-                              </span>
-                              {orderIdx === 0 && (
-                                <span className="absolute inset-x-1 bottom-1 rounded-lg bg-black/70 py-0.5 text-center text-[9.5px] font-bold text-white backdrop-blur-xs">
-                                  Główne
-                                </span>
-                              )}
-                            </>
-                          )}
-                        </button>
-                      );
-                    })}
+
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleFilesSelected}
+                    className="hidden"
+                  />
+
+                  <div className="mt-2.5">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                      className={cn(
+                        'w-full flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed p-4 text-[13px] font-bold transition-all cursor-pointer',
+                        uploading
+                          ? 'border-mist-300 bg-mist/60 text-ink-400 cursor-not-allowed'
+                          : 'border-mist-300 bg-sand-50/70 text-ink hover:border-coral hover:bg-sand-100',
+                      )}
+                    >
+                      {uploading ? (
+                        <>
+                          <Loader2 className="h-5 w-5 text-coral animate-spin" />
+                          <span>Wgrywanie zdjęć do chmury...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Camera className="h-5 w-5 text-coral shrink-0" />
+                          <span>Wybierz lub zrób zdjęcie telefonem</span>
+                        </>
+                      )}
+                    </button>
                   </div>
+
+                  {uploadError && (
+                    <div className="mt-2 rounded-xl bg-coral/15 p-2.5 text-[12px] font-medium text-coral-800">
+                      {uploadError}
+                    </div>
+                  )}
+
+                  {selectedImages.length > 0 ? (
+                    <div className="mt-3">
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-ink-400 mb-1.5">
+                        Wybrane zdjęcia (pierwsze to miniaturka):
+                      </p>
+                      <div className="grid grid-cols-3 gap-2">
+                        {selectedImages.map((src, i) => (
+                          <div
+                            key={i}
+                            className="relative aspect-square overflow-hidden rounded-2xl md:rounded-xl border border-mist-200 ring-1 ring-mist-300 group"
+                          >
+                            <img src={src} alt="Zdjęcie" className="h-full w-full object-cover" />
+                            {i === 0 && (
+                              <span className="absolute inset-x-1 bottom-1 rounded-lg bg-black/75 py-0.5 text-center text-[9.5px] font-bold text-white backdrop-blur-xs">
+                                Główne
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => removeImage(i)}
+                              aria-label="Usuń zdjęcie"
+                              className="absolute top-1 right-1 grid h-6 w-6 place-items-center rounded-full bg-ink/80 text-white hover:bg-coral transition-colors"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-3.5 pt-3 border-t border-mist-200">
+                      <p className="text-[11.5px] font-medium text-ink-500 mb-2">
+                        Lub wybierz gotowe zdjęcie poglądowe:
+                      </p>
+                      <div className="grid grid-cols-3 gap-2">
+                        {sampleImages.map((src, i) => {
+                          const isSelected = selectedImages.includes(src);
+                          return (
+                            <button
+                              key={i}
+                              type="button"
+                              onClick={() => toggleSampleImage(src)}
+                              className={cn(
+                                'relative aspect-square overflow-hidden rounded-2xl md:rounded-xl border-2 transition-all cursor-pointer',
+                                isSelected
+                                  ? 'border-coral ring-2 ring-coral/40'
+                                  : 'border-transparent opacity-60 hover:opacity-90',
+                              )}
+                            >
+                              <img src={src} alt="Podgląd" className="h-full w-full object-cover" />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Street Location Badge */}
                   <div className="mt-3.5 flex items-center gap-2 rounded-2xl md:rounded-xl bg-sand-100/80 px-3.5 py-2.5 text-[12px] font-semibold text-ink-700">
@@ -345,10 +443,20 @@ export function AddAdModal({
                   <div className="hidden md:block mt-4 pt-4 border-t border-mist-200">
                     <button
                       type="submit"
-                      className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-ink text-[13.5px] font-bold text-white shadow-sm hover:bg-ink-800 transition-all cursor-pointer"
+                      disabled={uploading || !title.trim()}
+                      className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-ink text-[13.5px] font-bold text-white shadow-sm hover:bg-ink-800 transition-all cursor-pointer disabled:opacity-50"
                     >
-                      Opublikuj ogłoszenie
-                      <ArrowRight className="h-4 w-4" />
+                      {uploading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Wgrywanie zdjęć...
+                        </>
+                      ) : (
+                        <>
+                          Opublikuj ogłoszenie
+                          <ArrowRight className="h-4 w-4" />
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
@@ -359,10 +467,20 @@ export function AddAdModal({
             <div className="md:hidden border-t border-mist bg-white px-5 py-3 pb-[max(env(safe-area-inset-bottom),14px)] shrink-0 shadow-float">
               <button
                 type="submit"
-                className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-ink text-[14px] font-bold text-white shadow-card transition-transform active:scale-95"
+                disabled={uploading || !title.trim()}
+                className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-ink text-[14px] font-bold text-white shadow-card transition-transform active:scale-95 disabled:opacity-50"
               >
-                Opublikuj ogłoszenie
-                <ArrowRight className="h-4 w-4" />
+                {uploading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Wgrywanie zdjęć...
+                  </>
+                ) : (
+                  <>
+                    Opublikuj ogłoszenie
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
               </button>
             </div>
           </form>

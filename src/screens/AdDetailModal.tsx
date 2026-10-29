@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
+  Briefcase,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -11,6 +12,8 @@ import {
   MapPin,
   Maximize2,
   MessageCircle,
+  Phone,
+  Send,
   Share2,
   ShieldAlert,
   Tag,
@@ -21,6 +24,7 @@ import {
 } from 'lucide-react';
 import { Img, StreetPill, cn, zl } from '../components/ui';
 import { avatarUrl, type Ad, type User } from '../data/mockData';
+import { incrementAdViewsInSupabase } from '../lib/supabase';
 
 interface AdDetailModalProps {
   ad: Ad;
@@ -35,6 +39,7 @@ interface AdDetailModalProps {
   onSellerClick?: (sellerName: string, sellerStreet: string) => void;
   onEditClick?: (ad: Ad) => void;
   onReserveClick?: (ad: Ad) => void;
+  onQuickApply?: (ad: Ad, details: { phone: string; note: string }) => void;
   isClosing?: boolean;
 }
 
@@ -51,12 +56,63 @@ export function AdDetailModal({
   onSellerClick,
   onEditClick,
   onReserveClick,
+  onQuickApply,
   isClosing = false,
 }: AdDetailModalProps) {
   const [copied, setCopied] = useState(false);
   const [activePhotoIdx, setActivePhotoIdx] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
+
+  // Atomowy licznik wyświetleń z zabezpieczeniem w sessionStorage
+  const [viewsCount, setViewsCount] = useState<number>(ad.views ?? 1);
+  useEffect(() => {
+    setViewsCount(ad.views ?? 1);
+    if (typeof window === 'undefined') return;
+    const viewKey = `mojminsk_ad_view_${ad.id}`;
+    if (!sessionStorage.getItem(viewKey)) {
+      sessionStorage.setItem(viewKey, '1');
+      void incrementAdViewsInSupabase(ad.id).then((val) => {
+        if (typeof val === 'number') {
+          setViewsCount(val);
+        }
+      });
+    }
+  }, [ad.id, ad.views]);
+
+  // Wykrywanie oferty pracy (Decyzje #37 i #40)
+  const isJobOffer =
+    ad.category === 'Praca' ||
+    ad.title.toLowerCase().includes('praca') ||
+    ad.title.toLowerCase().includes('zatrudnię') ||
+    ad.title.toLowerCase().includes('monter') ||
+    ad.title.toLowerCase().includes('kierowca');
+
+  const [isJobApplyOpen, setIsJobApplyOpen] = useState(false);
+  const [candidatePhone, setCandidatePhone] = useState(user.phone || '501 234 567');
+  const [candidateNote, setCandidateNote] = useState(
+    'Dzień dobry, chętnie podejmę tę pracę. Mieszkam w Mińsku i jestem dyspozycyjny od zaraz.',
+  );
+  const [isApplying, setIsApplying] = useState(false);
+
+  const handleJobApplySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsApplying(true);
+    setTimeout(() => {
+      setIsApplying(false);
+      setIsJobApplyOpen(false);
+      if (onQuickApply) {
+        onQuickApply(ad, {
+          phone: candidatePhone,
+          note: candidateNote,
+        });
+      } else if (onReserveClick) {
+        onReserveClick(ad);
+      } else if (onChatClick) {
+        onChatClick(ad);
+      }
+    }, 400);
+  };
 
   const isOwner = Boolean(
     ad.isOwner ||
@@ -297,7 +353,7 @@ export function AdDetailModal({
               <StreetPill street={`ul. ${ad.street}`} className="bg-sand-100 text-ink-700 text-[12px]" />
               <span className="flex items-center gap-1 text-[11.5px] font-medium text-ink-400">
                 <Eye className="h-3.5 w-3.5" />
-                {ad.views ?? 38} wyświetleń
+                {viewsCount} wyświetleń
               </span>
             </div>
           </div>
@@ -341,13 +397,23 @@ export function AdDetailModal({
           <div className="border-t border-mist bg-white px-4 py-2.5 pb-[max(env(safe-area-inset-bottom),14px)] shrink-0 shadow-float space-y-2">
             <div className="flex items-center gap-2.5">
               {currentStatus !== 'sold' && (
-                <button
-                  onClick={() => onReserveClick?.(ad)}
-                  className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-mist-300/80 bg-mist/70 text-[14px] font-bold text-ink"
-                >
-                  <HeartHandshake className="h-4.5 w-4.5 text-coral shrink-0" />
-                  Zarezerwuj
-                </button>
+                isJobOffer ? (
+                  <button
+                    onClick={() => setIsJobApplyOpen(true)}
+                    className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-coral text-ink text-[14px] font-bold shadow-sm active:scale-95 transition-all"
+                  >
+                    <Briefcase className="h-4.5 w-4.5 text-ink shrink-0" />
+                    Aplikuj 1-Click
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => onReserveClick?.(ad)}
+                    className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-mist-300/80 bg-mist/70 text-[14px] font-bold text-ink"
+                  >
+                    <HeartHandshake className="h-4.5 w-4.5 text-coral shrink-0" />
+                    Zarezerwuj
+                  </button>
+                )
               )}
               <button
                 onClick={() => {
@@ -507,7 +573,7 @@ export function AdDetailModal({
 
               <div className="mt-6 flex items-center justify-between border-t border-mist pt-3 text-[11.5px] text-ink-400">
                 <span>ID ogłoszenia: #{ad.id.toUpperCase()}</span>
-                <span>Wyświetlenia: {ad.views ?? 38}</span>
+                <span>Wyświetlenia: {viewsCount}</span>
               </div>
             </div>
           </div>
@@ -565,14 +631,25 @@ export function AdDetailModal({
                   </button>
 
                   {currentStatus !== 'sold' && (
-                    <button
-                      type="button"
-                      onClick={() => onReserveClick?.(ad)}
-                      className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-mist-300 bg-mist/70 text-[13.5px] font-bold text-ink hover:bg-mist-300 transition-all active:scale-[0.99]"
-                    >
-                      <HeartHandshake className="h-4 w-4 text-coral-700" />
-                      <span>Zarezerwuj odbiór osobisty</span>
-                    </button>
+                    isJobOffer ? (
+                      <button
+                        type="button"
+                        onClick={() => setIsJobApplyOpen(true)}
+                        className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-coral text-ink text-[13.5px] font-bold shadow-sm hover:bg-coral-400 transition-all active:scale-[0.99]"
+                      >
+                        <Briefcase className="h-4 w-4 text-ink" />
+                        <span>Szybka Aplikacja 1-Click (Profil + Telefon)</span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => onReserveClick?.(ad)}
+                        className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-mist-300 bg-mist/70 text-[13.5px] font-bold text-ink hover:bg-mist-300 transition-all active:scale-[0.99]"
+                      >
+                        <HeartHandshake className="h-4 w-4 text-coral-700" />
+                        <span>Zarezerwuj odbiór osobisty</span>
+                      </button>
+                    )
                   )}
                 </div>
               ) : (
@@ -683,6 +760,92 @@ export function AdDetailModal({
           </div>
         </div>
       </div>
+
+      {/* Modal Szybkiej Aplikacji 1-Click dla Ofert Pracy */}
+      {isJobApplyOpen && (
+        <div className="fixed inset-0 z-[75] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-xs p-0 md:p-4">
+          <div className="w-full max-w-lg rounded-t-3xl md:rounded-3xl bg-white p-5 md:p-6 shadow-2xl animate-in fade-in slide-in-from-bottom duration-200">
+            <div className="flex items-center justify-between border-b border-mist pb-3.5">
+              <div className="flex items-center gap-2.5">
+                <div className="grid h-10 w-10 place-items-center rounded-2xl bg-coral/20 text-coral-800">
+                  <Briefcase className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-display text-[16px] font-bold text-ink">
+                    Szybka Aplikacja (1-Click)
+                  </h3>
+                  <p className="text-[12px] text-ink-500">Do oferty pracodawcy z Mińska</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsJobApplyOpen(false)}
+                className="grid h-8 w-8 place-items-center rounded-full bg-mist text-ink-500 hover:text-ink cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleJobApplySubmit} className="mt-4 space-y-4">
+              <div className="rounded-2xl bg-sand-50 p-3.5 border border-sand-200 text-[12.5px] text-ink-700">
+                <p>
+                  Pracodawca <strong className="font-bold text-ink">{ad.author}</strong> otrzyma Twoje zgłoszenie sąsiedzkie na czacie wewnętrznym:
+                </p>
+                <div className="mt-2 flex items-center gap-2 font-bold text-ink">
+                  <span className="grid h-5 w-5 place-items-center rounded-full bg-sand-200 text-[11px] text-coral-800">✓</span>
+                  <span>{user.name} ze {user.street.as || user.street.name}</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[12px] font-bold text-ink-700 flex items-center gap-1.5">
+                  <Phone className="h-3.5 w-3.5 text-coral" />
+                  Twój numer telefonu do kontaktu
+                </label>
+                <input
+                  type="tel"
+                  required
+                  value={candidatePhone}
+                  onChange={(e) => setCandidatePhone(e.target.value)}
+                  placeholder="np. 501 234 567"
+                  className="mt-1 h-11 w-full rounded-xl border border-mist-300 bg-mist/50 px-3.5 text-[14px] font-semibold text-ink outline-none focus:border-ink focus:bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="text-[12px] font-bold text-ink-700">
+                  Krótka notatka / dyspozycyjność (opcjonalnie)
+                </label>
+                <textarea
+                  rows={3}
+                  value={candidateNote}
+                  onChange={(e) => setCandidateNote(e.target.value)}
+                  placeholder="Napisz krótko o swoim doświadczeniu lub kiedy możesz zacząć..."
+                  className="mt-1 w-full rounded-xl border border-mist-300 bg-mist/50 p-3 text-[13.5px] text-ink outline-none focus:border-ink focus:bg-white resize-none"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsJobApplyOpen(false)}
+                  className="h-11 flex-1 rounded-xl border border-mist-300 bg-mist text-[13px] font-bold text-ink hover:bg-mist-200 transition-colors cursor-pointer"
+                >
+                  Anuluj
+                </button>
+                <button
+                  type="submit"
+                  disabled={isApplying || !candidatePhone.trim()}
+                  className="h-11 flex-1 flex items-center justify-center gap-2 rounded-xl bg-ink text-[13px] font-bold text-white hover:bg-ink-800 transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  <Send className="h-4 w-4" />
+                  {isApplying ? 'Wysyłanie...' : 'Wyślij aplikację'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Full-Screen Photo Lightbox */}
       {isLightboxOpen && (

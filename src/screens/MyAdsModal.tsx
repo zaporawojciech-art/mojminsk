@@ -42,7 +42,10 @@ export function MyAdsModal({
 
   // Filter ads created by this user
   const myAds = ads.filter(
-    (a) => a.isOwner || a.author.toLowerCase().includes(user.name.toLowerCase()),
+    (a) =>
+      (user.profileId && a.authorId === user.profileId) ||
+      a.isOwner ||
+      (!a.authorId && a.author.toLowerCase().trim() === user.name.toLowerCase().trim()),
   );
 
   const filteredAds = myAds.filter((a) => {
@@ -51,7 +54,7 @@ export function MyAdsModal({
     return status === filter;
   });
 
-  const totalViews = myAds.reduce((sum, a) => sum + (a.views ?? 25), 0);
+  const totalViews = myAds.reduce((sum, a) => sum + (a.views ?? 0), 0);
   const activeCount = myAds.filter((a) => (a.status ?? 'active') === 'active').length;
   const reservedCount = myAds.filter((a) => a.status === 'reserved').length;
   const soldCount = myAds.filter((a) => a.status === 'sold').length;
