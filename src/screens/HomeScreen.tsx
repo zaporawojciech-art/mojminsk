@@ -1,9 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   ArrowRight,
   Bus,
   Car,
   Check,
+  ChevronDown,
   Coffee,
   Droplets,
   Gauge,
@@ -26,6 +27,7 @@ import {
 import {
   ads as initialAds,
   avatarUrl,
+  busLines,
   getAllBusStopsList,
   getPollTimeLeftLabel,
   getUpcomingDepartures,
@@ -787,6 +789,16 @@ function DesktopZditmWidget({
     return favoriteBuses[0]?.stopName || 'Plac Dworcowy';
   });
 
+  const [expandedRouteKey, setExpandedRouteKey] = useState<string | null>(null);
+
+  // Gdy użytkownik doda nowy ulubiony przystanek, automatycznie go wybierz
+  useEffect(() => {
+    if (favoriteBuses.length > 0) {
+      const latest = favoriteBuses[favoriteBuses.length - 1];
+      setSelectedStop(latest.stopName);
+    }
+  }, [favoriteBuses.length]);
+
   const hasFavorites = favoriteBuses.length > 0;
   const popularStops = ['Plac Dworcowy', 'Spacerowa', 'Szpital', 'Serbinów'];
 
@@ -796,6 +808,7 @@ function DesktopZditmWidget({
 
   const handleStopChange = (stopName: string) => {
     setSelectedStop(stopName);
+    setExpandedRouteKey(null);
     try {
       localStorage.setItem('mojminsk_desktop_zditm_stop', stopName);
     } catch {
@@ -923,41 +936,90 @@ function DesktopZditmWidget({
           )}
         </div>
 
-        {/* LIST OF DEPARTURES */}
+        {/* LIST OF DEPARTURES WITH INLINE EXPANSION */}
         <div className="mt-2.5 space-y-1.5">
           {currentStopData?.routes && currentStopData.routes.length > 0 ? (
             currentStopData.routes.slice(0, 3).map((route, i) => {
               const deps = getUpcomingDepartures(route.lineId, selectedStop, route.directionIdx);
+              const routeKey = `${route.lineId}-${route.destination}-${route.directionIdx}-${i}`;
+              const isExpanded = expandedRouteKey === routeKey;
+              const lineData = busLines.find((l) => l.id === route.lineId);
+              const dirData = lineData?.directions[route.directionIdx];
+
               return (
                 <div
-                  key={`${route.lineId}-${route.destination}-${i}`}
-                  onClick={() => onOpenFull?.(route.lineId, selectedStop)}
-                  className="group flex items-center justify-between rounded-xl bg-mist/40 hover:bg-mist/90 p-2.5 border border-mist-100 transition-colors cursor-pointer"
+                  key={routeKey}
+                  className={cn(
+                    'rounded-xl border transition-all overflow-hidden',
+                    isExpanded
+                      ? 'border-ink bg-mist/60 shadow-xs'
+                      : 'border-mist-100 bg-mist/40 hover:bg-mist/80'
+                  )}
                 >
-                  <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
-                    <span
-                      className={cn(
-                        'shrink-0 rounded px-1.5 py-0.5 text-[10.5px] font-black',
-                        lineTone[route.lineId],
-                      )}
-                    >
-                      {route.lineId}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="truncate text-[12px] font-bold text-ink group-hover:text-sky-800">
-                        ➔ {route.destination}
-                      </p>
-                      <p className="text-[10.5px] text-ink-400 font-medium">
-                        następne: {clock(deps[1])}, {clock(deps[2])}
-                      </p>
+                  <button
+                    type="button"
+                    onClick={() => setExpandedRouteKey(isExpanded ? null : routeKey)}
+                    className="w-full flex items-center justify-between p-2.5 text-left transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
+                      <span
+                        className={cn(
+                          'shrink-0 rounded px-1.5 py-0.5 text-[10.5px] font-black',
+                          lineTone[route.lineId],
+                        )}
+                      >
+                        {route.lineId}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="truncate text-[12px] font-bold text-ink hover:text-sky-800">
+                          ➔ {route.destination}
+                        </p>
+                        <p className="text-[10.5px] text-ink-400 font-medium">
+                          kolejne: {clock(deps[1])}, {clock(deps[2])}
+                        </p>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="text-right shrink-0">
-                    <span className="inline-block rounded-md bg-white border border-mist-200 px-2 py-0.5 font-display text-[13.5px] font-extrabold text-coral-700 shadow-2xs">
-                      za {deps[0]} min
-                    </span>
-                  </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="inline-block rounded-md bg-white border border-mist-200 px-2 py-0.5 font-display text-[13.5px] font-extrabold text-coral-700 shadow-2xs">
+                        za {deps[0]} min
+                      </span>
+                      <ChevronDown
+                        className={cn(
+                          'h-3.5 w-3.5 text-ink-400 transition-transform duration-200',
+                          isExpanded && 'rotate-180 text-ink'
+                        )}
+                      />
+                    </div>
+                  </button>
+
+                  {/* Inline Expanded Timetable */}
+                  {isExpanded && dirData && (
+                    <div className="border-t border-mist-200 bg-white p-2.5 space-y-2">
+                      <div className="flex items-center justify-between text-[10.5px]">
+                        <span className="font-extrabold text-ink uppercase tracking-wider">
+                          Rozkład odjazdów (Pn-Pt):
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => onOpenFull?.(route.lineId, selectedStop)}
+                          className="font-bold text-sky-700 hover:underline inline-flex items-center gap-0.5 cursor-pointer"
+                        >
+                          Wszystkie dni ➔
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-6 gap-1">
+                        {dirData.departures.weekday.slice(0, 12).map((time) => (
+                          <div
+                            key={time}
+                            className="rounded-md bg-mist/70 py-1 text-center text-[11px] font-semibold text-ink tabular-nums"
+                          >
+                            {time}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })

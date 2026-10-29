@@ -34,13 +34,15 @@ const lineBadges: Record<LineId, string> = {
 
 export function ZditmScreen({
   onBack,
+  initialLine: _initialLine,
+  initialStopName,
   isClosing = false,
   favoriteBuses = [],
   onToggleFavorite,
   onRemoveFavorite,
 }: ZditmScreenProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(() => initialStopName || '');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [dayType, setDayType] = useState<'weekday' | 'saturday' | 'sunday'>('weekday');
 

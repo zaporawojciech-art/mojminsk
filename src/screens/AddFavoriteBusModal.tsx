@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { ChevronRight, MapPin, Search } from 'lucide-react';
 import { NativeHeader, cn } from '../components/ui';
 import {
@@ -40,6 +40,13 @@ export function AddFavoriteBusModal({
         s.routes.some((r) => r.destination.toLowerCase().includes(q) || r.lineId.toLowerCase().includes(q)),
     );
   }, [allStops, search]);
+
+  // Gdy wyszukiwanie zawęzi wynik do 1 przystanku, rozwiń go automatycznie
+  useEffect(() => {
+    if (filteredStops.length === 1) {
+      setExpandedStop(filteredStops[0].name);
+    }
+  }, [filteredStops]);
 
   const handleSelectRoute = (stopName: string, route: (typeof allStops)[0]['routes'][0]) => {
     onSave({
@@ -89,12 +96,12 @@ export function AddFavoriteBusModal({
             )}
           </div>
           <p className="mt-2 text-[11.5px] text-ink-500 font-medium">
-            Wybierz przystanek i kierunek, aby przypiąć go do obserwowanych odjazdów ZDiTM.
+            Dotknij przystanek z listy, aby rozwinąć kierunki i dodać go do obserwowanych.
           </p>
         </div>
 
         {/* Stops List / Desktop Grid */}
-        <div className="flex-1 overflow-y-auto overscroll-contain p-4 md:px-8 lg:px-12 md:py-6 space-y-2.5 md:space-y-0 md:grid md:grid-cols-2 xl:grid-cols-3 md:gap-4 md:items-start pb-24 md:pb-8">
+        <div className="flex-1 overflow-y-auto overscroll-contain p-4 md:px-8 lg:px-12 md:py-6 space-y-3 md:space-y-0 md:grid md:grid-cols-2 xl:grid-cols-3 md:gap-4 md:items-start pb-24 md:pb-8">
           {filteredStops.length === 0 ? (
             <div className="md:col-span-full p-8 text-center text-ink-500">
               <MapPin className="mx-auto h-8 w-8 text-ink-300" />
@@ -103,18 +110,21 @@ export function AddFavoriteBusModal({
             </div>
           ) : (
             filteredStops.map((stop) => {
-              const isExpanded = expandedStop === stop.name || filteredStops.length === 1;
+              const isExpanded = expandedStop === stop.name;
 
               return (
                 <div
                   key={stop.name}
-                  className="overflow-hidden rounded-3xl bg-white shadow-card transition-all"
+                  className={cn(
+                    'rounded-3xl bg-white shadow-card transition-all border overflow-hidden',
+                    isExpanded ? 'border-ink shadow-md' : 'border-transparent hover:border-mist-300'
+                  )}
                 >
                   {/* Stop Header Row */}
                   <button
                     type="button"
                     onClick={() => setExpandedStop(isExpanded ? null : stop.name)}
-                    className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-mist/30 active:bg-mist/50"
+                    className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-mist/30 active:bg-mist/50 cursor-pointer"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-mist text-ink-700">
@@ -137,7 +147,7 @@ export function AddFavoriteBusModal({
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5 shrink-0 pl-2">
+                    <div className="flex items-center gap-2 shrink-0 pl-2">
                       <div className="flex -space-x-1">
                         {Array.from(new Set(stop.routes.map((r) => r.lineId))).map((lid) => (
                           <span
@@ -151,49 +161,59 @@ export function AddFavoriteBusModal({
                           </span>
                         ))}
                       </div>
-                      <ChevronRight
+                      <span
                         className={cn(
-                          'h-4 w-4 text-ink-400 transition-transform duration-200',
-                          isExpanded && 'rotate-90',
+                          'grid h-7 w-7 place-items-center rounded-full bg-mist/60 text-ink-500 transition-transform duration-200',
+                          isExpanded && 'rotate-90 bg-ink text-white'
                         )}
-                      />
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </span>
                     </div>
                   </button>
 
                   {/* Expanded Directions / Routes */}
                   {isExpanded && (
-                    <div className="border-t border-mist-200 bg-sand-50/40 p-3 space-y-2">
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-ink-400 px-1">
-                        Wybierz kierunek, by dodać do obserwowanych:
-                      </p>
-                      <div className="space-y-1.5">
+                    <div className="border-t border-mist-200 bg-sand-50/70 p-3.5 space-y-2.5">
+                      <div className="flex items-center justify-between px-1">
+                        <p className="text-[11.5px] font-extrabold text-ink">
+                          Wybierz kierunek odjazdu:
+                        </p>
+                        <span className="text-[10.5px] text-ink-400 font-semibold">
+                          Kliknij, by przypiąć
+                        </span>
+                      </div>
+                      <div className="space-y-2">
                         {stop.routes.map((r) => {
                           const upcoming = getUpcomingDepartures(r.lineId, stop.name, r.directionIdx);
                           return (
                             <button
-                              key={`${r.lineId}-${r.destination}`}
+                              key={`${r.lineId}-${r.destination}-${r.directionIdx}`}
                               type="button"
                               onClick={() => handleSelectRoute(stop.name, r)}
-                              className="flex w-full items-center justify-between rounded-2xl bg-white p-3 text-left shadow-xs border border-mist-200 transition-transform active:scale-[.98] hover:border-ink hover:shadow-sm"
+                              className="group flex w-full items-center justify-between rounded-2xl bg-white p-3.5 text-left shadow-xs border border-mist-200 transition-all active:scale-[.98] hover:border-ink hover:shadow-sm cursor-pointer"
                             >
-                              <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                                <span className={cn('shrink-0 rounded-lg px-2 py-0.5 text-[12px] font-extrabold', lineTone[r.lineId].badge)}>
+                              <div className="flex items-center gap-3 min-w-0 pr-2">
+                                <span className={cn('shrink-0 rounded-lg px-2.5 py-1 text-[12px] font-black', lineTone[r.lineId].badge)}>
                                   {r.lineId}
                                 </span>
                                 <div className="min-w-0">
-                                  <p className="truncate text-[13px] font-bold text-ink">
+                                  <p className="truncate text-[13.5px] font-bold text-ink group-hover:text-ink-700">
                                     ➔ {r.destination}
                                   </p>
-                                  <p className="text-[11px] text-ink-400 truncate">
+                                  <p className="text-[11.5px] text-ink-500 truncate mt-0.5">
                                     {r.directionName}
                                   </p>
                                 </div>
                               </div>
 
                               <div className="text-right shrink-0">
-                                <span className="inline-flex items-center gap-1 rounded-full bg-coral-100 px-2 py-0.5 text-[10.5px] font-extrabold text-coral-800">
+                                <span className="inline-flex items-center gap-1 rounded-full bg-coral-100 border border-coral-200 px-2.5 py-1 text-[11px] font-extrabold text-coral-800">
                                   za {upcoming[0]} min
                                 </span>
+                                <p className="text-[10px] text-ink-400 font-semibold mt-0.5">
+                                  potem za {upcoming[1]} min
+                                </p>
                               </div>
                             </button>
                           );
