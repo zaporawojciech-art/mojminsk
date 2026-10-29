@@ -1,6 +1,6 @@
 // Dane demonstracyjne mójMińsk — realia Mińska Mazowieckiego
 export type Tone = 'coral' | 'sky' | 'sand';
-export type LineId = 'M2' | 'M3' | 'M4';
+export type LineId = 'M1' | 'M2' | 'M3' | 'M4';
 
 const img = (id: string, w = 600) => `https://images.unsplash.com/${id}?w=${w}&auto=format&fit=crop&q=75`;
 

@@ -71,7 +71,7 @@ export function Footer({
               onClick={() => onOpenZditm?.('M2')}
               className="hover:text-coral-600 transition-colors"
             >
-              Rozkład ZDiTM
+              Komunikacja miejska
             </button>
             <a
               href={TAB_PATHS.rides}

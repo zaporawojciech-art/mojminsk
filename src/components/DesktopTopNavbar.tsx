@@ -125,7 +125,7 @@ export function DesktopTopNavbar({
               className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12.5px] font-bold text-ink-600 hover:bg-mist hover:text-ink transition-all whitespace-nowrap cursor-pointer"
             >
               <Bus className="h-3.5 w-3.5 text-sky-700 shrink-0" />
-              <span>Rozkład ZDiTM</span>
+              <span>Komunikacja miejska</span>
             </a>
 
             <a

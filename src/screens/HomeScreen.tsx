@@ -59,7 +59,7 @@ import {
 } from '../components/WeatherInfographics';
 import type { WeatherData } from '../services/weatherService';
 
-const lineTone: Record<LineId, string> = { M2: 'bg-sky', M3: 'bg-sand', M4: 'bg-coral' };
+const lineTone: Record<LineId, string> = { M1: 'bg-emerald-100 text-emerald-900', M2: 'bg-sky', M3: 'bg-sand', M4: 'bg-coral' };
 
 const greeting = () => {
   const h = new Date().getHours();
@@ -719,7 +719,7 @@ function BusWidget({
               <Bus className="h-4.5 w-4.5" aria-hidden />
             </span>
             <p className="font-display text-[15px] font-bold leading-tight text-ink">
-              Autobusy miejskie
+              Komunikacja miejska
             </p>
           </div>
 
@@ -893,7 +893,7 @@ function DesktopZditmWidget({
             </span>
             <div className="min-w-0">
               <h3 className="text-[13px] font-extrabold text-ink leading-tight truncate">
-                ZDiTM Mińsk Mazowiecki
+                Komunikacja miejska
               </h3>
               <p className="text-[10px] text-ink-400 font-medium flex items-center gap-1.5">
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />

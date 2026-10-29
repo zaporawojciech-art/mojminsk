@@ -15,6 +15,7 @@ interface AddFavoriteBusModalProps {
 }
 
 const lineTone: Record<LineId, { badge: string; border: string }> = {
+  M1: { badge: 'bg-emerald-100 text-emerald-900', border: 'border-emerald-300' },
   M2: { badge: 'bg-sky text-ink', border: 'border-sky-300' },
   M3: { badge: 'bg-sand text-ink', border: 'border-sand-300' },
   M4: { badge: 'bg-coral text-ink', border: 'border-coral-300' },
