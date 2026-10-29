@@ -39,6 +39,7 @@ import { NotFoundScreen } from './screens/NotFoundScreen';
 import type { AdFilterState } from './screens/AdFiltersModal';
 import { AuthRequiredModal } from './components/AuthRequiredModal';
 import { DesktopTopNavbar } from './components/DesktopTopNavbar';
+import { Footer } from './components/Footer';
 import { SeoHead, type SeoHeadProps } from './components/SeoHead';
 import { navigateTo } from './components/AppLink';
 import {
@@ -1373,6 +1374,33 @@ export default function App() {
                 </div>
               )}
             </div>
+          )}
+
+          {!authScreenOpen && !routeNotFound && (
+            <Footer
+              onTabChange={handleTabChange}
+              onOpenZditm={(line) => {
+                setSelectedZditmLine(line ?? 'M2');
+                setSelectedZditmStop(undefined);
+                setOverlay('zditm');
+                navigateTo('/zditm/m2');
+              }}
+              onOpenPolls={() => {
+                setPollsModalOpen(true);
+                navigateTo('/ankiety');
+              }}
+              onAddNewAd={() =>
+                requireAuth(
+                  'Dodaj ogłoszenie',
+                  'Publikacja ogłoszeń na tablicy Mińska wymaga konta mieszkańca.',
+                  () => {
+                    setAddAdOpen(true);
+                    navigateTo('/ogloszenia/dodaj');
+                  },
+                )
+              }
+              onOpenInstallApp={() => setInstallModalOpen(true)}
+            />
           )}
         </main>
 
