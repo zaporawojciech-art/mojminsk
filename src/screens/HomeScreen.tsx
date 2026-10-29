@@ -185,7 +185,7 @@ function WeatherCard({
                       </span>
                     ) : null}
                   </div>
-                  <p className="font-display text-[15px] font-bold leading-none">{item.temp}°</p>
+                  <p className="font-display text-[16px] font-extrabold leading-none">{item.temp}°</p>
                 </div>
               ))}
             </div>
@@ -209,8 +209,10 @@ function WeatherCard({
                     <span>Bez opadów</span>
                   )}
                 </div>
-                <div className="text-right shrink-0 font-bold text-ink">
-                  <span className="text-ink-400 font-semibold">{d.minTemp}°</span> / <span>{d.maxTemp}°</span>
+                <div className="text-right shrink-0">
+                  <span className="text-slate-600 font-bold text-[13px]">{d.minTemp}°</span>{' '}
+                  <span className="text-slate-400 font-normal text-[11px]">/</span>{' '}
+                  <span className="text-ink font-black font-display text-[15px]">{d.maxTemp}°</span>
                 </div>
               </div>
             ))}
@@ -402,7 +404,7 @@ function DesktopWeatherWidget({
                   <span className="my-0.5 h-6 w-6 flex items-center justify-center">
                     <HourlyWeatherIcon icon={item.icon} isDay={item.isDay} />
                   </span>
-                  <span className="font-display text-[13px] font-bold leading-none">{item.temp}°</span>
+                  <span className="font-display text-[14px] font-extrabold leading-none">{item.temp}°</span>
                   <span
                     className={cn(
                       'mt-0.5 text-[8.5px] font-extrabold h-2.5',
@@ -459,14 +461,18 @@ function DesktopWeatherWidget({
                   )}
                 </div>
 
-                <div className="w-full pt-1 border-t border-ink/5">
-                  <div className="flex items-baseline justify-between text-[11px] font-bold text-ink px-1">
-                    <span className="text-ink-400 font-semibold">{d.minTemp}°</span>
-                    <span className="text-ink font-extrabold">{d.maxTemp}°</span>
+                <div className="w-full pt-2 border-t border-slate-200/80">
+                  <div className="flex items-baseline justify-between px-1">
+                    <span className="text-[13px] font-bold text-slate-600">
+                      {d.minTemp}°
+                    </span>
+                    <span className="font-display text-[16px] font-black text-ink">
+                      {d.maxTemp}°
+                    </span>
                   </div>
-                  <div className="relative h-1.5 w-full rounded-full bg-mist-300 mt-1 overflow-hidden">
+                  <div className="relative h-2 w-full rounded-full bg-slate-200 mt-1.5 overflow-hidden">
                     <div
-                      className="absolute top-0 bottom-0 rounded-full bg-gradient-to-r from-sky-400 via-amber-400 to-coral"
+                      className="absolute top-0 bottom-0 rounded-full bg-gradient-to-r from-sky-500 via-amber-500 to-rose-500"
                       style={{
                         left: `${leftPercent}%`,
                         width: `${widthPercent}%`,
