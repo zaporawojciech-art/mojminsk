@@ -81,6 +81,17 @@ function HourlyWeatherIcon({ icon, isDay }: { icon: string; isDay: boolean }) {
   );
 }
 
+function formatAirQualityBadge(label: string): string {
+  const norm = label.trim().toLowerCase();
+  if (norm === 'bardzo dobra') return 'Powietrze: bardzo dobre';
+  if (norm === 'dobra') return 'Powietrze: dobre';
+  if (norm === 'umiarkowana') return 'Powietrze: umiarkowane';
+  if (norm === 'dostateczna') return 'Powietrze: dostateczne';
+  if (norm === 'zła') return 'Powietrze: złe';
+  if (norm === 'bardzo zła') return 'Powietrze: bardzo złe';
+  return `Jakość: ${label}`;
+}
+
 function WeatherCard({
   city = 'Mińsk Mazowiecki',
   weather,
@@ -150,7 +161,7 @@ function WeatherCard({
               title="Szczegóły jakości powietrza GIOŚ"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-current" />
-              <span>Smog: {weather.aqi.label}</span>
+              <span>{formatAirQualityBadge(weather.aqi.label)}</span>
             </button>
           </div>
         </div>
