@@ -75,7 +75,7 @@ export function AddFavoriteBusModal({
     >
       <div className="mx-auto flex h-full w-full max-w-md md:max-w-none flex-col overflow-hidden bg-mist">
         <NativeHeader
-          title="Dodaj przystanek do obserwowanych"
+          title="Dodaj przystanek"
           backLabel="Wróć"
           onBack={onClose}
         />
@@ -139,21 +139,21 @@ export function AddFavoriteBusModal({
                         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-sky-50 text-sky-800 border border-sky-200">
                           <Bus className="h-4.5 w-4.5" />
                         </span>
-                        <div className="min-w-0">
-                          <p className="font-display text-[15px] font-bold text-ink truncate">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-display text-[15px] font-bold text-ink leading-snug break-words">
                             {stop.name}
                           </p>
-                          <p className="text-[11px] text-ink-400 font-mono">
+                          <p className="text-[11px] text-ink-400 font-mono mt-0.5">
                             Kod słupka: {stop.altId || stop.id}
                           </p>
                         </div>
                       </button>
 
-                      <div className="flex items-center gap-2 shrink-0 pl-2">
+                      <div className="flex items-center gap-1.5 shrink-0 pl-2">
                         <button
                           type="button"
                           onClick={() => handleQuickAddStop(stop)}
-                          className="px-3 py-1.5 rounded-xl bg-ink text-white text-xs font-bold shadow-xs hover:bg-ink-700 active:scale-95 transition-all cursor-pointer"
+                          className="px-2.5 py-1.5 rounded-xl bg-ink text-white text-[11.5px] font-bold shadow-xs hover:bg-ink-700 active:scale-95 transition-all cursor-pointer whitespace-nowrap"
                         >
                           + Obserwuj
                         </button>
@@ -161,7 +161,7 @@ export function AddFavoriteBusModal({
                           type="button"
                           onClick={() => setExpandedStopId(isExpanded ? null : stop.id)}
                           className={cn(
-                            'grid h-7 w-7 place-items-center rounded-full bg-mist text-ink-500 transition-transform duration-200 cursor-pointer',
+                            'grid h-7 w-7 place-items-center rounded-full bg-mist text-ink-500 transition-transform duration-200 cursor-pointer shrink-0',
                             isExpanded && 'rotate-90 bg-sky-100 text-sky-900'
                           )}
                           title="Wybierz linię"

@@ -377,8 +377,8 @@ export function NativeHeader({
         </div>
 
         {/* Centrum: Tytuł matematycznie wycentrowany względem całej szerokości ekranu (Mobile) */}
-        <div className="pointer-events-none absolute inset-x-0 flex items-center justify-center px-16 sm:px-20 md:hidden">
-          <h1 className="truncate font-display text-[16px] font-bold text-ink">
+        <div className="pointer-events-none absolute inset-y-0 left-24 right-14 flex items-center justify-center md:hidden">
+          <h1 className="truncate font-display text-[16px] font-bold text-ink text-center">
             {title}
           </h1>
         </div>

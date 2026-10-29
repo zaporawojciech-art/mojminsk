@@ -376,7 +376,7 @@ export function ZditmScreen({
                     >
                       <div className="min-w-0 pr-2">
                         <div className="flex items-center gap-1.5">
-                          <p className="text-[13px] font-bold text-ink truncate leading-snug">
+                          <p className="text-[13px] font-bold text-ink leading-snug break-words">
                             {stop.name}
                           </p>
                           {isFav && <Star className="w-3 h-3 fill-amber-400 text-amber-500 shrink-0" />}
@@ -412,7 +412,7 @@ export function ZditmScreen({
                       {selectedStop?.altId || selectedStop?.id}
                     </span>
                   </div>
-                  <h2 className="font-display text-[22px] font-bold text-ink truncate">
+                  <h2 className="font-display text-[20px] md:text-[22px] font-bold text-ink leading-tight break-words">
                     {selectedStop?.name || 'Wybierz przystanek'}
                   </h2>
                 </div>
@@ -627,7 +627,7 @@ export function ZditmScreen({
                   <span>•</span>
                   <span className="font-mono">{selectedStop?.altId || selectedStop?.id}</span>
                 </div>
-                <h2 className="font-display text-[18px] font-bold text-ink truncate leading-tight mt-0.5">
+                <h2 className="font-display text-[17px] font-bold text-ink leading-tight mt-0.5 break-words">
                   {selectedStop?.name || 'Wybierz przystanek'}
                 </h2>
               </div>

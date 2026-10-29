@@ -1017,7 +1017,7 @@ function DesktopZditmWidget({
                     >
                       {fav.lineId}
                     </span>
-                    <span className="truncate max-w-[120px]">{fav.stopName}</span>
+                    <span className="truncate max-w-[180px]" title={fav.stopName}>{fav.stopName}</span>
                     {onRemoveFavorite && (
                       <span
                         role="button"
@@ -1154,7 +1154,7 @@ function DesktopZditmWidget({
 
       {/* FOOTER */}
       <div className="flex items-center justify-between text-[11px] pt-2.5 mt-2.5 border-t border-mist-100">
-        <span className="text-ink-500 font-medium truncate max-w-[170px] flex items-center gap-1">
+        <span className="text-ink-500 font-medium truncate max-w-[220px] flex items-center gap-1" title={selectedStopObj.name}>
           <MapPin className="h-3 w-3 text-sky-700 shrink-0" />
           <span><b>{selectedStopObj.name}</b></span>
         </span>
