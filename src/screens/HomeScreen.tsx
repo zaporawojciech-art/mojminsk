@@ -15,6 +15,7 @@ import {
   Phone,
   Plus,
   RefreshCw,
+  Search,
   ShieldCheck,
   Sparkles,
   TriangleAlert,
@@ -783,15 +784,11 @@ function DesktopZditmWidget({
     } catch {
       // ignore
     }
-    return favoriteBuses[0]?.stopName || 'Spacerowa';
+    return favoriteBuses[0]?.stopName || 'Plac Dworcowy';
   });
 
   const hasFavorites = favoriteBuses.length > 0;
-  const [viewMode, setViewMode] = useState<'selected' | 'favorites'>(() =>
-    hasFavorites ? 'favorites' : 'selected'
-  );
-
-  const effectiveMode = hasFavorites && viewMode === 'favorites' ? 'favorites' : 'selected';
+  const popularStops = ['Plac Dworcowy', 'Spacerowa', 'Szpital', 'Serbinów'];
 
   const currentStopData = useMemo(() => {
     return allStops.find((s) => s.name === selectedStop) || allStops[0];
@@ -799,7 +796,6 @@ function DesktopZditmWidget({
 
   const handleStopChange = (stopName: string) => {
     setSelectedStop(stopName);
-    setViewMode('selected');
     try {
       localStorage.setItem('mojminsk_desktop_zditm_stop', stopName);
     } catch {
@@ -833,7 +829,7 @@ function DesktopZditmWidget({
                 type="button"
                 onClick={onAddFavorite}
                 className="inline-flex items-center gap-1 rounded-full bg-sky-50 hover:bg-sky-100 border border-sky-200/80 px-2.5 py-1 text-[11px] font-extrabold text-sky-800 transition-colors cursor-pointer"
-                title="Wybierz i dodaj swój przystanek do obserwowanych"
+                title="Wyszukaj i dodaj swój przystanek do obserwowanych"
               >
                 <Plus className="h-3 w-3" />
                 <span>Dodaj przystanek</span>
@@ -842,163 +838,142 @@ function DesktopZditmWidget({
           </div>
         </div>
 
-        {/* CONTROLS BAR: TABS & STOP PICKER */}
-        <div className="mt-2.5 flex items-center gap-1.5">
-          {hasFavorites && (
-            <div className="flex rounded-lg bg-mist/80 p-0.5 border border-mist-200 shrink-0">
-              <button
-                type="button"
-                onClick={() => setViewMode('favorites')}
-                className={cn(
-                  'rounded-md px-2 py-1 text-[10.5px] font-bold transition-all cursor-pointer',
-                  effectiveMode === 'favorites' ? 'bg-white text-ink shadow-2xs' : 'text-ink-500 hover:text-ink'
-                )}
-              >
-                Ulubione ({favoriteBuses.length})
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('selected')}
-                className={cn(
-                  'rounded-md px-2 py-1 text-[10.5px] font-bold transition-all cursor-pointer',
-                  effectiveMode === 'selected' ? 'bg-white text-ink shadow-2xs' : 'text-ink-500 hover:text-ink'
-                )}
-              >
-                Wszystkie
-              </button>
-            </div>
+        {/* QUICK STOP PILLS (ZERO DROPDOWN) */}
+        <div className="mt-2.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+          {hasFavorites ? (
+            <>
+              {favoriteBuses.map((fav) => {
+                const isActive = selectedStop === fav.stopName;
+                return (
+                  <button
+                    key={fav.id}
+                    type="button"
+                    onClick={() => handleStopChange(fav.stopName)}
+                    className={cn(
+                      'group shrink-0 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer border',
+                      isActive
+                        ? 'bg-ink text-white border-ink shadow-xs'
+                        : 'bg-mist/70 hover:bg-mist text-ink-600 border-mist-200 hover:border-mist-300'
+                    )}
+                  >
+                    <span className={cn('rounded px-1 py-0.2 text-[9px] font-extrabold', lineTone[fav.lineId])}>
+                      {fav.lineId}
+                    </span>
+                    <span>{fav.stopName}</span>
+                    {onRemoveFavorite && (
+                      <span
+                        role="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRemoveFavorite(fav.id);
+                        }}
+                        className="opacity-60 hover:opacity-100 ml-0.5 text-current hover:text-coral transition-opacity"
+                        title="Usuń z obserwowanych"
+                      >
+                        <X className="h-3 w-3" />
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+              {onAddFavorite && (
+                <button
+                  type="button"
+                  onClick={onAddFavorite}
+                  className="shrink-0 inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-bold text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-200/80 transition-colors cursor-pointer"
+                  title="Wyszukaj i dodaj kolejny przystanek"
+                >
+                  <Plus className="h-3 w-3" />
+                  <span>Kolejny</span>
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              {popularStops.map((stName) => {
+                const isActive = selectedStop === stName;
+                return (
+                  <button
+                    key={stName}
+                    type="button"
+                    onClick={() => handleStopChange(stName)}
+                    className={cn(
+                      'shrink-0 rounded-lg px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer border',
+                      isActive
+                        ? 'bg-ink text-white border-ink shadow-xs'
+                        : 'bg-mist/70 hover:bg-mist text-ink-600 border-mist-200 hover:border-mist-300'
+                    )}
+                  >
+                    {stName}
+                  </button>
+                );
+              })}
+              {onAddFavorite && (
+                <button
+                  type="button"
+                  onClick={onAddFavorite}
+                  className="shrink-0 inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-bold text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-200/80 transition-colors cursor-pointer"
+                  title="Wyszukaj dowolny przystanek z listy"
+                >
+                  <Search className="h-3 w-3" />
+                  <span>Inny...</span>
+                </button>
+              )}
+            </>
           )}
-
-          {/* STOP DROPDOWN */}
-          <div className="relative flex items-center flex-1 min-w-0 rounded-lg bg-mist/60 px-2 py-1 border border-mist-200 hover:border-mist-300">
-            <MapPin className="h-3.5 w-3.5 shrink-0 text-sky-700 mr-1.5" />
-            <select
-              value={selectedStop}
-              onChange={(e) => handleStopChange(e.target.value)}
-              className="w-full bg-transparent text-[11.5px] font-bold text-ink focus:outline-none cursor-pointer truncate"
-              title="Zmień obserwowany przystanek"
-            >
-              {allStops.map((st) => (
-                <option key={st.name} value={st.name} className="text-ink">
-                  {st.name} ({st.routes.map((r) => r.lineId).join(', ')})
-                </option>
-              ))}
-            </select>
-          </div>
         </div>
 
         {/* LIST OF DEPARTURES */}
         <div className="mt-2.5 space-y-1.5">
-          {effectiveMode === 'favorites' ? (
-            /* User's custom favorite bus stops */
-            favoriteBuses.slice(0, 3).map((fav) => {
-              const upcoming = getUpcomingDepartures(fav.lineId, fav.stopName, fav.directionIdx);
+          {currentStopData?.routes && currentStopData.routes.length > 0 ? (
+            currentStopData.routes.slice(0, 3).map((route, i) => {
+              const deps = getUpcomingDepartures(route.lineId, selectedStop, route.directionIdx);
               return (
                 <div
-                  key={fav.id}
-                  onClick={() => onOpenFull?.(fav.lineId, fav.stopName)}
+                  key={`${route.lineId}-${route.destination}-${i}`}
+                  onClick={() => onOpenFull?.(route.lineId, selectedStop)}
                   className="group flex items-center justify-between rounded-xl bg-mist/40 hover:bg-mist/90 p-2.5 border border-mist-100 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
                     <span
                       className={cn(
                         'shrink-0 rounded px-1.5 py-0.5 text-[10.5px] font-black',
-                        lineTone[fav.lineId],
+                        lineTone[route.lineId],
                       )}
                     >
-                      {fav.lineId}
+                      {route.lineId}
                     </span>
                     <div className="min-w-0">
-                      <p className="truncate text-[12.5px] font-extrabold text-ink group-hover:text-sky-800">
-                        {fav.stopName}
+                      <p className="truncate text-[12px] font-bold text-ink group-hover:text-sky-800">
+                        ➔ {route.destination}
                       </p>
-                      <p className="truncate text-[11px] text-ink-500 font-medium">
-                        ➔ {fav.destination}
+                      <p className="text-[10.5px] text-ink-400 font-medium">
+                        następne: {clock(deps[1])}, {clock(deps[2])}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
-                    <div className="text-right">
-                      <span className="inline-block rounded-md bg-white border border-mist-200 px-2 py-0.5 font-display text-[13.5px] font-extrabold text-coral-700 shadow-2xs">
-                        za {upcoming[0]} min
-                      </span>
-                      <p className="text-[10px] text-ink-400 font-semibold mt-0.5">
-                        potem {clock(upcoming[1])}
-                      </p>
-                    </div>
-                    {onRemoveFavorite && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onRemoveFavorite(fav.id);
-                        }}
-                        className="opacity-0 group-hover:opacity-100 p-1 text-ink-400 hover:text-coral transition-opacity"
-                        title="Usuń z obserwowanych"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </button>
-                    )}
+                  <div className="text-right shrink-0">
+                    <span className="inline-block rounded-md bg-white border border-mist-200 px-2 py-0.5 font-display text-[13.5px] font-extrabold text-coral-700 shadow-2xs">
+                      za {deps[0]} min
+                    </span>
                   </div>
                 </div>
               );
             })
           ) : (
-            /* Passing routes for selected stop */
-            currentStopData?.routes && currentStopData.routes.length > 0 ? (
-              currentStopData.routes.slice(0, 3).map((route, i) => {
-                const deps = getUpcomingDepartures(route.lineId, selectedStop, route.directionIdx);
-                return (
-                  <div
-                    key={`${route.lineId}-${route.destination}-${i}`}
-                    onClick={() => onOpenFull?.(route.lineId, selectedStop)}
-                    className="group flex items-center justify-between rounded-xl bg-mist/40 hover:bg-mist/90 p-2.5 border border-mist-100 transition-colors cursor-pointer"
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
-                      <span
-                        className={cn(
-                          'shrink-0 rounded px-1.5 py-0.5 text-[10.5px] font-black',
-                          lineTone[route.lineId],
-                        )}
-                      >
-                        {route.lineId}
-                      </span>
-                      <div className="min-w-0">
-                        <p className="truncate text-[12px] font-bold text-ink group-hover:text-sky-800">
-                          ➔ {route.destination}
-                        </p>
-                        <p className="text-[10.5px] text-ink-400 font-medium">
-                          następne: {clock(deps[1])}, {clock(deps[2])}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="text-right shrink-0">
-                      <span className="inline-block rounded-md bg-white border border-mist-200 px-2 py-0.5 font-display text-[13.5px] font-extrabold text-coral-700 shadow-2xs">
-                        za {deps[0]} min
-                      </span>
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="p-4 text-center text-[12px] text-ink-400">
-                Brak zdefiniowanych odjazdów dla tego przystanku.
-              </div>
-            )
+            <div className="p-4 text-center text-[12px] text-ink-400">
+              Brak zdefiniowanych odjazdów dla tego przystanku.
+            </div>
           )}
         </div>
       </div>
 
       {/* FOOTER */}
       <div className="flex items-center justify-between text-[11px] pt-2.5 mt-2.5 border-t border-mist-100">
-        <span className="text-ink-500 font-medium truncate max-w-[170px]">
-          {effectiveMode === 'favorites' ? (
-            <span>Twoje zapisane przystanki</span>
-          ) : (
-            <span>Przystanek: <b>{selectedStop}</b></span>
-          )}
+        <span className="text-ink-500 font-medium truncate max-w-[170px] flex items-center gap-1">
+          <MapPin className="h-3 w-3 text-sky-700 shrink-0" />
+          <span><b>{selectedStop}</b></span>
         </span>
         <button
           type="button"
