@@ -69,6 +69,9 @@ export interface WeatherData {
   pressureTrend: 'rising' | 'steady' | 'falling';
   dewPoint: number; // °C
   rain: number; // mm
+  rainChance: number; // % prawdopodobieństwo opadów w bieżącej godzinie
+  rainNext12h: number; // mm suma opadów w ciągu najbliższych 12h
+  cloudCover: number; // % zachmurzenia
   visibility: number; // km
   uv: number;
   uvLabel: string;
@@ -85,7 +88,7 @@ export interface WeatherData {
 
 const MINSK_LAT = 52.1793;
 const MINSK_LON = 21.5728;
-const CACHE_KEY = 'mojminsk_openmeteo_cache_v2';
+const CACHE_KEY = 'mojminsk_openmeteo_cache_v3';
 const CACHE_TTL_MS = 15 * 60 * 1000; // 15 minut
 
 export function mapWmoToCondition(code: number, isDay: boolean = true): {
@@ -300,7 +303,7 @@ export async function fetchLiveWeatherData(): Promise<WeatherData> {
   }
 
   // 2. Zapytania do Open-Meteo
-  const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${MINSK_LAT}&longitude=${MINSK_LON}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation_probability,precipitation,weather_code,surface_pressure,visibility,wind_speed_10m,wind_direction_10m,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,sunrise,sunset,uv_index_max,precipitation_sum,precipitation_probability_max,wind_speed_10m_max&timezone=Europe%2FWarsaw&forecast_days=7`;
+  const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${MINSK_LAT}&longitude=${MINSK_LON}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m,cloud_cover&hourly=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation_probability,precipitation,weather_code,surface_pressure,visibility,cloud_cover,wind_speed_10m,wind_direction_10m,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,sunrise,sunset,uv_index_max,precipitation_sum,precipitation_probability_max,wind_speed_10m_max&timezone=Europe%2FWarsaw&forecast_days=7`;
   const airQualityUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${MINSK_LAT}&longitude=${MINSK_LON}&current=pm10,pm2_5,european_aqi&timezone=Europe%2FWarsaw`;
 
   const [weatherRes, aqiRes] = await Promise.allSettled([
@@ -473,6 +476,10 @@ export async function fetchLiveWeatherData(): Promise<WeatherData> {
     pressureTrend,
     dewPoint: calculateDewPoint(current.temperature_2m, current.relative_humidity_2m),
     rain: Math.round((current.precipitation || 0) * 10) / 10,
+    rainChance: hourlyItems[0]?.rainChance ?? 0,
+    rainNext12h:
+      Math.round(hourlyItems.slice(0, 12).reduce((sum, h) => sum + (h.rainAmount || 0), 0) * 10) / 10,
+    cloudCover: Math.round(current.cloud_cover ?? hourly.cloud_cover?.[startIndex] ?? 0),
     visibility: Math.round((hourly.visibility?.[startIndex] || 10000) / 1000),
     uv: uvVal,
     uvLabel: getUvLabel(uvVal),

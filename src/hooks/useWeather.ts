@@ -44,6 +44,9 @@ export const initialWeatherData: WeatherData = {
   pressureTrend: 'steady',
   dewPoint: 6.8,
   rain: 0.4,
+  rainChance: 10,
+  rainNext12h: 2.1,
+  cloudCover: 55,
   visibility: 11,
   uv: 2,
   uvLabel: 'Niski',
@@ -68,7 +71,7 @@ export const initialWeatherData: WeatherData = {
 export function useWeather() {
   const [weather, setWeather] = useState<WeatherData>(() => {
     try {
-      const cached = localStorage.getItem('mojminsk_openmeteo_cache_v2');
+      const cached = localStorage.getItem('mojminsk_openmeteo_cache_v3');
       if (cached) {
         const parsed = JSON.parse(cached);
         if (parsed.data) return parsed.data;

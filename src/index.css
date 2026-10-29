@@ -210,3 +210,22 @@
     transition: opacity 0.1s ease-out !important;
   }
 }
+
+/* ===== Weather infographics animations ===== */
+@keyframes wxSpin { to { transform: rotate(360deg); } }
+@keyframes wxDrift { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(3px); } }
+@keyframes wxRain { 0% { transform: translateY(-6px); opacity: 0; } 30% { opacity: 1; } 100% { transform: translateY(10px); opacity: 0; } }
+@keyframes wxSnow { 0% { transform: translate(0, -6px); opacity: 0; } 30% { opacity: 1; } 100% { transform: translate(2px, 12px); opacity: 0; } }
+@keyframes wxFlash { 0%, 88%, 100% { opacity: 1; } 92% { opacity: .2; } 95% { opacity: 1; } 97% { opacity: .3; } }
+@keyframes wxTwinkle { 0%, 100% { opacity: .2; } 50% { opacity: 1; } }
+@keyframes wxWave { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-5px); } }
+.wx-spin { animation: wxSpin 22s linear infinite; }
+.wx-drift { animation: wxDrift 6s ease-in-out infinite; }
+.wx-rain { animation: wxRain 0.9s linear infinite; }
+.wx-snow { animation: wxSnow 2.4s linear infinite; }
+.wx-flash { animation: wxFlash 3.5s linear infinite; }
+.wx-twinkle { animation: wxTwinkle 2.4s ease-in-out infinite; }
+.wx-wave { animation: wxWave 2.5s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .wx-spin, .wx-drift, .wx-rain, .wx-snow, .wx-flash, .wx-twinkle, .wx-wave { animation: none; }
+}

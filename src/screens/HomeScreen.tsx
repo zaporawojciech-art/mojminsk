@@ -11,7 +11,6 @@ import {
   CloudSun,
   Coffee,
   Droplets,
-  Eye,
   Gauge,
   Heart,
   MapPin,
@@ -26,10 +25,8 @@ import {
   Sparkles,
   Sun,
   TriangleAlert,
-  Umbrella,
   Users,
   Vote,
-  Wind,
   X,
 } from 'lucide-react';
 import {
@@ -59,6 +56,7 @@ import { buildAdUrl, buildZditmUrl, TAB_PATHS } from '../router/urlUtils';
 import type { TabId } from '../components/BottomNav';
 import { useWeather } from '../hooks/useWeather';
 import { WeatherDetailsModal } from './WeatherDetailsModal';
+import { WeatherIllustration, WeatherInfographicsRow } from '../components/WeatherInfographics';
 import type { WeatherData } from '../services/weatherService';
 
 const lineTone: Record<LineId, string> = { M2: 'bg-sky', M3: 'bg-sand', M4: 'bg-coral' };
@@ -71,51 +69,6 @@ const clock = (minsFromNow: number) => {
   const d = new Date(Date.now() + minsFromNow * 60000);
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 };
-
-function WeatherArt() {
-  return (
-    <div className="relative h-28 w-36 shrink-0" aria-hidden>
-      <div className="absolute right-3 top-0 h-20 w-20 rounded-full bg-[radial-gradient(circle_at_30%_30%,#FFF4E0,#EBC999_55%,#D4A866)] shadow-[0_12px_30px_-6px_rgba(212,168,102,.9)]" />
-      <div className="absolute bottom-3 left-0 h-12 w-28 rounded-full bg-[linear-gradient(180deg,#fff,#E3EAF5)] shadow-[0_14px_24px_-12px_rgba(31,29,43,.45)]" />
-      <div className="absolute bottom-7 left-4 h-14 w-14 rounded-full bg-[linear-gradient(180deg,#fff,#EDF1F8)]" />
-      <div className="absolute bottom-6 left-12 h-11 w-11 rounded-full bg-[linear-gradient(180deg,#fff,#E6ECF6)]" />
-    </div>
-  );
-}
-
-function SunArc({ sunrise = '06:14', sunset = '16:35' }: { sunrise?: string; sunset?: string }) {
-  const now = new Date();
-  const toMin = (s: string) => Number(s.slice(0, 2)) * 60 + Number(s.slice(3));
-  const t = Math.min(
-    1,
-    Math.max(
-      0,
-      (now.getHours() * 60 + now.getMinutes() - toMin(sunrise)) /
-        (toMin(sunset) - toMin(sunrise)),
-    ),
-  );
-  const x = (1 - t) ** 2 * 12 + 2 * (1 - t) * t * 120 + t ** 2 * 228;
-  const y = (1 - t) ** 2 * 66 + 2 * (1 - t) * t * -18 + t ** 2 * 66;
-  return (
-    <div className="rounded-3xl bg-white/45 p-3">
-      <svg viewBox="0 0 240 74" className="h-16 w-full" aria-hidden>
-        <path
-          d="M12 66 Q120 -18 228 66"
-          fill="none"
-          stroke="rgba(31,29,43,.35)"
-          strokeWidth="1.5"
-          strokeDasharray="4 5"
-        />
-        <line x1="0" y1="66" x2="240" y2="66" stroke="rgba(31,29,43,.15)" />
-        <circle cx={x} cy={y} r="8" fill="#EBC999" stroke="#fff" strokeWidth="3" />
-      </svg>
-      <div className="flex justify-between text-[11.5px] font-semibold text-ink-700">
-        <span>Wschód {sunrise}</span>
-        <span>Zachód {sunset}</span>
-      </div>
-    </div>
-  );
-}
 
 function HourlyWeatherIcon({ icon, isDay }: { icon: string; isDay: boolean }) {
   switch (icon) {
@@ -156,17 +109,9 @@ function WeatherCard({
   onOpenDetails?: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const metrics = [
-    { icon: Wind, label: 'Wiatr', value: `${weather.wind} km/h` },
-    { icon: Droplets, label: 'Wilgotność', value: `${weather.humidity}%` },
-    { icon: Sun, label: 'Indeks UV', value: `${weather.uv} (${weather.uvLabel})` },
-    { icon: Gauge, label: 'Ciśnienie', value: `${weather.pressure} hPa` },
-    { icon: Umbrella, label: 'Opady', value: `${weather.rain} mm` },
-    { icon: Eye, label: 'Widoczność', value: `${weather.visibility} km` },
-  ];
   return (
     <section className="px-5">
-      <div className="relative overflow-hidden rounded-4xl bg-sky p-5 shadow-card">
+      <div className="relative overflow-hidden rounded-4xl bg-gradient-to-br from-sky via-sky/80 to-sky-100 p-5 shadow-card">
         <div className="absolute -right-12 -top-12 h-52 w-52 rounded-full bg-white/15" aria-hidden />
         <button onClick={() => setOpen((o) => !o)} aria-expanded={open} className="relative block w-full text-left cursor-pointer">
           <div className="flex items-start justify-between">
@@ -175,7 +120,7 @@ function WeatherCard({
                 <MapPin className="h-3.5 w-3.5" aria-hidden />
                 {city}
               </p>
-              <p className="mt-2 font-display text-[68px] font-semibold leading-none tracking-tighter">
+              <p className="mt-2 font-display text-[64px] font-semibold leading-none tracking-tighter">
                 {weather.temp}°
               </p>
               <p className="mt-1 text-[15px] font-bold">{weather.condition}</p>
@@ -183,80 +128,65 @@ function WeatherCard({
                 Odczuwalna {weather.feels}° · ↑{weather.max}° ↓{weather.min}°
               </p>
             </div>
-            <WeatherArt />
-          </div>
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[12px] font-bold">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
-              Powietrze: {weather.aqi.label} · PM2.5 {weather.aqi.pm25}
-            </span>
-            <span className="inline-flex items-center rounded-full bg-white/45 px-3 py-1.5 text-[12px] font-bold">
-              {open ? 'Zwiń' : 'Szczegóły'}
-            </span>
+            <WeatherIllustration icon={weather.icon} isDay={weather.isDay} className="h-28 w-28 -mr-1" />
           </div>
         </button>
 
-        {open && (
-          <div className="relative mt-4 space-y-3">
-            <div className="grid grid-cols-3 gap-2">
-              {metrics.map(({ icon: Icon, label, value }) => (
-                <div key={label} className="rounded-2xl bg-white/45 p-2.5">
-                  <Icon className="h-4 w-4 text-ink-700" aria-hidden />
-                  <p className="mt-1.5 text-[13px] font-bold leading-none">{value}</p>
-                  <p className="mt-1 text-[10.5px] font-medium text-ink/65">{label}</p>
-                </div>
-              ))}
-            </div>
-            <div className="-mx-5 flex gap-2.5 overflow-x-auto px-5 pb-1 no-scrollbar">
-              {weather.hourly.slice(0, 12).map((item, i) => (
-                <div
-                  key={i}
-                  className={cn(
-                    'flex w-[72px] shrink-0 flex-col items-center justify-between rounded-2xl p-2.5 text-center transition-all shadow-sm',
-                    i === 0 ? 'bg-ink text-white shadow-card' : 'bg-white/60 text-ink',
-                  )}
-                >
-                  <p className={cn('text-[10px] font-semibold', i === 0 ? 'text-white/75' : 'text-ink-500')}>
-                    {item.timeStr}
-                  </p>
+        {/* Kluczowe infografiki zawsze widoczne na mobile */}
+        <WeatherInfographicsRow weather={weather} className="relative mt-4 grid-cols-2" />
 
-                  <div className="my-1.5 flex flex-col items-center gap-0.5">
-                    <HourlyWeatherIcon icon={item.icon} isDay={item.isDay} />
-                    {item.rainChance >= 20 ? (
-                      <span className={cn('text-[9px] font-extrabold', i === 0 ? 'text-sky-300' : 'text-sky-700')}>
-                        {item.rainChance}%
-                      </span>
-                    ) : null}
-                  </div>
-
-                  <p className="font-display text-[15px] font-bold leading-none">{item.temp}°</p>
-                  <p
-                    className={cn(
-                      'mt-1 line-clamp-1 text-[9.5px] font-medium leading-tight',
-                      i === 0 ? 'text-white/70' : 'text-ink-500',
-                    )}
-                  >
-                    {item.condition}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            {onOpenDetails && (
-              <button
-                type="button"
-                onClick={onOpenDetails}
-                className="w-full flex items-center justify-center gap-2 rounded-2xl bg-white px-4 py-2.5 text-[12.5px] font-bold text-ink shadow-sm hover:bg-mist transition-colors cursor-pointer"
-              >
-                <span>Otwórz pełne Centrum Pogodowe (7 dni, biomet, smog)</span>
-                <ArrowRight className="h-3.5 w-3.5 text-sky-700" />
-              </button>
-            )}
-
-            <SunArc sunrise={weather.sunrise} sunset={weather.sunset} />
-            <p className="text-[10.5px] font-medium text-ink/60">Dane: Open-Meteo · stacja GIOŚ Mińsk Mazowiecki</p>
+        {weather.alerts.length > 0 && (
+          <div className="relative mt-3 flex items-start gap-2 rounded-2xl bg-coral-50 border border-coral-200 p-2.5 text-[11.5px] text-coral-900">
+            <TriangleAlert className="h-4 w-4 shrink-0 text-coral-700" />
+            <span className="font-bold">{weather.alerts[0].title}</span>
           </div>
         )}
+
+        {open && (
+          <div className="relative mt-3 -mx-5 flex gap-2.5 overflow-x-auto px-5 pb-1 no-scrollbar">
+            {weather.hourly.slice(0, 12).map((item, i) => (
+              <div
+                key={i}
+                className={cn(
+                  'flex w-[66px] shrink-0 flex-col items-center justify-between rounded-2xl p-2 text-center shadow-sm',
+                  i === 0 ? 'bg-ink text-white shadow-card' : 'bg-white/70 text-ink',
+                )}
+              >
+                <p className={cn('text-[10px] font-semibold', i === 0 ? 'text-white/75' : 'text-ink-500')}>
+                  {i === 0 ? 'Teraz' : item.timeStr}
+                </p>
+                <div className="my-1.5 flex flex-col items-center gap-0.5">
+                  <HourlyWeatherIcon icon={item.icon} isDay={item.isDay} />
+                  {item.rainChance >= 20 ? (
+                    <span className={cn('text-[9px] font-extrabold', i === 0 ? 'text-sky-300' : 'text-sky-700')}>
+                      {item.rainChance}%
+                    </span>
+                  ) : null}
+                </div>
+                <p className="font-display text-[15px] font-bold leading-none">{item.temp}°</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="relative mt-3 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setOpen((o) => !o)}
+            className="flex-1 rounded-2xl bg-white/50 px-3 py-2 text-[12px] font-bold text-ink cursor-pointer"
+          >
+            {open ? 'Zwiń prognozę' : 'Prognoza godzinowa'}
+          </button>
+          {onOpenDetails && (
+            <button
+              type="button"
+              onClick={onOpenDetails}
+              className="flex-1 flex items-center justify-center gap-1 rounded-2xl bg-white px-3 py-2 text-[12px] font-bold text-ink shadow-sm cursor-pointer"
+            >
+              Centrum meteo <ArrowRight className="h-3.5 w-3.5 text-sky-700" />
+            </button>
+          )}
+        </div>
       </div>
     </section>
   );
@@ -271,87 +201,100 @@ function DesktopWeatherWidget({
   weather: WeatherData;
   onOpenDetails?: () => void;
 }) {
+  const alert = weather.alerts[0];
   return (
-    <section className="h-full rounded-2xl bg-gradient-to-r from-sky/35 via-sky/20 to-white/90 p-3.5 shadow-xs border border-sky-200/80 text-ink flex flex-col justify-between">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 h-full">
-        {/* 1. LEFT: CURRENT WEATHER SUMMARY */}
-        <div
+    <section className="h-full rounded-2xl bg-gradient-to-br from-sky/45 via-sky/20 to-white/90 p-4 shadow-xs border border-sky-200/80 text-ink flex flex-col gap-3">
+      {/* TOP: illustration + current summary | hourly strip */}
+      <div className="flex flex-col xl:flex-row xl:items-center gap-4">
+        <button
+          type="button"
           onClick={onOpenDetails}
-          className="flex items-center gap-3 shrink-0 cursor-pointer group"
-          title="Kliknij, aby otworzyć pełne Centrum Pogodowe"
+          className="flex items-center gap-3 shrink-0 text-left cursor-pointer group"
+          title="Otwórz pełne Centrum Pogodowe"
         >
-          <span className="font-display text-[32px] font-bold leading-none tracking-tight text-ink group-hover:text-sky-800 transition-colors">
-            {weather.temp}°
-          </span>
+          <WeatherIllustration icon={weather.icon} isDay={weather.isDay} className="h-[72px] w-[72px]" />
           <div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-[13px] font-extrabold text-ink leading-tight group-hover:text-sky-800 transition-colors">
-                {weather.condition}
-              </span>
-              <span className="text-ink-300">·</span>
-              <span className="text-[11px] font-medium text-ink-600">
-                odcz. {weather.feels}°
-              </span>
+            <div className="flex items-baseline gap-2">
+              <span className="font-display text-[40px] font-bold leading-none tracking-tight">{weather.temp}°</span>
+              <div className="leading-tight">
+                <p className="text-[14px] font-extrabold group-hover:text-sky-800 transition-colors">{weather.condition}</p>
+                <p className="text-[11px] font-medium text-ink-600">
+                  odcz. {weather.feels}° · ↑{weather.max}° ↓{weather.min}°
+                </p>
+              </div>
             </div>
-            <p className="flex items-center gap-1 text-[10.5px] font-semibold text-ink-500 mt-0.5">
+            <p className="mt-1 flex items-center gap-1 text-[10.5px] font-semibold text-ink-500">
               <MapPin className="h-3 w-3 text-coral-700" aria-hidden />
-              {city} · ↑{weather.max}° ↓{weather.min}°
+              {city}
+              <span className="text-ink-300">·</span>
+              <Gauge className="h-3 w-3 text-ink-400" aria-hidden />
+              {weather.pressure} hPa
+              {weather.pressureTrend === 'rising' ? ' ↑' : weather.pressureTrend === 'falling' ? ' ↓' : ''}
+              <span className="text-ink-300">·</span>
+              <Droplets className="h-3 w-3 text-ink-400" aria-hidden />
+              {weather.humidity}%
             </p>
-            <div className="mt-1 flex items-center gap-1.5">
-              <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold text-ink shadow-2xs border border-mist-200/60">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden />
-                PM2.5: {weather.aqi.pm25} ({weather.aqi.label})
-              </span>
-              <span className="text-[10px] font-bold text-sky-700 group-hover:underline flex items-center gap-0.5">
-                Centrum meteo ➔
-              </span>
-            </div>
           </div>
-        </div>
+        </button>
 
-        {/* Vertical divider */}
-        <div className="hidden sm:block h-12 w-px bg-ink/10 shrink-0" aria-hidden />
+        <div className="hidden xl:block h-14 w-px bg-ink/10 shrink-0" aria-hidden />
 
-        {/* 2. RIGHT: 8 HOURLY FORECAST PILLS */}
-        <div className="grid grid-cols-8 gap-1.5 flex-1 w-full min-w-0">
+        <div className="grid grid-cols-8 gap-1.5 flex-1 min-w-0">
           {weather.hourly.slice(0, 8).map((item, i) => (
-            <div
+            <button
+              type="button"
               key={i}
               onClick={onOpenDetails}
               className={cn(
-                'flex flex-col items-center justify-between rounded-xl py-1.5 px-0.5 text-center transition-all cursor-pointer hover:scale-[1.03]',
+                'flex flex-col items-center justify-between rounded-xl py-1.5 px-0.5 text-center transition-all cursor-pointer hover:-translate-y-0.5',
                 i === 0
-                  ? 'bg-ink text-white shadow-sm ring-1 ring-white/20'
-                  : 'bg-white/85 hover:bg-white text-ink shadow-2xs border border-white/60'
+                  ? 'bg-ink text-white shadow-sm'
+                  : 'bg-white/85 hover:bg-white text-ink shadow-2xs border border-white/60',
               )}
-              title={`${item.timeStr}: ${item.temp}° (${item.condition}) · Kliknij po szczegóły`}
+              title={`${item.timeStr}: ${item.temp}° · ${item.condition}`}
             >
-              <p className={cn('text-[9px] font-bold', i === 0 ? 'text-white/80' : 'text-ink-500')}>
-                {item.timeStr}
-              </p>
-
-              <div className="my-1 flex items-center justify-center gap-0.5 h-4">
+              <span className={cn('text-[9.5px] font-bold', i === 0 ? 'text-white/80' : 'text-ink-500')}>
+                {i === 0 ? 'Teraz' : item.timeStr}
+              </span>
+              <span className="my-1 h-4 flex items-center">
                 <HourlyWeatherIcon icon={item.icon} isDay={item.isDay} />
-                {item.rainChance >= 20 ? (
-                  <span className={cn('text-[8px] font-extrabold', i === 0 ? 'text-sky-300' : 'text-sky-700')}>
-                    {item.rainChance}%
-                  </span>
-                ) : null}
-              </div>
-
-              <p className="font-display text-[12.5px] font-bold leading-none">{item.temp}°</p>
-              <p
+              </span>
+              <span className="font-display text-[13px] font-bold leading-none">{item.temp}°</span>
+              <span
                 className={cn(
-                  'mt-0.5 truncate max-w-[48px] text-[8px] font-medium leading-tight',
-                  i === 0 ? 'text-white/70' : 'text-ink-500'
+                  'mt-0.5 text-[8.5px] font-extrabold h-2.5',
+                  i === 0 ? 'text-sky-300' : 'text-sky-700',
                 )}
-                title={item.condition}
               >
-                {item.condition}
-              </p>
-            </div>
+                {item.rainChance >= 20 ? `${item.rainChance}%` : ''}
+              </span>
+            </button>
           ))}
         </div>
+      </div>
+
+      {/* BOTTOM: 6 key infographics */}
+      <WeatherInfographicsRow weather={weather} className="grid-cols-3 2xl:grid-cols-6" />
+
+      {/* FOOTER: alert + link */}
+      <div className="flex items-center justify-between gap-3 text-[10.5px]">
+        {alert ? (
+          <span className="flex items-center gap-1.5 font-bold text-coral-800 truncate">
+            <TriangleAlert className="h-3.5 w-3.5 shrink-0 text-coral-700" />
+            {alert.title}
+          </span>
+        ) : (
+          <span className="font-medium text-ink-500 truncate">
+            Aktualizacja {weather.lastUpdated} · Open-Meteo & GIOŚ Mińsk Maz.
+          </span>
+        )}
+        <button
+          type="button"
+          onClick={onOpenDetails}
+          className="shrink-0 flex items-center gap-1 font-bold text-sky-800 hover:underline cursor-pointer"
+        >
+          Prognoza 7 dni i centrum meteo <ArrowRight className="h-3 w-3" />
+        </button>
       </div>
     </section>
   );
