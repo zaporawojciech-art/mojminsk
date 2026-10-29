@@ -1,95 +1,21 @@
 import type {
   Ad,
-  AdConversation,
   PollItem,
   Post,
   Ride,
   Street,
-  User,
 } from '../data/mockData';
-
-const SUPABASE_URL =
-  import.meta.env.VITE_SUPABASE_URL || 'https://jqortivwlvsjuiiexvro.supabase.co';
-const SUPABASE_ANON_KEY =
-  import.meta.env.VITE_SUPABASE_ANON_KEY ||
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impxb3J0aXZ3bHZzanVpaWV4dnJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMyMTU2MjgsImV4cCI6MjEwODc5MTYyOH0.mjqNwNnBKRouohPOp3Pa6LKu6m37Qy9xaAdWWdFA-CM';
-
-function getHeaders(prefer?: string): HeadersInit {
-  const headers: Record<string, string> = {
-    apikey: SUPABASE_ANON_KEY,
-    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-    'Content-Type': 'application/json',
-  };
-  if (prefer) {
-    headers.Prefer = prefer;
-  }
-  return headers;
-}
+import { supabaseRest } from './supabaseClient';
 
 async function restFetch<T>(
   path: string,
   options: RequestInit = {},
   prefer?: string,
 ): Promise<T | null> {
-  try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-      ...options,
-      headers: {
-        ...getHeaders(prefer),
-        ...(options.headers || {}),
-      },
-    });
-    if (!res.ok) {
-      return null;
-    }
-    if (res.status === 204) {
-      return null;
-    }
-    const text = await res.text();
-    if (!text) return null;
-    return JSON.parse(text) as T;
-  } catch {
-    return null;
-  }
+  return supabaseRest<T>(path, options, prefer);
 }
 
-/* ---------------- 1. Rejestracja i Weryfikacja Pocztowa (RODO AES-256) ---------------- */
-
-export async function registerNeighborInSupabase(user: User): Promise<{
-  profileId?: string;
-  activationPin?: string;
-  trialDaysLeft?: number;
-} | null> {
-  if (!user) return null;
-
-  const result = await restFetch<{
-    profile_id: string;
-    activation_pin: string;
-    trial_days_left: number;
-  }>('rpc/register_neighbor_postal', {
-    method: 'POST',
-    body: JSON.stringify({
-      p_name: user.name,
-      p_surname: user.surname ?? '',
-      p_email: user.email ?? '',
-      p_street_name: user.street.name,
-      p_street_as: user.street.as,
-      p_house_number: user.houseNumber ?? '',
-      p_flat_number: user.flatNumber ?? '',
-      p_postal_code: user.postalCode ?? '05-300',
-      p_city: user.city ?? 'Mińsk Mazowiecki',
-      p_phone: user.phone ?? '',
-      p_seed: user.seed,
-    }),
-  });
-
-  if (!result) return null;
-  return {
-    profileId: result.profile_id,
-    activationPin: result.activation_pin,
-    trialDaysLeft: result.trial_days_left,
-  };
-}
+/* ---------------- 1. Ulice i Sołectwa ---------------- */
 
 export async function fetchStreetsFromSupabase(): Promise<Street[] | null> {
   interface DbStreet {
@@ -114,6 +40,7 @@ interface DbAd {
   price: number | null;
   kind: 'sell' | 'free' | 'lost';
   author: string;
+  author_id: string | null;
   street: string;
   time_label: string;
   image: string;
@@ -136,6 +63,7 @@ export async function fetchAdsFromSupabase(): Promise<Ad[] | null> {
     price: r.price !== null ? Number(r.price) : null,
     kind: r.kind,
     author: r.author,
+    authorId: r.author_id,
     street: r.street,
     time: r.time_label,
     image: r.image,
@@ -145,34 +73,37 @@ export async function fetchAdsFromSupabase(): Promise<Ad[] | null> {
     condition: r.condition ?? undefined,
     status: r.status,
     views: r.views,
-    isOwner: r.is_owner,
     negotiable: r.negotiable,
   }));
 }
 
 export async function createAdInSupabase(ad: Ad): Promise<boolean> {
+  const payload: Record<string, unknown> = {
+    id: ad.id,
+    title: ad.title,
+    price: ad.price,
+    kind: ad.kind,
+    author: ad.author,
+    street: ad.street,
+    time_label: ad.time || 'teraz',
+    image: ad.image,
+    images: ad.images?.length ? ad.images : [ad.image],
+    description: ad.description ?? null,
+    category: ad.category ?? 'Inne',
+    condition: ad.condition ?? null,
+    status: ad.status ?? 'active',
+    views: ad.views ?? 1,
+    negotiable: ad.negotiable ?? false,
+  };
+  if (ad.authorId) {
+    payload.author_id = ad.authorId;
+  }
+
   const res = await restFetch<DbAd[]>(
     'ads',
     {
       method: 'POST',
-      body: JSON.stringify({
-        id: ad.id,
-        title: ad.title,
-        price: ad.price,
-        kind: ad.kind,
-        author: ad.author,
-        street: ad.street,
-        time_label: ad.time || 'teraz',
-        image: ad.image,
-        images: ad.images?.length ? ad.images : [ad.image],
-        description: ad.description ?? null,
-        category: ad.category ?? 'Inne',
-        condition: ad.condition ?? null,
-        status: ad.status ?? 'active',
-        views: ad.views ?? 1,
-        is_owner: ad.isOwner ?? true,
-        negotiable: ad.negotiable ?? false,
-      }),
+      body: JSON.stringify(payload),
     },
     'return=representation',
   );
@@ -226,55 +157,6 @@ export async function deleteAdInSupabase(adId: string): Promise<boolean> {
   return true;
 }
 
-export async function reserveAdInSupabase(
-  ad: Ad,
-  buyer: User,
-  details: { spot: string; time: string; phone: string; note: string },
-  conversation: AdConversation,
-): Promise<void> {
-  await Promise.all([
-    updateAdStatusInSupabase(ad.id, 'reserved'),
-    restFetch(
-      'ad_reservations',
-      {
-        method: 'POST',
-        body: JSON.stringify({
-          ad_id: ad.id,
-          buyer_name: buyer.name,
-          buyer_street: buyer.street.name,
-          spot: details.spot,
-          pickup_time: details.time,
-          phone: details.phone,
-          note: details.note,
-        }),
-      },
-      'return=minimal',
-    ),
-    restFetch(
-      'ad_conversations',
-      {
-        method: 'POST',
-        body: JSON.stringify({
-          id: conversation.id,
-          ad_id: conversation.adId,
-          ad_title: conversation.adTitle,
-          ad_price: conversation.adPrice,
-          ad_image: conversation.adImage,
-          ad_street: conversation.adStreet,
-          other_user_name: conversation.otherUser.name,
-          other_user_street: conversation.otherUser.street,
-          other_user_avatar_seed: conversation.otherUser.avatarSeed ?? null,
-          role: conversation.role,
-          last_message: conversation.lastMessage,
-          last_message_time: conversation.lastMessageTime,
-          unread_count: conversation.unreadCount,
-        }),
-      },
-      'resolution=merge-duplicates,return=minimal',
-    ),
-  ]);
-}
-
 export async function reportAdInSupabase(
   adId: string,
   reason: string,
@@ -288,99 +170,6 @@ export async function reportAdInSupabase(
         ad_id: adId,
         reason,
         details: details ?? null,
-      }),
-    },
-    'return=minimal',
-  );
-}
-
-interface DbConversation {
-  id: string;
-  ad_id: string;
-  ad_title: string;
-  ad_price: number | null;
-  ad_image: string;
-  ad_street: string;
-  other_user_name: string;
-  other_user_street: string;
-  other_user_avatar_seed: string | null;
-  role: 'buyer' | 'seller';
-  last_message: string;
-  last_message_time: string;
-  unread_count: number;
-}
-
-export async function fetchConversationsFromSupabase(): Promise<AdConversation[] | null> {
-  const rows = await restFetch<DbConversation[]>(
-    'ad_conversations?select=*&order=updated_at.desc',
-  );
-  if (!rows || rows.length === 0) return null;
-  return rows.map((r) => ({
-    id: r.id,
-    adId: r.ad_id,
-    adTitle: r.ad_title,
-    adPrice: r.ad_price !== null ? Number(r.ad_price) : null,
-    adImage: r.ad_image,
-    adStreet: r.ad_street,
-    otherUser: {
-      name: r.other_user_name,
-      street: r.other_user_street,
-      avatarSeed: r.other_user_avatar_seed ?? undefined,
-    },
-    role: r.role,
-    lastMessage: r.last_message,
-    lastMessageTime: r.last_message_time,
-    unreadCount: r.unread_count,
-  }));
-}
-
-export interface ChatMessageItem {
-  id: string;
-  sender: 'me' | 'neighbor';
-  text: string;
-  time: string;
-}
-
-interface DbMessage {
-  id: string;
-  ad_id: string;
-  sender: 'me' | 'neighbor';
-  sender_name: string;
-  text: string;
-  time_label: string;
-}
-
-export async function fetchAdMessagesFromSupabase(
-  adId: string,
-): Promise<ChatMessageItem[] | null> {
-  const rows = await restFetch<DbMessage[]>(
-    `ad_messages?ad_id=eq.${encodeURIComponent(adId)}&select=*&order=created_at.asc`,
-  );
-  if (!rows || rows.length === 0) return null;
-  return rows.map((r) => ({
-    id: r.id,
-    sender: r.sender,
-    text: r.text,
-    time: r.time_label,
-  }));
-}
-
-export async function sendAdMessageInSupabase(
-  adId: string,
-  msg: ChatMessageItem,
-  senderName: string,
-): Promise<void> {
-  await restFetch(
-    'ad_messages',
-    {
-      method: 'POST',
-      body: JSON.stringify({
-        id: msg.id,
-        ad_id: adId,
-        sender: msg.sender,
-        sender_name: senderName,
-        text: msg.text,
-        time_label: msg.time,
       }),
     },
     'return=minimal',

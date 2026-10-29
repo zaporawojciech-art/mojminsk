@@ -12,8 +12,10 @@ interface AdConversationsModalProps {
   user: User;
   conversations: AdConversation[];
   ads: Ad[];
+  initialConversationId?: string | null;
   onClose: () => void;
   onOpenChat: (ad: Ad, conversation?: AdConversation) => void;
+  onRefreshConversations?: () => void;
   isClosing?: boolean;
 }
 
@@ -21,15 +23,23 @@ export function AdConversationsModal({
   user,
   conversations,
   ads,
+  initialConversationId = null,
   onClose,
   onOpenChat,
+  onRefreshConversations,
   isClosing = false,
 }: AdConversationsModalProps) {
   const [tab, setTab] = useState<'all' | 'seller' | 'buyer'>('all');
   const [search, setSearch] = useState('');
   const [selectedConvId, setSelectedConvId] = useState<string | null>(
-    () => conversations[0]?.id ?? null,
+    () => initialConversationId ?? conversations[0]?.id ?? null,
   );
+
+  useEffect(() => {
+    if (initialConversationId) {
+      setSelectedConvId(initialConversationId);
+    }
+  }, [initialConversationId]);
 
   // Close with Escape key
   useEffect(() => {
@@ -251,11 +261,15 @@ export function AdConversationsModal({
 
         {/* RIGHT COLUMN: Active Chat (Visible on Desktop >= 768px) */}
         <div className="hidden md:flex flex-1 flex-col h-full bg-mist overflow-hidden">
-          {activeAd ? (
+          {activeAd && activeConv ? (
             <ChatModal
+              key={activeConv.id}
               ad={activeAd}
               user={user}
+              conversationId={activeConv.id}
+              otherUser={activeConv.otherUser}
               onClose={() => setSelectedConvId(null)}
+              onConversationUpdated={onRefreshConversations}
             />
           ) : (
             <div className="flex h-full w-full flex-col items-center justify-center p-8 text-center text-ink-400">

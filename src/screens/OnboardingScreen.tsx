@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import {
   avatarUrl,
-  demoUser,
   formatNeighborCount,
   gminaLocalityAs,
   streets,
@@ -23,6 +22,11 @@ import {
 } from '../data/mockData';
 import { CityDropdown, cn } from '../components/ui';
 import { fetchStreetsFromSupabase } from '../lib/supabase';
+import {
+  resetPasswordForEmail,
+  signInWithPassword,
+  signUpNeighbor,
+} from '../lib/auth';
 
 interface OnboardingScreenProps {
   onDone: (user: User) => void;
@@ -57,9 +61,13 @@ export function OnboardingScreen({
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [loginInfo, setLoginInfo] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // --- STAN REJESTRACJI ---
   const [registerStep, setRegisterStep] = useState<1 | 2 | 3>(1);
+  const [registerError, setRegisterError] = useState('');
+  const [emailConfirmSent, setEmailConfirmSent] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -111,8 +119,8 @@ export function OnboardingScreen({
     setSeedN((prev) => prev + 1);
   };
 
-  // Obsługa logowania
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  // Obsługa logowania przez Supabase Auth
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmedEmail = loginEmail.trim();
     if (!trimmedEmail || !trimmedEmail.includes('@') || !trimmedEmail.includes('.')) {
@@ -124,43 +132,69 @@ export function OnboardingScreen({
       return;
     }
     setLoginError('');
+    setLoginInfo('');
+    setIsSubmitting(true);
 
-    const emailPrefix = trimmedEmail.split('@')[0];
-    const formattedName = emailPrefix
-      ? emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1)
-      : demoUser.name;
+    const { user: loggedUser, error } = await signInWithPassword(trimmedEmail, loginPassword);
+    setIsSubmitting(false);
 
-    const loggedUser: User = {
-      ...demoUser,
-      name: formattedName,
-      email: trimmedEmail,
-      verified: true,
-    };
+    if (error || !loggedUser) {
+      setLoginError(error || 'Nie udało się zalogować. Sprawdź dane i spróbuj ponownie.');
+      return;
+    }
+
     onDone(loggedUser);
   };
 
-  // Zakończenie rejestracji
-  const handleFinishRegistration = () => {
-    if (!street || !name.trim()) return;
+  const handleForgotPassword = async () => {
+    const trimmedEmail = loginEmail.trim();
+    if (!trimmedEmail || !trimmedEmail.includes('@')) {
+      setLoginError('Wpisz najpierw swój adres e-mail powyżej, aby zresetować hasło.');
+      return;
+    }
+    setLoginError('');
+    setLoginInfo('');
+    setIsSubmitting(true);
+    const { ok, error } = await resetPasswordForEmail(trimmedEmail);
+    setIsSubmitting(false);
+    if (!ok) {
+      setLoginError(error || 'Nie udało się wysłać linku resetującego.');
+    } else {
+      setLoginInfo(`Wysłaliśmy link do zmiany hasła na adres ${trimmedEmail}.`);
+    }
+  };
 
-    const newUser: User = {
+  // Zakończenie rejestracji przez Supabase Auth
+  const handleFinishRegistration = async () => {
+    if (!street || !name.trim() || isSubmitting) return;
+    setRegisterError('');
+    setIsSubmitting(true);
+
+    const { user: createdUser, needsEmailConfirm, error } = await signUpNeighbor({
       name: name.trim(),
       email: email.trim(),
+      password,
       street,
       postalCode: postalCode.trim() || '05-300',
       city: city.trim() || 'Mińsk Mazowiecki',
       seed: avatarSeed,
-      rerolls: 999,
-      verified: true,
-      trialDaysLeft: 999,
-      privacy: {
-        showStats: true,
-        showPastAds: true,
-        showRides: true,
-      },
-    };
+    });
+    setIsSubmitting(false);
 
-    onDone(newUser);
+    if (error) {
+      setRegisterError(error);
+      return;
+    }
+
+    if (needsEmailConfirm) {
+      setEmailConfirmSent(true);
+      setLoginEmail(email.trim());
+      return;
+    }
+
+    if (createdUser) {
+      onDone(createdUser);
+    }
   };
 
   return (
@@ -236,6 +270,13 @@ export function OnboardingScreen({
                   <KeyRound className="h-3.5 w-3.5 text-coral" />
                   Hasło
                 </label>
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="text-[11px] font-semibold text-ink-500 hover:text-coral transition-colors cursor-pointer"
+                >
+                  Nie pamiętam hasła
+                </button>
               </div>
               <input
                 type="password"
@@ -253,11 +294,18 @@ export function OnboardingScreen({
               </div>
             )}
 
+            {loginInfo && (
+              <div className="rounded-xl bg-emerald-50 p-2.5 text-[12px] font-semibold text-emerald-800 border border-emerald-200">
+                {loginInfo}
+              </div>
+            )}
+
             <button
               type="submit"
-              className="w-full h-11 rounded-xl bg-ink text-white font-bold text-[14px] shadow-sm hover:bg-ink-700 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer mt-1"
+              disabled={isSubmitting}
+              className="w-full h-11 rounded-xl bg-ink text-white font-bold text-[14px] shadow-sm hover:bg-ink-700 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer mt-1 disabled:opacity-50"
             >
-              <span>Zaloguj się</span>
+              <span>{isSubmitting ? 'Logowanie…' : 'Zaloguj się'}</span>
               <ArrowRight className="h-4 w-4" />
             </button>
           </form>
@@ -618,14 +666,44 @@ export function OnboardingScreen({
                 </span>
               </div>
 
-              <button
-                type="button"
-                onClick={handleFinishRegistration}
-                className="w-full h-12 rounded-xl bg-ink text-white font-bold text-[14px] shadow-sm hover:bg-ink-700 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer mt-2"
-              >
-                <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                <span>Utwórz konto mieszkańca</span>
-              </button>
+              {registerError && (
+                <div className="rounded-xl bg-coral-50 p-2.5 text-[12px] font-semibold text-coral-700 border border-coral-200">
+                  {registerError}
+                </div>
+              )}
+
+              {emailConfirmSent ? (
+                <div className="rounded-2xl bg-emerald-50 p-4 border border-emerald-200 space-y-3 text-center">
+                  <CheckCircle2 className="h-7 w-7 text-emerald-600 mx-auto" />
+                  <p className="font-display text-[15px] font-bold text-emerald-950">
+                    Sprawdź swoją skrzynkę e-mail!
+                  </p>
+                  <p className="text-[12px] text-emerald-800 leading-relaxed">
+                    Wysłaliśmy link potwierdzający na adres <b>{email.trim()}</b>. Kliknij go, aby aktywować konto mieszkańca, a następnie zaloguj się.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmailConfirmSent(false);
+                      setAuthMode('login');
+                      setLoginInfo('Po kliknięciu linku z wiadomości e-mail zaloguj się poniżej.');
+                    }}
+                    className="w-full h-11 rounded-xl bg-ink text-white font-bold text-[13.5px] shadow-sm hover:bg-ink-700 transition-all cursor-pointer"
+                  >
+                    Przejdź do logowania
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  disabled={isSubmitting}
+                  onClick={handleFinishRegistration}
+                  className="w-full h-12 rounded-xl bg-ink text-white font-bold text-[14px] shadow-sm hover:bg-ink-700 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer mt-2 disabled:opacity-50"
+                >
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                  <span>{isSubmitting ? 'Tworzenie konta…' : 'Utwórz konto mieszkańca'}</span>
+                </button>
+              )}
             </div>
           )}
 

@@ -12,6 +12,7 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
+        importScripts: ['/push-sw.js'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [
           /^\/api\//,
@@ -19,7 +20,7 @@ export default defineConfig({
           /^\/robots\.txt$/,
         ],
       },
-      includeAssets: ['apple-touch-icon.png', 'icons/*.png', 'icons/*.svg'],
+      includeAssets: ['apple-touch-icon.png', 'icons/*.png', 'icons/*.svg', 'push-sw.js'],
       manifest: {
         name: 'mójMińsk - Aplikacja Mieszkańców',
         short_name: 'mójMińsk',

@@ -58,7 +58,11 @@ export function AdDetailModal({
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
 
-  const isOwner = ad.isOwner || ad.author.toLowerCase().includes(user.name.toLowerCase());
+  const isOwner = Boolean(
+    ad.isOwner ||
+      (user.profileId && ad.authorId && ad.authorId === user.profileId) ||
+      (!ad.authorId && ad.author.toLowerCase().trim() === user.name.toLowerCase().trim()),
+  );
   const currentStatus = ad.status ?? 'active';
   const scrollRef = useRef<HTMLDivElement>(null);
   const carouselRef = useRef<HTMLDivElement>(null);

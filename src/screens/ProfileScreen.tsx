@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
+  Bell,
   Car,
   Check,
   ChevronRight,
@@ -17,12 +18,17 @@ import {
 } from 'lucide-react';
 import {
   avatarUrl,
-  initialAdConversations,
   type Ad,
   type AdConversation,
   type User,
 } from '../data/mockData';
 import { Img, NativeHeader, StreetPill, cn, zl } from '../components/ui';
+import {
+  disablePushNotifications,
+  enablePushNotifications,
+  getPushSubscriptionStatus,
+  isIosNotStandalone,
+} from '../lib/push';
 
 interface ProfileScreenProps {
   user: User;
@@ -60,7 +66,7 @@ export function ProfileScreen({
   myReservedAdsCount = 0,
   onOpenConversations,
   onOpenChatWithNeighbor,
-  conversations = initialAdConversations,
+  conversations = [],
   unreadConversationsCount = 0,
   onPreviewPublic: _onPreviewPublic,
   onAddRide,
@@ -77,6 +83,31 @@ export function ProfileScreen({
   const [supportAmount, setSupportAmount] = useState<number>(10);
   const [supportBlikCode, setSupportBlikCode] = useState('');
   const [supportPaid, setSupportPaid] = useState(false);
+
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushLoading, setPushLoading] = useState(false);
+  const [pushError, setPushError] = useState<string | null>(null);
+
+  useEffect(() => {
+    void getPushSubscriptionStatus().then(setPushEnabled);
+  }, []);
+
+  const handleTogglePush = async () => {
+    setPushLoading(true);
+    setPushError(null);
+    if (pushEnabled) {
+      await disablePushNotifications();
+      setPushEnabled(false);
+    } else {
+      const { ok, error } = await enablePushNotifications();
+      if (ok) {
+        setPushEnabled(true);
+      } else {
+        setPushError(error || 'Nie udało się włączyć powiadomień.');
+      }
+    }
+    setPushLoading(false);
+  };
 
   const badges = [
     {
@@ -271,6 +302,44 @@ export function ProfileScreen({
             </div>
           </div>
 
+          {/* Powiadomienia Web Push */}
+          <div className="mx-5 mt-6">
+            <div className="rounded-3xl bg-white p-4 shadow-card border border-mist flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-coral-50 text-coral-700">
+                  <Bell className="h-5 w-5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13.5px] font-bold text-ink">Powiadomienia o wiadomościach</p>
+                  <p className="text-[11.5px] text-ink-500 truncate">
+                    {pushEnabled ? 'Aktywne na tym urządzeniu' : 'Powiadom o nowej wiadomości sąsiada'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                disabled={pushLoading}
+                onClick={handleTogglePush}
+                className={cn(
+                  'rounded-full px-3 py-1.5 text-[11.5px] font-bold transition-all shrink-0 cursor-pointer',
+                  pushEnabled
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : 'bg-mist text-ink hover:bg-mist-200',
+                )}
+              >
+                {pushLoading ? '...' : pushEnabled ? 'Włączone' : 'Włącz'}
+              </button>
+            </div>
+            {pushError && (
+              <p className="text-[11px] text-coral-700 font-medium px-3 mt-1.5">{pushError}</p>
+            )}
+            {isIosNotStandalone() && !pushEnabled && (
+              <p className="text-[11px] text-ink-400 px-3 mt-1.5">
+                Wskazówka iOS: Dodaj aplikację do ekranu początkowego, aby móc odbierać powiadomienia Push.
+              </p>
+            )}
+          </div>
+
           {/* Moja aktywność */}
           <div className="mx-5 mt-6">
             <p className="mb-2 px-3 text-[11.5px] font-extrabold uppercase tracking-wider text-ink-400">
@@ -451,6 +520,35 @@ export function ProfileScreen({
                   </b>
                   . Twój numer telefonu nie jest upubliczniany.
                 </span>
+              </div>
+
+              {/* Web Push Card (Desktop) */}
+              <div className="rounded-2xl bg-white p-4 shadow-card border border-mist-200 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Bell className="h-4 w-4 text-coral" />
+                    <span className="text-[13px] font-bold text-ink">Powiadomienia Push</span>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={pushLoading}
+                    onClick={handleTogglePush}
+                    className={cn(
+                      'rounded-full px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer',
+                      pushEnabled
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : 'bg-mist text-ink hover:bg-mist-200',
+                    )}
+                  >
+                    {pushLoading ? '...' : pushEnabled ? 'Włączone' : 'Włącz'}
+                  </button>
+                </div>
+                <p className="text-[11px] text-ink-500">
+                  {pushEnabled
+                    ? 'Otrzymasz powiadomienie na pulpicie, gdy sąsiad napisze do Ciebie na czacie.'
+                    : 'Włącz powiadomienia w przeglądarce o nowych wiadomościach w czacie sąsiedzkim.'}
+                </p>
+                {pushError && <p className="text-[11px] text-coral-700 font-medium">{pushError}</p>}
               </div>
             </div>
 

@@ -16,7 +16,6 @@ import {
 } from './components/TabSkeletons';
 import {
   ads as initialAds,
-  initialAdConversations,
   rides as initialRides,
   streets,
   type Ad,
@@ -61,14 +60,22 @@ import {
   deleteAdInSupabase,
   deleteRideInSupabase,
   fetchAdsFromSupabase,
-  fetchConversationsFromSupabase,
   fetchPollsFromSupabase,
   fetchRidesFromSupabase,
-  registerNeighborInSupabase,
-  reserveAdInSupabase,
   updateAdInSupabase,
   updateAdStatusInSupabase,
 } from './lib/supabase';
+import {
+  fetchMyProfile,
+  onAuthSessionChange,
+  signOut,
+  updateMyProfileInSupabase,
+} from './lib/auth';
+import {
+  fetchConversations,
+  reserveAdWithMessage,
+  subscribeToInboxChanges,
+} from './lib/chat';
 
 // Asynchronicznie ładowane widoki podstron i modali (Lazy Modals)
 const ProfileScreen = lazy(() => import('./screens/ProfileScreen').then((m) => ({ default: m.ProfileScreen })));
@@ -95,22 +102,26 @@ import type { LegalDocType } from './screens/LegalScreen';
 type Overlay = null | 'profile' | 'zditm';
 
 export default function App() {
-  const [user, setUser] = useState<User | null>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem('mojminsk_user');
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (parsed && typeof parsed === 'object') {
-            return { ...parsed, verified: true };
-          }
-        }
-      } catch {
-        // fallback
+  const [user, setUser] = useState<User | null>(null);
+
+  // Załaduj zweryfikowany profil jeśli istnieje aktywna sesja w Supabase Auth
+  useEffect(() => {
+    void fetchMyProfile().then((profile) => {
+      if (profile) setUser(profile);
+    });
+
+    const unsub = onAuthSessionChange((session) => {
+      if (!session) {
+        setUser(null);
+      } else {
+        void fetchMyProfile().then((profile) => {
+          if (profile) setUser(profile);
+        });
       }
-    }
-    return null;
-  });
+    });
+
+    return () => unsub();
+  }, []);
 
   const [authScreenOpen, setAuthScreenOpen] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -139,34 +150,18 @@ export default function App() {
 
   const handleUpdateUser = useCallback((nextUser: User | null) => {
     setUser(nextUser);
-    if (typeof window !== 'undefined') {
-      try {
-        if (nextUser) {
-          localStorage.setItem('mojminsk_user', JSON.stringify(nextUser));
-          if (window.location.pathname === '/dolacz') {
-            navigateTo('/');
-          }
-          if (!nextUser.activationPin) {
-            void registerNeighborInSupabase(nextUser).then((res) => {
-              if (res?.activationPin) {
-                const enriched: User = {
-                  ...nextUser,
-                  activationPin: res.activationPin,
-                  trialDaysLeft: res.trialDaysLeft ?? nextUser.trialDaysLeft,
-                };
-                setUser(enriched);
-                try {
-                  localStorage.setItem('mojminsk_user', JSON.stringify(enriched));
-                } catch {}
-              }
-            });
-          }
-        } else {
-          localStorage.removeItem('mojminsk_user');
-          navigateTo('/dolacz');
-        }
-      } catch {
-        // storage fallback
+    if (!nextUser) {
+      void signOut();
+      navigateTo('/dolacz');
+    } else {
+      void updateMyProfileInSupabase(nextUser);
+      if (
+        typeof window !== 'undefined' &&
+        (window.location.pathname === '/dolacz' ||
+          window.location.pathname === '/rejestracja' ||
+          window.location.pathname === '/logowanie')
+      ) {
+        navigateTo('/');
       }
     }
   }, []);
@@ -214,12 +209,13 @@ export default function App() {
   // Modals for Ads logic
   const [addAdOpen, setAddAdOpen] = useState(false);
   const [chatAd, setChatAd] = useState<Ad | null>(null);
+  const [chatConversation, setChatConversation] = useState<AdConversation | null>(null);
   const [selectedAd, setSelectedAd] = useState<Ad | null>(null);
   const [myAdsOpen, setMyAdsOpen] = useState(false);
   const [reportAd, setReportAd] = useState<Ad | null>(null);
 
   // Extended Classifieds Views State
-  const [conversations, setConversations] = useState<AdConversation[]>(initialAdConversations);
+  const [conversations, setConversations] = useState<AdConversation[]>([]);
   const [conversationsOpen, setConversationsOpen] = useState(false);
   const [editAd, setEditAd] = useState<Ad | null>(null);
   const [sellerProfile, setSellerProfile] = useState<{ name: string; street: string } | null>(null);
@@ -296,9 +292,36 @@ export default function App() {
     void fetchPollsFromSupabase().then((remotePolls) => {
       if (remotePolls && remotePolls.length > 0) setPolls(remotePolls);
     });
-    void fetchConversationsFromSupabase().then((remoteConvs) => {
-      if (remoteConvs && remoteConvs.length > 0) setConversations(remoteConvs);
+  }, []);
+
+  const refreshConversations = useCallback(() => {
+    if (!user?.profileId) return;
+    void fetchConversations(user.profileId, adsList).then((list) => {
+      setConversations(list);
     });
+  }, [user?.profileId, adsList]);
+
+  useEffect(() => {
+    if (!user?.profileId) {
+      setConversations([]);
+      return;
+    }
+    refreshConversations();
+    const unsub = subscribeToInboxChanges(user.profileId, () => {
+      refreshConversations();
+    });
+    return () => unsub();
+  }, [user?.profileId, refreshConversations]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
+    const handleMsg = (e: MessageEvent) => {
+      if (e.data?.type === 'OPEN_CHAT_URL' && typeof e.data?.url === 'string') {
+        navigateTo(e.data.url);
+      }
+    };
+    navigator.serviceWorker.addEventListener('message', handleMsg);
+    return () => navigator.serviceWorker.removeEventListener('message', handleMsg);
   }, []);
 
   useEffect(() => {
@@ -460,7 +483,14 @@ export default function App() {
   const closeReserveAd = useCallback(() => closeWithAnimation('reserveAd', () => setReserveAd(null)), [closeWithAnimation]);
   const closeFiltersModal = useCallback(() => closeWithAnimation('filtersModal', () => setFiltersModalOpen(false)), [closeWithAnimation]);
   const closeReportAd = useCallback(() => closeWithAnimation('reportAd', () => setReportAd(null)), [closeWithAnimation]);
-  const closeChatAd = useCallback(() => closeWithAnimation('chatAd', () => setChatAd(null)), [closeWithAnimation]);
+  const closeChatAd = useCallback(
+    () =>
+      closeWithAnimation('chatAd', () => {
+        setChatAd(null);
+        setChatConversation(null);
+      }),
+    [closeWithAnimation],
+  );
   const closeEditAd = useCallback(() => closeWithAnimation('editAd', () => setEditAd(null)), [closeWithAnimation]);
   const closeSellerProfile = useCallback(
     () =>
@@ -738,8 +768,31 @@ export default function App() {
         return;
       }
 
-      if (cleanPath === '/wiadomosci') {
+      if (cleanPath === '/wiadomosci' || cleanPath.startsWith('/wiadomosci/')) {
+        const targetConvId = cleanPath.startsWith('/wiadomosci/')
+          ? cleanPath.replace('/wiadomosci/', '')
+          : null;
         setConversationsOpen(true);
+        if (targetConvId) {
+          const matchConv = conversations.find((c) => c.id === targetConvId);
+          if (matchConv) {
+            const foundAd = adsList.find((a) => a.id === matchConv.adId) ?? {
+              id: matchConv.adId,
+              title: matchConv.adTitle,
+              price: matchConv.adPrice,
+              kind: matchConv.adPrice ? ('sell' as const) : ('free' as const),
+              category: 'Ogłoszenie',
+              street: matchConv.otherUser?.streetAs || matchConv.adStreet || 'Mińsk Mazowiecki',
+              author: matchConv.otherUser.name,
+              time: 'aktywne',
+              image: matchConv.adImage,
+              status: 'active' as const,
+              description: '',
+            };
+            setChatConversation(matchConv);
+            setChatAd(foundAd);
+          }
+        }
         return;
       }
 
@@ -866,36 +919,20 @@ export default function App() {
   }, []);
 
   const handleReservationSuccess = useCallback(
-    (ad: Ad, details: { spot: string; time: string; phone: string; note: string }) => {
-      // Mark ad as reserved
+    async (ad: Ad, details: { spot: string; time: string; phone: string; note: string }) => {
+      // Mark ad as reserved locally
       handleStatusChange(ad.id, 'reserved');
-
-      // Add to conversations
-      const newConv: AdConversation = {
-        id: `conv_${Date.now()}`,
-        adId: ad.id,
-        adTitle: ad.title,
-        adPrice: ad.price,
-        adImage: ad.image,
-        adStreet: ad.street,
-        otherUser: {
-          name: ad.author,
-          street: ad.street,
-        },
-        role: 'buyer',
-        lastMessage: `Rezerwacja: odbiór ${details.spot}, termin: ${details.time}`,
-        lastMessageTime: 'Przed chwilą',
-        unreadCount: 0,
-      };
-
-      setConversations((prev) => [newConv, ...prev.filter((c) => c.adId !== ad.id)]);
-      if (user) {
-        void reserveAdInSupabase(ad, user, details, newConv);
-      }
       setReserveAd(null);
-      setChatAd(ad);
+
+      if (user) {
+        await reserveAdWithMessage(ad.id, details);
+        refreshConversations();
+        const existingConv = conversations.find((c) => c.adId === ad.id);
+        setChatConversation(existingConv ?? null);
+        setChatAd(ad);
+      }
     },
-    [handleStatusChange, user],
+    [handleStatusChange, user, refreshConversations, conversations],
   );
 
   const activeFiltersCount =
@@ -909,7 +946,12 @@ export default function App() {
   const unreadConversationsCount = conversations.reduce((acc, c) => acc + c.unreadCount, 0);
 
   const userAds = user
-    ? adsList.filter((a) => a.isOwner || a.author.toLowerCase().includes(user.name.toLowerCase()))
+    ? adsList.filter(
+        (a) =>
+          (user.profileId && a.authorId === user.profileId) ||
+          a.isOwner ||
+          a.author.toLowerCase().trim() === user.name.toLowerCase().trim(),
+      )
     : [];
   const userActiveAdsCount = userAds.filter((a) => (a.status ?? 'active') === 'active').length;
   const userReservedAdsCount = userAds.filter((a) => a.status === 'reserved').length;
@@ -1545,6 +1587,7 @@ export default function App() {
                   'Aby rozmawiać na czacie, załóż konto sąsiedzkie.',
                   () => {
                     const foundAd = adsList.find((a) => a.id === conv.adId);
+                    setChatConversation(conv);
                     if (foundAd) {
                       setChatAd(foundAd);
                     } else {
@@ -1557,6 +1600,8 @@ export default function App() {
                         street: conv.adStreet,
                         time: 'Dzisiaj',
                         image: conv.adImage,
+                        description: '',
+                        status: 'active',
                       });
                     }
                   },
@@ -1686,7 +1731,11 @@ export default function App() {
               ads={adsList}
               onClose={closeConversations}
               isClosing={!!exitingScreens['conversations']}
-              onOpenChat={(ad) => setChatAd(ad)}
+              onRefreshConversations={refreshConversations}
+              onOpenChat={(ad, conv) => {
+                setChatConversation(conv ?? null);
+                setChatAd(ad);
+              }}
             />
           </AsyncViewBoundary>
         )}
@@ -1768,7 +1817,11 @@ export default function App() {
                 requireAuth(
                   'Napisz do sąsiada',
                   'Aby wysłać wiadomość do autora ogłoszenia, załóż konto sąsiedzkie.',
-                  () => setChatAd(ad),
+                  () => {
+                    const existingConv = conversations.find((c) => c.adId === ad.id);
+                    setChatConversation(existingConv ?? null);
+                    setChatAd(ad);
+                  },
                 )
               }
               onReportClick={(ad) => setReportAd(ad)}
@@ -1802,8 +1855,12 @@ export default function App() {
               onClose={closeAddAd}
               isClosing={!!exitingScreens['addAd']}
               onAdCreated={(newAd) => {
-                setAdsList((prev) => [newAd, ...prev]);
-                void createAdInSupabase(newAd);
+                const adWithAuthor: Ad = {
+                  ...newAd,
+                  authorId: user.profileId,
+                };
+                setAdsList((prev) => [adWithAuthor, ...prev]);
+                void createAdInSupabase(adWithAuthor);
               }}
             />
           </AsyncViewBoundary>
@@ -1871,7 +1928,11 @@ export default function App() {
                 requireAuth(
                   'Napisz do sąsiada',
                   'Aby wysłać wiadomość do sąsiada, załóż konto sąsiedzkie.',
-                  () => setChatAd(ad),
+                  () => {
+                    const existingConv = conversations.find((c) => c.adId === ad.id);
+                    setChatConversation(existingConv ?? null);
+                    setChatAd(ad);
+                  },
                 )
               }
             />
@@ -1921,7 +1982,10 @@ export default function App() {
             <ChatModal
               ad={chatAd}
               user={user}
+              conversationId={chatConversation?.id ?? null}
+              otherUser={chatConversation?.otherUser}
               onClose={closeChatAd}
+              onConversationUpdated={refreshConversations}
               isClosing={!!exitingScreens['chatAd']}
             />
           </AsyncViewBoundary>
