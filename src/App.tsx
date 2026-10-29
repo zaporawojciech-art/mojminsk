@@ -1133,7 +1133,7 @@ export default function App() {
     };
   }, []);
 
-  const showChrome = Boolean(user && !overlay);
+  const showChrome = Boolean(!overlay);
 
   return (
     <div className="h-full h-[100dvh] w-full overflow-hidden bg-mist select-none">
@@ -1143,76 +1143,74 @@ export default function App() {
         className="relative mx-auto flex h-full h-[100dvh] w-full max-w-md md:max-w-none flex-col overflow-hidden bg-mist shadow-2xl md:shadow-none"
       >
         {/* TOP HORIZONTAL NAVBAR (Desktop Only >= 768px) */}
-        {user && (
-          <DesktopTopNavbar
-            currentTab={tab}
-            onTabChange={handleTabChange}
-            hasActiveSubpage={isChildScreenActive}
-            onCloseAllLayers={() => {
-              setOverlay(null);
-              setPartnerOpen(false);
-              setSelectedAd(null);
-              setMyAdsOpen(false);
-              setReportAd(null);
-              setAddAdOpen(false);
-              setAddRideOpen(false);
-              setChatAd(null);
-              setConversationsOpen(false);
-              setEditAd(null);
-              setSellerProfile(null);
-              setReserveAd(null);
-              setFiltersModalOpen(false);
-              setInstallModalOpen(false);
-              setAddFavBusOpen(false);
-              setPollsModalOpen(false);
-              setAddPollModalOpen(false);
-            }}
-            user={user}
-            unreadCount={unreadConversationsCount}
-            onOpenConversations={() =>
-              requireAuth(
-                'Wiadomości sąsiedzkie',
-                'Dostęp do czatu wymaga konta mieszkańca.',
-                () => {
-                  setConversationsOpen(true);
-                  navigateTo('/wiadomosci');
-                },
-              )
+        <DesktopTopNavbar
+          currentTab={tab}
+          onTabChange={handleTabChange}
+          hasActiveSubpage={isChildScreenActive}
+          onCloseAllLayers={() => {
+            setOverlay(null);
+            setPartnerOpen(false);
+            setSelectedAd(null);
+            setMyAdsOpen(false);
+            setReportAd(null);
+            setAddAdOpen(false);
+            setAddRideOpen(false);
+            setChatAd(null);
+            setConversationsOpen(false);
+            setEditAd(null);
+            setSellerProfile(null);
+            setReserveAd(null);
+            setFiltersModalOpen(false);
+            setInstallModalOpen(false);
+            setAddFavBusOpen(false);
+            setPollsModalOpen(false);
+            setAddPollModalOpen(false);
+          }}
+          user={user}
+          unreadCount={unreadConversationsCount}
+          onOpenConversations={() =>
+            requireAuth(
+              'Wiadomości sąsiedzkie',
+              'Dostęp do czatu wymaga konta mieszkańca.',
+              () => {
+                setConversationsOpen(true);
+                navigateTo('/wiadomosci');
+              },
+            )
+          }
+          onAddNewAd={() =>
+            requireAuth(
+              'Dodaj ogłoszenie',
+              'Publikacja ogłoszeń na tablicy Mińska wymaga konta mieszkańca.',
+              () => {
+                setAddAdOpen(true);
+                navigateTo('/ogloszenia/dodaj');
+              },
+            )
+          }
+          onOpenZditm={() => {
+            setSelectedZditmLine('M2');
+            setSelectedZditmStop(undefined);
+            setOverlay('zditm');
+            navigateTo('/zditm/m2');
+          }}
+          onOpenPolls={() => {
+            setPollsModalOpen(true);
+            navigateTo('/ankiety');
+          }}
+          onProfileClick={handleOpenProfileOrAuth}
+          onLogout={() => handleUpdateUser(null)}
+          searchQuery={desktopSearchQuery}
+          onSearchChange={(q) => {
+            setDesktopSearchQuery(q);
+            if (q && tab !== 'ads') {
+              setTab('ads');
+              setVisitedTabs((prev) => ({ ...prev, ads: true }));
+              navigateTo('/ogloszenia');
             }
-            onAddNewAd={() =>
-              requireAuth(
-                'Dodaj ogłoszenie',
-                'Publikacja ogłoszeń na tablicy Mińska wymaga konta mieszkańca.',
-                () => {
-                  setAddAdOpen(true);
-                  navigateTo('/ogloszenia/dodaj');
-                },
-              )
-            }
-            onOpenZditm={() => {
-              setSelectedZditmLine('M2');
-              setSelectedZditmStop(undefined);
-              setOverlay('zditm');
-              navigateTo('/zditm/m2');
-            }}
-            onOpenPolls={() => {
-              setPollsModalOpen(true);
-              navigateTo('/ankiety');
-            }}
-            onProfileClick={handleOpenProfileOrAuth}
-            onLogout={() => handleUpdateUser(null)}
-            searchQuery={desktopSearchQuery}
-            onSearchChange={(q) => {
-              setDesktopSearchQuery(q);
-              if (q && tab !== 'ads') {
-                setTab('ads');
-                setVisitedTabs((prev) => ({ ...prev, ads: true }));
-                navigateTo('/ogloszenia');
-              }
-            }}
-            onSearchClear={() => setDesktopSearchQuery('')}
-          />
-        )}
+          }}
+          onSearchClear={() => setDesktopSearchQuery('')}
+        />
 
         {/* FULL-WIDTH MAIN WORKSPACE */}
         <main
