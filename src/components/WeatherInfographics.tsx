@@ -68,7 +68,10 @@ function CloudShape({
         <path
           d="M10 30 a10 10 0 0 1 2-19.8 A14 14 0 0 1 39 8 a11 11 0 0 1 11 22 z"
           fill={fill}
-          stroke="rgba(31,29,43,.06)"
+          stroke={tone === 'light' ? '#8E9BB0' : tone === 'grey' ? '#6B788D' : '#3B4558'}
+          strokeWidth="1.4"
+          strokeLinejoin="round"
+          filter="url(#wxShadow)"
         />
       </g>
     </g>
@@ -137,16 +140,19 @@ export function WeatherIllustration({
         </radialGradient>
         <linearGradient id="wxCloudLight" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#FFFFFF" />
-          <stop offset="100%" stopColor="#E4EBF5" />
+          <stop offset="100%" stopColor="#D3DCEA" />
         </linearGradient>
         <linearGradient id="wxCloudGrey" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#E9EDF3" />
-          <stop offset="100%" stopColor="#B9C3D1" />
+          <stop offset="0%" stopColor="#C3CCDA" />
+          <stop offset="100%" stopColor="#8D9AAF" />
         </linearGradient>
         <linearGradient id="wxCloudDark" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#9AA5B6" />
-          <stop offset="100%" stopColor="#5E6B80" />
+          <stop offset="0%" stopColor="#7A869A" />
+          <stop offset="100%" stopColor="#465267" />
         </linearGradient>
+        <filter id="wxShadow" x="-20%" y="-20%" width="140%" height="160%">
+          <feDropShadow dx="0" dy="2.5" stdDeviation="2" floodColor="#1F1D2B" floodOpacity="0.22" />
+        </filter>
         <linearGradient id="wxNightBg" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#C7D6EC" />
           <stop offset="100%" stopColor="#B7C9E3" />
@@ -181,7 +187,7 @@ export function WeatherIllustration({
               y1={y}
               x2={76 - i * 4}
               y2={y}
-              stroke="#AEB8C7"
+              stroke="#8D9AAF"
               strokeWidth="3"
               strokeLinecap="round"
               className="wx-drift"
@@ -275,7 +281,7 @@ export function CloudCoverTile({ value }: { value: number }) {
         />
         <path
           d="M14 25 a4 4 0 0 1 .8-7.9 A5.6 5.6 0 0 1 25.6 16 a4.4 4.4 0 0 1 .4 9 z"
-          fill="#B9C3D1"
+          fill="#7F8DA3"
         />
       </svg>
     </Tile>
