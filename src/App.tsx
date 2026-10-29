@@ -1195,9 +1195,7 @@ export default function App() {
         {/* FULL-WIDTH MAIN WORKSPACE */}
         <main
           ref={mainRef}
-          className={`h-full w-full flex-1 overscroll-contain ${
-            !user ? 'overflow-y-auto md:overflow-hidden' : 'overflow-y-auto'
-          }`}
+          className="h-full w-full flex-1 overscroll-contain overflow-y-auto"
         >
           {!user ? (
             <div className="h-full min-h-full">
