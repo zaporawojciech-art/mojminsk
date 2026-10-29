@@ -9,7 +9,6 @@ import {
   Mail,
   MapPin,
   ShieldCheck,
-  Sparkles,
   User as UserIcon,
 } from 'lucide-react';
 import {
@@ -245,25 +244,6 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
               <ArrowRight className="h-4 w-4" />
             </button>
           </form>
-
-          <div className="relative my-6 text-center">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-mist-200" />
-            </div>
-            <span className="relative bg-white px-3 text-[11px] font-bold text-ink-400 uppercase tracking-wider">
-              lub
-            </span>
-          </div>
-
-          {/* Dostęp demo */}
-          <button
-            type="button"
-            onClick={() => onDone({ ...demoUser, isGuest: true, name: 'Gość', verified: true })}
-            className="w-full h-10 rounded-xl bg-mist/60 hover:bg-mist text-ink font-bold text-[12.5px] transition-all flex items-center justify-center gap-2 border border-mist-300 cursor-pointer"
-          >
-            <Sparkles className="h-3.5 w-3.5 text-coral" />
-            <span>Wypróbuj wersję demonstracyjną (jako Gość)</span>
-          </button>
 
           {/* Główny blok CTA do rejestracji */}
           <div className="mt-6 pt-5 border-t border-mist-200 text-center">

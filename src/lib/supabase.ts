@@ -60,7 +60,7 @@ export async function registerNeighborInSupabase(user: User): Promise<{
   activationPin?: string;
   trialDaysLeft?: number;
 } | null> {
-  if (user.isGuest) return null;
+  if (!user) return null;
 
   const result = await restFetch<{
     profile_id: string;

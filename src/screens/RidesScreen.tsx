@@ -58,10 +58,10 @@ export function RidesScreen({
   };
 
   const handleToggleBook = (rideId: string) => {
-    if (user?.isGuest) {
+    if (!user) {
       onAuthRequired?.(
         'Rezerwacja miejsca w przejeździe',
-        'Sąsiedzki carpooling jest dostępny dla mieszkańców Mińska. Zarejestruj się, aby wspólnie dojeżdżać do Warszawy.',
+        'Sąsiedzki carpooling jest dostępny dla mieszkańców Mińska. Zaloguj się, aby wspólnie dojeżdżać do Warszawy.',
       );
       return;
     }

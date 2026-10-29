@@ -3,7 +3,6 @@ import {
   Car,
   Check,
   ChevronRight,
-  Clock,
   Coffee,
   Dices,
   Gem,
@@ -79,17 +78,15 @@ export function ProfileScreen({
   const [supportBlikCode, setSupportBlikCode] = useState('');
   const [supportPaid, setSupportPaid] = useState(false);
 
-  const badges = user.isGuest
-    ? [
-        {
-          id: 'guest',
-          label: 'Tryb gościa (tylko podgląd)',
-          icon: Clock,
-          unlocked: true,
-          tone: 'bg-sand-200 text-ink border-sand-300',
-        },
-      ]
-    : [];
+  const badges = [
+    {
+      id: 'verified',
+      label: 'Zweryfikowany Mieszkaniec',
+      icon: ShieldCheck,
+      unlocked: true,
+      tone: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+    },
+  ];
 
   const adsMetaLabel = [
     `${myAdsCount} aktywne`,
@@ -195,29 +192,6 @@ export function ProfileScreen({
               </div>
             )}
           </section>
-
-          {user.isGuest && (
-            <div className="mx-5 mt-5 rounded-4xl border border-sand-200 bg-sand-100 p-5 shadow-card text-center">
-              <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-white shadow-xs text-ink mb-3">
-                <ShieldCheck className="h-6 w-6 text-coral" />
-              </div>
-              <p className="font-display text-[16px] font-bold text-ink">
-                Przeglądasz aplikację w trybie gościa
-              </p>
-              <p className="mt-1 text-[12.5px] leading-relaxed text-ink-600">
-                Zarejestruj się bezpłatnie, aby dodawać ogłoszenia, rozmawiać na czacie, zamawiać przejazdy i brać udział w ankietach mieszkańców.
-              </p>
-              {onLogout && (
-                <button
-                  type="button"
-                  onClick={onLogout}
-                  className="mt-4 flex h-12 w-full items-center justify-center rounded-2xl bg-ink font-bold text-[13.5px] text-white shadow-xs transition-transform active:scale-95"
-                >
-                  Zarejestruj konto mieszkańca
-                </button>
-              )}
-            </div>
-          )}
 
           {/* Czat sąsiedzki */}
           <div className="mx-5 mt-6">
@@ -381,7 +355,7 @@ export function ProfileScreen({
                 className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-mist-300 bg-white text-[13.5px] font-bold text-coral-700"
               >
                 <LogOut className="h-4.5 w-4.5" />
-                {user.isGuest ? 'Opuść tryb gościa / Zarejestruj się' : 'Wyloguj się z konta'}
+                Wyloguj się z konta
               </button>
             </div>
           )}
@@ -462,7 +436,7 @@ export function ProfileScreen({
                     className="mt-5 flex h-10 w-full items-center justify-center gap-1.5 rounded-xl border border-mist-300 bg-white text-[12.5px] font-bold text-coral-700 hover:bg-coral-50 transition-colors"
                   >
                     <LogOut className="h-4 w-4" />
-                    <span>{user.isGuest ? 'Zarejestruj konto mieszkańca' : 'Wyloguj się z konta'}</span>
+                    <span>Wyloguj się z konta</span>
                   </button>
                 )}
               </div>

@@ -16,7 +16,6 @@ import {
 } from './components/TabSkeletons';
 import {
   ads as initialAds,
-  demoUser,
   initialAdConversations,
   rides as initialRides,
   streets,
@@ -92,13 +91,6 @@ const AddPollModal = lazy(() => import('./screens/AddPollModal').then((m) => ({ 
 
 type Overlay = null | 'profile' | 'zditm';
 
-const DEFAULT_GUEST_USER: User = {
-  ...demoUser,
-  isGuest: true,
-  name: 'Gość',
-  verified: true,
-};
-
 export default function App() {
   const [user, setUser] = useState<User | null>(() => {
     if (typeof window !== 'undefined') {
@@ -113,11 +105,8 @@ export default function App() {
       } catch {
         // fallback
       }
-      if (window.location.pathname === '/dolacz') {
-        return null;
-      }
     }
-    return DEFAULT_GUEST_USER;
+    return null;
   });
 
   const handleUpdateUser = useCallback((nextUser: User | null) => {
@@ -129,7 +118,7 @@ export default function App() {
           if (window.location.pathname === '/dolacz') {
             navigateTo('/');
           }
-          if (!nextUser.isGuest && !nextUser.activationPin) {
+          if (!nextUser.activationPin) {
             void registerNeighborInSupabase(nextUser).then((res) => {
               if (res?.activationPin) {
                 const enriched: User = {
@@ -254,7 +243,7 @@ export default function App() {
 
   const requireAuth = useCallback(
     (actionTitle: string, actionDesc: string, onAuthorized: () => void) => {
-      if (!user || user.isGuest) {
+      if (!user) {
         setAuthModal({
           isOpen: true,
           actionTitle,
@@ -556,9 +545,6 @@ export default function App() {
         setUser(null);
         return;
       }
-
-      // Gdy użytkownik był na /dolacz i przeszedł na trasę publiczną, przywróć sesję lub gościa
-      setUser((prev) => prev ?? DEFAULT_GUEST_USER);
 
       // Reset modal layers before applying route-matched layer
       setOverlay(null);

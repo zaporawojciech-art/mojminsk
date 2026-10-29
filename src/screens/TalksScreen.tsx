@@ -55,7 +55,7 @@ export function TalksScreen({
   const left = MAX - text.length;
 
   const publish = () => {
-    if (user.isGuest) {
+    if (!user) {
       onAuthRequired?.(
         'Publikowanie w Strefie Rozmów',
         'Wpisy w mińskiej strefie dyskusji mogą dodawać wyłącznie zarejestrowani mieszkańcy, aby wyeliminować anonimowy hejt i boty.',
@@ -80,7 +80,7 @@ export function TalksScreen({
   };
 
   const toggleLike = (postId: string) => {
-    if (user.isGuest) {
+    if (!user) {
       onAuthRequired?.(
         'Polubienie wpisu',
         'Reakcje na wpisy sąsiadów są dostępne wyłącznie dla zalogowanych mieszkańców.',
