@@ -4,7 +4,6 @@ import {
   Bus,
   Car,
   Check,
-  Clock,
   Cloud,
   CloudMoon,
   CloudRain,
@@ -238,83 +237,42 @@ function WeatherCard({ city = 'Mińsk Mazowiecki' }: { city?: string }) {
 
 function DesktopWeatherWidget({ city = 'Mińsk Mazowiecki' }: { city?: string }) {
   const h = new Date().getHours();
-  const metrics = [
-    { icon: Wind, label: 'Wiatr', value: `${weather.wind} km/h` },
-    { icon: Droplets, label: 'Wilgotność', value: `${weather.humidity}%` },
-    { icon: Sun, label: 'Indeks UV', value: `${weather.uv} niski` },
-    { icon: Gauge, label: 'Ciśnienie', value: `${weather.pressure} hPa` },
-    { icon: Umbrella, label: 'Opady', value: `${weather.rain} mm` },
-    { icon: Eye, label: 'Widoczność', value: `${weather.visibility} km` },
-  ];
 
   return (
-    <section className="relative overflow-hidden rounded-3xl bg-sky p-6 shadow-card text-ink">
-      {/* Decorative ambient background circle */}
-      <div className="absolute -right-16 -top-16 h-72 w-72 rounded-full bg-white/15 pointer-events-none" aria-hidden />
-
-      {/* TOP ROW: Current weather overview & micro metrics */}
-      <div className="relative flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-        {/* Left: Location, big temp, condition & AQI badge */}
-        <div className="flex items-center gap-6">
-          <div>
-            <p className="flex items-center gap-1.5 text-[13px] font-bold text-ink/75">
-              <MapPin className="h-4 w-4 text-ink-700" aria-hidden />
-              {city}
-            </p>
-            <div className="mt-1 flex items-baseline gap-3">
-              <span className="font-display text-[64px] font-semibold leading-none tracking-tighter">
-                {weather.temp}°
-              </span>
-              <div>
-                <p className="text-[18px] font-extrabold leading-tight">{weather.condition}</p>
-                <p className="text-[12.5px] font-medium text-ink/70">
-                  Odczuwalna {weather.feels}° · ↑{weather.max}° ↓{weather.min}°
-                </p>
+    <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-sky/35 via-sky/20 to-white/85 p-3.5 shadow-xs border border-sky-200/80 text-ink">
+      <div className="flex flex-col lg:flex-row items-center justify-between gap-3 lg:gap-5">
+        {/* 1. LEFT: CURRENT WEATHER SUMMARY */}
+        <div className="flex items-center gap-4 shrink-0 w-full lg:w-auto justify-between lg:justify-start">
+          <div className="flex items-center gap-3">
+            <span className="font-display text-[36px] font-bold leading-none tracking-tight text-ink">
+              {weather.temp}°
+            </span>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[13.5px] font-extrabold text-ink leading-tight">
+                  {weather.condition}
+                </span>
+                <span className="text-ink-300">·</span>
+                <span className="text-[11.5px] font-medium text-ink-600">
+                  odcz. {weather.feels}°
+                </span>
               </div>
-            </div>
-
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-[12px] font-bold shadow-2xs">
-                <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
-                Powietrze: {weather.aqi.label} · PM2.5 {weather.aqi.pm25} µg/m³
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-white/50 px-2.5 py-1 text-[11.5px] font-semibold text-ink-800">
-                Wschód {weather.sunrise} · Zachód {weather.sunset}
-              </span>
+              <p className="flex items-center gap-1 text-[11px] font-semibold text-ink-500 mt-0.5">
+                <MapPin className="h-3 w-3 text-coral-700" aria-hidden />
+                {city} <span className="text-ink-300">·</span> ↑{weather.max}° ↓{weather.min}°
+              </p>
             </div>
           </div>
-        </div>
 
-        {/* Center / Right: 6 Weather Metrics grid */}
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 w-full lg:w-auto">
-          {metrics.map(({ icon: Icon, label, value }) => (
-            <div key={label} className="rounded-2xl bg-white/45 p-2.5 text-center min-w-[85px] backdrop-blur-xs">
-              <Icon className="h-4 w-4 mx-auto text-ink-700" aria-hidden />
-              <p className="mt-1 font-display text-[13px] font-bold leading-none">{value}</p>
-              <p className="mt-1 text-[10.5px] font-medium text-ink/70">{label}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Far Right: Weather Art Illustration */}
-        <div className="hidden xl:block shrink-0">
-          <WeatherArt />
-        </div>
-      </div>
-
-      {/* BOTTOM ROW: HOURLY FORECAST CAPSULES */}
-      <div className="relative mt-5 pt-4 border-t border-ink/10">
-        <div className="flex items-center justify-between mb-3">
-          <p className="flex items-center gap-1.5 text-[12.5px] font-extrabold text-ink/80">
-            <Clock className="h-3.5 w-3.5 text-ink/60" aria-hidden />
-            Prognoza godzinowa na dziś
-          </p>
-          <span className="text-[11px] font-medium text-ink/60">
-            Stacja GIOŚ Mińsk Mazowiecki · Open-Meteo
+          {/* Air Quality Badge */}
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-bold text-ink shadow-2xs border border-mist-200/60 shrink-0">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
+            PM2.5: {weather.aqi.pm25} ({weather.aqi.label})
           </span>
         </div>
 
-        <div className="flex lg:grid gap-2.5 overflow-x-auto pb-1 no-scrollbar lg:grid-cols-8">
+        {/* 2. CENTER: COMPACT HOURLY FORECAST PILLS */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full lg:w-auto py-0.5 justify-start lg:justify-center">
           {weather.hourly.map((item, i) => {
             const hourNum = (h + i) % 24;
             const isDay = hourNum >= 6 && hourNum < 20;
@@ -322,32 +280,30 @@ function DesktopWeatherWidget({ city = 'Mińsk Mazowiecki' }: { city?: string })
               <div
                 key={i}
                 className={cn(
-                  'flex min-w-[84px] lg:min-w-0 flex-1 shrink-0 flex-col items-center justify-between rounded-2xl py-3 px-2 text-center transition-all',
+                  'flex w-[62px] shrink-0 flex-col items-center justify-between rounded-xl py-1.5 px-1 text-center transition-all',
                   i === 0
-                    ? 'bg-ink text-white shadow-card ring-2 ring-white/20'
-                    : 'bg-white/70 hover:bg-white text-ink shadow-2xs backdrop-blur-xs'
+                    ? 'bg-ink text-white shadow-sm ring-1 ring-white/20'
+                    : 'bg-white/85 hover:bg-white text-ink shadow-2xs border border-white/60'
                 )}
               >
-                <p className={cn('text-[10.5px] font-bold', i === 0 ? 'text-white/80' : 'text-ink-500')}>
+                <p className={cn('text-[9.5px] font-bold', i === 0 ? 'text-white/80' : 'text-ink-500')}>
                   {i === 0 ? 'Teraz' : `${String(hourNum).padStart(2, '0')}:00`}
                 </p>
 
-                <div className="my-2 flex flex-col items-center gap-0.5 min-h-[36px] justify-center">
+                <div className="my-1 flex items-center justify-center gap-0.5 h-4">
                   <HourlyWeatherIcon icon={item.icon} isDay={isDay} />
                   {item.rainChance && item.rainChance >= 20 ? (
-                    <span className={cn('text-[9.5px] font-extrabold', i === 0 ? 'text-sky-300' : 'text-sky-700')}>
+                    <span className={cn('text-[8.5px] font-extrabold', i === 0 ? 'text-sky-300' : 'text-sky-700')}>
                       {item.rainChance}%
                     </span>
-                  ) : (
-                    <span className="h-3" />
-                  )}
+                  ) : null}
                 </div>
 
-                <p className="font-display text-[16px] font-bold leading-none">{item.temp}°</p>
+                <p className="font-display text-[13px] font-bold leading-none">{item.temp}°</p>
                 <p
                   className={cn(
-                    'mt-1.5 line-clamp-1 text-[9.5px] font-semibold leading-tight px-1',
-                    i === 0 ? 'text-white/75' : 'text-ink-600'
+                    'mt-0.5 truncate max-w-[56px] text-[8.5px] font-medium leading-tight',
+                    i === 0 ? 'text-white/70' : 'text-ink-500'
                   )}
                   title={item.condition}
                 >
@@ -356,6 +312,30 @@ function DesktopWeatherWidget({ city = 'Mińsk Mazowiecki' }: { city?: string })
               </div>
             );
           })}
+        </div>
+
+        {/* 3. RIGHT: COMPACT MICRO-METRICS */}
+        <div className="hidden xl:flex items-center gap-3 border-l border-ink/10 pl-4 text-[11px] font-medium text-ink-600 shrink-0">
+          <div className="space-y-0.5">
+            <p className="flex items-center gap-1">
+              <Wind className="h-3 w-3 text-ink-400" />
+              <span>{weather.wind} km/h</span>
+            </p>
+            <p className="flex items-center gap-1">
+              <Droplets className="h-3 w-3 text-ink-400" />
+              <span>{weather.humidity}%</span>
+            </p>
+          </div>
+          <div className="space-y-0.5">
+            <p className="flex items-center gap-1">
+              <Gauge className="h-3 w-3 text-ink-400" />
+              <span>{weather.pressure} hPa</span>
+            </p>
+            <p className="flex items-center gap-1">
+              <Sun className="h-3 w-3 text-amber-500" />
+              <span>UV: {weather.uv}</span>
+            </p>
+          </div>
         </div>
       </div>
     </section>
