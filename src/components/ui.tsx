@@ -146,11 +146,13 @@ export function CityDropdown({
   onChange,
   variant = 'compact',
   className,
+  triggerClassName,
 }: {
   value: string;
   onChange: (city: string) => void;
   variant?: 'compact' | 'full';
   className?: string;
+  triggerClassName?: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -196,6 +198,7 @@ export function CityDropdown({
           variant === 'compact'
             ? 'h-9 gap-1.5 rounded-full bg-white pl-2.5 pr-2 text-[12px] font-bold text-ink shadow-card border border-mist-300 hover:border-ink-400 active:scale-95'
             : 'h-12 w-full gap-2 rounded-2xl bg-mist/50 px-3.5 text-[14.5px] font-bold text-ink border-2 border-mist-300 hover:border-ink/40 active:scale-[0.99] focus:border-ink focus:bg-white',
+          triggerClassName,
           isOpen && 'border-ink ring-2 ring-ink/20 shadow-md',
         )}
       >

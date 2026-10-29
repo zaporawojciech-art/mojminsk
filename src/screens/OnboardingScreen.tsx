@@ -412,37 +412,31 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
                 {/* --- KROK 1: IMIĘ, MIEJSCOWOŚĆ, ULICA I AWATAR --- */}
                 {registerStep === 1 && (
                   <div className="space-y-2.5">
-                    {/* Wiersz 1: Imię i Miejscowość w 2 kolumnach */}
+                    {/* Wiersz 1: Imię i Miejscowość w 2 idealnie zrównanych kolumnach */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-                      <div className="rounded-2xl bg-white p-2.5 shadow-2xs border border-mist-300">
-                        <label className="text-[11.5px] font-bold text-ink block">
+                      <div className="rounded-2xl bg-white p-3 shadow-2xs border border-mist-300 flex flex-col justify-between">
+                        <label className="text-[11.5px] font-bold text-ink block mb-1.5 leading-none">
                           Jak masz na imię?
                         </label>
                         <input
                           value={name}
                           onChange={(e) => setName(e.target.value)}
-                          placeholder="np. Wojtek"
+                          placeholder="np. Wojciech"
                           autoComplete="given-name"
-                          className="mt-1 h-9 w-full rounded-xl border border-mist-300 bg-mist/40 px-3 text-[14px] font-bold text-ink outline-none focus:ring-2 focus:ring-ink"
+                          className="h-10 w-full rounded-xl border border-mist-300 bg-mist/40 px-3 text-[14px] font-bold text-ink outline-none focus:ring-1 focus:ring-ink"
                         />
                       </div>
 
-                      <div className="rounded-2xl bg-white p-2.5 shadow-2xs border border-mist-300">
-                        <div className="flex items-center justify-between">
-                          <label className="text-[11.5px] font-bold text-ink block">
-                            Miejscowość
-                          </label>
-                          <span className="rounded-full bg-sand-100 px-2 py-0.2 text-[10px] font-bold text-ink">
-                            {city}
-                          </span>
-                        </div>
-                        <div className="mt-1">
-                          <CityDropdown
-                            value={city}
-                            onChange={handleCitySelect}
-                            variant="full"
-                          />
-                        </div>
+                      <div className="rounded-2xl bg-white p-3 shadow-2xs border border-mist-300 flex flex-col justify-between">
+                        <label className="text-[11.5px] font-bold text-ink block mb-1.5 leading-none">
+                          Miejscowość / Miasto
+                        </label>
+                        <CityDropdown
+                          value={city}
+                          onChange={handleCitySelect}
+                          variant="full"
+                          triggerClassName="!h-10 !rounded-xl !border !border-mist-300 !bg-mist/40 !px-3 !text-[14px] !font-bold"
+                        />
                       </div>
                     </div>
 
