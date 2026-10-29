@@ -179,7 +179,7 @@ export function DesktopTopNavbar({
           </button>
 
           {/* Neighbor Profile Pill */}
-          {user && (
+          {user ? (
             <div className="flex items-center gap-2 pl-2.5 ml-0.5 border-l border-mist-300 shrink-0">
               <button
                 type="button"
@@ -210,6 +210,19 @@ export function DesktopTopNavbar({
                   <LogOut className="h-3.5 w-3.5" />
                 </button>
               )}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 pl-2.5 ml-0.5 border-l border-mist-300 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  onCloseAllLayers?.();
+                  onProfileClick();
+                }}
+                className="flex h-9 items-center gap-1.5 rounded-lg border border-ink bg-ink px-3 text-[12.5px] font-bold text-white hover:bg-ink-700 active:scale-95 transition-all cursor-pointer"
+              >
+                <span>Zaloguj się</span>
+              </button>
             </div>
           )}
         </div>

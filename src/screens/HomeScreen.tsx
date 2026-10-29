@@ -558,7 +558,7 @@ function FeaturedPollCard({
 }
 
 interface HomeScreenProps {
-  user: User;
+  user: User | null;
   onTab: (t: TabId) => void;
   onProfile: () => void;
   onPartner: () => void;
@@ -637,7 +637,7 @@ export function HomeScreen({
                 {greeting()},
               </span>
               <span className="font-display text-[22px] font-bold text-ink leading-none">
-                {user.name} 👋
+                {user ? `${user.name} 👋` : 'Sąsiedzie 👋'}
               </span>
             </button>
           }

@@ -33,7 +33,7 @@ export function TalksScreen({
   onNeighborClick,
   onAuthRequired,
 }: {
-  user: User;
+  user: User | null;
   onProfile?: () => void;
   onNeighborClick?: (name: string, street: string) => void;
   onAuthRequired?: (title: string, desc: string) => void;
@@ -121,12 +121,28 @@ export function TalksScreen({
         <div className="md:col-span-8 lg:col-span-9">
           <div className="mx-5 md:mx-0 rounded-4xl bg-white p-4 md:p-6 shadow-card border border-mist-200">
             <div className="flex gap-3.5">
-              <img src={avatarUrl(user.seed)} alt="" className="h-11 w-11 shrink-0 rounded-2xl bg-sand-100" />
+              <img
+                src={avatarUrl(user ? user.seed : 'gosc')}
+                alt=""
+                className="h-11 w-11 shrink-0 rounded-2xl bg-sand-100"
+              />
               <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value.slice(0, MAX))}
+                onFocus={() => {
+                  if (!user) {
+                    onAuthRequired?.(
+                      'Publikowanie w Strefie Rozmów',
+                      'Wpisy w mińskiej strefie dyskusji mogą dodawać wyłącznie zarejestrowani mieszkańcy, aby wyeliminować anonimowy hejt i boty.',
+                    );
+                  }
+                }}
                 rows={2}
-                placeholder={`Co słychać ${user.street.as.replace(/^ze? /, 'na ')}? Podziel się z sąsiadami...`}
+                placeholder={
+                  user
+                    ? `Co słychać ${user.street.as.replace(/^ze? /, 'na ')}? Podziel się z sąsiadami...`
+                    : 'Zaloguj się, aby podzielić się wiadomością z sąsiadami...'
+                }
                 aria-label="Treść wpisu"
                 className="min-h-[56px] flex-1 resize-none bg-transparent pt-2 text-[15px] outline-none placeholder:text-ink-400"
               />

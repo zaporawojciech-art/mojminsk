@@ -185,7 +185,7 @@ const QUICK_FILTERS = [
 ] as const;
 
 interface AdsScreenProps {
-  user?: User;
+  user?: User | null;
   onProfile?: () => void;
   adsList?: Ad[];
   likedAds?: Record<string, boolean>;

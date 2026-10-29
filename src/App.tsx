@@ -109,6 +109,22 @@ export default function App() {
     return null;
   });
 
+  const [authScreenOpen, setAuthScreenOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const p = window.location.pathname;
+      return p === '/dolacz' || p === '/rejestracja' || p === '/logowanie';
+    }
+    return false;
+  });
+
+  const [authScreenMode, setAuthScreenMode] = useState<'login' | 'register'>(() => {
+    if (typeof window !== 'undefined') {
+      const p = window.location.pathname;
+      return p === '/dolacz' || p === '/rejestracja' ? 'register' : 'login';
+    }
+    return 'login';
+  });
+
   const handleUpdateUser = useCallback((nextUser: User | null) => {
     setUser(nextUser);
     if (typeof window !== 'undefined') {
@@ -528,6 +544,17 @@ export default function App() {
     [closeWithAnimation, tab],
   );
 
+  const handleOpenProfileOrAuth = useCallback(() => {
+    if (!user) {
+      setAuthScreenMode('login');
+      setAuthScreenOpen(true);
+      navigateTo('/dolacz');
+    } else {
+      setOverlay('profile');
+      navigateTo('/profil');
+    }
+  }, [user, navigateTo]);
+
   const handlePollCreated = useCallback((newPoll: PollItem) => {
     setPolls((prev) => [newPoll, ...prev]);
     void createPollInSupabase(newPoll);
@@ -540,11 +567,18 @@ export default function App() {
       const cleanPath = pathname.replace(/\/+$/, '') || '/';
       setRouteNotFound(false);
 
-      // 1. Onboarding / Rejestracja
-      if (cleanPath === '/dolacz') {
-        setUser(null);
+      // 1. Onboarding / Rejestracja / Logowanie
+      if (cleanPath === '/dolacz' || cleanPath === '/rejestracja') {
+        setAuthScreenMode('register');
+        setAuthScreenOpen(true);
         return;
       }
+      if (cleanPath === '/logowanie') {
+        setAuthScreenMode('login');
+        setAuthScreenOpen(true);
+        return;
+      }
+      setAuthScreenOpen(false);
 
       // Reset modal layers before applying route-matched layer
       setOverlay(null);
@@ -665,7 +699,12 @@ export default function App() {
       }
 
       if (cleanPath === '/profil') {
-        setOverlay('profile');
+        if (!user) {
+          setAuthScreenMode('login');
+          setAuthScreenOpen(true);
+        } else {
+          setOverlay('profile');
+        }
         return;
       }
 
@@ -1160,10 +1199,7 @@ export default function App() {
               setPollsModalOpen(true);
               navigateTo('/ankiety');
             }}
-            onProfileClick={() => {
-              setOverlay('profile');
-              navigateTo('/profil');
-            }}
+            onProfileClick={handleOpenProfileOrAuth}
             onLogout={() => handleUpdateUser(null)}
             searchQuery={desktopSearchQuery}
             onSearchChange={(q) => {
@@ -1183,9 +1219,25 @@ export default function App() {
           ref={mainRef}
           className="h-full w-full flex-1 overscroll-contain overflow-y-auto"
         >
-          {!user ? (
-            <div className="h-full min-h-full">
-              <OnboardingScreen onDone={handleUpdateUser} />
+          {authScreenOpen ? (
+            <div className="min-h-full">
+              <OnboardingScreen
+                initialMode={authScreenMode}
+                onDone={(newUser) => {
+                  handleUpdateUser(newUser);
+                  setAuthScreenOpen(false);
+                }}
+                onClose={() => {
+                  setAuthScreenOpen(false);
+                  if (
+                    window.location.pathname === '/dolacz' ||
+                    window.location.pathname === '/rejestracja' ||
+                    window.location.pathname === '/logowanie'
+                  ) {
+                    navigateTo('/');
+                  }
+                }}
+              />
             </div>
           ) : routeNotFound ? (
             <div className="min-h-full">
@@ -1197,10 +1249,7 @@ export default function App() {
                 <HomeScreen
                   user={user}
                   onTab={handleTabChange}
-                  onProfile={() => {
-                    setOverlay('profile');
-                    navigateTo('/profil');
-                  }}
+                  onProfile={handleOpenProfileOrAuth}
                   onPartner={() => {
                     setPartnerOpen(true);
                     navigateTo('/partnerzy/jubiler-minsk');
@@ -1222,7 +1271,7 @@ export default function App() {
                     setPollsModalOpen(true);
                     navigateTo('/ankiety');
                   }}
-                  city={user.city || 'Mińsk Mazowiecki'}
+                  city={user?.city || 'Mińsk Mazowiecki'}
                   adsList={adsList}
                   ridesList={ridesList}
                   onAdClick={(ad) => {
@@ -1250,10 +1299,7 @@ export default function App() {
                 <div className={tab === 'ads' ? 'min-h-full' : 'hidden'}>
                   <AdsScreen
                     user={user}
-                    onProfile={() => {
-                      setOverlay('profile');
-                      navigateTo('/profil');
-                    }}
+                    onProfile={handleOpenProfileOrAuth}
                     adsList={adsList}
                     likedAds={likedAds}
                     onToggleLike={handleToggleLike}
@@ -1295,10 +1341,7 @@ export default function App() {
                 <div className={tab === 'rides' ? 'min-h-full' : 'hidden'}>
                   <RidesScreen
                     user={user}
-                    onProfile={() => {
-                      setOverlay('profile');
-                      navigateTo('/profil');
-                    }}
+                    onProfile={handleOpenProfileOrAuth}
                     ridesList={ridesList}
                     onDeleteRide={handleDeleteRide}
                     onAuthRequired={(title, desc) =>
@@ -1316,10 +1359,7 @@ export default function App() {
                 <div className={tab === 'talks' ? 'min-h-full' : 'hidden'}>
                   <TalksScreen
                     user={user}
-                    onProfile={() => {
-                      setOverlay('profile');
-                      navigateTo('/profil');
-                    }}
+                    onProfile={handleOpenProfileOrAuth}
                     onNeighborClick={(name, street) => {
                       setSellerProfile({ name, street });
                       navigateTo(buildNeighborUrl(name, street));
@@ -1812,11 +1852,15 @@ export default function App() {
           actionDesc={authModal.actionDesc}
           onRegister={() => {
             setAuthModal({ isOpen: false });
-            handleUpdateUser(null);
+            setAuthScreenMode('register');
+            setAuthScreenOpen(true);
+            navigateTo('/dolacz');
           }}
           onLogin={() => {
             setAuthModal({ isOpen: false });
-            handleUpdateUser(null);
+            setAuthScreenMode('login');
+            setAuthScreenOpen(true);
+            navigateTo('/dolacz');
           }}
         />
 

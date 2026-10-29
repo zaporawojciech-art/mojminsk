@@ -10,6 +10,7 @@ import {
   MapPin,
   ShieldCheck,
   User as UserIcon,
+  X,
 } from 'lucide-react';
 import {
   avatarUrl,
@@ -25,11 +26,17 @@ import { fetchStreetsFromSupabase } from '../lib/supabase';
 
 interface OnboardingScreenProps {
   onDone: (user: User) => void;
+  onClose?: () => void;
+  initialMode?: 'login' | 'register';
 }
 
-export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
+export function OnboardingScreen({
+  onDone,
+  onClose,
+  initialMode = 'login',
+}: OnboardingScreenProps) {
   // Domyślny widok to LOGOWANIE, z wyraźnym CTA do rejestracji
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const [authMode, setAuthMode] = useState<'login' | 'register'>(initialMode);
 
   // Dynamiczna lista ulic (zsynchronizowana z bazą Supabase)
   const [allStreets, setAllStreets] = useState<Street[]>(streets);
@@ -188,6 +195,16 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
           ========================================================================= */}
       {authMode === 'login' ? (
         <div className="w-full max-w-[430px] bg-white rounded-3xl p-6 sm:p-8 shadow-card border border-mist-200/90 relative z-10 transition-all">
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Zamknij"
+              className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-full bg-mist/60 text-ink-500 hover:text-ink hover:bg-mist active:scale-95 transition-all cursor-pointer"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
           <div className="mb-6">
             <h1 className="font-display text-[22px] font-bold text-ink tracking-tight">
               Zaloguj się
@@ -269,6 +286,16 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
            WIDOK 2: REJESTRACJA (3 PRZEJRZYSTE KROKI)
            ========================================================================= */
         <div className="w-full max-w-[480px] bg-white rounded-3xl p-6 sm:p-8 shadow-card border border-mist-200/90 relative z-10 transition-all">
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Zamknij"
+              className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-full bg-mist/60 text-ink-500 hover:text-ink hover:bg-mist active:scale-95 transition-all cursor-pointer"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
           {/* Pasek nawigacji powrotu i wskaźnik kroku */}
           <div className="flex items-center justify-between mb-4">
             <button

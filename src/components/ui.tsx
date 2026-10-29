@@ -126,9 +126,17 @@ export function StandardTopBar({
             />
           )}
           {action}
-          {user && onProfile && (
+          {user && onProfile ? (
             <ProfileAvatarButton user={user} onClick={onProfile} />
-          )}
+          ) : onProfile ? (
+            <button
+              type="button"
+              onClick={onProfile}
+              className="flex h-8 items-center gap-1 rounded-full bg-ink px-3 text-[11.5px] font-bold text-white shadow-xs active:scale-95 transition-transform cursor-pointer"
+            >
+              Zaloguj
+            </button>
+          ) : null}
         </div>
       </div>
 

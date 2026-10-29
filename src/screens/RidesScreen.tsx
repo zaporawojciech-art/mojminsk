@@ -15,7 +15,7 @@ import { Chip, StandardTopBar, cn } from '../components/ui';
 const dests = ['Wszystkie', 'Warszawa', 'Halinów', 'Sulejówek', 'Stojadła', 'Dębe Wielkie'];
 
 interface RidesScreenProps {
-  user?: User;
+  user?: User | null;
   onProfile?: () => void;
   ridesList?: Ride[];
   onDeleteRide?: (rideId: string) => void;
