@@ -54,12 +54,12 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
   const [loginSmsCode, setLoginSmsCode] = useState('');
   const [loginError, setLoginError] = useState('');
 
-  // Filtrowanie i podpowiedzi ulic
+  // Filtrowanie i podpowiedzi ulic (pełna baza Mińska Mazowieckiego)
   const topStreets = streets.slice(0, 3);
   const filteredStreets = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
-    return streets.filter((s) => s.name.toLowerCase().includes(q)).slice(0, 5);
+    return streets.filter((s) => s.name.toLowerCase().includes(q)).slice(0, 30);
   }, [query]);
 
   const displayName = name.trim() || 'Sąsiad';
@@ -493,12 +493,12 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
                           <input
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
-                            placeholder="Szukaj innej ulicy w Mińsku…"
+                            placeholder="Wpisz nazwę swojej ulicy (np. Warszawska, Prusa, Polna)…"
                             className="mt-2 h-8 w-full rounded-lg border border-mist-300 bg-mist/40 px-2.5 text-[12.5px] text-ink outline-none focus:ring-1 focus:ring-ink"
                           />
 
                           {filteredStreets.length > 0 ? (
-                            <ul className="mt-1.5 max-h-24 overflow-y-auto rounded-xl border border-mist-300 bg-white shadow-sm">
+                            <ul className="mt-1.5 max-h-28 overflow-y-auto rounded-xl border border-mist-300 bg-white shadow-sm divide-y divide-mist">
                               {filteredStreets.map((s) => (
                                 <li key={s.name}>
                                   <button
@@ -507,7 +507,7 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
                                       setStreet(s);
                                       setQuery('');
                                     }}
-                                    className="flex w-full items-center justify-between border-b border-mist px-2.5 py-1.5 text-left last:border-0 hover:bg-mist/60 text-[12px] font-bold text-ink cursor-pointer"
+                                    className="flex w-full items-center justify-between px-2.5 py-1.5 text-left hover:bg-mist/60 text-[12px] font-bold text-ink cursor-pointer"
                                   >
                                     <span>ul. {s.name}</span>
                                     <span className="text-[10px] text-ink-400 font-normal">{s.neighbors} sąsiadów</span>
