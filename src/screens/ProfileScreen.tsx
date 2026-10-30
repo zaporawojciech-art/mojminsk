@@ -12,7 +12,6 @@ import {
   MessageCircle,
   Plus,
   ShieldCheck,
-  Smartphone,
   Sparkles,
   Vote,
 } from 'lucide-react';
@@ -50,7 +49,6 @@ interface ProfileScreenProps {
   onOpenPolls?: () => void;
   onAddPoll?: () => void;
   activePollsCount?: number;
-  onInstallApp?: () => void;
   onLogout?: () => void;
   userAds?: Ad[];
   isClosing?: boolean;
@@ -75,7 +73,6 @@ export function ProfileScreen({
   onOpenPolls,
   onAddPoll,
   activePollsCount = 0,
-  onInstallApp,
   onLogout,
   userAds = [],
   isClosing = false,
@@ -794,25 +791,6 @@ export function ProfileScreen({
                   </div>
                   <ChevronRight className="h-4 w-4 text-ink-400" />
                 </button>
-
-                {onInstallApp && (
-                  <button
-                    type="button"
-                    onClick={onInstallApp}
-                    className="flex w-full items-center justify-between rounded-xl bg-mist/50 p-3 text-left hover:bg-mist transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="grid h-9 w-9 place-items-center rounded-lg bg-sky-100 text-sky-900">
-                        <Smartphone className="h-4 w-4" />
-                      </span>
-                      <div>
-                        <p className="text-[13px] font-bold text-ink">Aplikacja PWA na telefon</p>
-                        <p className="text-[11px] text-ink-500">Instrukcja instalacji na iOS i Android</p>
-                      </div>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-ink-400" />
-                  </button>
-                )}
 
                 <div className="rounded-xl bg-sand-100/70 p-3.5 border border-sand-200">
                   <div className="flex items-center justify-between">

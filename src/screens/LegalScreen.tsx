@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import {
   ArrowLeft,
   CheckCircle2,
@@ -22,10 +22,37 @@ interface LegalScreenProps {
 }
 
 export function LegalScreen({ activeDoc, onBack, onSelectDoc }: LegalScreenProps) {
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const scrollToTop = () => {
+      if (typeof window !== 'undefined') {
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      }
+      const mainEl = document.querySelector('main');
+      if (mainEl) {
+        mainEl.scrollTop = 0;
+      }
+      if (containerRef.current) {
+        let parent = containerRef.current.parentElement;
+        while (parent) {
+          if (parent.scrollTop > 0) {
+            parent.scrollTop = 0;
+          }
+          parent = parent.parentElement;
+        }
+      }
+    };
+
+    scrollToTop();
+    const rafId = requestAnimationFrame(scrollToTop);
+    const timerId = setTimeout(scrollToTop, 60);
+    return () => {
+      cancelAnimationFrame(rafId);
+      clearTimeout(timerId);
+    };
   }, [activeDoc]);
 
   const handleDocChange = (doc: LegalDocType) => {
@@ -37,7 +64,10 @@ export function LegalScreen({ activeDoc, onBack, onSelectDoc }: LegalScreenProps
   };
 
   return (
-    <div className="min-h-full w-full bg-mist text-ink select-text py-6 px-4 sm:px-6 lg:px-8">
+    <div
+      ref={containerRef}
+      className="min-h-full w-full bg-mist text-ink select-text py-6 px-4 sm:px-6 md:px-8 lg:px-12"
+    >
       <SeoHead
         title={
           activeDoc === 'terms'
@@ -52,7 +82,7 @@ export function LegalScreen({ activeDoc, onBack, onSelectDoc }: LegalScreenProps
         canonicalPath={activeDoc === 'terms' ? '/regulamin' : '/polityka-prywatnosci'}
       />
 
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="w-full space-y-6">
         {/* Navigation Bar / Back */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <AppLink
@@ -179,7 +209,7 @@ function TermsContent() {
     <article className="prose prose-sm max-w-none text-ink-800 space-y-8 leading-relaxed">
       <div className="p-4 rounded-2xl bg-mist border border-mist-200 text-xs text-ink-600">
         <p className="font-bold text-ink-900 mb-1">Spis treści Regulaminu:</p>
-        <ol className="grid grid-cols-1 sm:grid-cols-2 gap-1 list-decimal list-inside">
+        <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1.5 list-decimal list-inside">
           <li>Postanowienia ogólne i definicje</li>
           <li>Warunki techniczne i charakter PWA</li>
           <li>Rejestracja i weryfikacja pocztowa</li>
@@ -428,7 +458,7 @@ function PrivacyContent() {
     <article className="prose prose-sm max-w-none text-ink-800 space-y-8 leading-relaxed">
       <div className="p-4 rounded-2xl bg-mist border border-mist-200 text-xs text-ink-600">
         <p className="font-bold text-ink-900 mb-1">Spis treści Polityki Prywatności:</p>
-        <ol className="grid grid-cols-1 sm:grid-cols-2 gap-1 list-decimal list-inside">
+        <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1.5 list-decimal list-inside">
           <li>Administrator Danych Osobowych</li>
           <li>Cele i podstawy prawne przetwarzania</li>
           <li>Szyfrowanie adresów i tożsamość sąsiedzka</li>

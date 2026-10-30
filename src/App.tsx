@@ -460,12 +460,12 @@ export default function App() {
     }
   };
 
-  // 1. Reset main container scroll immediately upon opening root overlays
+  // 1. Reset main container scroll immediately upon opening root overlays or legal documents
   useLayoutEffect(() => {
-    if (overlay && mainRef.current) {
+    if ((overlay || legalView) && mainRef.current) {
       mainRef.current.scrollTop = 0;
     }
-  }, [overlay]);
+  }, [overlay, legalView]);
 
   // 2. Prevent browser from retaining scroll offsets on SPA page changes
   useEffect(() => {
@@ -700,11 +700,13 @@ export default function App() {
       if (cleanPath === '/regulamin') {
         setSelectedAd(null);
         setLegalView('terms');
+        if (mainRef.current) mainRef.current.scrollTop = 0;
         return;
       }
       if (cleanPath === '/polityka-prywatnosci') {
         setSelectedAd(null);
         setLegalView('privacy');
+        if (mainRef.current) mainRef.current.scrollTop = 0;
         return;
       }
       setLegalView(null);
@@ -1393,7 +1395,7 @@ export default function App() {
               />
             </div>
           ) : legalView ? (
-            <div className="min-h-full">
+            <div className="min-h-full w-full">
               <Suspense
                 fallback={
                   <div className="min-h-[50vh] flex items-center justify-center p-8 text-ink-400">
@@ -1405,6 +1407,7 @@ export default function App() {
                   activeDoc={legalView}
                   onBack={() => handleTabChange('home')}
                   onSelectDoc={(doc) => {
+                    if (mainRef.current) mainRef.current.scrollTop = 0;
                     setLegalView(doc);
                     navigateTo(doc === 'terms' ? '/regulamin' : '/polityka-prywatnosci');
                   }}
@@ -1582,8 +1585,8 @@ export default function App() {
                   },
                 )
               }
-              onOpenInstallApp={() => setInstallModalOpen(true)}
               onOpenLegal={(doc) => {
+                if (mainRef.current) mainRef.current.scrollTop = 0;
                 setLegalView(doc);
                 navigateTo(doc === 'terms' ? '/regulamin' : '/polityka-prywatnosci');
               }}
@@ -1703,7 +1706,6 @@ export default function App() {
                 )
               }
               activePollsCount={polls.filter(isPollActive).length}
-              onInstallApp={() => setInstallModalOpen(true)}
               userAds={userAds}
             />
           </AsyncViewBoundary>

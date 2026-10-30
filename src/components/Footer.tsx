@@ -8,7 +8,6 @@ export interface FooterProps {
   onOpenZditm?: (line?: LineId) => void;
   onOpenPolls?: () => void;
   onAddNewAd?: () => void;
-  onOpenInstallApp?: () => void;
   onOpenLegal?: (doc: 'terms' | 'privacy') => void;
 }
 
@@ -24,7 +23,6 @@ export function Footer({
   onTabChange,
   onOpenZditm,
   onOpenPolls,
-  onOpenInstallApp,
   onOpenLegal,
 }: FooterProps) {
   const handleNavClick = (tabId: TabId, e: React.MouseEvent) => {
@@ -100,15 +98,6 @@ export function Footer({
             >
               Dla firm & kontakt
             </a>
-            {onOpenInstallApp && (
-              <button
-                type="button"
-                onClick={onOpenInstallApp}
-                className="text-ink-400 hover:text-ink-700 transition-colors"
-              >
-                Zainstaluj PWA
-              </button>
-            )}
           </nav>
         </div>
 
