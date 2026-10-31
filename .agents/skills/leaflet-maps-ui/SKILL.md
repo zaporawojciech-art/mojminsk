@@ -9,8 +9,9 @@ Specjalistyczny skill do tworzenia lekkich, nieobciążających baterii smartfon
 
 ## 1. Wytyczne Techniczne
 - **Współrzędne Mińska Mazowieckiego:** `lat: 52.1793, lng: 21.5658`.
-- **Kafelki:** Darmowe, estetyczne kafelki CartoDB Positron lub OpenStreetMap:
-  `https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png`
+- **Kafelki:** Darmowe, oficjalne kafelki OpenStreetMap (bez wymogu klucza API):
+  `https://tile.openstreetmap.org/{z}/{x}/{y}.png`
+  (Uwaga: CartoDB Positron bez klucza nakłada znak wodny "API KEY REQUIRED").
 - **Dotyk i gesty:** Obsługa pinch-to-zoom i dotykowego przesuwania bez blokowania przewijania pionowego całej strony (`touchZoom: true`, `scrollWheelZoom: false`).
 
 ## 2. Niestandardowe Pinezki (Pills & Markers)

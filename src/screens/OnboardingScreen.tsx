@@ -239,6 +239,31 @@ export function OnboardingScreen({
               <X className="h-4 w-4" />
             </button>
           )}
+
+          {/* Segmented Switcher Logowanie / Rejestracja */}
+          <div className="flex rounded-2xl bg-mist/80 p-1 mb-6 border border-mist-300/80">
+            <button
+              type="button"
+              onClick={() => {
+                setAuthMode('login');
+                setLoginError('');
+              }}
+              className="flex-1 py-2 text-[13.5px] font-bold rounded-xl transition-all bg-white text-ink shadow-sm cursor-pointer"
+            >
+              Zaloguj się
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setAuthMode('register');
+                setRegisterStep(1);
+                setLoginError('');
+              }}
+              className="flex-1 py-2 text-[13.5px] font-bold rounded-xl transition-all text-ink-500 hover:text-ink cursor-pointer"
+            >
+              Załóż konto
+            </button>
+          </div>
           <div className="mb-6">
             <h1 className="font-display text-[22px] font-bold text-ink tracking-tight">
               Zaloguj się
@@ -343,6 +368,33 @@ export function OnboardingScreen({
             >
               <X className="h-4 w-4" />
             </button>
+          )}
+
+          {/* Segmented Switcher Logowanie / Rejestracja */}
+          {registerStep === 1 && (
+            <div className="flex rounded-2xl bg-mist/80 p-1 mb-6 border border-mist-300/80">
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthMode('login');
+                  setLoginError('');
+                }}
+                className="flex-1 py-2 text-[13.5px] font-bold rounded-xl transition-all text-ink-500 hover:text-ink cursor-pointer"
+              >
+                Zaloguj się
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthMode('register');
+                  setRegisterStep(1);
+                  setLoginError('');
+                }}
+                className="flex-1 py-2 text-[13.5px] font-bold rounded-xl transition-all bg-white text-ink shadow-sm cursor-pointer"
+              >
+                Załóż konto
+              </button>
+            </div>
           )}
           {/* Pasek nawigacji powrotu i wskaźnik kroku */}
           <div className="flex items-center justify-between mb-4">

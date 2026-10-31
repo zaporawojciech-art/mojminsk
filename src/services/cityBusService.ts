@@ -8,7 +8,7 @@ import { REAL_BUS_STOPS } from '../data/realBusStops';
 
 export interface BusStop {
   id: string;
-  altId: string;
+  altId?: string;
   name: string;
   lat: number;
   lon: number;

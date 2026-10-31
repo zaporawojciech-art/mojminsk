@@ -9,7 +9,7 @@ import { avatarUrl, type Ad, type User } from '../data/mockData';
 interface SellerProfileModalProps {
   sellerName: string;
   sellerStreet: string;
-  currentUser: User;
+  currentUser: User | null;
   allAds: Ad[];
   onClose: () => void;
   onOpenAd?: (ad: Ad) => void;
@@ -26,11 +26,13 @@ export function SellerProfileModal({
   onStartChat,
   isClosing = false,
 }: SellerProfileModalProps) {
-  const isSelf =
-    sellerName.toLowerCase() === currentUser.name.toLowerCase() &&
-    sellerStreet.toLowerCase() === currentUser.street.name.toLowerCase();
+  const isSelf = Boolean(
+    currentUser &&
+      sellerName.toLowerCase() === currentUser.name.toLowerCase() &&
+      sellerStreet.toLowerCase() === currentUser.street.name.toLowerCase(),
+  );
 
-  const avatarSeed = isSelf ? currentUser.seed : `${sellerName}-${sellerStreet}`;
+  const avatarSeed = isSelf && currentUser ? currentUser.seed : `${sellerName}-${sellerStreet}`;
 
   // Find any active ad from this seller to allow initiating chat
   const relatedAd = allAds.find(

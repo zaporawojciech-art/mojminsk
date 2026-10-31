@@ -114,6 +114,7 @@ export function AddAdModal({
       images: photos,
       author: user.name,
       authorId: user.profileId,
+      authorAvatarSeed: user.seed,
       description: description.trim() || undefined,
       category,
       condition: kind !== 'lost' && category !== 'Praca' ? condition : undefined,
@@ -121,6 +122,8 @@ export function AddAdModal({
       status: 'active',
       views: 1,
       isOwner: true,
+      createdAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
     };
 
     setIsCreated(true);

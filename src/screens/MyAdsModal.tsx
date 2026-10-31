@@ -12,7 +12,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { NativeHeader, cn, zl } from '../components/ui';
-import type { Ad, User } from '../data/mockData';
+import { getAdValidityInfo, type Ad, type User } from '../data/mockData';
 
 interface MyAdsModalProps {
   user: User;
@@ -81,6 +81,11 @@ export function MyAdsModal({
       label: 'Sprzedane',
       cls: 'bg-mist-300 text-ink-700',
       dot: 'bg-ink-500',
+    },
+    expired: {
+      label: 'Wygasłe',
+      cls: 'bg-mist-200 text-ink-500',
+      dot: 'bg-ink-400',
     },
   } as const;
 
@@ -215,10 +220,29 @@ export function MyAdsModal({
                           {meta.label}
                         </span>
 
-                        <span className="flex items-center gap-0.5 text-[10.5px] font-medium text-ink-400">
-                          <Clock className="h-3 w-3" />
-                          {ad.time}
-                        </span>
+                        {(() => {
+                          const validity = getAdValidityInfo(ad);
+                          return (
+                            <div className="flex items-center gap-1.5">
+                              <span className="flex items-center gap-0.5 text-[10.5px] font-medium text-ink-400">
+                                <Clock className="h-3 w-3" />
+                                {ad.time}
+                              </span>
+                              <span
+                                className={cn(
+                                  'rounded-md px-1.5 py-0.2 text-[9.5px] font-bold',
+                                  validity.isExpired
+                                    ? 'bg-ink-100 text-ink-700'
+                                    : validity.daysLeft <= 2
+                                      ? 'bg-coral-50 text-coral-800'
+                                      : 'bg-emerald-50 text-emerald-800',
+                                )}
+                              >
+                                {validity.shortLabel}
+                              </span>
+                            </div>
+                          );
+                        })()}
                       </div>
 
                       {/* Title */}

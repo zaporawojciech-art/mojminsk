@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ArrowRight,
+  ArrowRightLeft,
   Bus,
   Car,
   Check,
   ChevronDown,
   ChevronUp,
-  Coffee,
   Droplets,
   Gauge,
   Heart,
@@ -18,7 +18,6 @@ import {
   Phone,
   Plus,
   RefreshCw,
-  Search,
   ShieldCheck,
   Sparkles,
   Tag,
@@ -30,24 +29,29 @@ import {
 import {
   ads as initialAds,
   avatarUrl,
+  busLines,
+  getAdAuthorSeed,
+  getCurrentTimetableDay,
+  getNextScheduledBus,
+  getOfficialStopTimetable,
   getPollTimeLeftLabel,
-  getUpcomingDepartures,
   initialPolls,
   isPollActive,
   liveAlert,
   news,
   partner,
-  posts as seedPosts,
   rides as initialRides,
   streets,
   type Ad,
-  type FavoriteBusStop,
   type LineId,
   type PollItem,
+  type Post,
   type Ride,
   type User,
 } from '../data/mockData';
+import { fetchPostsFromSupabase } from '../lib/supabase';
 import { Card, Img, SectionHeader, StandardTopBar, cn, zl } from '../components/ui';
+import { BuyCoffeeButton } from '../components/BuyCoffeeButton';
 import { AppLink } from '../components/AppLink';
 import { buildAdUrl, TAB_PATHS } from '../router/urlUtils';
 import type { TabId } from '../components/BottomNav';
@@ -58,18 +62,10 @@ import {
   type WeatherIconKind,
 } from '../components/WeatherInfographics';
 import type { WeatherData } from '../services/weatherService';
-import { REAL_BUS_STOPS } from '../data/realBusStops';
-import { fetchStopDepartures, type BusDeparture } from '../services/cityBusService';
-
-const lineTone: Record<LineId, string> = { M1: 'bg-emerald-100 text-emerald-900', M2: 'bg-sky', M3: 'bg-sand', M4: 'bg-coral' };
 
 const greeting = () => {
   const h = new Date().getHours();
   return h < 12 ? 'Dzień dobry' : h < 18 ? 'Cześć' : 'Dobry wieczór';
-};
-const clock = (minsFromNow: number) => {
-  const d = new Date(Date.now() + minsFromNow * 60000);
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 };
 
 function HourlyWeatherIcon({ icon, isDay }: { icon: string; isDay: boolean }) {
@@ -700,472 +696,406 @@ function LiveAlert() {
 }
 
 interface BusWidgetProps {
-  favoriteBuses: FavoriteBusStop[];
   onOpenFull?: (lineId?: LineId, stopName?: string) => void;
-  onAddFavorite?: () => void;
-  onRemoveFavorite?: (id: string) => void;
+  onOpenMap?: (lineId?: LineId) => void;
 }
 
-function BusWidget({
-  favoriteBuses,
-  onOpenFull,
-  onAddFavorite,
-  onRemoveFavorite,
-}: BusWidgetProps) {
-  if (favoriteBuses.length === 0) {
-    return (
-      <Card className="mx-5 p-3.5">
-        <div className="flex items-center justify-between gap-3">
-          <div
-            onClick={() => onOpenFull?.()}
-            className="flex items-center gap-2.5 min-w-0 cursor-pointer flex-1 active:opacity-75"
-          >
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-ink text-white">
-              <Bus className="h-4.5 w-4.5" aria-hidden />
-            </span>
-            <div className="min-w-0">
-              <p className="font-display text-[15px] font-bold leading-tight text-ink">
-                Komunikacja miejska
-              </p>
-              <p className="text-[11px] text-sky-700 font-semibold mt-0.5">
-                Rozkład & odjazdy na żywo ➔
-              </p>
-            </div>
-          </div>
+const LINE_THEME: Record<
+  LineId,
+  { name: string; routeLabel: string; activeBtn: string; badge: string }
+> = {
+  M1: {
+    name: 'Linia M1',
+    routeLabel: 'Plac Dworcowy ⇄ Stojadła',
+    activeBtn: 'bg-emerald-600 text-white shadow-xs',
+    badge: 'bg-emerald-100 text-emerald-900 border-emerald-300',
+  },
+  M2: {
+    name: 'Linia M2',
+    routeLabel: 'Plac Dworcowy ⇄ Serbinów',
+    activeBtn: 'bg-sky-600 text-white shadow-xs',
+    badge: 'bg-sky-100 text-sky-900 border-sky-300',
+  },
+  M3: {
+    name: 'Linia M3',
+    routeLabel: 'Rondo Żołnierzy Wyklętych ⇄ Osiedlowa',
+    activeBtn: 'bg-amber-600 text-white shadow-xs',
+    badge: 'bg-amber-100 text-amber-950 border-amber-300',
+  },
+  M4: {
+    name: 'Linia M4',
+    routeLabel: 'Plac Dworcowy — pętla przez Anielinę',
+    activeBtn: 'bg-rose-600 text-white shadow-xs',
+    badge: 'bg-rose-100 text-rose-950 border-rose-300',
+  },
+};
 
-          <div className="flex items-center gap-2 shrink-0">
-            {onAddFavorite && (
-              <button
-                type="button"
-                onClick={onAddFavorite}
-                className="flex items-center gap-1.5 rounded-full bg-ink px-3.5 py-2 text-[12px] font-bold text-white shadow-xs transition-transform active:scale-95"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                Dodaj przystanek
-              </button>
-            )}
-          </div>
-        </div>
-      </Card>
-    );
-  }
+function BusWidget({ onOpenFull, onOpenMap }: BusWidgetProps) {
+  const [selectedLineId, setSelectedLineId] = useState<LineId>('M2');
+  const [directionIdx, setDirectionIdx] = useState<0 | 1>(0);
+
+  const currentLine = busLines.find((l) => l.id === selectedLineId) || busLines[0];
+  const currentDirection = currentLine.directions[directionIdx] || currentLine.directions[0];
+  const activeStops: string[] = currentDirection.stops && currentDirection.stops.length > 0 ? currentDirection.stops : currentLine.stops;
+
+  const [selectedStopName, setSelectedStopName] = useState<string>(() => activeStops[0]);
+
+  const handleSelectLine = (id: LineId) => {
+    setSelectedLineId(id);
+    setDirectionIdx(0);
+    const line = busLines.find((l) => l.id === id) || busLines[0];
+    const stops: string[] = line.directions[0].stops && line.directions[0].stops.length > 0 ? line.directions[0].stops : line.stops;
+    setSelectedStopName(stops[0]);
+  };
+
+  const handleToggleDirection = () => {
+    setDirectionIdx((prev) => (prev === 0 ? 1 : 0));
+  };
+
+  const currentDay = getCurrentTimetableDay();
+  const dayName = currentDay === 'weekday' ? 'Dni robocze' : currentDay === 'saturday' ? 'Soboty' : 'Niedziele';
+  const timetable = getOfficialStopTimetable(selectedLineId, selectedStopName, directionIdx);
+  const nextBus = getNextScheduledBus(timetable[currentDay]);
+  const allDepartures = timetable[currentDay] || [];
 
   return (
     <Card className="mx-5 p-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <span className="grid h-8 w-8 place-items-center rounded-xl bg-ink text-white">
+      {/* HEADER */}
+      <div className="flex items-center justify-between gap-2 border-b border-mist-200 pb-2.5">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-ink text-white">
             <Bus className="h-4 w-4" aria-hidden />
           </span>
-          <div>
-            <p className="font-display text-[15px] font-bold leading-tight text-ink">
-              Twoje przystanki
+          <div className="min-w-0">
+            <p className="font-display text-[14.5px] font-bold leading-tight text-ink">
+              Rozkład jazdy ZDiTM
+            </p>
+            <p className="text-[10.5px] text-ink-500 font-medium">
+              Wszystkie linie miejskie · {dayName}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {onAddFavorite && (
-            <button
-              type="button"
-              onClick={onAddFavorite}
-              className="flex items-center gap-1 rounded-full bg-sand px-2.5 py-1 text-[11px] font-bold text-ink"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Dodaj kolejny
-            </button>
-          )}
-          {onOpenFull && (
-            <button
-              onClick={() => onOpenFull()}
-              className="text-[11.5px] font-bold text-sky-700"
-            >
-              Rozkład ➔
-            </button>
-          )}
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => onOpenMap?.(selectedLineId)}
+            className="text-[11px] font-extrabold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-300 hover:bg-emerald-100 flex items-center gap-1 cursor-pointer transition-all active:scale-95 shadow-2xs"
+            title="Zobacz mapę linii i pozycję autobusu na żywo"
+          >
+            <span>🗺️ Mapa na żywo</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onOpenFull?.(selectedLineId, selectedStopName)}
+            className="text-[11.5px] font-bold text-sky-700 hover:text-sky-900 flex items-center gap-0.5"
+          >
+            <span>Pełny rozkład</span>
+            <ArrowRight className="h-3 w-3" />
+          </button>
         </div>
       </div>
 
-      <div className="mt-3 divide-y divide-mist-200">
-        {favoriteBuses.map((fav) => {
-          const upcoming = getUpcomingDepartures(fav.lineId, fav.stopName, fav.directionIdx);
+      {/* LINE SELECTOR (M1, M2, M3, M4) */}
+      <div className="mt-3 grid grid-cols-4 gap-1.5 p-1 rounded-xl bg-mist/60 border border-mist-200">
+        {(['M1', 'M2', 'M3', 'M4'] as LineId[]).map((id) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => handleSelectLine(id)}
+            className={cn(
+              'py-1.5 rounded-lg text-center font-display text-[13px] font-extrabold transition-all cursor-pointer',
+              selectedLineId === id
+                ? LINE_THEME[id].activeBtn
+                : 'text-ink-600 hover:text-ink hover:bg-white/60'
+            )}
+          >
+            {id}
+          </button>
+        ))}
+      </div>
+
+      {/* DIRECTION BAR */}
+      <div className="mt-2.5 flex items-center justify-between gap-2 px-1">
+        <div className="min-w-0 flex-1">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-ink-400 block">
+            Kierunek:
+          </span>
+          <p className="text-[12.5px] font-extrabold text-ink truncate leading-tight">
+            ➔ {currentDirection.destination}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={handleToggleDirection}
+          className="inline-flex items-center gap-1 rounded-lg bg-mist hover:bg-mist-300 px-2 py-1 text-[10.5px] font-bold text-ink-700 transition-colors cursor-pointer shrink-0"
+          title="Zmień kierunek trasy"
+        >
+          <ArrowRightLeft className="h-3 w-3" />
+          <span>Odwróć</span>
+        </button>
+      </div>
+
+      {/* STOPS STRIP */}
+      <div className="mt-2.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+        {activeStops.map((stopName) => {
+          const isActive = selectedStopName.toLowerCase() === stopName.toLowerCase();
           return (
-            <div
-              key={fav.id}
-              onClick={() => onOpenFull?.(fav.lineId, fav.stopName)}
-              className="flex items-center justify-between py-2.5 first:pt-1 last:pb-0 cursor-pointer transition-opacity active:opacity-75"
+            <button
+              key={stopName}
+              type="button"
+              onClick={() => setSelectedStopName(stopName)}
+              className={cn(
+                'shrink-0 rounded-lg px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer border',
+                isActive
+                  ? 'bg-ink text-white border-ink shadow-xs'
+                  : 'bg-mist/70 hover:bg-mist text-ink-600 border-mist-200'
+              )}
             >
-              <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
-                <span className={cn('shrink-0 rounded-md px-2 py-0.5 text-[11px] font-extrabold', lineTone[fav.lineId])}>
-                  {fav.lineId}
-                </span>
-                <div className="min-w-0">
-                  <p className="truncate text-[13.5px] font-bold text-ink">
-                    {fav.stopName}
-                  </p>
-                  <p className="truncate text-[11px] font-medium text-ink-500">
-                    ➔ {fav.destination}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2.5 shrink-0">
-                <div className="text-right">
-                  <p className="font-display text-[15px] font-extrabold text-coral-700 leading-none">
-                    za {upcoming[0]} min
-                  </p>
-                  <p className="mt-0.5 text-[10px] text-ink-400">
-                    potem {clock(upcoming[1])}
-                  </p>
-                </div>
-
-                {onRemoveFavorite && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onRemoveFavorite(fav.id);
-                    }}
-                    aria-label="Usuń z obserwowanych"
-                    className="grid h-7 w-7 place-items-center rounded-full text-ink-300 hover:text-coral transition-colors"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-            </div>
+              {stopName}
+            </button>
           );
         })}
+      </div>
+
+      {/* DEPARTURES HERO CARD */}
+      <div className="mt-3 rounded-xl border border-mist-200 bg-mist/35 p-3">
+        <div className="flex items-center justify-between gap-2 border-b border-mist-200/80 pb-2">
+          <div className="min-w-0">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-ink-400 block">
+              Najbliższy odjazd:
+            </span>
+            <p className="text-[12px] font-bold text-ink truncate">
+              {selectedStopName}
+            </p>
+          </div>
+          {nextBus && (
+            <div className="rounded-xl bg-ink text-white px-3 py-1 font-mono text-[14px] font-black shadow-xs">
+              {nextBus.time}
+            </div>
+          )}
+        </div>
+
+        {/* ALL UPCOMING TIMES IN STRIP */}
+        <div className="mt-2">
+          <span className="text-[10px] font-semibold text-ink-400 block mb-1">
+            Wszystkie odjazdy dzisiaj ({dayName}):
+          </span>
+          <div className="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto no-scrollbar">
+            {allDepartures.map((time, idx) => (
+              <span
+                key={idx}
+                className={cn(
+                  'rounded-md px-1.5 py-0.5 font-mono text-[11px] font-bold border shadow-2xs',
+                  nextBus?.time === time
+                    ? 'bg-ink text-white border-ink'
+                    : 'bg-white border-mist-200 text-ink-700'
+                )}
+              >
+                {time}
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
     </Card>
   );
 }
 
 interface DesktopZditmWidgetProps {
-  favoriteBuses?: FavoriteBusStop[];
   onOpenFull?: (lineId?: LineId, stopName?: string) => void;
-  onAddFavorite?: () => void;
-  onRemoveFavorite?: (id: string) => void;
+  onOpenMap?: (lineId?: LineId) => void;
 }
 
-const POPULAR_DEFAULT_STOPS = [
-  { name: 'Plac Dworcowy 01', id: '000024' },
-  { name: 'Szpital 03', id: '000040' },
-  { name: 'Serbinów 02', id: '000067' },
-  { name: 'Spacerowa 04', id: '000045' },
-  { name: 'Kazikowskiego 02', id: '000025' },
-];
+function DesktopZditmWidget({ onOpenFull, onOpenMap }: DesktopZditmWidgetProps) {
+  const [selectedLineId, setSelectedLineId] = useState<LineId>('M2');
+  const [directionIdx, setDirectionIdx] = useState<0 | 1>(0);
 
-function DesktopZditmWidget({
-  favoriteBuses = [],
-  onOpenFull,
-  onAddFavorite,
-  onRemoveFavorite,
-}: DesktopZditmWidgetProps) {
-  const [selectedStopObj, setSelectedStopObj] = useState<{ id: string; name: string }>(() => {
-    try {
-      const saved = localStorage.getItem('mojminsk_desktop_zditm_stop');
-      if (saved) {
-        const found = REAL_BUS_STOPS.find((s) => s.name === saved || s.id === saved);
-        if (found) return { id: found.id, name: found.name };
-      }
-    } catch {
-      // ignore
-    }
-    if (favoriteBuses.length > 0) {
-      const fav = favoriteBuses[0];
-      const match = REAL_BUS_STOPS.find((s) => s.name.toLowerCase().includes(fav.stopName.toLowerCase()));
-      if (match) return { id: match.id, name: match.name };
-      return { id: fav.id, name: fav.stopName };
-    }
-    return POPULAR_DEFAULT_STOPS[0];
-  });
+  const currentLine = busLines.find((l) => l.id === selectedLineId) || busLines[0];
+  const currentDirection = currentLine.directions[directionIdx] || currentLine.directions[0];
+  const activeStops: string[] = currentDirection.stops && currentDirection.stops.length > 0 ? currentDirection.stops : currentLine.stops;
+  const [selectedStopName, setSelectedStopName] = useState<string>(() => activeStops[0]);
 
-  const [departures, setDepartures] = useState<BusDeparture[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  // Auto-select when a new favorite is added
-  useEffect(() => {
-    if (favoriteBuses.length > 0) {
-      const latest = favoriteBuses[favoriteBuses.length - 1];
-      const match = REAL_BUS_STOPS.find((s) => s.name.toLowerCase().includes(latest.stopName.toLowerCase()));
-      if (match) {
-        setSelectedStopObj({ id: match.id, name: match.name });
-      } else {
-        setSelectedStopObj({ id: latest.id, name: latest.stopName });
-      }
-    }
-  }, [favoriteBuses.length]);
-
-  // Fetch live departures from real-time Trapeze edge function
-  useEffect(() => {
-    let isCancelled = false;
-    setLoading(true);
-
-    fetchStopDepartures(selectedStopObj.id)
-      .then((data) => {
-        if (!isCancelled) {
-          setDepartures(data.departures.slice(0, 4));
-          setLoading(false);
-        }
-      })
-      .catch(() => {
-        if (!isCancelled) {
-          setDepartures([]);
-          setLoading(false);
-        }
-      });
-
-    const interval = setInterval(() => {
-      fetchStopDepartures(selectedStopObj.id)
-        .then((data) => {
-          if (!isCancelled) {
-            setDepartures(data.departures.slice(0, 4));
-          }
-        })
-        .catch(() => {});
-    }, 30000);
-
-    return () => {
-      isCancelled = true;
-      clearInterval(interval);
-    };
-  }, [selectedStopObj.id, refreshKey]);
-
-  const handleStopChange = (stop: { id: string; name: string }) => {
-    setSelectedStopObj(stop);
-    try {
-      localStorage.setItem('mojminsk_desktop_zditm_stop', stop.name);
-    } catch {
-      // ignore
-    }
+  const handleSelectLine = (id: LineId) => {
+    setSelectedLineId(id);
+    setDirectionIdx(0);
+    const line = busLines.find((l) => l.id === id) || busLines[0];
+    const stops: string[] = line.directions[0].stops && line.directions[0].stops.length > 0 ? line.directions[0].stops : line.stops;
+    setSelectedStopName(stops[0]);
   };
 
-  const hasFavorites = favoriteBuses.length > 0;
+  const handleToggleDirection = () => {
+    setDirectionIdx((prev) => (prev === 0 ? 1 : 0));
+  };
+
+  const currentDay = getCurrentTimetableDay();
+  const dayName = currentDay === 'weekday' ? 'Dni robocze' : currentDay === 'saturday' ? 'Soboty' : 'Niedziele i święta';
+  const timetable = getOfficialStopTimetable(selectedLineId, selectedStopName, directionIdx);
+  const nextBus = getNextScheduledBus(timetable[currentDay]);
+  const allDepartures = timetable[currentDay] || [];
 
   return (
     <div className="rounded-2xl bg-white p-4 shadow-xs border border-mist-200 flex flex-col justify-between h-full">
       <div>
-        {/* HEADER */}
+        {/* HEADER: Modern & strictly official */}
         <div className="flex items-center justify-between gap-2 border-b border-mist-100 pb-2.5">
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-2.5 min-w-0">
             <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-sky-100 text-sky-800">
               <Bus className="h-4 w-4" />
             </span>
             <div className="min-w-0">
               <h3 className="text-[13px] font-extrabold text-ink leading-tight truncate">
-                Komunikacja miejska
+                Rozkład jazdy ZDiTM
               </h3>
-              <p className="text-[10px] text-ink-400 font-medium flex items-center gap-1.5">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Odjazdy na żywo (GPS)
+              <p className="text-[10px] text-ink-500 font-medium">
+                Wszystkie linie miejskie · {dayName}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex items-center gap-1.5">
             <button
               type="button"
-              onClick={() => setRefreshKey((k) => k + 1)}
-              className="grid h-7 w-7 place-items-center rounded-full text-ink-400 hover:text-ink hover:bg-mist transition-colors cursor-pointer"
-              title="Odśwież odjazdy na żywo"
+              onClick={() => onOpenMap?.(selectedLineId)}
+              className="text-[11px] font-extrabold text-emerald-850 bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-300 hover:bg-emerald-100 flex items-center gap-1 cursor-pointer transition-all active:scale-95 shadow-2xs"
+              title="Zobacz mapę linii i pozycję autobusu na żywo"
             >
-              <RefreshCw className={cn('h-3.5 w-3.5', loading && 'animate-spin text-sky-600')} />
+              <span>🗺️ Mapa na żywo</span>
             </button>
-            {onAddFavorite && (
-              <button
-                type="button"
-                onClick={onAddFavorite}
-                className="inline-flex items-center gap-1 rounded-full bg-sky-50 hover:bg-sky-100 border border-sky-200/80 px-2.5 py-1 text-[11px] font-extrabold text-sky-800 transition-colors cursor-pointer"
-                title="Wyszukaj i dodaj dowolny ze 120 przystanków"
-              >
-                <Plus className="h-3 w-3" />
-                <span>Dodaj przystanek</span>
-              </button>
-            )}
+
+            <button
+              type="button"
+              onClick={() => onOpenFull?.(selectedLineId, selectedStopName)}
+              className="inline-flex items-center gap-0.5 text-[11px] font-extrabold text-sky-700 hover:text-sky-900 transition-colors cursor-pointer"
+            >
+              <span>Pełny rozkład</span>
+              <ArrowRight className="h-3 w-3" />
+            </button>
           </div>
         </div>
 
-        {/* QUICK STOP PILLS */}
-        <div className="mt-2.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-          {hasFavorites ? (
-            <>
-              {favoriteBuses.map((fav) => {
-                const isActive =
-                  selectedStopObj.name.toLowerCase().includes(fav.stopName.toLowerCase()) ||
-                  selectedStopObj.id === fav.id;
-                const matchObj = REAL_BUS_STOPS.find((s) => s.name.toLowerCase().includes(fav.stopName.toLowerCase())) || {
-                  id: fav.id,
-                  name: fav.stopName,
-                };
-                return (
-                  <button
-                    key={fav.id}
-                    type="button"
-                    onClick={() => handleStopChange(matchObj)}
-                    className={cn(
-                      'group shrink-0 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer border',
-                      isActive
-                        ? 'bg-ink text-white border-ink shadow-xs'
-                        : 'bg-mist/70 hover:bg-mist text-ink-600 border-mist-200 hover:border-mist-300'
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        'rounded px-1 py-0.2 text-[9px] font-extrabold',
-                        lineTone[fav.lineId as LineId] || 'bg-ink text-white'
-                      )}
-                    >
-                      {fav.lineId}
-                    </span>
-                    <span className="truncate max-w-[180px]" title={fav.stopName}>{fav.stopName}</span>
-                    {onRemoveFavorite && (
-                      <span
-                        role="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onRemoveFavorite(fav.id);
-                        }}
-                        className="opacity-60 hover:opacity-100 ml-0.5 text-current hover:text-coral transition-opacity"
-                        title="Usuń z obserwowanych"
-                      >
-                        <X className="h-3 w-3" />
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-              {onAddFavorite && (
-                <button
-                  type="button"
-                  onClick={onAddFavorite}
-                  className="shrink-0 inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-bold text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-200/80 transition-colors cursor-pointer"
-                  title="Wyszukaj i dodaj kolejny przystanek ze 120 w Mińsku"
-                >
-                  <Plus className="h-3 w-3" />
-                  <span>Kolejny</span>
-                </button>
+        {/* STEP 1: LINE SELECTOR BUTTONS */}
+        <div className="mt-3 grid grid-cols-4 gap-1.5 p-1 rounded-xl bg-mist/60 border border-mist-200">
+          {(['M1', 'M2', 'M3', 'M4'] as LineId[]).map((id) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => handleSelectLine(id)}
+              className={cn(
+                'py-1.5 rounded-lg text-center font-display text-[13px] font-extrabold transition-all cursor-pointer',
+                selectedLineId === id
+                  ? LINE_THEME[id].activeBtn
+                  : 'text-ink-600 hover:text-ink hover:bg-white/60'
               )}
-            </>
-          ) : (
-            <>
-              {POPULAR_DEFAULT_STOPS.map((st) => {
-                const isActive = selectedStopObj.id === st.id;
-                return (
-                  <button
-                    key={st.id}
-                    type="button"
-                    onClick={() => handleStopChange(st)}
-                    className={cn(
-                      'shrink-0 rounded-lg px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer border',
-                      isActive
-                        ? 'bg-ink text-white border-ink shadow-xs'
-                        : 'bg-mist/70 hover:bg-mist text-ink-600 border-mist-200 hover:border-mist-300'
-                    )}
-                  >
-                    {st.name}
-                  </button>
-                );
-              })}
-              {onAddFavorite && (
-                <button
-                  type="button"
-                  onClick={onAddFavorite}
-                  className="shrink-0 inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-bold text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-200/80 transition-colors cursor-pointer"
-                  title="Wyszukaj dowolny przystanek ze 120"
-                >
-                  <Search className="h-3 w-3" />
-                  <span>Wszystkie (120)...</span>
-                </button>
-              )}
-            </>
-          )}
+            >
+              {id}
+            </button>
+          ))}
         </div>
 
-        {/* LIST OF DEPARTURES */}
-        <div className="mt-2.5 space-y-1.5">
-          {loading ? (
-            <div className="space-y-1.5 py-1">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-12 rounded-xl bg-mist/60 animate-pulse border border-mist-100" />
-              ))}
-            </div>
-          ) : departures.length > 0 ? (
-            departures.map((dep, idx) => {
-              const lineKey = dep.line as LineId;
-              const badgeClass = lineTone[lineKey] || 'bg-ink text-white';
-              const hasCountdown = typeof dep.minutesTo === 'number';
-              const isImminent = hasCountdown && dep.minutesTo! <= 3;
+        {/* STEP 2: DIRECTION TOGGLE */}
+        <div className="mt-2.5 flex items-center justify-between gap-2 px-1">
+          <div className="min-w-0 flex-1">
+            <span className="text-[9.5px] font-bold uppercase tracking-wider text-ink-400 block">
+              Kierunek trasy:
+            </span>
+            <p className="text-[12px] font-extrabold text-ink truncate leading-tight">
+              ➔ {currentDirection.destination}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleToggleDirection}
+            className="inline-flex items-center gap-1 rounded-lg bg-mist hover:bg-mist-300 px-2.5 py-1 text-[11px] font-bold text-ink-700 transition-colors cursor-pointer shrink-0"
+            title="Odwróć kierunek trasy"
+          >
+            <ArrowRightLeft className="h-3 w-3" />
+            <span>Zmień kierunek</span>
+          </button>
+        </div>
 
+        {/* STEP 3: STOPS STRIP (All stops on route) */}
+        <div className="mt-2.5">
+          <span className="text-[9.5px] font-bold uppercase tracking-wider text-ink-400 block px-1 mb-1">
+            Wybierz przystanek:
+          </span>
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+            {activeStops.map((stopName) => {
+              const isActive = selectedStopName.toLowerCase() === stopName.toLowerCase();
               return (
-                <div
-                  key={`${dep.line}-${dep.time}-${idx}`}
-                  className="rounded-xl border border-mist-100 bg-mist/40 hover:bg-mist/80 p-2.5 flex items-center justify-between gap-2 transition-colors"
+                <button
+                  key={stopName}
+                  type="button"
+                  onClick={() => setSelectedStopName(stopName)}
+                  className={cn(
+                    'shrink-0 rounded-lg px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer border',
+                    isActive
+                      ? 'bg-ink text-white border-ink shadow-xs'
+                      : 'bg-mist/70 hover:bg-mist text-ink-600 border-mist-200 hover:border-mist-300'
+                  )}
                 >
-                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                    <span
-                      className={cn(
-                        'shrink-0 rounded px-2 py-0.5 text-[11px] font-black',
-                        badgeClass
-                      )}
-                    >
-                      {dep.line}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="truncate text-[12px] font-bold text-ink leading-snug">
-                        ➔ {dep.destination}
-                      </p>
-                      <div className="flex items-center gap-2 text-[10px] text-ink-400 font-medium">
-                        <span>rozkład: {dep.time}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 shrink-0 text-right">
-                    {hasCountdown ? (
-                      <span
-                        className={cn(
-                          'inline-block rounded-md border px-2 py-0.5 font-display text-[12.5px] font-extrabold shadow-2xs tabular-nums',
-                          isImminent
-                            ? 'bg-coral-50 border-coral-200 text-coral-700 animate-pulse'
-                            : 'bg-white border-mist-200 text-ink'
-                        )}
-                      >
-                        {dep.minutesTo! <= 0 ? 'odjeżdża' : `za ${dep.minutesTo} min`}
-                      </span>
-                    ) : (
-                      <span className="inline-block rounded-md bg-white border border-mist-200 px-2 py-0.5 font-display text-[12.5px] font-extrabold text-ink tabular-nums">
-                        {dep.time}
-                      </span>
-                    )}
-                  </div>
-                </div>
+                  {stopName}
+                </button>
               );
-            })
-          ) : (
-            <div className="p-4 text-center text-[12px] text-ink-400 bg-mist/30 rounded-xl border border-mist-100">
-              <p className="font-semibold text-ink-600">Brak najbliższych odjazdów</p>
-              <p className="text-[11px] mt-0.5 text-ink-400">
-                Kursy dla tego przystanku mogły zakończyć się na dziś lub autobusy ruszają w kolejnych godzinach.
+            })}
+          </div>
+        </div>
+
+        {/* RESULT: NEXT DEPARTURE & UPCOMING TIMETABLE */}
+        <div className="mt-3 rounded-xl border border-mist-200/90 bg-mist/35 p-3">
+          <div className="flex items-center justify-between gap-3 border-b border-mist-200/80 pb-2.5">
+            <div className="min-w-0">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-ink-400 block">
+                Najbliższy odjazd ({selectedStopName}):
+              </span>
+              <p className="text-[12.5px] font-extrabold text-ink truncate mt-0.5">
+                {currentDirection.name}
               </p>
             </div>
-          )}
+            {nextBus && (
+              <div className="rounded-xl bg-ink text-white px-3 py-1.5 font-mono text-[15px] font-black shadow-xs shrink-0">
+                {nextBus.time}
+              </div>
+            )}
+          </div>
+
+          {/* ALL HOURS IN CLEAN PILLS */}
+          <div className="mt-2.5">
+            <span className="text-[10px] font-bold text-ink-500 block mb-1">
+              Wszystkie godziny odjazdów w tym dniu ({dayName}):
+            </span>
+            <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto no-scrollbar py-0.5">
+              {allDepartures.map((time, idx) => (
+                <span
+                  key={idx}
+                  className={cn(
+                    'rounded-md px-1.5 py-0.5 font-mono text-[11px] font-bold border shadow-2xs',
+                    nextBus?.time === time
+                      ? 'bg-ink text-white border-ink'
+                      : 'bg-white border-mist-200 text-ink-700'
+                  )}
+                >
+                  {time}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
       {/* FOOTER */}
       <div className="flex items-center justify-between text-[11px] pt-2.5 mt-2.5 border-t border-mist-100">
-        <span className="text-ink-500 font-medium truncate max-w-[220px] flex items-center gap-1" title={selectedStopObj.name}>
+        <span className="text-ink-500 font-medium truncate max-w-[220px] flex items-center gap-1" title={selectedStopName}>
           <MapPin className="h-3 w-3 text-sky-700 shrink-0" />
-          <span><b>{selectedStopObj.name}</b></span>
+          <span><b>{selectedStopName}</b></span>
         </span>
         <button
           type="button"
-          onClick={() => onOpenFull?.(undefined, selectedStopObj.name)}
+          onClick={() => onOpenFull?.(selectedLineId, selectedStopName)}
           className="font-bold text-sky-700 hover:text-sky-900 flex items-center gap-0.5 shrink-0 cursor-pointer"
         >
-          <span>Pełny rozkład jazdy</span>
+          <span>Pełny rozkład ZDiTM</span>
           <ArrowRight className="h-3 w-3" />
         </button>
       </div>
@@ -1326,9 +1256,7 @@ interface HomeScreenProps {
   onProfile: () => void;
   onPartner: () => void;
   onZditm?: (line?: LineId, stopName?: string) => void;
-  favoriteBuses?: FavoriteBusStop[];
-  onAddFavoriteBus?: () => void;
-  onRemoveFavoriteBus?: (id: string) => void;
+  onZditmMap?: (line?: LineId) => void;
   polls?: PollItem[];
   userVotes?: Record<string, string>;
   onVote?: (pollId: string, optionId: string) => void;
@@ -1347,9 +1275,7 @@ export function HomeScreen({
   onProfile,
   onPartner,
   onZditm,
-  favoriteBuses = [],
-  onAddFavoriteBus,
-  onRemoveFavoriteBus,
+  onZditmMap,
   polls = initialPolls,
   userVotes = {},
   onVote,
@@ -1362,7 +1288,14 @@ export function HomeScreen({
   onNeighborClick,
 }: HomeScreenProps) {
   const [desktopAlertDismissed, setDesktopAlertDismissed] = useState(false);
+  const [postsList, setPostsList] = useState<Post[]>([]);
   const { weather, refreshing, refresh } = useWeather();
+
+  useEffect(() => {
+    void fetchPostsFromSupabase().then((res) => {
+      if (res) setPostsList(res);
+    });
+  }, []);
 
   const activePolls = polls
     .filter((p) => isPollActive(p))
@@ -1378,7 +1311,7 @@ export function HomeScreen({
   ];
 
   const latestAds = adsList.filter((a) => (a.status ?? 'active') === 'active').slice(0, 6);
-  const latestPosts = seedPosts.slice(0, 3);
+  const latestPosts = postsList.slice(0, 3);
   const upcomingRides = ridesList.slice(0, 3);
 
   return (
@@ -1390,6 +1323,7 @@ export function HomeScreen({
         <StandardTopBar
           user={user}
           onProfile={onProfile}
+          action={<BuyCoffeeButton variant="pill" />}
           title={
             <button onClick={onProfile} className="text-left leading-none active:opacity-75 transition-opacity">
               <span className="block text-[12px] font-semibold text-ink-500 leading-none mb-1">
@@ -1422,12 +1356,7 @@ export function HomeScreen({
 
         <LiveAlert />
 
-        <BusWidget
-          favoriteBuses={favoriteBuses}
-          onOpenFull={onZditm}
-          onAddFavorite={onAddFavoriteBus}
-          onRemoveFavorite={onRemoveFavoriteBus}
-        />
+        <BusWidget onOpenFull={onZditm} onOpenMap={onZditmMap} />
 
         {news.length > 0 && (
           <section>
@@ -1492,24 +1421,27 @@ export function HomeScreen({
           </span>
         </button>
 
-        <Card className="mx-5 flex items-center gap-3.5 p-4">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-coral-100">
-            <Coffee className="h-5 w-5 text-coral-700" aria-hidden />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-[14px] font-bold">Postaw kawę mójMińsk</p>
-            <p className="text-[12px] text-ink-500">Niezależna aplikacja bez polityki i hejtu</p>
-          </div>
-          <button className="rounded-full bg-ink px-4 py-2 text-[12.5px] font-bold text-white">
-            BLIK
-          </button>
-        </Card>
+        <BuyCoffeeButton variant="card" className="mx-5" />
       </div>
 
       {/* =====================================================================
        * 2. DESKTOP VIEW (>= 768px) — 100% Full-Width City Portal & Magazine
        * =================================================================== */}
       <div className="hidden md:block w-full px-8 lg:px-12 py-5 space-y-6">
+        {/* DESKTOP WELCOME & COMMUNITY SUPPORT HEADER */}
+        <div className="flex items-center justify-between gap-4 border-b border-mist-300/70 pb-4">
+          <div>
+            <h1 className="font-display text-[22px] font-extrabold tracking-tight text-ink leading-tight">
+              {greeting()}, {user ? user.name : 'Sąsiedzie'} 👋
+            </h1>
+            <p className="mt-0.5 text-[12.5px] font-medium text-ink-500">
+              Aktualne wiadomości, komunikacja miejska i sprawy mieszkańców Mińska Mazowieckiego
+            </p>
+          </div>
+
+          <BuyCoffeeButton variant="desktop-nav" />
+        </div>
+
         {/* OPTIONAL COMPACT CRISIS ALERT BAR */}
         {!desktopAlertDismissed && liveAlert && (
           <div className="flex items-center justify-between gap-4 rounded-xl border-l-4 border-coral bg-white px-4 py-2.5 shadow-card text-[12.5px]">
@@ -1548,12 +1480,7 @@ export function HomeScreen({
 
           {/* NEAREST ZDiTM DEPARTURES (4 cols) */}
           <div className="lg:col-span-4">
-            <DesktopZditmWidget
-              favoriteBuses={favoriteBuses}
-              onOpenFull={onZditm}
-              onAddFavorite={onAddFavoriteBus}
-              onRemoveFavorite={onRemoveFavoriteBus}
-            />
+            <DesktopZditmWidget onOpenFull={onZditm} onOpenMap={onZditmMap} />
           </div>
         </div>
 
@@ -1801,7 +1728,7 @@ export function HomeScreen({
                     >
                       <div className="flex items-center gap-2 min-w-0">
                         <img
-                          src={avatarUrl(ad.author)}
+                          src={avatarUrl(getAdAuthorSeed(ad, user))}
                           alt={ad.author}
                           width={22}
                           height={22}

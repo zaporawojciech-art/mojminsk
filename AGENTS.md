@@ -856,8 +856,73 @@ flowchart LR
     - **Primary Button (Główna akcja):** `bg-ink text-white font-bold h-12 rounded-2xl shadow-sm hover:bg-ink-700 active:scale-[0.98]` (nowoczesna, czytelna czerń/grafit z idealnym kontrastem).
     - **Secondary Button (Akcja uzupełniająca w rzędzie):** `border border-mist-300/80 bg-mist/70 text-ink font-bold h-12 rounded-2xl hover:bg-mist active:scale-[0.98]` (z delikatnym akcentem kolorystycznym ikony).
     - **Zakaz agresywnych zderzeń kolorystycznych:** Zakazuje się stawiania obok siebie dwóch przycisków o maksymalnym kontraście (np. jaskrawy koral obok głębokiej czerni) oraz tworzenia wielkich, krzykliwych koralowych bloków z `shadow-coral` jako głównego przycisku w dolnych paskach.
-- **Komunikacja Miejska ZDiTM (Personalny Hub Rozkładów bez Mapy Trasy):**
-  - **Całkowity brak mapy trasy:** Zrezygnowano ze statycznych i rysowanych map SVG na rzecz szybkiego, czystego widoku tabelaryczno-kafelkowego.
-  - **Model własnych przystanków mieszkańca:** Użytkownik sam konfiguruje swój pulpit rozkładów, dodając przystanki z wyszukiwarki lub alfabetycznej bazy przystanków Mińska Mazowieckiego (`+ Dodaj przystanek do listy`).
-  - **Dynamiczne odjazdy live:** Każdy dodany przystanek prezentuje 3 najbliższe odjazdy w minutach na żywo (np. `za 4 min`, `za 18 min`, `za 34 min`), kierunek docelowy, opcjonalną etykietę (*Dom*, *Praca*, *Szkoła*) oraz rozwijany pełny rozkład godzinowy (Dni robocze / Soboty / Niedziele).
-  - **Przeglądanie linii:** Dedykowana zakładka „Wszystkie linie (M2, M3, M4)” pozwala przeglądać pełne trasy przystanek po przystanku z możliwością dodania dowolnego punktu do obserwowanych za pomocą jednego tapnięcia w gwiazdkę.
+- **Komunikacja Miejska ZDiTM (Nowoczesny, Minimalistyczny Rozkład Jazdy M1–M4):**
+  - **Rezygnacja ze śledzenia GPS i sztucznych odjazdów live:** Zrezygnowano z zawodnego śledzenia GPS pojazdów, migających punktów na mapie oraz skaczących countdownów na rzecz 100% pewnego, oficjalnego rozkładu jazdy miejskiej komunikacji ZDiTM Mińsk Mazowiecki (`minsk-maz.trapeze.fi`).
+  - **Przeglądanie linii (M1, M2, M3, M4):** Szybki selektor 4 linii miejskich z kodami kolorystycznymi, podglądem trasy oraz możliwością odwrócenia kierunku jazdy jednym kliknięciem (`⇄ Zmień kierunek`).
+  - **Minimalistyczna pionowa oś trasy (Route Timeline):** Czytelna oś przystanków w kolejności przejazdu z oznaczeniem przystanków początkowych i końcowych oraz wyróżnieniem aktualnie przeglądanego przystanku.
+  - **Tablica godzinowa wybranego przystanku:** Nowoczesna siatka godzinowa z podziałem na 3 tryby (`Dni robocze`, `Soboty`, `Niedziele i święta`), wskazująca najbliższy planowany kurs wg aktualnego zegara telefonu (np. `Najbliższy odjazd: 14:24 · za 12 min`).
+  - **Szybka wyszukiwarka przystanków:** Natychmiastowe filtrowanie po nazwie z pełnej bazy 118 przystanków Mińska Mazowieckiego (`REAL_BUS_STOPS`) oraz możliwość dodania przystanku do ulubionych (`⭐`).
+
+---
+
+## 8. Matryca Testów i Regresji (Wersja Produkcyjna v1.0)
+
+Ta sekcja określa oficjalną checklistę testów automatycznych i regresyjnych po każdym wdrożeniu na gałąź `main`.
+Skupia się **wyłącznie na funkcjonalnościach aktualnie wdrożonych i aktywnych w interfejsie**, z wyraźnym rozróżnieniem zachowania aplikacji dla **użytkownika niezalogowanego (Gość)** oraz **użytkownika zalogowanego (Mieszkaniec)**.
+
+> [!NOTE] Moduły wyłączone z aktualnych testów regresyjnych:
+> - E-grocery Motylek Market (wstrzymane do czasu podpisania umowy handlowej).
+> - Zamawianie gastronomii z dowozem przez kurierów (brak aktywnej floty).
+> - Płatne oferty pracy dla firm (moduł zintegrowany z darmowymi ogłoszeniami C2C).
+
+### 8.1. Macierz Funkcjonalna: Gość vs Użytkownik Zalogowany
+
+| Moduł / Ekran | Użytkownik Niezalogowany (Gość) | Użytkownik Zalogowany (Mieszkaniec) |
+| :--- | :--- | :--- |
+| **Pulpit Główny (`/`)** | Pełny podgląd pogody, jakości powietrza i odjazdów ZDiTM; ankieta z możliwością podglądu wyników; kliknięcie w głosowanie wywołuje `AuthRequiredModal`. | Pełny dostęp, oddawanie głosów w ankietach (zapisywane w Supabase / localStorage). |
+| **Rozkłady ZDiTM (`/zditm`)** | Przeglądanie linii M2, M3, M4, wyszukiwarka przystanków i pełny rozkład godzinowy. | Przeglądanie rozkładów + zapisywanie ulubionych przystanków z etykietami (*Dom*, *Praca*). |
+| **Ogłoszenia Sąsiedzkie (`/ogloszenia`)** | Przeglądanie siatki i listy ogłoszeń, filtrów ulic, sortowania i kategorii; otwieranie szczegółów ogłoszenia (`AdDetailModal`). | Przeglądanie ogłoszeń + skrót do czatów, polubienia ofert (`Obserwuj`), zarządzanie własnymi ogłoszeniami w profilu. |
+| **Szczegóły Ogłoszenia (`/ogloszenia/...`)** | Pełny podgląd zdjęć (galeria, zoom), opisu, ceny, ulicy i profilu sąsiada; kliknięcie `Czat`, `Zarezerwuj` lub `Obserwuj` wywołuje `AuthRequiredModal`. | Pełny dostęp: rezerwacja, bezpośredni czat z autorem, zgłaszanie ogłoszenia, edycja/usunięcie (jeśli właściciel). |
+| **Spójność Awatara Autora** | Awatar na kafelku ogłoszenia korzysta z tego samego seeda (`ad.authorAvatarSeed` lub `${author}-${street}`) co w modalu szczegółów i wizytówce sąsiada. | Własne ogłoszenia zalogowanego usera renderują jego unikalny awatar `user.seed` wybrany w profilu/rejestracji. |
+| **Wspólne Przejazdy (`/przejazdy`)** | Przeglądanie dostępnych ofert carpoolingu na trasie Mińsk <-> Warszawa i powiat; kliknięcie `Dodaj przejazd` otwiera `AuthRequiredModal`. | Przeglądanie ofert + dodawanie własnych przejazdów do bazy. |
+| **Strefa Rozmów (`/rozmowy`)** | Przeglądanie publicznego feedu wpisów sąsiedzkich; brak możliwości publikacji bez konta. | Publikacja wpisów (do 280 znaków) ze swoją tożsamością sąsiedzką. |
+| **Ekran Powitalny (`/dolacz`, `/logowanie`)** | Domyślny ekran prezentuje przyjazne **Logowanie** z natychmiastowym przełączeniem na **Rejestrację** (brak przymusowego kreatora dla powracających). | Automatyczne przekierowanie na pulpit główny `/`. |
+| **Wylogowanie z Profilu** | Po wylogowaniu czyszczony jest stan `localStorage` (`mojminsk_profile_v1`), a użytkownik trafia na `/logowanie` (zamiast wymuszonej rejestracji). | Dostępny przycisk "Wyloguj" w widoku ustawień profilu. |
+
+### 8.2. Weryfikacja Wizualna i Responsywności PWA (Automatyzacja Playwright)
+Testy wykonywane skryptem `npm run test:qa` sprawdzają następujące reguły:
+1. **Brak poziomego scrolla:** Wartość `Math.max(document.documentElement.scrollWidth, document.body.scrollWidth)` nie może przekraczać szerokości viewportu (`window.innerWidth + 1.5px`) na żadnym ekranie w profilu Desktop (1440x900) ani Mobile (390x844).
+2. **Pływająca dolna kapsuła nawigacji (PWA BottomNav):** Sprawdzenie, czy dolny pasek nawigacyjny (`z-40`, `bottom-4`) jest widoczny na mobile i czy dolny padding treści (`pb-28`) zapobiega ucinaniu ostatnich elementów listy.
+3. **Paski akcji w modalu (Sticky Bottom Bar):** Przyciski akcji mają wysokość `h-12` (48px) i `rounded-2xl`, uwzględniając `safe-area-inset-bottom` na urządzeniach z notchem / gestami iOS.
+4. **Spójność routingowa:** Kliknięcie w dowolne ogłoszenie aktualizuje adres URL do formatu kanonicznego `/ogloszenia/[tytul]-[ulica]-[id]` i poprawnie otwiera modal ze szczegółami.
+
+### 8.3. Oficjalny Prompt QA & Regresji dla Antigravity (Po Deployu na Main)
+
+Poniższy prompt należy przekazać agentowi Antigravity po każdym wdrożeniu na gałąź `main` lub po wprowadzeniu zmian w interfejsie. Można go wywołać bezpośrednio w czacie wpisując poniższą treść lub odwołując się do pliku `.antigravity/prompts/qa-regression.md`:
+
+```markdown
+Jesteś autonomicznym Senior QA Engineerem oraz UX/UI Reviewerem w środowisku Antigravity.
+Twoim zadaniem jest przeprowadzenie kompleksowej weryfikacji regresyjnej oraz audytu UX/UI aplikacji mójMińsk.app po wdrożeniu na main.
+
+1. ZASADY ZAKRESU I ŹRÓDŁO WIEDZY (AGENTS.md):
+- Przeanalizuj sekcję 8 w `AGENTS.md` ("Matryca Testów i Regresji").
+- Ignoruj moduły wyłączone (Motylek grocery, gastronomia z dostawą, płatne oferty pracy).
+- Skup się WYŁĄCZNIE na zachowaniu dla Gościa (niezalogowany) i Mieszkańca (zalogowany).
+
+2. PRZYGOTOWANIE ŚRODOWISKA:
+- Upewnij się, że serwer działa na http://localhost:5173 (jeśli nie, uruchom go w tle: `npm run preview -- --port 5173`).
+- Uruchom dedykowany runner testowy: `npm run test:qa` (lub `node scripts/qa-runner.mjs`).
+
+3. KRYTYCZNE OBSZARY DO ZWERYFIKOWANIA (Desktop 1440x900 + Mobile PWA 390x844 Touch):
+- Layout: Brak poziomego scrolla (`scrollWidth <= innerWidth + 1.5px`) na /, /ogloszenia, /przejazdy, /rozmowy, /dolacz, /logowanie.
+- Siatka ogłoszeń: Karty nie rozjeżdżają się na mobile (reguła `min-w-0`, elastyczny gap i padding, brak ucinania tekstu).
+- Ścieżka Gościa: Kliknięcie w ogłoszenie poprawnie otwiera modal szczegółów dla niezalogowanego mieszkańca.
+- Spójność awatarów: Awatar na kafelku ogłoszenia musi być identyczny z awatarem w modalu i w profilu sąsiada (`getAdAuthorSeed`).
+- UX /dolacz i po wylogowaniu: Domyślnie widoczny formularz Logowania z przełącznikiem zakładek [ Zaloguj się ] / [ Załóż konto ].
+- Bramki Auth: Kliknięcie w Czat/Rezerwację przez gościa poprawnie wywołuje `AuthRequiredModal`.
+
+4. RAPORT KOŃCOWY:
+- Przedstaw podsumowanie Pass/Fail (z liczbą zaliczonych asercji).
+- Potwierdź weryfikację zrzutów ekranu z katalogu `.test-results/screenshots/`.
+- Wskaż ewentualne wykryte defekty i gotowe propozycje poprawek w kodzie.
+```

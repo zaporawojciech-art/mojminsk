@@ -5,14 +5,18 @@ import {
   Car,
   CheckCircle2,
   Clock,
+  ExternalLink,
   MapPin,
   Minus,
+  Navigation,
   Plus,
   Trash2,
   Users,
 } from 'lucide-react';
 import { NativeHeader, cn } from '../components/ui';
 import type { Ride, User } from '../data/mockData';
+import { GooglePlaceAutocompleteInput } from '../components/GooglePlaceAutocompleteInput';
+import { openGoogleMapsRoute } from '../services/googleMapsService';
 
 interface AddRideModalProps {
   user: User;
@@ -182,52 +186,50 @@ export function AddRideModal({
                   </div>
 
                   <div className="relative space-y-2">
-                    {/* Skąd */}
-                    <label className="flex items-center gap-3 rounded-2xl md:rounded-xl border border-mist-300 bg-mist/50 px-3.5 py-2.5 focus-within:border-ink focus-within:bg-white">
-                      <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-ink" aria-hidden />
-                      <div className="min-w-0 flex-1 pr-10">
-                        <span className="block text-[10px] font-bold uppercase tracking-wider text-ink-400">
-                          Miejsce startu (Skąd)
-                        </span>
-                        <input
-                          type="text"
-                          required
-                          value={from}
-                          onChange={(e) => setFrom(e.target.value)}
-                          placeholder="Np. Mińsk · Spacerowa / PKP"
-                          className="w-full bg-transparent text-[14px] font-bold text-ink outline-none placeholder:font-medium placeholder:text-ink-400"
-                        />
-                      </div>
-                    </label>
+                    {/* Miejsce startu (Skąd) z Google Places */}
+                    <GooglePlaceAutocompleteInput
+                      label="SKĄD"
+                      variant="origin"
+                      value={from}
+                      onChange={setFrom}
+                      placeholder="Np. Mińsk · Spacerowa / PKP"
+                      hasSwapButton
+                    />
 
-                    {/* Dokąd */}
-                    <label className="flex items-center gap-3 rounded-2xl md:rounded-xl border border-mist-300 bg-mist/50 px-3.5 py-2.5 focus-within:border-ink focus-within:bg-white">
-                      <span className="h-2.5 w-2.5 shrink-0 rounded-full border-2 border-ink" aria-hidden />
-                      <div className="min-w-0 flex-1 pr-10">
-                        <span className="block text-[10px] font-bold uppercase tracking-wider text-ink-400">
-                          Miejsce docelowe (Dokąd)
-                        </span>
-                        <input
-                          type="text"
-                          required
-                          value={to}
-                          onChange={(e) => setTo(e.target.value)}
-                          placeholder="Np. Warszawa · Rondo Wiatraczna"
-                          className="w-full bg-transparent text-[14px] font-bold text-ink outline-none placeholder:font-medium placeholder:text-ink-400"
-                        />
-                      </div>
-                    </label>
+                    {/* Miejsce docelowe (Dokąd) z Google Places */}
+                    <GooglePlaceAutocompleteInput
+                      label="DOKĄD"
+                      variant="destination"
+                      value={to}
+                      onChange={setTo}
+                      placeholder="Np. Warszawa · Rondo Wiatraczna"
+                      hasSwapButton
+                    />
 
                     {/* Swap button */}
                     <button
                       type="button"
                       onClick={handleSwapRoute}
                       aria-label="Odwróć kierunek trasy"
-                      className="absolute right-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-mist-300 bg-white text-ink shadow-card transition-transform active:scale-90 hover:bg-mist cursor-pointer"
+                      className="absolute right-3 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-mist-300 bg-white text-ink shadow-card transition-transform active:scale-90 hover:bg-mist cursor-pointer"
                     >
                       <ArrowUpDown className="h-4 w-4" aria-hidden />
                     </button>
                   </div>
+
+                  {from.trim() && to.trim() && (
+                    <div className="pt-1 flex items-center justify-between">
+                      <button
+                        type="button"
+                        onClick={() => openGoogleMapsRoute(from, to)}
+                        className="inline-flex items-center gap-1.5 text-[11px] font-bold text-ink-600 hover:text-ink active:scale-98 transition-colors"
+                      >
+                        <Navigation className="h-3 w-3 text-coral" />
+                        <span>Podejrzyj trasę w Google Maps</span>
+                        <ExternalLink className="h-2.5 w-2.5 opacity-60" />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Card 2: Termin, godzina, miejsca i zrzutka */}
@@ -378,7 +380,7 @@ export function AddRideModal({
                   <div className="flex items-center gap-2 rounded-2xl md:rounded-xl bg-sand-100/80 px-3.5 py-2.5 text-[12px] font-semibold text-ink-700">
                     <MapPin className="h-4 w-4 shrink-0 text-coral-700" />
                     <span>
-                      Kierowca: <strong className="font-bold text-ink">{user.name} {user.street.as}</strong> · Rozliczenie bezpośrednio między sąsiadami
+                      Kierowca: <strong className="font-bold text-ink">{user.name}</strong>
                     </span>
                   </div>
 

@@ -1,9 +1,11 @@
-import type {
-  Ad,
-  PollItem,
-  Post,
-  Ride,
-  Street,
+import {
+  formatRelativeChatTime,
+  type Ad,
+  type PollItem,
+  type Post,
+  type PostComment,
+  type Ride,
+  type Street,
 } from '../data/mockData';
 import { supabaseRest, supabaseRpc } from './supabaseClient';
 
@@ -48,10 +50,12 @@ interface DbAd {
   description: string | null;
   category: string | null;
   condition: 'Nowe' | 'Używane' | 'Bardzo dobry' | null;
-  status: 'active' | 'reserved' | 'sold';
+  status: 'active' | 'reserved' | 'sold' | 'expired';
   views: number;
   is_owner: boolean;
   negotiable: boolean;
+  created_at: string;
+  expires_at?: string | null;
 }
 
 export async function fetchAdsFromSupabase(): Promise<Ad[] | null> {
@@ -65,7 +69,7 @@ export async function fetchAdsFromSupabase(): Promise<Ad[] | null> {
     author: r.author,
     authorId: r.author_id,
     street: r.street,
-    time: r.time_label,
+    time: formatRelativeChatTime(r.created_at) || r.time_label,
     image: r.image,
     images: r.images?.length ? r.images : [r.image],
     description: r.description ?? undefined,
@@ -74,6 +78,8 @@ export async function fetchAdsFromSupabase(): Promise<Ad[] | null> {
     status: r.status,
     views: r.views,
     negotiable: r.negotiable,
+    createdAt: r.created_at,
+    expiresAt: r.expires_at ?? undefined,
   }));
 }
 
@@ -85,7 +91,7 @@ export async function createAdInSupabase(ad: Ad): Promise<boolean> {
     kind: ad.kind,
     author: ad.author,
     street: ad.street,
-    time_label: ad.time || 'teraz',
+    time_label: ad.time || 'przed chwilą',
     image: ad.image,
     images: ad.images?.length ? ad.images : [ad.image],
     description: ad.description ?? null,
@@ -94,6 +100,7 @@ export async function createAdInSupabase(ad: Ad): Promise<boolean> {
     status: ad.status ?? 'active',
     views: ad.views ?? 1,
     negotiable: ad.negotiable ?? false,
+    expires_at: ad.expiresAt ?? new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
   };
   if (ad.authorId) {
     payload.author_id = ad.authorId;
@@ -108,6 +115,14 @@ export async function createAdInSupabase(ad: Ad): Promise<boolean> {
     'return=representation',
   );
   return !!res;
+}
+
+export async function renewAd14DaysInSupabase(adId: string): Promise<string | null> {
+  const res = await restFetch<string>('rpc/renew_ad_14_days', {
+    method: 'POST',
+    body: JSON.stringify({ p_ad_id: adId }),
+  });
+  return res;
 }
 
 export async function updateAdInSupabase(ad: Ad): Promise<boolean> {
@@ -363,6 +378,7 @@ interface DbPost {
   id: string;
   author: string;
   author_as: string;
+  author_profile_id?: string | null;
   time_label: string;
   content: string;
   image: string | null;
@@ -370,22 +386,35 @@ interface DbPost {
   replies: number;
   reposts: number;
   views: number;
+  created_at: string;
+}
+
+interface DbPostComment {
+  id: string;
+  post_id: string;
+  author: string;
+  author_as: string;
+  author_profile_id?: string | null;
+  content: string;
+  created_at: string;
 }
 
 export async function fetchPostsFromSupabase(): Promise<Post[] | null> {
   const rows = await restFetch<DbPost[]>('posts?select=*&order=created_at.desc');
-  if (!rows || rows.length === 0) return null;
+  if (!rows || rows.length === 0) return [];
   return rows.map((r) => ({
     id: r.id,
     author: r.author,
     authorAs: r.author_as,
-    time: r.time_label,
+    authorProfileId: r.author_profile_id ?? undefined,
+    time: formatRelativeChatTime(r.created_at) || r.time_label,
     content: r.content,
     image: r.image ?? undefined,
     likes: r.likes,
     replies: r.replies,
     reposts: r.reposts,
     views: r.views,
+    createdAt: r.created_at,
   }));
 }
 
@@ -398,6 +427,7 @@ export async function createPostInSupabase(post: Post): Promise<void> {
         id: post.id,
         author: post.author,
         author_as: post.authorAs,
+        author_profile_id: post.authorProfileId ?? null,
         time_label: post.time || 'teraz',
         content: post.content,
         image: post.image ?? null,
@@ -411,15 +441,120 @@ export async function createPostInSupabase(post: Post): Promise<void> {
   );
 }
 
+export async function deletePostInSupabase(postId: string): Promise<boolean> {
+  const res = await restFetch(`posts?id=eq.${encodeURIComponent(postId)}`, {
+    method: 'DELETE',
+  });
+  return res !== null;
+}
+
+export async function incrementPostViewsInSupabase(postId: string): Promise<void> {
+  await restFetch('rpc/increment_post_views', {
+    method: 'POST',
+    body: JSON.stringify({ p_post_id: postId }),
+  });
+}
+
+export async function fetchCommentsForPost(postId: string): Promise<PostComment[]> {
+  const rows = await restFetch<DbPostComment[]>(
+    `post_comments?post_id=eq.${encodeURIComponent(postId)}&select=*&order=created_at.asc`,
+  );
+  if (!rows || rows.length === 0) return [];
+  return rows.map((r) => ({
+    id: r.id,
+    postId: r.post_id,
+    author: r.author,
+    authorAs: r.author_as,
+    authorProfileId: r.author_profile_id ?? undefined,
+    content: r.content,
+    createdAt: r.created_at,
+    time: formatRelativeChatTime(r.created_at),
+  }));
+}
+
+export async function createCommentInSupabase(comment: {
+  id: string;
+  postId: string;
+  author: string;
+  authorAs: string;
+  authorProfileId?: string;
+  content: string;
+}): Promise<boolean> {
+  const res = await restFetch(
+    'post_comments',
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        id: comment.id,
+        post_id: comment.postId,
+        author: comment.author,
+        author_as: comment.authorAs,
+        author_profile_id: comment.authorProfileId ?? null,
+        content: comment.content,
+      }),
+    },
+    'return=minimal',
+  );
+  return res !== null;
+}
+
+export async function deleteCommentInSupabase(commentId: string): Promise<boolean> {
+  const res = await restFetch(`post_comments?id=eq.${encodeURIComponent(commentId)}`, {
+    method: 'DELETE',
+  });
+  return res !== null;
+}
+
+export async function fetchUserLikedPostIds(profileId: string): Promise<string[]> {
+  interface DbLike {
+    post_id: string;
+  }
+  const rows = await restFetch<DbLike[]>(
+    `post_likes?profile_id=eq.${encodeURIComponent(profileId)}&select=post_id`,
+  );
+  if (!rows) return [];
+  return rows.map((r) => r.post_id);
+}
+
 export async function togglePostLikeInSupabase(
   postId: string,
-  delta: 1 | -1,
-): Promise<void> {
+  profileId?: string,
+): Promise<{ liked: boolean; likesDelta: number }> {
+  if (profileId) {
+    const isLiked = await supabaseRpc<boolean>('toggle_post_user_like', {
+      p_post_id: postId,
+      p_profile_id: profileId,
+    });
+    return { liked: Boolean(isLiked), likesDelta: isLiked ? 1 : -1 };
+  }
   await restFetch('rpc/increment_post_likes', {
     method: 'POST',
     body: JSON.stringify({
       p_post_id: postId,
-      p_delta: delta,
+      p_delta: 1,
     }),
   });
+  return { liked: true, likesDelta: 1 };
+}
+
+export async function reportPostInSupabase(report: {
+  postId: string;
+  reporterProfileId?: string;
+  reason: string;
+  details?: string;
+}): Promise<boolean> {
+  const res = await restFetch(
+    'post_reports',
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        post_id: report.postId,
+        reporter_profile_id: report.reporterProfileId ?? null,
+        reason: report.reason,
+        details: report.details ?? null,
+      }),
+    },
+    'return=minimal',
+  );
+  return res !== null;
 }

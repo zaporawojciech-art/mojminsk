@@ -3,7 +3,9 @@ import {
   ArrowUpDown,
   Car,
   Check,
+  ExternalLink,
   Minus,
+  Navigation,
   Phone,
   Plus,
   Trash2,
@@ -11,6 +13,8 @@ import {
 } from 'lucide-react';
 import { avatarUrl, rides as initialRides, type Ride, type User } from '../data/mockData';
 import { Chip, StandardTopBar, cn } from '../components/ui';
+import { GooglePlaceAutocompleteInput } from '../components/GooglePlaceAutocompleteInput';
+import { openGoogleMapsRoute } from '../services/googleMapsService';
 
 const dests = ['Wszystkie', 'Warszawa', 'Halinów', 'Sulejówek', 'Stojadła', 'Dębe Wielkie'];
 
@@ -29,7 +33,7 @@ export function RidesScreen({
   onDeleteRide,
   onAuthRequired,
 }: RidesScreenProps) {
-  const defaultOrigin = `Mińsk · ${user ? user.street.name : 'Spacerowa'}`;
+  const defaultOrigin = `Mińsk · ${user ? user.street.name : 'Centrum'}`;
 
   const [booked, setBooked] = useState<Record<string, boolean>>({});
 
@@ -74,8 +78,14 @@ export function RidesScreen({
     }
     if (searchTo.trim() && dest === 'Wszystkie') {
       const q = searchTo.trim().toLowerCase();
-      const matchTo = r.to.toLowerCase().includes(q) || r.dest.toLowerCase().includes(q);
-      const matchFrom = r.from.toLowerCase().includes(q);
+      const words = q.split(/[\s,·-]+/).filter((w) => w.length >= 3);
+      const matchTo =
+        r.to.toLowerCase().includes(q) ||
+        r.dest.toLowerCase().includes(q) ||
+        words.some((w) => r.to.toLowerCase().includes(w) || r.dest.toLowerCase().includes(w));
+      const matchFrom =
+        r.from.toLowerCase().includes(q) ||
+        words.some((w) => r.from.toLowerCase().includes(w));
       if (!matchTo && !matchFrom) return false;
     }
     if (r.seats < seatsNeeded) {
@@ -138,53 +148,54 @@ export function RidesScreen({
               Wyszukaj wspólny przejazd
             </p>
             <div className="relative space-y-2">
-              {/* Skąd Input */}
-              <label className="flex items-center gap-3 rounded-2xl bg-mist px-4 py-2.5 focus-within:ring-2 focus-within:ring-ink">
-                <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-ink" aria-hidden />
-                <div className="min-w-0 flex-1 pr-10">
-                  <span className="block text-[10.5px] font-bold uppercase tracking-wider text-ink-400">
-                    Skąd
-                  </span>
-                  <input
-                    type="text"
-                    value={searchFrom}
-                    onChange={(e) => setSearchFrom(e.target.value)}
-                    placeholder="Np. Mińsk Maz. · Spacerowa"
-                    className="w-full bg-transparent text-[14.5px] font-bold text-ink outline-none placeholder:font-medium placeholder:text-ink-400"
-                  />
-                </div>
-              </label>
+              {/* Skąd Input z Google Places */}
+              <GooglePlaceAutocompleteInput
+                label="SKĄD"
+                variant="origin"
+                value={searchFrom}
+                onChange={setSearchFrom}
+                placeholder="Np. Mińsk Maz. · Spacerowa"
+                hasSwapButton
+              />
 
-              {/* Dokąd Input */}
-              <label className="flex items-center gap-3 rounded-2xl bg-mist px-4 py-2.5 focus-within:ring-2 focus-within:ring-ink">
-                <span className="h-2.5 w-2.5 shrink-0 rounded-full border-2 border-ink" aria-hidden />
-                <div className="min-w-0 flex-1 pr-10">
-                  <span className="block text-[10.5px] font-bold uppercase tracking-wider text-ink-400">
-                    Dokąd
-                  </span>
-                  <input
-                    type="text"
-                    value={searchTo}
-                    onChange={(e) => {
-                      setSearchTo(e.target.value);
-                      if (dest !== 'Wszystkie') setDest('Wszystkie');
-                    }}
-                    placeholder="Dowolny kierunek (np. Warszawa, Halinów)"
-                    className="w-full bg-transparent text-[14.5px] font-bold text-ink outline-none placeholder:font-medium placeholder:text-ink-400"
-                  />
-                </div>
-              </label>
+              {/* Dokąd Input z Google Places */}
+              <GooglePlaceAutocompleteInput
+                label="DOKĄD"
+                variant="destination"
+                value={searchTo}
+                onChange={(val) => {
+                  setSearchTo(val);
+                  if (dest !== 'Wszystkie') setDest('Wszystkie');
+                }}
+                placeholder="Dowolny kierunek (np. Warszawa, Halinów)"
+                hasSwapButton
+              />
 
               {/* Swap Origin <-> Destination Button */}
               <button
                 type="button"
                 onClick={handleSwapSearch}
                 aria-label="Zamień kierunek"
-                className="absolute right-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white text-ink shadow-card transition-transform active:scale-90 hover:bg-mist"
+                className="absolute right-3 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white text-ink shadow-card transition-transform active:scale-90 hover:bg-mist border border-mist-200"
               >
                 <ArrowUpDown className="h-4 w-4" aria-hidden />
               </button>
             </div>
+
+            {/* Opcja podglądu trasy w Google Maps */}
+            {searchFrom.trim() && searchTo.trim() && (
+              <div className="mt-2.5 pt-2 border-t border-mist-200 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => openGoogleMapsRoute(searchFrom, searchTo)}
+                  className="inline-flex items-center gap-1.5 text-[11.5px] font-bold text-ink-600 hover:text-ink active:scale-98 transition-colors"
+                >
+                  <Navigation className="h-3.5 w-3.5 text-coral" />
+                  <span>Sprawdź trasę w Google Maps</span>
+                  <ExternalLink className="h-3 w-3 opacity-60" />
+                </button>
+              </div>
+            )}
 
             {/* Day & Seats Controls */}
             <div className="mt-3 flex items-center gap-2">

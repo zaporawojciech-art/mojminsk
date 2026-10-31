@@ -13,6 +13,7 @@ import type { TabId } from './BottomNav';
 import { avatarUrl, type User } from '../data/mockData';
 import { TAB_PATHS } from '../router/urlUtils';
 import { cn } from './ui';
+import { BuyCoffeeButton } from './BuyCoffeeButton';
 
 interface DesktopTopNavbarProps {
   currentTab: TabId;
@@ -146,6 +147,8 @@ export function DesktopTopNavbar({
 
         {/* 2. RIGHT: Actions + Neighbor Identity */}
         <div className="flex items-center justify-end gap-2.5 shrink-0">
+          <BuyCoffeeButton variant="desktop-nav" />
+
           {/* Messages / Chat Button */}
           <button
             type="button"

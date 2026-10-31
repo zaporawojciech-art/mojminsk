@@ -1,18 +1,23 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Briefcase,
+  Calendar,
   Check,
   ChevronLeft,
   ChevronRight,
   Clock,
+  Copy,
   Edit3,
+  ExternalLink,
   Eye,
   Heart,
   HeartHandshake,
+  Mail,
   MapPin,
   Maximize2,
   MessageCircle,
   Phone,
+  RefreshCw,
   Send,
   Share2,
   ShieldAlert,
@@ -23,12 +28,12 @@ import {
   ZoomOut,
 } from 'lucide-react';
 import { Img, StreetPill, cn, zl } from '../components/ui';
-import { avatarUrl, type Ad, type User } from '../data/mockData';
-import { incrementAdViewsInSupabase } from '../lib/supabase';
+import { avatarUrl, formatAdExactDate, getAdValidityInfo, type Ad, type User } from '../data/mockData';
+import { incrementAdViewsInSupabase, renewAd14DaysInSupabase } from '../lib/supabase';
 
 interface AdDetailModalProps {
   ad: Ad;
-  user: User;
+  user: User | null;
   isLiked?: boolean;
   onClose: () => void;
   onToggleLike?: (adId: string) => void;
@@ -41,6 +46,31 @@ interface AdDetailModalProps {
   onReserveClick?: (ad: Ad) => void;
   onQuickApply?: (ad: Ad, details: { phone: string; note: string }) => void;
   isClosing?: boolean;
+}
+
+async function copyTextToClipboard(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    // fallback
+  }
+  try {
+    const el = document.createElement('textarea');
+    el.value = text;
+    el.setAttribute('readonly', '');
+    el.style.position = 'absolute';
+    el.style.left = '-9999px';
+    document.body.appendChild(el);
+    el.select();
+    const success = document.execCommand('copy');
+    document.body.removeChild(el);
+    return success;
+  } catch {
+    return false;
+  }
 }
 
 export function AdDetailModal({
@@ -60,9 +90,39 @@ export function AdDetailModal({
   isClosing = false,
 }: AdDetailModalProps) {
   const [copied, setCopied] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const [showShareToast, setShowShareToast] = useState(false);
   const [activePhotoIdx, setActivePhotoIdx] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
+
+  // Terminowość ogłoszenia (14 dni)
+  const [adValidity, setAdValidity] = useState(() => getAdValidityInfo(ad));
+  const [isRenewing, setIsRenewing] = useState(false);
+  const [renewedSuccess, setRenewedSuccess] = useState(false);
+
+  useEffect(() => {
+    setAdValidity(getAdValidityInfo(ad));
+  }, [ad]);
+
+  const handleRenewAd = async () => {
+    setIsRenewing(true);
+    try {
+      const res = await renewAd14DaysInSupabase(ad.id);
+      if (res) {
+        setAdValidity({
+          daysLeft: 14,
+          isExpired: false,
+          label: 'Ważne jeszcze 14 dni',
+          shortLabel: 'Jeszcze 14 dni',
+        });
+        setRenewedSuccess(true);
+        setTimeout(() => setRenewedSuccess(false), 4000);
+      }
+    } finally {
+      setIsRenewing(false);
+    }
+  };
 
   // Atomowy licznik wyświetleń z zabezpieczeniem w sessionStorage
   const [viewsCount, setViewsCount] = useState<number>(ad.views ?? 1);
@@ -89,7 +149,7 @@ export function AdDetailModal({
     ad.title.toLowerCase().includes('kierowca');
 
   const [isJobApplyOpen, setIsJobApplyOpen] = useState(false);
-  const [candidatePhone, setCandidatePhone] = useState(user.phone || '501 234 567');
+  const [candidatePhone, setCandidatePhone] = useState(user?.phone || '501 234 567');
   const [candidateNote, setCandidateNote] = useState(
     'Dzień dobry, chętnie podejmę tę pracę. Mieszkam w Mińsku i jestem dyspozycyjny od zaraz.',
   );
@@ -116,8 +176,10 @@ export function AdDetailModal({
 
   const isOwner = Boolean(
     ad.isOwner ||
-      (user.profileId && ad.authorId && ad.authorId === user.profileId) ||
-      (!ad.authorId && ad.author.toLowerCase().trim() === user.name.toLowerCase().trim()),
+      (user && (
+        (user.profileId && ad.authorId && ad.authorId === user.profileId) ||
+        (!ad.authorId && ad.author.toLowerCase().trim() === user.name.toLowerCase().trim())
+      )),
   );
   const currentStatus = ad.status ?? 'active';
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -125,7 +187,7 @@ export function AdDetailModal({
   const lightboxStageRef = useRef<HTMLDivElement>(null);
 
   const photos = ad.images && ad.images.length > 0 ? ad.images : [ad.image];
-  const sellerSeed = isOwner ? user.seed : `${ad.author}-${ad.street}`;
+  const sellerSeed = (isOwner && user) ? user.seed : (ad.authorAvatarSeed || `${ad.author}-${ad.street}`);
 
   useLayoutEffect(() => {
     setActivePhotoIdx(0);
@@ -165,22 +227,38 @@ export function AdDetailModal({
     }
   };
 
+  const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+  const shareTitle = `${ad.title} — mójMińsk`;
+  const shareText = `Zobacz ogłoszenie sąsiedzkie w Mińsku Mazowieckim: ${ad.title}`;
+
+  const triggerCopy = async () => {
+    const ok = await copyTextToClipboard(shareUrl);
+    if (ok) {
+      setCopied(true);
+      setShowShareToast(true);
+      setTimeout(() => setCopied(false), 2500);
+      setTimeout(() => setShowShareToast(false), 3000);
+    }
+  };
+
   const handleShare = async () => {
-    const shareData = {
-      title: `${ad.title} — mójMińsk`,
-      text: `Zobacz ogłoszenie sąsiedzkie w Mińsku Mazowieckim: ${ad.title}`,
-      url: window.location.href,
-    };
+    // 1. Zawsze skopiuj link do schowka, aby użytkownik miał gwarancję działania
+    await triggerCopy();
+    // 2. Otwórz estetyczny moduł udostępniania z bezpośrednimi kanałami
+    setIsShareOpen(true);
+  };
+
+  const triggerNativeShare = async () => {
     if (navigator.share) {
       try {
-        await navigator.share(shareData);
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl,
+        });
       } catch {
         // user cancelled share
       }
-    } else {
-      navigator.clipboard?.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -323,16 +401,57 @@ export function AdDetailModal({
               </div>
             )}
 
-            <div className="flex items-center justify-between gap-2 text-[11.5px] text-ink-400">
-              <span className="flex items-center gap-1 font-medium">
-                <Clock className="h-3.5 w-3.5" />
-                Dodano: {ad.time}
-              </span>
-              {ad.category && (
-                <span className="flex items-center gap-1 rounded-full bg-mist px-2.5 py-0.5 text-[11px] font-bold text-ink-600">
-                  <Tag className="h-3 w-3 text-ink-400" />
-                  {ad.category}
+            <div className="space-y-2 text-[11.5px] text-ink-500">
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-1.5 font-semibold text-ink-700">
+                  <Clock className="h-3.5 w-3.5 text-ink-400" />
+                  <span>Dodano: {formatAdExactDate(ad.createdAt)}</span>
+                  <span className="text-ink-400 font-normal">({ad.time})</span>
                 </span>
+                {ad.category && (
+                  <span className="flex items-center gap-1 rounded-full bg-mist px-2.5 py-0.5 text-[11px] font-bold text-ink-600 shrink-0">
+                    <Tag className="h-3 w-3 text-ink-400" />
+                    {ad.category}
+                  </span>
+                )}
+              </div>
+
+              {/* Terminowość 14 dni */}
+              <div className="flex items-center justify-between gap-2 rounded-xl bg-mist/50 px-3 py-1.5 border border-mist-200">
+                <span className="flex items-center gap-1.5 font-bold text-ink-600">
+                  <Calendar className="h-3.5 w-3.5 text-coral-700" />
+                  <span>Termin ważności (14 dni):</span>
+                </span>
+                <span
+                  className={cn(
+                    'rounded-full px-2.5 py-0.5 text-[10.5px] font-extrabold',
+                    adValidity.isExpired
+                      ? 'bg-ink text-white'
+                      : adValidity.daysLeft <= 2
+                        ? 'bg-coral-100 text-coral-800'
+                        : 'bg-emerald-100 text-emerald-800',
+                  )}
+                >
+                  {adValidity.label}
+                </span>
+              </div>
+
+              {isOwner && (
+                adValidity.isExpired ? (
+                  <button
+                    type="button"
+                    onClick={handleRenewAd}
+                    disabled={isRenewing}
+                    className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-coral px-3 py-2 text-[12px] font-extrabold text-ink shadow-coral hover:bg-coral-400 active:scale-95 transition-all cursor-pointer"
+                  >
+                    <RefreshCw className={cn('h-3.5 w-3.5', isRenewing && 'animate-spin')} />
+                    <span>{isRenewing ? 'Odnawianie...' : 'Przedłuż ogłoszenie o kolejne 14 dni'}</span>
+                  </button>
+                ) : renewedSuccess ? (
+                  <p className="text-[11px] font-bold text-emerald-700 text-center">
+                    Ogłoszenie zostało pomyślnie przedłużone o 14 dni!
+                  </p>
+                ) : null
               )}
             </div>
 
@@ -482,11 +601,18 @@ export function AdDetailModal({
           <div className="col-span-12 lg:col-span-7 xl:col-span-8 space-y-5">
             {/* Photo Gallery Card */}
             <div className="rounded-2xl bg-white p-4 shadow-card border border-mist-200">
-              <div className="relative aspect-[16/10] w-full overflow-hidden rounded-xl bg-ink-900">
+              <div
+                onClick={() => {
+                  setIsZoomed(false);
+                  setIsLightboxOpen(true);
+                }}
+                className="relative aspect-[16/10] w-full overflow-hidden rounded-xl bg-ink-900 cursor-zoom-in group select-none"
+                title="Kliknij, aby powiększyć zdjęcie"
+              >
                 <Img
                   src={photos[activePhotoIdx]}
                   alt={`${ad.title} — zdjęcie ${activePhotoIdx + 1}`}
-                  className="h-full w-full object-contain bg-ink-900 cursor-zoom-in"
+                  className="h-full w-full object-contain bg-ink-900 cursor-zoom-in transition-transform duration-200 group-hover:scale-[1.01]"
                 />
 
                 {photos.length > 1 && (
@@ -494,8 +620,12 @@ export function AdDetailModal({
                     {activePhotoIdx > 0 && (
                       <button
                         type="button"
-                        onClick={() => setActivePhotoIdx((i) => Math.max(0, i - 1))}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 grid h-10 w-10 place-items-center rounded-full bg-white/90 text-ink shadow-md hover:bg-white transition-all"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActivePhotoIdx((i) => Math.max(0, i - 1));
+                        }}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 z-10 grid h-10 w-10 place-items-center rounded-full bg-white/90 text-ink shadow-md hover:bg-white transition-all cursor-pointer"
+                        aria-label="Poprzednie zdjęcie"
                       >
                         <ChevronLeft className="h-5 w-5" />
                       </button>
@@ -503,8 +633,12 @@ export function AdDetailModal({
                     {activePhotoIdx < photos.length - 1 && (
                       <button
                         type="button"
-                        onClick={() => setActivePhotoIdx((i) => Math.min(photos.length - 1, i + 1))}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 grid h-10 w-10 place-items-center rounded-full bg-white/90 text-ink shadow-md hover:bg-white transition-all"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActivePhotoIdx((i) => Math.min(photos.length - 1, i + 1));
+                        }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 z-10 grid h-10 w-10 place-items-center rounded-full bg-white/90 text-ink shadow-md hover:bg-white transition-all cursor-pointer"
+                        aria-label="Następne zdjęcie"
                       >
                         <ChevronRight className="h-5 w-5" />
                       </button>
@@ -514,11 +648,12 @@ export function AdDetailModal({
 
                 <button
                   type="button"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setIsZoomed(false);
                     setIsLightboxOpen(true);
                   }}
-                  className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-lg bg-black/70 px-3 py-1.5 text-[12px] font-bold text-white backdrop-blur-md hover:bg-black/85 transition-colors"
+                  className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5 rounded-lg bg-black/70 px-3 py-1.5 text-[12px] font-bold text-white backdrop-blur-md hover:bg-black/85 transition-colors cursor-pointer"
                 >
                   <Maximize2 className="h-3.5 w-3.5" />
                   <span>Powiększ ({activePhotoIdx + 1}/{photos.length})</span>
@@ -582,20 +717,61 @@ export function AdDetailModal({
           <div className="col-span-12 lg:col-span-5 xl:col-span-4 space-y-4 sticky top-2">
             {/* Main Offer & Actions Card */}
             <div className="rounded-2xl bg-white p-5 shadow-card border border-mist-200">
-              <div className="flex items-center justify-between gap-2 text-[12px] text-ink-400">
-                <span className="flex items-center gap-1 font-semibold">
-                  <Clock className="h-3.5 w-3.5" />
-                  Dodano {ad.time}
-                </span>
-                {currentStatus === 'reserved' && (
-                  <span className="rounded-md bg-amber-400 px-2 py-0.5 text-[11px] font-extrabold text-ink">
-                    Zarezerwowane
+              <div className="space-y-2 border-b border-mist-200 pb-3">
+                <div className="flex items-center justify-between gap-2 text-[12px] text-ink-500">
+                  <span className="flex items-center gap-1.5 font-semibold text-ink-700">
+                    <Clock className="h-3.5 w-3.5 text-ink-400" />
+                    <span>Dodano: {formatAdExactDate(ad.createdAt)}</span>
+                    <span className="text-ink-400 font-normal">({ad.time})</span>
                   </span>
-                )}
-                {currentStatus === 'sold' && (
-                  <span className="rounded-md bg-ink px-2 py-0.5 text-[11px] font-extrabold text-white">
-                    Sprzedane
+                  {currentStatus === 'reserved' && (
+                    <span className="rounded-md bg-amber-400 px-2 py-0.5 text-[11px] font-extrabold text-ink">
+                      Zarezerwowane
+                    </span>
+                  )}
+                  {currentStatus === 'sold' && (
+                    <span className="rounded-md bg-ink px-2 py-0.5 text-[11px] font-extrabold text-white">
+                      Sprzedane
+                    </span>
+                  )}
+                </div>
+
+                {/* Terminowość 14 dni */}
+                <div className="flex items-center justify-between gap-2 rounded-xl bg-mist/50 px-3 py-1.5 border border-mist-200 text-[11.5px]">
+                  <span className="flex items-center gap-1.5 font-bold text-ink-600">
+                    <Calendar className="h-3.5 w-3.5 text-coral-700" />
+                    <span>Termin ważności (14 dni):</span>
                   </span>
+                  <span
+                    className={cn(
+                      'rounded-full px-2.5 py-0.5 text-[10.5px] font-extrabold',
+                      adValidity.isExpired
+                        ? 'bg-ink text-white'
+                        : adValidity.daysLeft <= 2
+                          ? 'bg-coral-100 text-coral-800'
+                          : 'bg-emerald-100 text-emerald-800',
+                    )}
+                  >
+                    {adValidity.label}
+                  </span>
+                </div>
+
+                {isOwner && (
+                  adValidity.isExpired ? (
+                    <button
+                      type="button"
+                      onClick={handleRenewAd}
+                      disabled={isRenewing}
+                      className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-coral px-3 py-2 text-[12px] font-extrabold text-ink shadow-coral hover:bg-coral-400 active:scale-95 transition-all cursor-pointer"
+                    >
+                      <RefreshCw className={cn('h-3.5 w-3.5', isRenewing && 'animate-spin')} />
+                      <span>{isRenewing ? 'Odnawianie...' : 'Przedłuż ogłoszenie o kolejne 14 dni'}</span>
+                    </button>
+                  ) : renewedSuccess ? (
+                    <p className="text-[11px] font-bold text-emerald-700 text-center">
+                      Ogłoszenie zostało pomyślnie przedłużone o 14 dni!
+                    </p>
+                  ) : null
                 )}
               </div>
 
@@ -791,10 +967,12 @@ export function AdDetailModal({
                 <p>
                   Pracodawca <strong className="font-bold text-ink">{ad.author}</strong> otrzyma Twoje zgłoszenie sąsiedzkie na czacie wewnętrznym:
                 </p>
-                <div className="mt-2 flex items-center gap-2 font-bold text-ink">
-                  <span className="grid h-5 w-5 place-items-center rounded-full bg-sand-200 text-[11px] text-coral-800">✓</span>
-                  <span>{user.name} ze {user.street.as || user.street.name}</span>
-                </div>
+                {user && (
+                  <div className="mt-2 flex items-center gap-2 font-bold text-ink">
+                    <span className="grid h-5 w-5 place-items-center rounded-full bg-sand-200 text-[11px] text-coral-800">✓</span>
+                    <span>{user.name} ze {user.street.as || user.street.name}</span>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -888,6 +1066,151 @@ export function AdDetailModal({
               />
             </div>
           </div>
+        </div>
+      )}
+
+      {/* MODUŁ UDOSTĘPNIANIA OGŁOSZENIA */}
+      {isShareOpen && (
+        <div
+          className="fixed inset-0 z-[85] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in"
+          onClick={() => setIsShareOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-md rounded-3xl bg-white p-5 shadow-2xl border border-mist-200 animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-mist-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <span className="grid h-8 w-8 place-items-center rounded-xl bg-ink text-white">
+                  <Share2 className="h-4 w-4" />
+                </span>
+                <div>
+                  <h3 className="font-display text-[16px] font-bold text-ink leading-tight">
+                    Udostępnij ogłoszenie
+                  </h3>
+                  <p className="text-[11px] text-ink-500 font-medium">
+                    Poleć ofertę sąsiadom z Mińska Mazowieckiego
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsShareOpen(false)}
+                className="grid h-8 w-8 place-items-center rounded-full text-ink-400 hover:text-ink hover:bg-mist transition-colors cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Podgląd ogłoszenia */}
+            <div className="mt-3 flex items-center gap-3 rounded-2xl bg-mist/40 p-3 border border-mist-200">
+              <img
+                src={ad.image}
+                alt={ad.title}
+                className="h-14 w-14 rounded-xl object-cover shrink-0 bg-mist border border-mist-200"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[13px] font-bold text-ink">{ad.title}</p>
+                <p className="font-display text-[14.5px] font-black text-ink mt-0.5">
+                  {ad.kind === 'free' ? 'Za darmo' : zl(ad.price || 0)}
+                </p>
+                <p className="text-[11px] text-ink-500 truncate">ul. {ad.street} · {ad.author}</p>
+              </div>
+            </div>
+
+            {/* Bezpośredni link + Kopiuj */}
+            <div className="mt-4">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-ink-500 block mb-1.5">
+                Bezpośredni link do ogłoszenia
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={shareUrl}
+                  className="flex-1 rounded-xl bg-mist/60 border border-mist-200 px-3 py-2 text-[12px] font-mono text-ink truncate select-all focus:outline-none focus:ring-1 focus:ring-ink"
+                />
+                <button
+                  type="button"
+                  onClick={triggerCopy}
+                  className={cn(
+                    'inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-[12px] font-bold transition-all cursor-pointer shadow-xs shrink-0',
+                    copied
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-ink text-white hover:bg-ink-800'
+                  )}
+                >
+                  {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  <span>{copied ? 'Skopiowano!' : 'Kopiuj'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Kanały udostępniania */}
+            <div className="mt-4 pt-3 border-t border-mist-100">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-ink-500 mb-2">
+                Wyślij przez aplikację:
+              </p>
+              <div className="grid grid-cols-2 gap-2 text-[12px] font-bold">
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(`${shareText}\n${shareUrl}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 rounded-xl bg-emerald-50 text-emerald-900 border border-emerald-200/80 p-2.5 hover:bg-emerald-100 transition-colors"
+                >
+                  <MessageCircle className="h-4 w-4 text-emerald-600" />
+                  <span>WhatsApp</span>
+                </a>
+                <a
+                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 rounded-xl bg-sky-50 text-sky-900 border border-sky-200/80 p-2.5 hover:bg-sky-100 transition-colors"
+                >
+                  <ExternalLink className="h-4 w-4 text-sky-700" />
+                  <span>Facebook</span>
+                </a>
+                <a
+                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 rounded-xl bg-slate-100 text-slate-800 border border-slate-200 p-2.5 hover:bg-slate-200 transition-colors"
+                >
+                  <ExternalLink className="h-4 w-4 text-slate-700" />
+                  <span>X (Twitter)</span>
+                </a>
+                <a
+                  href={`mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(`${shareText}\n\n${shareUrl}`)}`}
+                  className="flex items-center justify-center gap-2 rounded-xl bg-amber-50 text-amber-900 border border-amber-200/80 p-2.5 hover:bg-amber-100 transition-colors"
+                >
+                  <Mail className="h-4 w-4 text-amber-700" />
+                  <span>E-mail</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Natywne udostępnienie (telefon) */}
+            {typeof navigator !== 'undefined' && 'share' in navigator && (
+              <div className="mt-3">
+                <button
+                  type="button"
+                  onClick={triggerNativeShare}
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-mist hover:bg-mist-300 text-ink py-2 text-[12px] font-bold transition-colors cursor-pointer"
+                >
+                  <Share2 className="h-4 w-4" />
+                  <span>Więcej opcji telefonu...</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* PŁYWAJĄCY TOAST POTWIERDZENIA */}
+      {showShareToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[90] flex items-center gap-2 rounded-2xl bg-ink text-white px-4 py-2.5 shadow-2xl border border-white/20 text-[12.5px] font-bold animate-in fade-in slide-in-from-bottom-4 duration-200 pointer-events-none">
+          <Check className="h-4 w-4 text-emerald-400 shrink-0" />
+          <span>Link do ogłoszenia został skopiowany do schowka!</span>
         </div>
       )}
     </div>

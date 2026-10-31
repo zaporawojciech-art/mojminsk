@@ -7,6 +7,23 @@ const img = (id: string, w = 600) => `https://images.unsplash.com/${id}?w=${w}&a
 export const avatarUrl = (seed: string) =>
   `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(seed)}&backgroundColor=ebc999,8ca9d3,f26659,fddfdb`;
 
+export const getAdAuthorSeed = (
+  ad: { author: string; street: string; authorAvatarSeed?: string; authorId?: string | null; isOwner?: boolean },
+  currentUser?: User | null,
+): string => {
+  const isOwner = Boolean(
+    currentUser && (
+      ad.isOwner ||
+      (currentUser.profileId && ad.authorId && ad.authorId === currentUser.profileId) ||
+      (!ad.authorId && ad.author.toLowerCase().trim() === currentUser.name.toLowerCase().trim())
+    )
+  );
+  if (isOwner && currentUser?.seed) {
+    return currentUser.seed;
+  }
+  return ad.authorAvatarSeed || `${ad.author}-${ad.street}`;
+};
+
 /* ---------------- Użytkownik i ulice ---------------- */
 export interface Street {
   name: string;
@@ -548,10 +565,182 @@ export function getUpcomingDepartures(lineId: LineId, stopName: string, directio
   return line.offsets.map((o) => (o + shift) % 60).sort((a, b) => a - b);
 }
 
+export type TimetableDayType = 'weekday' | 'saturday' | 'sunday';
+
+import { OFFICIAL_TIMETABLES, getOfficialStopDepartures } from './officialTimetables';
+import { REAL_BUS_STOPS } from './realBusStops';
+
+export function getCurrentTimetableDay(): TimetableDayType {
+  const day = new Date().getDay();
+  if (day === 0) return 'sunday';
+  if (day === 6) return 'saturday';
+  return 'weekday';
+}
+
+/**
+ * Zwraca autentyczny rozkład odjazdów dla przystanku bezpośrednio z tabel PDF ZDiTM
+ */
+export function getOfficialStopTimetable(lineId: LineId, stopName: string, directionIdx: 0 | 1 = 0): {
+  weekday: string[];
+  saturday: string[];
+  sunday: string[];
+} {
+  const departures = getOfficialStopDepartures(lineId, stopName, directionIdx);
+  if (departures.weekday.length > 0) {
+    return departures;
+  }
+
+  // Fallback gdyby dany przystanek miał inną pisownię
+  const line = busLines.find((l) => l.id === lineId) || busLines[0];
+  const dir = line.directions[directionIdx] || line.directions[0];
+  return {
+    weekday: dir.departures.weekday,
+    saturday: dir.departures.saturday,
+    sunday: dir.departures.sunday,
+  };
+}
+
+export function getNextScheduledBus(times: string[]): { time: string; minutesLeft: number } | null {
+  if (!times || times.length === 0) return null;
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  for (const t of times) {
+    const [h, m] = t.split(':').map(Number);
+    const depMinutes = h * 60 + m;
+    if (depMinutes >= currentMinutes) {
+      return {
+        time: t,
+        minutesLeft: depMinutes - currentMinutes,
+      };
+    }
+  }
+
+  const [firstH, firstM] = times[0].split(':').map(Number);
+  const firstDepMinutes = 24 * 60 + firstH * 60 + firstM;
+  return {
+    time: times[0],
+    minutesLeft: firstDepMinutes - currentMinutes,
+  };
+}
+
+export function groupTimetableByHours(times: string[]): Record<string, string[]> {
+  const grouped: Record<string, string[]> = {};
+  for (const t of times) {
+    const [h, m] = t.split(':');
+    if (!grouped[h]) grouped[h] = [];
+    grouped[h].push(m);
+  }
+  return grouped;
+}
+
+export interface StopRouteDepartureSummary {
+  lineId: LineId;
+  destination: string;
+  nextTime: string;
+  isToday: boolean;
+  minutesLeft?: number;
+  badgeLabel: string;
+  subsequentTimes: string[];
+}
+
+export function getStopRoutesOverview(rawStopName: string): StopRouteDepartureSummary[] {
+  const day = getCurrentTimetableDay();
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  // Normalizuj nazwę przystanku (np. "Plac Dworcowy 01" -> "Plac Dworcowy")
+  const cleanName = rawStopName.replace(/\s+\d{2}$/i, '').trim();
+
+  const results: StopRouteDepartureSummary[] = [];
+
+  for (const line of busLines) {
+    const hasStop = line.stops.some(
+      (s) =>
+        s.toLowerCase().includes(cleanName.toLowerCase()) ||
+        cleanName.toLowerCase().includes(s.toLowerCase())
+    );
+
+    if (hasStop) {
+      line.directions.forEach((dir, dirIdx) => {
+        const timetable = getOfficialStopTimetable(line.id, cleanName, dirIdx as 0 | 1);
+        const dayTimes = timetable[day];
+        if (!dayTimes || dayTimes.length === 0) return;
+
+        const todayRemaining: { time: string; minutesLeft: number }[] = [];
+        for (const t of dayTimes) {
+          const [h, m] = t.split(':').map(Number);
+          const depMinutes = h * 60 + m;
+          if (depMinutes >= currentMinutes) {
+            todayRemaining.push({
+              time: t,
+              minutesLeft: depMinutes - currentMinutes,
+            });
+          }
+        }
+
+        if (todayRemaining.length > 0) {
+          const next = todayRemaining[0];
+          const subsequentTimes = todayRemaining.slice(1, 4).map((x) => x.time);
+          if (subsequentTimes.length < 3) {
+            const need = 3 - subsequentTimes.length;
+            subsequentTimes.push(...dayTimes.slice(0, need));
+          }
+
+          results.push({
+            lineId: line.id,
+            destination: dir.destination,
+            nextTime: next.time,
+            isToday: true,
+            minutesLeft: next.minutesLeft,
+            badgeLabel: next.time,
+            subsequentTimes,
+          });
+        } else {
+          // Kursy na dziś zakończone -> podaj pierwszy poranny kurs jutra
+          const firstMorning = dayTimes[0] || '05:30';
+          results.push({
+            lineId: line.id,
+            destination: dir.destination,
+            nextTime: firstMorning,
+            isToday: false,
+            badgeLabel: firstMorning,
+            subsequentTimes: dayTimes.slice(1, 4),
+          });
+        }
+      });
+    }
+  }
+
+  if (results.length === 0) {
+    const fallbackLines: LineId[] = ['M1', 'M2', 'M3', 'M4'];
+    for (const lid of fallbackLines) {
+      const line = busLines.find((l) => l.id === lid);
+      if (line) {
+        const dir = line.directions[0];
+        const dayTimes = dir.departures[day];
+        const nextTime = dayTimes[0] || '06:00';
+        results.push({
+          lineId: lid,
+          destination: dir.destination,
+          nextTime,
+          isToday: false,
+          badgeLabel: `Jutro ${nextTime}`,
+          subsequentTimes: dayTimes.slice(1, 4),
+        });
+      }
+    }
+  }
+
+  // Posortuj: najpierw odjazdy na dziś (chronologicznie), potem na jutro
+  return results.slice(0, 4);
+}
+
 export interface BusDirection {
   name: string;
   destination: string;
   frequency: string;
+  stops?: string[];
   departures: {
     weekday: string[];
     saturday: string[];
@@ -577,130 +766,76 @@ export interface BusLine {
   directions: [BusDirection, BusDirection];
 }
 
+function createOfficialBusLine(
+  id: LineId,
+  route: string,
+  colorHex: string,
+  offsets: number[],
+): BusLine {
+  const lineOfficial = OFFICIAL_TIMETABLES[id];
+  const dir0 = lineOfficial.directions[0];
+  const dir1 = lineOfficial.directions[1];
+
+  const allUniqueStops = Array.from(new Set([...dir0.stops, ...dir1.stops]));
+
+  const stopsDetails: BusStopDetail[] = allUniqueStops.map((stopName, idx) => {
+    const clean = stopName.replace(/\s+\d+$/, '').trim().toLowerCase();
+    const found = REAL_BUS_STOPS.find(
+      (s) => s.fullName.toLowerCase() === stopName.toLowerCase() || s.name.toLowerCase() === clean,
+    );
+    return {
+      name: stopName,
+      zone: found?.zone || 'Mińsk Mazowiecki',
+      isTransfer:
+        found?.isTransfer ||
+        stopName.toLowerCase().includes('dworc') ||
+        stopName.toLowerCase().includes('szpital'),
+      x: (idx * 4) % 100,
+      y: (idx * 5) % 100,
+    };
+  });
+
+  const getDirDepartures = (dir: typeof dir0) => {
+    const firstStop = dir.stops[0];
+    const dep = dir.stopDepartures[firstStop] || { weekday: [], saturday: [], sunday: [] };
+    return {
+      weekday: dep.weekday,
+      saturday: dep.saturday,
+      sunday: dep.sunday,
+    };
+  };
+
+  return {
+    id,
+    route,
+    colorHex,
+    stops: dir0.stops,
+    stopsDetails,
+    offsets,
+    directions: [
+      {
+        name: dir0.name,
+        destination: dir0.destination,
+        frequency: 'Według oficjalnego rozkładu ZDiTM',
+        stops: dir0.stops,
+        departures: getDirDepartures(dir0),
+      },
+      {
+        name: dir1.name,
+        destination: dir1.destination,
+        frequency: 'Według oficjalnego rozkładu ZDiTM',
+        stops: dir1.stops,
+        departures: getDirDepartures(dir1),
+      },
+    ],
+  };
+}
+
 export const busLines: BusLine[] = [
-  {
-    id: 'M2',
-    route: 'Plac Dworcowy ⇄ Serbinów (przez Szpital)',
-    colorHex: '#8CA9D3',
-    stops: ['Plac Dworcowy', 'Piękna', 'Licealna', 'Tartaczna', 'Urząd Miasta', 'Mireckiego', 'Chemik', 'Szpital', 'Cmentarz Żydowski', 'Serbinów'],
-    stopsDetails: [
-      { name: 'Plac Dworcowy', zone: 'Centrum', x: 20, y: 35, isTransfer: true },
-      { name: 'Piękna', zone: 'Centrum', x: 28, y: 38 },
-      { name: 'Licealna', zone: 'Centrum', x: 38, y: 42 },
-      { name: 'Tartaczna', zone: 'Strefa Południe', x: 46, y: 48 },
-      { name: 'Urząd Miasta', zone: 'Centrum', x: 55, y: 44, isTransfer: true },
-      { name: 'Mireckiego', zone: 'Wschód', x: 64, y: 50 },
-      { name: 'Chemik', zone: 'Wschód', x: 72, y: 56 },
-      { name: 'Szpital', zone: 'Wschód', x: 80, y: 64, isTransfer: true },
-      { name: 'Cmentarz Żydowski', zone: 'Serbinów', x: 86, y: 72 },
-      { name: 'Serbinów', zone: 'Serbinów', x: 92, y: 80, isTransfer: true },
-    ],
-    offsets: [4, 19, 34],
-    directions: [
-      {
-        name: 'Kierunek Serbinów',
-        destination: 'Serbinów Pętla',
-        frequency: 'Co 15–20 min',
-        departures: {
-          weekday: ['05:45', '06:15', '06:35', '07:05', '07:35', '08:05', '08:45', '09:30', '10:30', '11:30', '12:30', '13:15', '14:00', '14:35', '15:10', '15:45', '16:20', '17:00', '17:40', '18:30', '19:30', '20:30', '21:30'],
-          saturday: ['06:30', '07:30', '08:30', '09:30', '10:30', '11:30', '12:30', '13:30', '14:30', '15:30', '16:30', '17:30', '18:30', '19:30', '20:30'],
-          sunday: ['07:30', '09:30', '11:30', '13:30', '15:30', '17:30', '19:30', '20:30'],
-        },
-      },
-      {
-        name: 'Kierunek Plac Dworcowy',
-        destination: 'Dworzec PKP Mińsk Maz.',
-        frequency: 'Co 15–20 min',
-        departures: {
-          weekday: ['05:15', '05:50', '06:20', '06:50', '07:20', '07:55', '08:30', '09:15', '10:15', '11:15', '12:15', '13:00', '13:45', '14:20', '14:55', '15:30', '16:05', '16:45', '17:25', '18:15', '19:15', '20:15', '21:15'],
-          saturday: ['06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'],
-          sunday: ['07:00', '09:00', '11:00', '13:00', '15:00', '17:00', '19:00', '20:00'],
-        },
-      },
-    ],
-  },
-  {
-    id: 'M3',
-    route: 'Rondo Żołnierzy Wyklętych ⇄ Osiedlowa',
-    colorHex: '#EBC999',
-    stops: ['Rondo Żołnierzy Wyklętych', 'Warszawskie Przedmieście', 'Sienkiewicza', 'Kościuszki', 'Chemik', 'Szpitalna', 'Spacerowa', 'Klonowa Osiedle', 'FUD', 'Osiedlowa'],
-    stopsDetails: [
-      { name: 'Rondo Żołnierzy Wyklętych', zone: 'Zachód', x: 15, y: 70, isTransfer: true },
-      { name: 'Warszawskie Przedmieście', zone: 'Zachód', x: 25, y: 62 },
-      { name: 'Sienkiewicza', zone: 'Centrum', x: 38, y: 55 },
-      { name: 'Kościuszki', zone: 'Centrum', x: 48, y: 50, isTransfer: true },
-      { name: 'Chemik', zone: 'Wschód', x: 58, y: 46 },
-      { name: 'Szpitalna', zone: 'Wschód', x: 67, y: 40 },
-      { name: 'Spacerowa', zone: 'Północ', x: 74, y: 35 },
-      { name: 'Klonowa Osiedle', zone: 'Północ', x: 80, y: 28 },
-      { name: 'FUD', zone: 'Strefa Przemysłowa', x: 86, y: 22 },
-      { name: 'Osiedlowa', zone: 'Osiedlowa Pętla', x: 92, y: 16, isTransfer: true },
-    ],
-    offsets: [6, 26, 46],
-    directions: [
-      {
-        name: 'Kierunek Osiedlowa',
-        destination: 'Osiedlowa Pętla FUD',
-        frequency: 'Co 20 min',
-        departures: {
-          weekday: ['05:30', '06:05', '06:40', '07:15', '07:50', '08:30', '09:20', '10:20', '11:20', '12:20', '13:10', '13:50', '14:30', '15:10', '15:50', '16:30', '17:15', '18:00', '19:00', '20:00', '21:00'],
-          saturday: ['06:40', '07:40', '08:40', '09:40', '10:40', '11:40', '12:40', '13:40', '14:40', '15:40', '16:40', '17:40', '18:40', '19:40'],
-          sunday: ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00'],
-        },
-      },
-      {
-        name: 'Kierunek Rondo Ż.W.',
-        destination: 'Rondo Żołnierzy Wyklętych',
-        frequency: 'Co 20 min',
-        departures: {
-          weekday: ['05:05', '05:40', '06:15', '06:50', '07:25', '08:05', '08:55', '09:55', '10:55', '11:55', '12:45', '13:25', '14:05', '14:45', '15:25', '16:05', '16:50', '17:35', '18:35', '19:35', '20:35'],
-          saturday: ['06:10', '07:10', '08:10', '09:10', '10:10', '11:10', '12:10', '13:10', '14:10', '15:10', '16:10', '17:10', '18:10', '19:10'],
-          sunday: ['07:30', '09:30', '11:30', '13:30', '15:30', '17:30', '19:30'],
-        },
-      },
-    ],
-  },
-  {
-    id: 'M4',
-    route: 'Plac Dworcowy — pętla przez Anielinę',
-    colorHex: '#F26659',
-    stops: ['Plac Dworcowy', 'Kazikowskiego', 'Urząd Skarbowy', 'Chełmońskiego', 'Kościelna', 'Dąbrówki', 'PKP Anielina', 'Klonowa Osiedle', 'Spacerowa', 'Szpital'],
-    stopsDetails: [
-      { name: 'Plac Dworcowy', zone: 'Centrum', x: 20, y: 35, isTransfer: true },
-      { name: 'Kazikowskiego', zone: 'Centrum', x: 30, y: 25 },
-      { name: 'Urząd Skarbowy', zone: 'Północ', x: 42, y: 20 },
-      { name: 'Chełmońskiego', zone: 'Północ', x: 55, y: 18 },
-      { name: 'Kościelna', zone: 'Centrum', x: 62, y: 28 },
-      { name: 'Dąbrówki', zone: 'Wschód', x: 70, y: 35 },
-      { name: 'PKP Anielina', zone: 'Anielina', x: 80, y: 45, isTransfer: true },
-      { name: 'Klonowa Osiedle', zone: 'Północ', x: 85, y: 55 },
-      { name: 'Spacerowa', zone: 'Północ', x: 75, y: 65 },
-      { name: 'Szpital', zone: 'Wschód', x: 65, y: 75, isTransfer: true },
-    ],
-    offsets: [11, 41, 71],
-    directions: [
-      {
-        name: 'Trasa Pętlowa A (przez PKP Anielina)',
-        destination: 'Pętla Dworzec PKP',
-        frequency: 'Co 30 min',
-        departures: {
-          weekday: ['06:10', '06:40', '07:10', '07:45', '08:20', '09:00', '10:00', '11:00', '12:00', '13:00', '13:40', '14:20', '15:00', '15:40', '16:20', '17:00', '17:45', '18:30', '19:30', '20:30'],
-          saturday: ['07:15', '08:15', '09:15', '10:15', '11:15', '12:15', '13:15', '14:15', '15:15', '16:15', '17:15', '18:15', '19:15'],
-          sunday: ['08:15', '10:15', '12:15', '14:15', '16:15', '18:15', '20:15'],
-        },
-      },
-      {
-        name: 'Trasa Pętlowa B (przez Szpital)',
-        destination: 'Pętla Dworzec PKP',
-        frequency: 'Co 30 min',
-        departures: {
-          weekday: ['06:25', '06:55', '07:25', '08:00', '08:35', '09:30', '10:30', '11:30', '12:30', '13:20', '14:00', '14:40', '15:20', '16:00', '16:40', '17:20', '18:05', '19:00', '20:00', '21:00'],
-          saturday: ['07:45', '08:45', '09:45', '10:45', '11:45', '12:45', '13:45', '14:45', '15:45', '16:45', '17:45', '18:45', '19:45'],
-          sunday: ['08:45', '10:45', '12:45', '14:45', '16:45', '18:45', '20:45'],
-        },
-      },
-    ],
-  },
+  createOfficialBusLine('M1', 'Plac Dworcowy ⇄ Serbinów', '#10B981', [0, 15, 30]),
+  createOfficialBusLine('M2', 'Plac Dworcowy ⇄ Serbinów (przez Szpital)', '#8CA9D3', [4, 19, 34]),
+  createOfficialBusLine('M3', 'Osiedlowa ⇄ Rondo Żołnierzy Wyklętych', '#EBC999', [6, 26, 46]),
+  createOfficialBusLine('M4', 'Plac Dworcowy ⇄ Spacerowa (przez Anielinę)', '#F26659', [11, 41, 71]),
 ];
 
 /* ---------------- Alert i newsy ---------------- */
@@ -769,6 +904,7 @@ export interface Ad {
   kind: 'sell' | 'free' | 'lost';
   author: string;
   authorId?: string | null;
+  authorAvatarSeed?: string;
   street: string;
   time: string;
   image: string;
@@ -776,10 +912,93 @@ export interface Ad {
   description?: string;
   category?: string;
   condition?: 'Nowe' | 'Używane' | 'Bardzo dobry';
-  status?: 'active' | 'reserved' | 'sold';
+  status?: 'active' | 'reserved' | 'sold' | 'expired';
   views?: number;
   isOwner?: boolean;
   negotiable?: boolean;
+  createdAt?: string;
+  expiresAt?: string;
+}
+
+export function formatAdExactDate(isoString?: string | null): string {
+  if (!isoString) return 'niedawno';
+  const ts = Date.parse(isoString);
+  if (Number.isNaN(ts)) return isoString;
+  const date = new Date(ts);
+  return date.toLocaleDateString('pl-PL', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+export function getAdValidityInfo(ad: Pick<Ad, 'createdAt' | 'expiresAt' | 'status'>): {
+  daysLeft: number;
+  isExpired: boolean;
+  label: string;
+  shortLabel: string;
+} {
+  if (ad.status === 'expired') {
+    return {
+      daysLeft: 0,
+      isExpired: true,
+      label: 'Ogłoszenie wygasło (minęło 14 dni)',
+      shortLabel: 'Wygasło',
+    };
+  }
+
+  let expiresTs: number;
+  if (ad.expiresAt) {
+    expiresTs = Date.parse(ad.expiresAt);
+  } else if (ad.createdAt) {
+    expiresTs = Date.parse(ad.createdAt) + 14 * 24 * 60 * 60 * 1000;
+  } else {
+    return {
+      daysLeft: 14,
+      isExpired: false,
+      label: 'Ważne 14 dni',
+      shortLabel: 'Ważne 14 dni',
+    };
+  }
+
+  if (Number.isNaN(expiresTs)) {
+    return {
+      daysLeft: 14,
+      isExpired: false,
+      label: 'Ważne 14 dni',
+      shortLabel: 'Ważne 14 dni',
+    };
+  }
+
+  const diffMs = expiresTs - Date.now();
+  const daysLeft = Math.ceil(diffMs / (24 * 60 * 60 * 1000));
+
+  if (daysLeft <= 0) {
+    return {
+      daysLeft: 0,
+      isExpired: true,
+      label: 'Ogłoszenie wygasło (minęło 14 dni)',
+      shortLabel: 'Wygasło',
+    };
+  }
+
+  if (daysLeft === 1) {
+    return {
+      daysLeft: 1,
+      isExpired: false,
+      label: 'Wygasa dzisiaj (ostatni dzień)',
+      shortLabel: 'Ostatni dzień',
+    };
+  }
+
+  return {
+    daysLeft,
+    isExpired: false,
+    label: `Ważne jeszcze ${daysLeft} dni`,
+    shortLabel: `Jeszcze ${daysLeft} dni`,
+  };
 }
 
 export interface AdConversation {
@@ -847,6 +1066,7 @@ export interface Post {
   id: string;
   author: string;
   authorAs: string;
+  authorProfileId?: string;
   time: string;
   content: string;
   image?: string;
@@ -854,11 +1074,23 @@ export interface Post {
   replies: number;
   reposts: number;
   views: number;
+  createdAt?: string;
+}
+
+export interface PostComment {
+  id: string;
+  postId: string;
+  author: string;
+  authorAs: string;
+  authorProfileId?: string;
+  content: string;
+  createdAt: string;
+  time?: string;
 }
 
 export const posts: Post[] = [];
 
-export const talkTags = ['Wszystko', '#Spacerowa', '#Centrum', '#Serbinów', '#Drogi', '#Kultura'];
+export const talkTags = ['Wszystko', '#Centrum', '#Serbinów', '#Drogi', '#Kultura', '#Inwestycje'];
 
 /* ---------------- Strefa Partnera ---------------- */
 export interface PartnerProduct {

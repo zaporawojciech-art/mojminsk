@@ -30,6 +30,7 @@ import {
 import {
   ads as initialAds,
   avatarUrl,
+  getAdAuthorSeed,
   streets,
   type Ad,
   type User,
@@ -327,6 +328,10 @@ export function AdsScreen({
 
   // Filter C2C ads
   let filteredAds = adsList.filter((a) => {
+    // 14-dniowa terminowość ogłoszeń: ukrywamy wygasłe z publicznej listy
+    if (a.status === 'expired') return false;
+    if (a.expiresAt && Date.parse(a.expiresAt) <= Date.now()) return false;
+
     if (quickFilter === 'saved') {
       if (!likedAds[a.id]) return false;
     } else if (quickFilter !== 'all') {
@@ -666,7 +671,7 @@ export function AdsScreen({
                       </p>
                       <div className="mt-2 flex items-center gap-1.5">
                         <img
-                          src={avatarUrl(ad.author)}
+                          src={avatarUrl(getAdAuthorSeed(ad, user))}
                           alt={ad.author}
                           className="h-4 w-4 rounded-full bg-sand-100 object-cover shrink-0"
                         />
@@ -1036,7 +1041,7 @@ export function AdsScreen({
             </div>
           ) : viewMode === 'grid' ? (
             /* Wide Dense Mosaic Grid (2 cols mobile, 3 cols md, 4 cols lg, 5 cols xl, 6 cols 2xl) */
-            <div className="mt-3 md:mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 md:gap-3.5 px-5 md:px-0">
+            <div className="mt-3 md:mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2.5 sm:gap-3 md:gap-3.5 px-3.5 sm:px-5 md:px-0">
               {filteredAds.map((a) => {
                 const isItemLiked = !!likedAds[a.id];
                 const photoCount = a.images?.length ?? 1;
@@ -1044,7 +1049,7 @@ export function AdsScreen({
                 return (
                   <article
                     key={a.id}
-                    className="group relative flex flex-col justify-between rounded-2xl bg-white p-2.5 shadow-card transition-all hover:shadow-float hover:border-ink/20 active:scale-[0.99] border border-mist-200"
+                    className="group relative flex flex-col justify-between rounded-2xl bg-white p-2 sm:p-2.5 shadow-card transition-all hover:shadow-float hover:border-ink/20 active:scale-[0.99] border border-mist-200 min-w-0"
                   >
                     <div>
                       {/* Photo 4:3 on top with crisp badges */}
@@ -1133,14 +1138,14 @@ export function AdsScreen({
                     </div>
 
                     {/* Compact Neighbor Avatar + Street + Quick Chat Footer */}
-                    <div className="mt-2.5 flex items-center justify-between gap-1.5 border-t border-mist/80 pt-2 px-0.5">
+                    <div className="mt-2.5 flex items-center justify-between gap-1.5 border-t border-mist/80 pt-2 px-0.5 min-w-0">
                       <AppLink
                         to={adHref}
                         onClick={() => handleOpenAd(a)}
-                        className="flex items-center gap-1.5 min-w-0 cursor-pointer"
+                        className="flex items-center gap-1.5 min-w-0 flex-1 cursor-pointer"
                       >
                         <img
-                          src={avatarUrl(a.author)}
+                          src={avatarUrl(getAdAuthorSeed(a, user))}
                           alt={a.author}
                           width={22}
                           height={22}
@@ -1175,7 +1180,7 @@ export function AdsScreen({
             return (
               <article
                 key={a.id}
-                className="flex gap-3.5 rounded-3xl bg-white p-3 shadow-card transition-all hover:shadow-float active:scale-[0.99] border border-mist-200"
+                className="flex gap-3.5 rounded-3xl bg-white p-3 shadow-card transition-all hover:shadow-float active:scale-[0.99] border border-mist-200 min-w-0"
               >
                 <AppLink
                   to={adHref}
@@ -1202,7 +1207,7 @@ export function AdsScreen({
                     <div className="flex items-center justify-between gap-1 mb-1">
                       <div className="flex items-center gap-1.5 min-w-0">
                         <img
-                          src={avatarUrl(a.author)}
+                          src={avatarUrl(getAdAuthorSeed(a, user))}
                           alt={a.author}
                           className="h-4.5 w-4.5 shrink-0 rounded-full bg-sand-100 object-cover"
                         />

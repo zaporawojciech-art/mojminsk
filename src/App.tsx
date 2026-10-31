@@ -18,10 +18,9 @@ import {
   ads as initialAds,
   rides as initialRides,
   streets,
+  busLines,
   type Ad,
   type AdConversation,
-  type FavoriteBusStop,
-  FAVORITE_BUS_STOPS_KEY,
   type LineId,
   type Ride,
   type User,
@@ -45,6 +44,7 @@ import {
   buildAdUrl,
   buildNeighborUrl,
   buildZditmUrl,
+  buildZditmMapUrl,
   CATEGORY_SEO_META,
   CATEGORY_URL_MAP,
   extractAdIdFromSlug,
@@ -94,13 +94,13 @@ const SellerProfileModal = lazy(() => import('./screens/SellerProfileModal').the
 const AdFiltersModal = lazy(() => import('./screens/AdFiltersModal').then((m) => ({ default: m.AdFiltersModal })));
 const ReserveAdModal = lazy(() => import('./screens/ReserveAdModal').then((m) => ({ default: m.ReserveAdModal })));
 const InstallAppModal = lazy(() => import('./screens/InstallAppModal').then((m) => ({ default: m.InstallAppModal })));
-const AddFavoriteBusModal = lazy(() => import('./screens/AddFavoriteBusModal').then((m) => ({ default: m.AddFavoriteBusModal })));
 const PollsModal = lazy(() => import('./screens/PollsModal').then((m) => ({ default: m.PollsModal })));
 const AddPollModal = lazy(() => import('./screens/AddPollModal').then((m) => ({ default: m.AddPollModal })));
 const LegalScreen = lazy(() => import('./screens/LegalScreen').then((m) => ({ default: m.LegalScreen })));
+const ZditmMapScreen = lazy(() => import('./screens/ZditmMapScreen').then((m) => ({ default: m.ZditmMapScreen })));
 import type { LegalDocType } from './screens/LegalScreen';
 
-type Overlay = null | 'profile' | 'zditm';
+type Overlay = null | 'profile' | 'zditm' | 'zditmMap';
 
 export default function App() {
   const [user, setUser] = useState<User | null>(() => {
@@ -182,7 +182,7 @@ export default function App() {
   const [authScreenMode, setAuthScreenMode] = useState<'login' | 'register'>(() => {
     if (typeof window !== 'undefined') {
       const p = window.location.pathname;
-      return p === '/dolacz' || p === '/rejestracja' ? 'register' : 'login';
+      return p === '/rejestracja' ? 'register' : 'login';
     }
     return 'login';
   });
@@ -206,7 +206,7 @@ export default function App() {
       } catch {
         // ignore
       }
-      navigateTo('/dolacz');
+      navigateTo('/logowanie');
     } else {
       try {
         localStorage.setItem('mojminsk_profile_v1', JSON.stringify(nextUser));
@@ -244,18 +244,7 @@ export default function App() {
   const [partnerOpen, setPartnerOpen] = useState(false);
   const [selectedZditmLine, setSelectedZditmLine] = useState<LineId>('M2');
   const [selectedZditmStop, setSelectedZditmStop] = useState<string | undefined>(undefined);
-  const [favoriteBuses, setFavoriteBuses] = useState<FavoriteBusStop[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem(FAVORITE_BUS_STOPS_KEY);
-        if (stored) return JSON.parse(stored);
-      } catch {
-        // fallback
-      }
-    }
-    return [];
-  });
-  const [addFavBusOpen, setAddFavBusOpen] = useState(false);
+  const [zditmSource, setZditmSource] = useState<'map' | null>(null);
   const [frame, setFrame] = useState<HTMLDivElement | null>(null);
   const mainRef = useRef<HTMLElement>(null);
 
@@ -424,42 +413,6 @@ export default function App() {
     [requireAuth, user],
   );
 
-  const handleAddFavoriteBus = (newFav: Omit<FavoriteBusStop, 'id'>) => {
-    const id = `${newFav.lineId}_${newFav.stopName}_${newFav.directionIdx}`;
-    setFavoriteBuses((prev) => {
-      const filtered = prev.filter((f) => f.id !== id);
-      const updated = [...filtered, { ...newFav, id }];
-      if (typeof window !== 'undefined') {
-        try {
-          localStorage.setItem(FAVORITE_BUS_STOPS_KEY, JSON.stringify(updated));
-        } catch {}
-      }
-      return updated;
-    });
-  };
-
-  const handleRemoveFavoriteBus = (id: string) => {
-    setFavoriteBuses((prev) => {
-      const updated = prev.filter((f) => f.id !== id);
-      if (typeof window !== 'undefined') {
-        try {
-          localStorage.setItem(FAVORITE_BUS_STOPS_KEY, JSON.stringify(updated));
-        } catch {}
-      }
-      return updated;
-    });
-  };
-
-  const handleToggleFavoriteBus = (fav: Omit<FavoriteBusStop, 'id'>) => {
-    const id = `${fav.lineId}_${fav.stopName}_${fav.directionIdx}`;
-    const exists = favoriteBuses.some((f) => f.id === id);
-    if (exists) {
-      handleRemoveFavoriteBus(id);
-    } else {
-      handleAddFavoriteBus(fav);
-    }
-  };
-
   // 1. Reset main container scroll immediately upon opening root overlays or legal documents
   useLayoutEffect(() => {
     if ((overlay || legalView) && mainRef.current) {
@@ -520,7 +473,6 @@ export default function App() {
       reserveAd ||
       filtersModalOpen ||
       installModalOpen ||
-      addFavBusOpen ||
       pollsModalOpen ||
       addPollModalOpen
   );
@@ -540,7 +492,6 @@ export default function App() {
   }, []);
 
   const closeInstallModal = useCallback(() => setInstallModalOpen(false), []);
-  const closeAddFavBus = useCallback(() => closeWithAnimation('addFavBus', () => setAddFavBusOpen(false)), [closeWithAnimation]);
   const closeReserveAd = useCallback(() => closeWithAnimation('reserveAd', () => setReserveAd(null)), [closeWithAnimation]);
   const closeFiltersModal = useCallback(() => closeWithAnimation('filtersModal', () => setFiltersModalOpen(false)), [closeWithAnimation]);
   const closeReportAd = useCallback(() => closeWithAnimation('reportAd', () => setReportAd(null)), [closeWithAnimation]);
@@ -652,7 +603,7 @@ export default function App() {
     if (!currentUser) {
       setAuthScreenMode('login');
       setAuthScreenOpen(true);
-      navigateTo('/dolacz');
+      navigateTo('/logowanie');
     } else if (overlay === 'profile') {
       closeOverlay();
     } else {
@@ -675,12 +626,12 @@ export default function App() {
       setRouteNotFound(false);
 
       // 1. Onboarding / Rejestracja / Logowanie
-      if (cleanPath === '/dolacz' || cleanPath === '/rejestracja') {
+      if (cleanPath === '/rejestracja') {
         setAuthScreenMode('register');
         setAuthScreenOpen(true);
         return;
       }
-      if (cleanPath === '/logowanie') {
+      if (cleanPath === '/dolacz' || cleanPath === '/logowanie') {
         setAuthScreenMode('login');
         setAuthScreenOpen(true);
         return;
@@ -797,14 +748,37 @@ export default function App() {
         return;
       }
 
-      // 3. Rozkład jazdy ZDiTM (/zditm, /zditm/m2, /zditm/m2/plac-dworcowy)
+      // 3a. Mapa linii ZDiTM (/zditm/mapa, /zditm/mapa/m2)
+      if (cleanPath === '/zditm/mapa' || cleanPath.startsWith('/zditm/mapa/')) {
+        const parts = cleanPath.split('/').filter(Boolean); // ['zditm', 'mapa', 'm2']
+        const lineUpper = parts[2]?.toUpperCase();
+        const validLine: LineId =
+          lineUpper === 'M1' || lineUpper === 'M2' || lineUpper === 'M3' || lineUpper === 'M4' ? lineUpper : 'M2';
+        setSelectedZditmLine(validLine);
+        setOverlay('zditmMap');
+        return;
+      }
+
+      // 3b. Rozkład jazdy ZDiTM (/zditm, /zditm/m2, /zditm/m2/plac-dworcowy)
       if (cleanPath === '/zditm' || cleanPath.startsWith('/zditm/')) {
         const parts = cleanPath.split('/').filter(Boolean); // ['zditm', 'm2', 'plac-dworcowy']
         const lineUpper = parts[1]?.toUpperCase();
         const validLine: LineId =
           lineUpper === 'M1' || lineUpper === 'M2' || lineUpper === 'M3' || lineUpper === 'M4' ? lineUpper : 'M2';
+        const lineData = busLines.find((l) => l.id === validLine) || busLines[0];
+        let matchedStop: string | undefined = undefined;
+        if (parts[2]) {
+          const allLineStops = [
+            ...(lineData.directions[0]?.stops || lineData.stops),
+            ...(lineData.directions[1]?.stops || lineData.stops),
+          ];
+          matchedStop =
+            allLineStops.find(
+              (s) => slugify(s) === parts[2] || s.toLowerCase() === parts[2].toLowerCase().replace(/-/g, ' '),
+            ) || parts[2].replace(/-/g, ' ');
+        }
         setSelectedZditmLine(validLine);
-        setSelectedZditmStop(parts[2] ? parts[2].replace(/-/g, ' ') : undefined);
+        setSelectedZditmStop(matchedStop);
         setOverlay('zditm');
         return;
       }
@@ -875,7 +849,7 @@ export default function App() {
             : 'Sąsiad';
           setSellerProfile({ name: formattedName, street: matchedStreet.name });
         } else {
-          setSellerProfile({ name: 'Sąsiad', street: 'Spacerowa' });
+          setSellerProfile({ name: 'Sąsiad', street: user ? user.street.name : 'Centrum' });
         }
         return;
       }
@@ -912,7 +886,6 @@ export default function App() {
     { active: addAdOpen, close: closeAddAd },
     { active: !!selectedAd, close: closeSelectedAd },
     { active: filtersModalOpen, close: closeFiltersModal },
-    { active: addFavBusOpen, close: closeAddFavBus },
     { active: conversationsOpen, close: closeConversations },
     { active: myAdsOpen, close: closeMyAds },
     { active: partnerOpen, close: closePartner },
@@ -1278,7 +1251,6 @@ export default function App() {
       void import('./screens/AdFiltersModal');
       void import('./screens/ReserveAdModal');
       void import('./screens/ReportAdModal');
-      void import('./screens/AddFavoriteBusModal');
       void import('./screens/InstallAppModal');
       void import('./screens/PollsModal');
       void import('./screens/AddPollModal');
@@ -1319,7 +1291,6 @@ export default function App() {
             setReserveAd(null);
             setFiltersModalOpen(false);
             setInstallModalOpen(false);
-            setAddFavBusOpen(false);
             setPollsModalOpen(false);
             setAddPollModalOpen(false);
           }}
@@ -1436,9 +1407,12 @@ export default function App() {
                     setOverlay('zditm');
                     navigateTo(buildZditmUrl(nextLine, stopName));
                   }}
-                  favoriteBuses={favoriteBuses}
-                  onAddFavoriteBus={() => setAddFavBusOpen(true)}
-                  onRemoveFavoriteBus={handleRemoveFavoriteBus}
+                  onZditmMap={(line) => {
+                    const nextLine = line ?? 'M2';
+                    setSelectedZditmLine(nextLine);
+                    setOverlay('zditmMap');
+                    navigateTo(buildZditmMapUrl(nextLine));
+                  }}
                   polls={polls}
                   userVotes={userVotes}
                   onVote={handleVote}
@@ -1713,7 +1687,7 @@ export default function App() {
 
         {overlay === 'zditm' && (
           <AsyncViewBoundary
-            viewKey={`overlay-zditm-${selectedZditmLine}-${selectedZditmStop ?? 'all'}`}
+            viewKey="overlay-zditm"
             level={1}
             isClosing={!!exitingScreens['overlay']}
             skeleton={<ZditmSkeleton />}
@@ -1721,10 +1695,61 @@ export default function App() {
             <ZditmScreen
               initialLine={selectedZditmLine}
               initialStopName={selectedZditmStop}
-              favoriteBuses={favoriteBuses}
-              onToggleFavorite={handleToggleFavoriteBus}
-              onRemoveFavorite={handleRemoveFavoriteBus}
-              onBack={closeOverlay}
+              onBack={() => {
+                const cameFromMap =
+                  zditmSource === 'map' ||
+                  Boolean(typeof window !== 'undefined' && (window.history.state as any)?.fromMap);
+                if (cameFromMap) {
+                  setZditmSource(null);
+                  setOverlay('zditmMap');
+                  navigateTo(buildZditmMapUrl(selectedZditmLine));
+                } else {
+                  closeOverlay();
+                  navigateTo('/', { replace: true });
+                }
+              }}
+              onOpenMap={(lineId) => {
+                setZditmSource(null);
+                setSelectedZditmLine(lineId);
+                setOverlay('zditmMap');
+                navigateTo(buildZditmMapUrl(lineId));
+              }}
+              onNavigate={(lineId, stopName) => {
+                setSelectedZditmLine(lineId);
+                setSelectedZditmStop(stopName);
+                navigateTo(buildZditmUrl(lineId, stopName), {
+                  replace: true,
+                  state: zditmSource === 'map' ? { fromMap: true, fromMapLine: lineId } : undefined,
+                });
+              }}
+              isClosing={!!exitingScreens['overlay']}
+            />
+          </AsyncViewBoundary>
+        )}
+
+        {overlay === 'zditmMap' && (
+          <AsyncViewBoundary
+            viewKey="overlay-zditm-map"
+            level={1}
+            isClosing={!!exitingScreens['overlay']}
+            skeleton={<ZditmSkeleton />}
+          >
+            <ZditmMapScreen
+              initialLine={selectedZditmLine}
+              initialStopName={selectedZditmStop}
+              onBack={() => {
+                closeOverlay();
+                navigateTo('/', { replace: true });
+              }}
+              onOpenTimetable={(lineId, stopName) => {
+                setSelectedZditmLine(lineId);
+                setSelectedZditmStop(stopName);
+                setZditmSource('map');
+                setOverlay('zditm');
+                navigateTo(buildZditmUrl(lineId, stopName), {
+                  state: { fromMap: true, fromMapLine: lineId },
+                });
+              }}
               isClosing={!!exitingScreens['overlay']}
             />
           </AsyncViewBoundary>
@@ -1846,21 +1871,6 @@ export default function App() {
           </AsyncViewBoundary>
         )}
 
-        {addFavBusOpen && (
-          <AsyncViewBoundary
-            viewKey="modal-add-fav-bus"
-            level={2}
-            isClosing={!!exitingScreens['addFavBus']}
-            skeleton={<ModalFormSkeleton />}
-          >
-            <AddFavoriteBusModal
-              onClose={closeAddFavBus}
-              isClosing={!!exitingScreens['addFavBus']}
-              onSave={handleAddFavoriteBus}
-            />
-          </AsyncViewBoundary>
-        )}
-
         {user && addPollModalOpen && (
           <AsyncViewBoundary
             viewKey="modal-add-poll"
@@ -1878,7 +1888,7 @@ export default function App() {
         )}
 
         {/* LEVEL 3 (z-[54]): Views opened from Level 0/1/2 (e.g. AdDetail from Ads/MyAds, AddAd from Profile/MyAds) */}
-        {user && selectedAd && (
+        {selectedAd && (
           <AsyncViewBoundary
             viewKey={`ad-detail-${selectedAd.id}`}
             level={3}
@@ -2105,13 +2115,13 @@ export default function App() {
             setAuthModal({ isOpen: false });
             setAuthScreenMode('register');
             setAuthScreenOpen(true);
-            navigateTo('/dolacz');
+            navigateTo('/rejestracja');
           }}
           onLogin={() => {
             setAuthModal({ isOpen: false });
             setAuthScreenMode('login');
             setAuthScreenOpen(true);
-            navigateTo('/dolacz');
+            navigateTo('/logowanie');
           }}
         />
 

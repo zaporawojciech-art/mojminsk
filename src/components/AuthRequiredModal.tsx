@@ -1,4 +1,4 @@
-import { Lock, ShieldAlert, Sparkles, X } from 'lucide-react';
+import { ShieldAlert, Sparkles, X } from 'lucide-react';
 
 interface AuthRequiredModalProps {
   isOpen: boolean;
@@ -53,15 +53,6 @@ export function AuthRequiredModal({
           <p className="text-[13px] text-ink-600 leading-relaxed pt-1">
             {actionDesc}
           </p>
-        </div>
-
-        {/* RODO / Zasada sąsiedzka */}
-        <div className="rounded-2xl bg-mist/60 p-3 text-[11.5px] text-ink-500 text-left flex items-start gap-2 border border-mist-200">
-          <Lock className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-          <span>
-            W aplikacji nie ma anonimowych kont ani spamu. Po rejestracji inni widzą Cię bezpiecznie
-            jako <b>Imię z ulicy</b> (np. Wojtek ze Spacerowej).
-          </span>
         </div>
 
         {/* Przyciski Akcji */}
