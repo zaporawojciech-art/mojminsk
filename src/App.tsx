@@ -1317,10 +1317,11 @@ export default function App() {
             )
           }
           onOpenZditm={() => {
+            setZditmSource(null);
             setSelectedZditmLine('M2');
             setSelectedZditmStop(undefined);
-            setOverlay('zditm');
-            navigateTo('/zditm/m2');
+            setOverlay('zditmMap');
+            navigateTo(buildZditmMapUrl('M2'));
           }}
           onOpenPolls={() => {
             setPollsModalOpen(true);
@@ -1540,10 +1541,12 @@ export default function App() {
             <Footer
               onTabChange={handleTabChange}
               onOpenZditm={(line) => {
-                setSelectedZditmLine(line ?? 'M2');
+                const targetLine = line ?? 'M2';
+                setSelectedZditmLine(targetLine);
                 setSelectedZditmStop(undefined);
-                setOverlay('zditm');
-                navigateTo('/zditm/m2');
+                setZditmSource(null);
+                setOverlay('zditmMap');
+                navigateTo(buildZditmMapUrl(targetLine));
               }}
               onOpenPolls={() => {
                 setPollsModalOpen(true);

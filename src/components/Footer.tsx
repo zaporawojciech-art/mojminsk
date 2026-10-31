@@ -64,13 +64,6 @@ export function Footer({
             >
               Ogłoszenia
             </a>
-            <button
-              type="button"
-              onClick={() => onOpenZditm?.('M2')}
-              className="hover:text-coral-600 transition-colors"
-            >
-              Komunikacja miejska
-            </button>
             <a
               href={TAB_PATHS.rides}
               onClick={(e) => handleNavClick('rides', e)}
@@ -78,6 +71,20 @@ export function Footer({
             >
               Przejazdy
             </a>
+            <button
+              type="button"
+              onClick={() => onOpenZditm?.('M2')}
+              className="hover:text-coral-600 transition-colors cursor-pointer"
+            >
+              Komunikacja miejska
+            </button>
+            <button
+              type="button"
+              onClick={() => onOpenPolls?.()}
+              className="hover:text-coral-600 transition-colors cursor-pointer"
+            >
+              Ankiety
+            </button>
             <a
               href={TAB_PATHS.talks}
               onClick={(e) => handleNavClick('talks', e)}
@@ -85,13 +92,6 @@ export function Footer({
             >
               Rozmowy
             </a>
-            <button
-              type="button"
-              onClick={() => onOpenPolls?.()}
-              className="hover:text-coral-600 transition-colors"
-            >
-              Ankiety
-            </button>
             <a
               href="mailto:kontakt@mojminsk.app"
               className="hover:text-coral-600 transition-colors"

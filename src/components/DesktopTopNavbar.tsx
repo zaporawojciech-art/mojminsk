@@ -47,11 +47,10 @@ export function DesktopTopNavbar({
   onProfileClick,
   onLogout,
 }: DesktopTopNavbarProps) {
-  const navItems: { id: TabId; label: string; shortLabel?: string; href: string; icon: typeof House }[] = [
+  const primaryNavItems: { id: TabId; label: string; shortLabel?: string; href: string; icon: typeof House }[] = [
     { id: 'home', label: 'Start', href: TAB_PATHS.home, icon: House },
     { id: 'ads', label: 'Ogłoszenia', href: TAB_PATHS.ads, icon: Megaphone },
     { id: 'rides', label: 'Wspólne przejazdy', shortLabel: 'Przejazdy', href: TAB_PATHS.rides, icon: Car },
-    { id: 'talks', label: 'Rozmowy', href: TAB_PATHS.talks, icon: MessagesSquare },
   ];
 
   const handleNavClick = (tabId: TabId) => {
@@ -80,7 +79,7 @@ export function DesktopTopNavbar({
           </a>
 
           <nav aria-label="Nawigacja główna" className="flex items-center gap-1.5 min-w-0">
-            {navItems.map((item) => {
+            {primaryNavItems.map((item) => {
               const Icon = item.icon;
               const active = !hasActiveSubpage && currentTab === item.id;
               return (
@@ -115,8 +114,9 @@ export function DesktopTopNavbar({
 
             <div className="mx-1.5 h-4 w-px bg-mist-300 shrink-0" />
 
+            {/* Komunikacja miejska (Live Mapa) */}
             <a
-              href="/zditm"
+              href="/zditm/mapa"
               onClick={(e) => {
                 if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
                 e.preventDefault();
@@ -127,8 +127,12 @@ export function DesktopTopNavbar({
             >
               <Bus className="h-3.5 w-3.5 text-sky-700 shrink-0" />
               <span>Komunikacja miejska</span>
+              <span className="ml-0.5 rounded-md bg-emerald-100 px-1.5 py-0.2 text-[9.5px] font-black text-emerald-800 uppercase tracking-wider">
+                Live
+              </span>
             </a>
 
+            {/* Ankiety */}
             <a
               href="/ankiety"
               onClick={(e) => {
@@ -141,6 +145,31 @@ export function DesktopTopNavbar({
             >
               <Vote className="h-3.5 w-3.5 text-coral-700 shrink-0" />
               <span>Ankiety</span>
+            </a>
+
+            <div className="mx-1.5 h-4 w-px bg-mist-300 shrink-0" />
+
+            {/* Rozmowy (na samym końcu nawigacji) */}
+            <a
+              href={TAB_PATHS.talks}
+              aria-current={!hasActiveSubpage && currentTab === 'talks' ? 'page' : undefined}
+              onClick={(e) => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                e.preventDefault();
+                handleNavClick('talks');
+              }}
+              className={cn(
+                'flex items-center gap-2 rounded-lg px-3 py-1.5 text-[13px] font-bold transition-all whitespace-nowrap cursor-pointer',
+                !hasActiveSubpage && currentTab === 'talks'
+                  ? 'bg-ink text-white shadow-xs'
+                  : 'text-ink-600 hover:bg-mist hover:text-ink',
+              )}
+            >
+              <MessagesSquare
+                className="h-3.5 w-3.5 shrink-0"
+                strokeWidth={!hasActiveSubpage && currentTab === 'talks' ? 2.4 : 2}
+              />
+              <span>Rozmowy</span>
             </a>
           </nav>
         </div>

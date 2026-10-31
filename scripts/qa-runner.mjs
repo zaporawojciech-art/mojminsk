@@ -112,8 +112,8 @@ async function run() {
       await checkHorizontalOverflow(desktopPage, 'Desktop Ogłoszenia');
       await desktopPage.screenshot({ path: `${SCREENSHOT_DIR}/desktop-ads.png` });
 
-      // Szukamy pierwszej karty ogłoszenia
-      const firstCard = desktopPage.locator('article').first();
+      // Szukamy pierwszej karty ogłoszenia (widocznej)
+      const firstCard = desktopPage.locator('article:visible').first();
       await firstCard.waitFor({ timeout: 5000 });
 
       // Sprawdzamy awatar autora na karcie
@@ -204,8 +204,8 @@ async function run() {
         pass('Pływająca dolna nawigacja obecna na mobile');
       }
 
-      // Test otwarcia ogłoszenia na mobile
-      const firstMobileCard = mobilePage.locator('article').first();
+      // Test otwarcia ogłoszenia na mobile (widocznego)
+      const firstMobileCard = mobilePage.locator('article:visible').first();
       await firstMobileCard.waitFor({ timeout: 5000 });
       await firstMobileCard.locator('a').first().click();
       await mobilePage.waitForTimeout(500);
