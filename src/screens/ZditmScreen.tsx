@@ -541,12 +541,12 @@ export function ZditmScreen({
                     Najbliższy planowany odjazd
                   </span>
                   <span className="font-display text-[15px] sm:text-[16px] font-bold text-ink">
-                    Godzina {nextBus.time}
+                    {nextBus.isTomorrow ? `Jutro o ${nextBus.time}` : `Godzina ${nextBus.time}`}
                   </span>
                 </div>
               </div>
               <span className="rounded-xl bg-ink px-3.5 py-1.5 font-mono text-[14px] font-extrabold text-white shadow-2xs">
-                {nextBus.time}
+                {nextBus.isTomorrow ? `Jutro ${nextBus.time}` : nextBus.time}
               </span>
             </div>
           )}

@@ -151,6 +151,8 @@ export function ZditmMapScreen({
     return {
       all: tt[currentDay] || [],
       next: next?.time || null,
+      isTomorrow: next?.isTomorrow || false,
+      label: next?.label || (next?.time ? `Godzina ${next.time}` : null),
       day: currentDay === 'weekday' ? 'Dni robocze' : currentDay === 'saturday' ? 'Sobota' : 'Niedziela',
     };
   }, [selectedLineId, selectedStopName, directionIdx]);
@@ -737,7 +739,11 @@ export function ZditmMapScreen({
                     Najbliższy planowany odjazd ({stopTimetable.day})
                   </span>
                   <span className="font-display text-[15px] font-extrabold text-slate-900">
-                    {stopTimetable.next ? `Godzina ${stopTimetable.next}` : 'Brak kursów dziś'}
+                    {stopTimetable.next
+                      ? stopTimetable.isTomorrow
+                        ? `Jutro o ${stopTimetable.next}`
+                        : `Godzina ${stopTimetable.next}`
+                      : 'Brak kursów dziś'}
                   </span>
                 </div>
               </div>
@@ -747,7 +753,7 @@ export function ZditmMapScreen({
                   className="rounded-xl px-3 py-1 font-mono text-[13px] font-black text-white shadow-xs"
                   style={{ backgroundColor: theme.color }}
                 >
-                  {stopTimetable.next}
+                  {stopTimetable.isTomorrow ? `Jutro ${stopTimetable.next}` : stopTimetable.next}
                 </span>
               )}
             </div>

@@ -600,7 +600,12 @@ export function getOfficialStopTimetable(lineId: LineId, stopName: string, direc
   };
 }
 
-export function getNextScheduledBus(times: string[]): { time: string; minutesLeft: number } | null {
+export function getNextScheduledBus(times: string[]): {
+  time: string;
+  minutesLeft: number;
+  isTomorrow: boolean;
+  label: string;
+} | null {
   if (!times || times.length === 0) return null;
   const now = new Date();
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
@@ -609,9 +614,13 @@ export function getNextScheduledBus(times: string[]): { time: string; minutesLef
     const [h, m] = t.split(':').map(Number);
     const depMinutes = h * 60 + m;
     if (depMinutes >= currentMinutes) {
+      const minutesLeft = depMinutes - currentMinutes;
+      const label = minutesLeft <= 60 ? `za ${minutesLeft} min` : `o ${t}`;
       return {
         time: t,
-        minutesLeft: depMinutes - currentMinutes,
+        minutesLeft,
+        isTomorrow: false,
+        label,
       };
     }
   }
@@ -621,6 +630,8 @@ export function getNextScheduledBus(times: string[]): { time: string; minutesLef
   return {
     time: times[0],
     minutesLeft: firstDepMinutes - currentMinutes,
+    isTomorrow: true,
+    label: `Jutro o ${times[0]}`,
   };
 }
 

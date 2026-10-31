@@ -864,7 +864,7 @@ function BusWidget({ onOpenFull, onOpenMap }: BusWidgetProps) {
         <div className="flex items-center justify-between gap-2 border-b border-mist-200/80 pb-2">
           <div className="min-w-0">
             <span className="text-[10px] font-bold uppercase tracking-wider text-ink-400 block">
-              Najbliższy odjazd:
+              {nextBus?.isTomorrow ? 'Pierwszy kurs jutro:' : 'Najbliższy odjazd:'}
             </span>
             <p className="text-[12px] font-bold text-ink truncate">
               {selectedStopName}
@@ -872,7 +872,7 @@ function BusWidget({ onOpenFull, onOpenMap }: BusWidgetProps) {
           </div>
           {nextBus && (
             <div className="rounded-xl bg-ink text-white px-3 py-1 font-mono text-[14px] font-black shadow-xs">
-              {nextBus.time}
+              {nextBus.isTomorrow ? `Jutro ${nextBus.time}` : nextBus.time}
             </div>
           )}
         </div>

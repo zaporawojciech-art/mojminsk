@@ -417,10 +417,21 @@ export function getActiveBusEstimate(
     };
   }
 
-  const waitMin =
-    nextTrip.startTimeMinutes >= currentMinutes
-      ? nextTrip.startTimeMinutes - currentMinutes
-      : nextTrip.startTimeMinutes + 1440 - currentMinutes;
+  const isTomorrow = nextTrip.startTimeMinutes < currentMinutes;
+  const waitMin = !isTomorrow
+    ? nextTrip.startTimeMinutes - currentMinutes
+    : nextTrip.startTimeMinutes + 1440 - currentMinutes;
+
+  let statusLabel: string;
+  if (isTomorrow) {
+    statusLabel = `Jutro o ${nextTrip.startTime}`;
+  } else if (waitMin <= 1) {
+    statusLabel = `Odjazd za chwilę (o ${nextTrip.startTime})`;
+  } else if (waitMin <= 60) {
+    statusLabel = `Odjazd o ${nextTrip.startTime} (za ${waitMin} min)`;
+  } else {
+    statusLabel = `Odjazd o ${nextTrip.startTime}`;
+  }
 
   return {
     id: nextTrip.id,
@@ -438,6 +449,6 @@ export function getActiveBusEstimate(
     minutesToNextStop: waitMin,
     progressPercent: 0,
     isAtStop: true,
-    statusLabel: `Odjazd o ${nextTrip.startTime} (za ${waitMin} min)`,
+    statusLabel,
   };
 }
