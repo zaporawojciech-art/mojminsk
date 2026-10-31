@@ -37,15 +37,15 @@ export function BuyCoffeeButton({ variant = 'pill', className }: BuyCoffeeButton
         href={BUYCOFFEE_URL}
         target="_blank"
         rel="noopener noreferrer"
-        title="Wesprzyj niezależną platformę mieszkańców Mińska Mazowieckiego"
+        title="Postaw kawę twórcom mójMińsk (wesprzyj niezależną platformę)"
         className={cn(
-          'group flex h-9 items-center gap-1.5 rounded-lg border border-amber-200/90 bg-amber-50/80 px-3 text-[12px] font-bold text-amber-950 shadow-2xs hover:bg-amber-100 hover:border-amber-300 active:scale-95 transition-all shrink-0 cursor-pointer',
+          'group flex h-9 items-center gap-1.5 rounded-lg border border-amber-200/90 bg-amber-50/80 px-2.5 xl:px-3 text-[12px] font-bold text-amber-950 shadow-2xs hover:bg-amber-100 hover:border-amber-300 active:scale-95 transition-all shrink-0 cursor-pointer',
           className,
         )}
       >
-        <Coffee className="h-3.5 w-3.5 text-amber-700 group-hover:rotate-12 transition-transform" />
-        <span>Postaw kawę</span>
-        <ArrowUpRight className="h-3 w-3 text-amber-600/70 -ml-0.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+        <Coffee className="h-3.5 w-3.5 text-amber-700 group-hover:rotate-12 transition-transform shrink-0" />
+        <span className="coffee-label">Postaw kawę</span>
+        <ArrowUpRight className="h-3 w-3 text-amber-600/70 -ml-0.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform shrink-0" />
       </a>
     );
   }
