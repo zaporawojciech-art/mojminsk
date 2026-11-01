@@ -19,6 +19,7 @@ import {
   Sparkles,
   Star,
   Trees,
+  ThumbsUp,
   Wrench,
   Zap,
   type LucideIcon,
@@ -679,6 +680,14 @@ export function ServicesScreen({
                                   </span>
                                 )}
                               </span>
+
+                              {/* NEIGHBOR RECOMMENDATION PILL */}
+                              {stats.count > 0 && (
+                                <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800">
+                                  <ThumbsUp className="h-2.5 w-2.5 text-emerald-600 shrink-0" />
+                                  <span>{stats.recommendPercent}% poleca</span>
+                                </span>
+                              )}
 
                               {/* EMERALD VERIFIED PILL */}
                               {!isPending && (
