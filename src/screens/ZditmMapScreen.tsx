@@ -211,8 +211,17 @@ export function ZditmMapScreen({
     const currentDay = getCurrentTimetableDay();
     const tt = getOfficialStopTimetable(selectedLineId, selectedStopName, directionIdx);
     const next = getNextScheduledBus(tt[currentDay]);
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const all = tt[currentDay] || [];
+    const upcoming = all.filter((t) => {
+      const [h, m] = t.split(':').map(Number);
+      return h * 60 + m >= currentMinutes;
+    });
+
     return {
-      all: tt[currentDay] || [],
+      all,
+      upcoming,
       next: next?.time || null,
       isTomorrow: next?.isTomorrow || false,
       label: next?.label || (next?.time ? `Godzina ${next.time}` : null),
@@ -827,13 +836,13 @@ export function ZditmMapScreen({
               )}
             </div>
 
-            {/* KOLEJNE 4 ODJAZDY */}
+            {/* KOLEJNE ODJAZDY */}
             <div>
               <p className="text-[10.5px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                Kolejne odjazdy dzisiaj:
+                {stopTimetable.upcoming.length > 0 ? 'Kolejne odjazdy dzisiaj:' : 'Pierwsze odjazdy jutro:'}
               </p>
               <div className="flex flex-wrap gap-1.5">
-                {stopTimetable.all.slice(0, 7).map((t, idx) => (
+                {(stopTimetable.upcoming.length > 0 ? stopTimetable.upcoming : stopTimetable.all).slice(0, 7).map((t, idx) => (
                   <span
                     key={idx}
                     className="text-[12px] font-bold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-800 border border-slate-200"
@@ -841,9 +850,9 @@ export function ZditmMapScreen({
                     {t}
                   </span>
                 ))}
-                {stopTimetable.all.length > 7 && (
+                {(stopTimetable.upcoming.length > 0 ? stopTimetable.upcoming.length : stopTimetable.all.length) > 7 && (
                   <span className="text-[11px] font-semibold text-slate-400 px-1 py-0.5">
-                    +{stopTimetable.all.length - 7} więcej
+                    +{(stopTimetable.upcoming.length > 0 ? stopTimetable.upcoming.length : stopTimetable.all.length) - 7} więcej
                   </span>
                 )}
               </div>

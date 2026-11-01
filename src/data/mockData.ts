@@ -629,10 +629,18 @@ export function getNextScheduledBus(times: string[]): {
   label: string;
 } | null {
   if (!times || times.length === 0) return null;
+  
+  // Posortuj chronologicznie, aby wyszukiwanie zawsze było niezawodne
+  const sorted = [...times].sort((a, b) => {
+    const [ha, ma] = a.split(':').map(Number);
+    const [hb, mb] = b.split(':').map(Number);
+    return ha * 60 + ma - (hb * 60 + mb);
+  });
+
   const now = new Date();
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
-  for (const t of times) {
+  for (const t of sorted) {
     const [h, m] = t.split(':').map(Number);
     const depMinutes = h * 60 + m;
     if (depMinutes >= currentMinutes) {
@@ -647,24 +655,43 @@ export function getNextScheduledBus(times: string[]): {
     }
   }
 
-  const [firstH, firstM] = times[0].split(':').map(Number);
+  const [firstH, firstM] = sorted[0].split(':').map(Number);
   const firstDepMinutes = 24 * 60 + firstH * 60 + firstM;
   return {
-    time: times[0],
+    time: sorted[0],
     minutesLeft: firstDepMinutes - currentMinutes,
     isTomorrow: true,
-    label: `Jutro o ${times[0]}`,
+    label: `Jutro o ${sorted[0]}`,
   };
 }
 
-export function groupTimetableByHours(times: string[]): Record<string, string[]> {
-  const grouped: Record<string, string[]> = {};
-  for (const t of times) {
+export interface TimetableHourGroup {
+  hour: string;
+  minutes: string[];
+}
+
+export function groupTimetableByHours(times: string[]): TimetableHourGroup[] {
+  if (!times || times.length === 0) return [];
+
+  // Posortuj chronologicznie od początku dnia (00:00 do 23:59)
+  const sorted = [...times].sort((a, b) => {
+    const [ha, ma] = a.split(':').map(Number);
+    const [hb, mb] = b.split(':').map(Number);
+    return ha * 60 + ma - (hb * 60 + mb);
+  });
+
+  const map = new Map<string, string[]>();
+  for (const t of sorted) {
     const [h, m] = t.split(':');
-    if (!grouped[h]) grouped[h] = [];
-    grouped[h].push(m);
+    if (!map.has(h)) map.set(h, []);
+    map.get(h)!.push(m);
   }
-  return grouped;
+
+  // Zwróć tablicę grup posortowaną numerycznie według godziny (04, 05, 06... 21, 22),
+  // co eliminuje błąd silników JS sortujących obiekty (klucze 10-23 przed kluczami z zerem '05'-'09')
+  return Array.from(map.entries())
+    .map(([hour, minutes]) => ({ hour, minutes }))
+    .sort((a, b) => parseInt(a.hour, 10) - parseInt(b.hour, 10));
 }
 
 export interface StopRouteDepartureSummary {

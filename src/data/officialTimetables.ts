@@ -52553,9 +52553,26 @@ export function getOfficialStopDepartures(
   const dir = line.directions[directionIdx] || line.directions[0];
   if (!dir) return { weekday: [], saturday: [], sunday: [] };
 
+  const sanitizeDepartures = (res: { weekday?: string[]; saturday?: string[]; sunday?: string[] }) => {
+    const sortTimes = (arr?: string[]) => {
+      if (!arr || arr.length === 0) return [];
+      const unique = Array.from(new Set(arr));
+      return unique.sort((a, b) => {
+        const [ha, ma] = a.split(':').map(Number);
+        const [hb, mb] = b.split(':').map(Number);
+        return ha * 60 + ma - (hb * 60 + mb);
+      });
+    };
+    return {
+      weekday: sortTimes(res.weekday),
+      saturday: sortTimes(res.saturday),
+      sunday: sortTimes(res.sunday),
+    };
+  };
+
   // Bezpośrednie dopasowanie nazwy
   if (dir.stopDepartures[stopName]) {
-    return dir.stopDepartures[stopName];
+    return sanitizeDepartures(dir.stopDepartures[stopName]);
   }
 
   // Dopasowanie case-insensitive lub częściowe (np. "Plac Dworcowy" vs "PLAC DWORCOWY 01")
@@ -52567,7 +52584,7 @@ export function getOfficialStopDepartures(
   );
 
   if (key && dir.stopDepartures[key]) {
-    return dir.stopDepartures[key];
+    return sanitizeDepartures(dir.stopDepartures[key]);
   }
 
   return { weekday: [], saturday: [], sunday: [] };

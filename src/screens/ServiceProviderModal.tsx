@@ -104,23 +104,6 @@ export function ServiceProviderModal({
   const category = getServiceCategoryById(provider.categoryId);
   const isPending = provider.status === 'pending_verification';
 
-  // Dynamic Neighborhood Proximity & Trust calculation
-  const userStreet = currentUser?.street?.name?.trim();
-  const directStreetReviews = userStreet
-    ? provider.reviews.filter(
-        (r) =>
-          r.authorStreet &&
-          (r.authorStreet.toLowerCase().includes(userStreet.toLowerCase()) ||
-            userStreet.toLowerCase().includes(r.authorStreet.toLowerCase())),
-      )
-    : [];
-  const hasDirectStreetMatch = directStreetReviews.length > 0;
-  const isSameBaseStreet = !!(
-    userStreet &&
-    (provider.street.toLowerCase().includes(userStreet.toLowerCase()) ||
-      userStreet.toLowerCase().includes(provider.street.toLowerCase()))
-  );
-
   // Lightbox state for portfolio gallery
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
@@ -348,130 +331,6 @@ export function ServiceProviderModal({
                     </span>
                   </div>
                 </div>
-              </div>
-
-              {/* DYNAMICZNY KONTEKST GEOGRAFICZNY I DOWÓD SĄSIEDZKI (HYPERLOCAL TRUST BOX) */}
-              <div className="mt-4.5 rounded-3xl bg-gradient-to-br from-emerald-50/70 via-sand-50/90 to-sand-100/80 p-4 border border-emerald-200/80 shadow-2xs space-y-2.5">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100/90 border border-emerald-300 px-2.5 py-0.5 text-[10.5px] font-extrabold text-emerald-950 uppercase tracking-wide">
-                    <MapPin className="h-3 w-3 text-emerald-700 shrink-0" />
-                    {hasDirectStreetMatch
-                      ? `Dowód sąsiedzki: ul. ${userStreet}`
-                      : isSameBaseStreet
-                      ? `Twój sąsiad z ul. ${userStreet}`
-                      : userStreet
-                      ? `Dojazd: ul. ${userStreet}`
-                      : 'Dowód sąsiedzki z Mińska'}
-                  </span>
-                  <span className="text-[11px] font-bold text-emerald-800 flex items-center gap-1">
-                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-                    Zweryfikowane
-                  </span>
-                </div>
-
-                {hasDirectStreetMatch ? (
-                  <div>
-                    <h3 className="text-[13.5px] font-extrabold text-ink leading-tight">
-                      Wykonawca zrealizował {directStreetReviews.length} {directStreetReviews.length === 1 ? 'zlecenie' : directStreetReviews.length < 5 ? 'zlecenia' : 'zleceń'} bezpośrednio na Twojej ulicy!
-                    </h3>
-                    <p className="mt-1 text-[11.5px] text-ink-700 leading-snug">
-                      Sąsiad <strong className="text-ink">{directStreetReviews[0].authorName}</strong> potwierdził wykonanie ({directStreetReviews[0].serviceTag || 'Usługa'}) z oceną{' '}
-                      <span className="inline-flex items-center gap-0.5 font-black text-amber-900 bg-amber-100 px-1.5 py-0.5 rounded-md border border-amber-300 text-[11px]">
-                        ★ {directStreetReviews[0].rating.toFixed(1)}
-                      </span>
-                    </p>
-                    <div className="mt-2 flex items-center gap-1 text-[11px] font-semibold text-emerald-800">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                      <span>100% sąsiadów z Twojego rejonu poleca tego wykonawcę</span>
-                    </div>
-                  </div>
-                ) : isSameBaseStreet ? (
-                  <div>
-                    <h3 className="text-[13.5px] font-extrabold text-ink leading-tight">
-                      Ten fachowiec ma bazę na Twojej ulicy (ul. {userStreet})!
-                    </h3>
-                    <p className="mt-1 text-[11.5px] text-ink-700 leading-snug">
-                      Brak opłat za dojazd, najszybszy czas reakcji i bezpośrednia pomoc sąsiedzka na miejscu.
-                    </p>
-                    <div className="mt-2 flex items-center gap-1 text-[11px] font-semibold text-emerald-800">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                      <span>Lokalny rzemieślnik z Twojego bezpośredniego sąsiedztwa</span>
-                    </div>
-                  </div>
-                ) : userStreet ? (
-                  <div>
-                    <h3 className="text-[13.5px] font-extrabold text-ink leading-tight">
-                      Obsługuje Twój rejon: dojazd na ul. {userStreet}
-                    </h3>
-                    <p className="mt-1 text-[11.5px] text-ink-700 leading-snug">
-                      Baza fachowca: <strong>ul. {provider.street}</strong> · Potwierdzone realizacje u sąsiadów m.in. z ulic:
-                    </p>
-                    {stats.verifiedStreets.length > 0 && (
-                      <div className="mt-1.5 flex flex-wrap gap-1">
-                        {stats.verifiedStreets.slice(0, 3).map((st) => (
-                          <span
-                            key={st}
-                            className="rounded-lg bg-white/90 border border-sand-300 px-2 py-0.5 text-[10.5px] font-bold text-ink-800"
-                          >
-                            ul. {st}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    <div className="mt-2 flex items-center gap-1 text-[11px] font-semibold text-emerald-800">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                      <span>Średnia ocen sąsiadów: {stats.average > 0 ? stats.average.toFixed(1) : '5.0'} / 5.0 ({stats.recommendPercent}% poleceń)</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <h3 className="text-[13.5px] font-extrabold text-ink leading-tight">
-                      Sprawdzone realizacje u sąsiadów w Mińsku
-                    </h3>
-                    <p className="mt-1 text-[11.5px] text-ink-700 leading-snug">
-                      Wykonawca zrealizował potwierdzone prace m.in. na ulicach:
-                    </p>
-                    {stats.verifiedStreets.length > 0 && (
-                      <div className="mt-1.5 flex flex-wrap gap-1">
-                        {stats.verifiedStreets.slice(0, 3).map((st) => (
-                          <span
-                            key={st}
-                            className="rounded-lg bg-white/90 border border-sand-300 px-2 py-0.5 text-[10.5px] font-bold text-ink-800"
-                          >
-                            ul. {st}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    <div className="mt-2 flex items-center gap-1 text-[11px] font-semibold text-emerald-800">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                      <span>{stats.count} {stats.count === 1 ? 'zweryfikowana ocena sąsiedzka' : stats.count < 5 ? 'zweryfikowane oceny sąsiedzkie' : 'zweryfikowanych ocen sąsiedzkich'}</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Szybkie Zapytanie 1-Click CTA */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!currentUser && onAuthRequired) {
-                      onAuthRequired(
-                        'Zapytaj o termin',
-                        'Zaloguj się kontem sąsiedzkim, aby błyskawicznie skontaktować się z wykonawcą na czacie mójMińsk.',
-                      );
-                    } else {
-                      onContactChat(provider);
-                    }
-                  }}
-                  className="mt-1 w-full flex items-center justify-center gap-2 rounded-2xl bg-ink text-white py-2.5 px-3.5 text-[12.5px] font-extrabold hover:bg-ink-800 active:scale-[0.99] transition-all shadow-xs cursor-pointer"
-                >
-                  <Zap className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
-                  <span>
-                    {userStreet
-                      ? `Zapytaj o wolny termin na ul. ${userStreet} ➔`
-                      : 'Zapytaj o wolny termin wykonania prac ➔'}
-                  </span>
-                </button>
               </div>
 
               {/* SĄSIEDZKI INDEKS JAKOŚCI I ZAUFANIA WPROJEKTOWANY W KARTĘ USŁUGI */}
@@ -919,11 +778,7 @@ export function ServiceProviderModal({
 
                 <div className="mt-1 flex items-center justify-center gap-1.5 text-[11px] font-bold text-emerald-800">
                   <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-                  <span>
-                    {userStreet
-                      ? `Bezpieczne zlecenie sąsiedzkie na ul. ${userStreet}`
-                      : 'Bezpieczne zlecenie sąsiedzkie w Mińsku'}
-                  </span>
+                  <span>Bezpieczne zlecenie sąsiedzkie w mójMińsk</span>
                 </div>
               </div>
             </div>

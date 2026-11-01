@@ -896,7 +896,7 @@ function BusWidget({ onOpenFull, onOpenMap }: BusWidgetProps) {
                 key={idx}
                 className={cn(
                   'rounded-md px-1.5 py-0.5 font-mono text-[11px] font-bold border shadow-2xs',
-                  nextBus?.time === time
+                  !nextBus?.isTomorrow && nextBus?.time === time
                     ? 'bg-ink text-white border-ink'
                     : 'bg-white border-mist-200 text-ink-700'
                 )}
@@ -1062,8 +1062,8 @@ function DesktopZditmWidget({ onOpenFull, onOpenMap }: DesktopZditmWidgetProps) 
               </p>
             </div>
             {nextBus && (
-              <div className="rounded-xl bg-ink text-white px-3 py-1.5 font-mono text-[15px] font-black shadow-xs shrink-0">
-                {nextBus.time}
+              <div className="rounded-xl bg-ink text-white px-3 py-1.5 font-mono text-[14px] font-black shadow-xs shrink-0">
+                {nextBus.isTomorrow ? `Jutro ${nextBus.time}` : nextBus.time}
               </div>
             )}
           </div>
@@ -1079,7 +1079,7 @@ function DesktopZditmWidget({ onOpenFull, onOpenMap }: DesktopZditmWidgetProps) 
                   key={idx}
                   className={cn(
                     'rounded-md px-1.5 py-0.5 font-mono text-[11px] font-bold border shadow-2xs',
-                    nextBus?.time === time
+                    !nextBus?.isTomorrow && nextBus?.time === time
                       ? 'bg-ink text-white border-ink'
                       : 'bg-white border-mist-200 text-ink-700'
                   )}

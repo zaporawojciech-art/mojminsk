@@ -558,8 +558,8 @@ export function ZditmScreen({
             </h3>
 
             <div className="divide-y divide-mist-200 rounded-2xl border border-mist-200 overflow-hidden bg-mist/20">
-              {Object.keys(groupedHours).length > 0 ? (
-                Object.entries(groupedHours).map(([hour, minutes]) => (
+              {groupedHours.length > 0 ? (
+                groupedHours.map(({ hour, minutes }) => (
                   <div
                     key={hour}
                     className="flex items-center gap-4 px-4 py-2.5 hover:bg-white transition-colors"
@@ -570,7 +570,7 @@ export function ZditmScreen({
                     <div className="flex flex-wrap items-center gap-2 flex-1">
                       {minutes.map((m, idx) => {
                         const fullTime = `${hour}:${m}`;
-                        const isNext = nextBus?.time === fullTime;
+                        const isNext = !nextBus?.isTomorrow && nextBus?.time === fullTime;
                         return (
                           <span
                             key={idx}
