@@ -156,8 +156,8 @@ export function LegalScreen({ activeDoc, onBack, onSelectDoc }: LegalScreenProps
               </p>
               <p className="leading-relaxed">
                 {activeDoc === 'terms'
-                  ? 'Wszyscy użytkownicy występują publicznie w formacie imienia oraz oznaczenia „Mieszkaniec Mińska · ul. [Nazwa Ulicy]”. Pełne dane adresowe podlegają ścisłej tajemnicy i służą wyłącznie doręczeniu tradycyjnego listu weryfikacyjnego.'
-                  : 'Twój dokładny adres (numer domu, lokalu) jest zaszyfrowany w bazie danych i nigdy nie jest prezentowany publicznie innym mieszkańcom. Nie handlujemy danymi ani nie udostępniamy ich podmiotom trzecim.'}
+                  ? 'Wszyscy użytkownicy występują publicznie w formacie imienia oraz oznaczenia „Mieszkaniec Mińska · ul. [Nazwa Ulicy]”. Pełne dane konta podlegają ścisłej tajemnicy i nigdy nie są ujawniane publicznie innym mieszkańcom.'
+                  : 'Twoje dane logowania oraz profil są w pełni bezpieczne i poufne. Nie handlujemy danymi ani nie udostępniamy ich podmiotom trzecim.'}
               </p>
             </div>
           </div>
@@ -212,7 +212,7 @@ function TermsContent() {
         <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1.5 list-decimal list-inside">
           <li>Postanowienia ogólne i definicje</li>
           <li>Warunki techniczne i charakter PWA</li>
-          <li>Rejestracja i weryfikacja pocztowa</li>
+          <li>Rejestracja i tożsamość sąsiedzka</li>
           <li>Tablica Ogłoszeń Sąsiedzkich (C2C)</li>
           <li>Strefa Rozmów i kultura sąsiedzka</li>
           <li>Wspólne przejazdy (Carpooling) & ZDiTM</li>
@@ -247,13 +247,9 @@ function TermsContent() {
             <strong>Użytkownik</strong> – każda osoba fizyczna korzystająca z zasobów Serwisu.
           </li>
           <li>
-            <strong>Zweryfikowany Mieszkaniec</strong> – Użytkownik, który pomyślnie przeszedł procedurę
-            potwierdzenia adresu zamieszkania w Mińsku Mazowieckim lub Gminie Mińsk Mazowiecki za pomocą
-            kodu PIN z listu doręczonego do skrzynki pocztowej.
-          </li>
-          <li>
-            <strong>Dostęp Tymczasowy</strong> – okres 14 dni od momentu rejestracji, umożliwiający pełne
-            zapoznanie się z platformą i jej funkcjami w oczekiwaniu na doręczenie listu weryfikacyjnego.
+            <strong>Zweryfikowany Mieszkaniec</strong> – Użytkownik, który pomyślnie założył konto
+            i potwierdził swoją tożsamość oraz przypisanie do ulicy lub sołectwa w Mińsku Mazowieckim lub
+            Gminie Mińsk Mazowiecki.
           </li>
           <li>
             <strong>Tożsamość Sąsiedzka</strong> – format publicznej identyfikacji Użytkownika oparty
@@ -291,33 +287,21 @@ function TermsContent() {
 
       <section className="space-y-3">
         <h2 className="text-lg md:text-xl font-display font-extrabold text-ink-950 border-b border-mist-200 pb-2">
-          § 3. Rejestracja, weryfikacja pocztowa i tożsamość sąsiedzka
+          § 3. Rejestracja i tożsamość sąsiedzka
         </h2>
         <p>
           1. W celu ochrony społeczności przed hejtem, spamem i anonimowością, platforma mójMińsk.app
-          wprowadza mechanizm weryfikacji faktycznego zamieszkania na terenie Mińska Mazowieckiego lub
-          Gminy Mińsk Mazowiecki.
+          wprowadza przejrzystą tożsamość sąsiedzką opartą o imię oraz ulicę lub sołectwo zamieszkania
+          na terenie Mińska Mazowieckiego lub Gminy Mińsk Mazowiecki.
         </p>
         <p>
-          2. Rejestracja wymaga podania: imienia, wskazania ulicy lub miejscowości zamieszkania oraz
-          pełnego adresu doręczeń (numer budynku, ewentualnie lokalu oraz nazwisko adresata) na potrzeby
-          wysyłki bezpłatnego listu weryfikacyjnego.
+          2. Rejestracja wymaga podania: imienia, adresu e-mail, hasła oraz wyboru ulicy lub sołectwa
+          zamieszkania.
         </p>
         <p>
-          3. <strong>Tajemnica danych adresowych:</strong> Dokładny numer budynku, mieszkania oraz
-          nazwisko adresata podlegają ścisłemu szyfrowaniu kryptograficznemu (AES-256), są dostępne
-          wyłącznie dla upoważnionego administratora do celów wysyłki pocztowej i{' '}
-          <strong>nigdy nie są publikowane ani udostępniane innym użytkownikom</strong>.
-        </p>
-        <p>
-          4. <strong>Zasada 14 dni dostępu:</strong> Nowo zarejestrowany użytkownik uzyskuje pełny dostęp
-          do funkcji społecznościowych na okres 14 dni kalendarzowych. Po tym terminie publikacja nowych
-          treści wymaga wpisania 6-cyfrowego kodu PIN doręczonego w liście powitalnym.
-        </p>
-        <p>
-          5. <strong>Reguła domowników:</strong> Jeden list weryfikacyjny dostarczony pod fizyczny adres
-          umożliwia aktywację do 3 niezależnych kont pełnoletnich domowników (np. małżonkowie, dorosłe
-          dzieci).
+          3. <strong>Poufność danych konta:</strong> Dane logowania podlegają bezpiecznemu szyfrowaniu,
+          nie są ujawniane podmiotom trzecim i <strong>nigdy nie są publikowane na profilu publicznym</strong>.
+          Inni mieszkańcy widzą wyłącznie Twoje imię oraz ulicę (np. <em>Wojtek ze Spacerowej</em>).
         </p>
       </section>
 
@@ -502,12 +486,10 @@ function PrivacyContent() {
             </p>
           </div>
           <div className="p-3 rounded-xl bg-mist border border-mist-200">
-            <p className="font-bold text-ink-950">B. Fizyczna weryfikacja adresu zamieszkania</p>
+            <p className="font-bold text-ink-950">B. Tożsamość sąsiedzka i geolokalizacja ulicy</p>
             <p className="text-ink-600 mt-0.5">
-              Pełne dane adresowe (ulica, numer domu i lokalu, kod pocztowy, nazwisko dla doręczyciela)
-              wykorzystywane wyłącznie do wysłania listu z kodem PIN — podstawa prawna: art. 6 ust. 1
-              lit. f RODO (prawnie uzasadniony interes Administratora polegający na ochronie społeczności
-              przed trollami i fałszywymi kontami).
+              Imię, nazwa ulicy lub sołectwa — podstawa prawna: art. 6 ust. 1 lit. b RODO
+              (świadczenie usługi tożsamości sąsiedzkiej).
             </p>
           </div>
           <div className="p-3 rounded-xl bg-mist border border-mist-200">
@@ -522,16 +504,15 @@ function PrivacyContent() {
 
       <section className="space-y-3">
         <h2 className="text-lg md:text-xl font-display font-extrabold text-ink-950 border-b border-mist-200 pb-2">
-          § 3. Szyfrowanie adresów i tożsamość sąsiedzka
+          § 3. Ochrona prywatności i tożsamość sąsiedzka
         </h2>
         <div className="flex items-start gap-3 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900">
           <Lock className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" aria-hidden />
           <div className="space-y-1">
-            <p className="font-bold text-emerald-950">Standard Szyfrowania AES-256</p>
+            <p className="font-bold text-emerald-950">Standard Bezpieczeństwa AES-256</p>
             <p>
-              Wszystkie szczegółowe dane adresowe podane w formularzu rejestracyjnym są szyfrowane w
-              bezpiecznej bazie danych w standardzie AES-256. Dostęp do nich posiada wyłącznie
-              upoważniony personel realizujący wysyłkę korespondencji pocztowej.
+              Wszystkie dane logowania i konta są zabezpieczone w bezpiecznej bazie danych z zachowaniem
+              najwyższych standardów ochrony i zgodności z RODO.
             </p>
           </div>
         </div>
@@ -540,7 +521,7 @@ function PrivacyContent() {
           wyłącznie Twoje imię oraz oznaczenie ulicy (np. <em>Mieszkaniec Mińska · ul. Spacerowa</em>).
         </p>
         <p>
-          2. Twój numer domu, lokalu oraz nazwisko nigdy nie są wyświetlane w aplikacji ani udostępniane
+          2. Twój adres e-mail oraz dane logowania nigdy nie są wyświetlane w aplikacji ani udostępniane
           innym osobom.
         </p>
         <p>
@@ -561,10 +542,6 @@ function PrivacyContent() {
         </p>
         <p>2. Dane mogą być przekazywane wyłącznie zaufanym podmiotom przetwarzającym:</p>
         <ul className="list-disc list-inside space-y-1 pl-2 text-ink-700">
-          <li>
-            <strong>Poczta Polska S.A.</strong> – wyłącznie dane niezbędne do doręczenia koperty z listem
-            weryfikacyjnym.
-          </li>
           <li>
             <strong>Dostawcy infrastruktury serwerowej i bazodanowej</strong> – serwery bazodanowe
             zlokalizowane na terenie Unii Europejskiej spełniające najwyższe wymogi RODO (ISO 27001).

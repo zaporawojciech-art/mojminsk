@@ -27,7 +27,6 @@ import {
   Tag,
   Trash2,
   UserCheck,
-  Users,
   Wrench,
   X,
 } from 'lucide-react';
@@ -45,59 +44,7 @@ import { ProviderBrandMark, SERVICE_CATEGORY_ICONS } from './ServicesScreen';
 import { cn } from '../components/ui';
 import type { AdReportItem } from '../lib/supabase';
 
-export type AdminTabId = 'pending_services' | 'active_services' | 'moderation' | 'postal_pins';
-
-interface PostalPinVerificationItem {
-  id: string;
-  residentName: string;
-  publicStreet: string;
-  encryptedAddressPreview: string;
-  postalCode: string;
-  city: string;
-  pinCode: string;
-  registeredAt: string;
-  daysLeftTemporary: number;
-  letterStatus: 'waiting_print' | 'sent' | 'activated';
-}
-
-const INITIAL_POSTAL_QUEUE: PostalPinVerificationItem[] = [
-  {
-    id: 'pin_1',
-    residentName: 'Anna Kowalczyk',
-    publicStreet: 'ul. Warszawska',
-    encryptedAddressPreview: 'ul. Warszawska 42 m. 11',
-    postalCode: '05-300',
-    city: 'Mińsk Mazowiecki',
-    pinCode: '482-910',
-    registeredAt: 'Dzisiaj, 09:40',
-    daysLeftTemporary: 14,
-    letterStatus: 'waiting_print',
-  },
-  {
-    id: 'pin_2',
-    residentName: 'Piotr Zieliński',
-    publicStreet: 'ul. Sosnkowskiego',
-    encryptedAddressPreview: 'ul. Gen. K. Sosnkowskiego 18 m. 4',
-    postalCode: '05-300',
-    city: 'Mińsk Mazowiecki',
-    pinCode: '739-204',
-    registeredAt: 'Wczoraj, 18:15',
-    daysLeftTemporary: 13,
-    letterStatus: 'waiting_print',
-  },
-  {
-    id: 'pin_3',
-    residentName: 'Katarzyna Mazur',
-    publicStreet: 'Stojadła',
-    encryptedAddressPreview: 'Stojadła, ul. Kołbielska 12',
-    postalCode: '05-300',
-    city: 'Gmina Mińsk Mazowiecki',
-    pinCode: '615-883',
-    registeredAt: '3 dni temu',
-    daysLeftTemporary: 11,
-    letterStatus: 'sent',
-  },
-];
+export type AdminTabId = 'pending_services' | 'active_services' | 'moderation';
 
 interface AdminScreenProps {
   currentUser?: User | null;
@@ -164,7 +111,6 @@ export function AdminScreen({
     provider: ServiceProvider;
     review: ServiceProvider['reviews'][number];
   } | null>(null);
-  const [postalQueue, setPostalQueue] = useState<PostalPinVerificationItem[]>(INITIAL_POSTAL_QUEUE);
 
   const pendingProviders = useMemo(
     () => providers.filter((p) => p.status === 'pending_verification'),
@@ -363,12 +309,6 @@ export function AdminScreen({
     onAdminLogout?.();
   };
 
-  const handleMarkLetterSent = (id: string) => {
-    setPostalQueue((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, letterStatus: 'sent' } : item)),
-    );
-  };
-
   // ============================================================================
   // VIEW 1: DEDICATED ADMIN LOGIN SCREEN
   // ============================================================================
@@ -410,7 +350,7 @@ export function AdminScreen({
             </div>
 
             <p className="mt-3 text-[13px] leading-relaxed text-ink-500">
-              Zaloguj się na konto administratora systemu <strong className="text-ink">mójMińsk.app</strong>, aby weryfikować i akceptować nowych usługodawców, moderować ogłoszenia oraz zarządzać wysyłką listów PIN.
+              Zaloguj się na konto administratora systemu <strong className="text-ink">mójMińsk.app</strong>, aby weryfikować i akceptować nowych usługodawców oraz moderować ogłoszenia i opinie.
             </p>
 
             <form onSubmit={handleLoginSubmit} className="mt-6 space-y-4">
@@ -534,7 +474,7 @@ export function AdminScreen({
                 </span>
               </div>
               <p className="text-[11px] text-white/65 truncate hidden sm:block">
-                Centrum weryfikacji usługodawców, moderacji i korespondencji PIN
+                Centrum weryfikacji usługodawców oraz moderacji treści
               </p>
             </div>
           </div>
@@ -564,7 +504,7 @@ export function AdminScreen({
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
         {/* KPI SUMMARY CARDS */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
           <button
             type="button"
             onClick={() => setActiveTab('pending_services')}
@@ -651,32 +591,6 @@ export function AdminScreen({
               </span>
             </div>
           </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('postal_pins')}
-            className={cn(
-              'text-left rounded-2xl p-4 border transition-all cursor-pointer shadow-card',
-              activeTab === 'postal_pins'
-                ? 'bg-white border-ink ring-2 ring-ink/15'
-                : 'bg-white border-mist-200 hover:border-mist-300',
-            )}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-ink-500">
-                Listy Powitalne PIN
-              </span>
-              <span className="grid h-8 w-8 place-items-center rounded-xl bg-indigo-100 text-indigo-800">
-                <Users className="h-4 w-4" />
-              </span>
-            </div>
-            <div className="mt-2 flex items-baseline gap-2">
-              <span className="font-display text-2xl font-black text-ink">
-                {postalQueue.filter((i) => i.letterStatus === 'waiting_print').length}
-              </span>
-              <span className="text-[11.5px] font-medium text-ink-500">do wysyłki pocztą</span>
-            </div>
-          </button>
         </div>
 
         {/* 1-CLICK ADMIN NAVIGATION TABS */}
@@ -737,20 +651,6 @@ export function AdminScreen({
                   {reportedReviews.length}
                 </span>
               )}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('postal_pins')}
-              className={cn(
-                'inline-flex h-10 shrink-0 items-center gap-2 rounded-xl px-4 text-[13px] font-bold transition-all cursor-pointer',
-                activeTab === 'postal_pins'
-                  ? 'bg-ink text-white shadow-xs'
-                  : 'bg-white text-ink-600 border border-mist-200 hover:bg-mist/60',
-              )}
-            >
-              <Mail className="h-4 w-4" />
-              <span>Listy weryfikacyjne PIN</span>
             </button>
           </div>
 
@@ -1653,82 +1553,6 @@ export function AdminScreen({
                 )}
               </div>
             )}
-          </div>
-        )}
-
-        {/* =====================================================================
-            TAB 4: WERYFIKACJA POCZTOWA MIESZKAŃCÓW (LISTY PIN RODO)
-        ===================================================================== */}
-        {activeTab === 'postal_pins' && (
-          <div className="space-y-4">
-            <div>
-              <h2 className="font-display text-[20px] font-extrabold text-ink">
-                Kolejka wysyłki listów powitalnych Poczty Polskiej (6-cyfrowy PIN)
-              </h2>
-              <p className="text-[13px] text-ink-500">
-                Pełne dane adresowe mieszkańców (AES-256) są widoczne wyłącznie tutaj na potrzeby wydruku listu powitalnego z kodem PIN i książeczką 5 kuponów partnerskich.
-              </p>
-            </div>
-
-            <div className="rounded-2xl bg-white border border-mist-200 divide-y divide-mist-200 overflow-hidden shadow-card">
-              {postalQueue.map((item) => (
-                <div
-                  key={item.id}
-                  className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                >
-                  <div className="space-y-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-display text-[15px] font-bold text-ink">
-                        {item.residentName}
-                      </span>
-                      <span className="rounded-md bg-sand-100 px-2 py-0.5 text-[11px] font-bold text-ink-700">
-                        Widok publiczny: {item.residentName.split(' ')[0]} ({item.publicStreet})
-                      </span>
-                      {item.letterStatus === 'waiting_print' ? (
-                        <span className="rounded-md bg-amber-100 border border-amber-300 px-2 py-0.5 text-[10.5px] font-extrabold text-amber-900">
-                          Do wydruku i wysyłki
-                        </span>
-                      ) : (
-                        <span className="rounded-md bg-emerald-100 border border-emerald-300 px-2 py-0.5 text-[10.5px] font-extrabold text-emerald-900">
-                          Wysłano Pocztą Polską
-                        </span>
-                      )}
-                    </div>
-
-                    <p className="text-[12.5px] text-ink-600">
-                      Adres doręczenia (AES-256):{' '}
-                      <strong className="text-ink">
-                        {item.encryptedAddressPreview}, {item.postalCode} {item.city}
-                      </strong>
-                    </p>
-
-                    <p className="text-[11.5px] text-ink-400">
-                      Zarejestrowano: {item.registeredAt} · Dostęp tymczasowy: pozostało{' '}
-                      <strong>{item.daysLeftTemporary} dni</strong> · Kod PIN w liście:{' '}
-                      <span className="font-mono font-bold text-ink">{item.pinCode}</span>
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    {item.letterStatus === 'waiting_print' ? (
-                      <button
-                        type="button"
-                        onClick={() => handleMarkLetterSent(item.id)}
-                        className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-ink px-3.5 text-[12px] font-bold text-white hover:bg-ink-800 cursor-pointer"
-                      >
-                        <Check className="h-3.5 w-3.5 text-coral" />
-                        <span>Oznacz jako wysłany</span>
-                      </button>
-                    ) : (
-                      <span className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-mist px-3 text-[12px] font-bold text-ink-500">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                        <span>List w drodze</span>
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
         )}
 

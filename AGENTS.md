@@ -18,19 +18,18 @@ Jest automatycznie wczytywany przy każdej sesji asystenta.
 ## 1. Wstęp, Misja i Zasady Działania
 
 ### 1.1. Wizja Projektu
-**mójMińsk.app** to hiperlokalna platforma społecznościowo-usługowa stworzona wyłącznie dla mieszkańców Mińska Mazowieckiego oraz Gminy Mińsk Mazowiecki. Rozwiązuje problem dezinformacji, spamu, anonimowego hejtu i trolli w lokalnych grupach (np. na Facebooku), wprowadzając **fizyczną weryfikację adresu zamieszkania** oraz publiczną tożsamość sąsiedzką opartą na regule:  
+**mójMińsk.app** to hiperlokalna platforma społecznościowo-usługowa stworzona wyłącznie dla mieszkańców Mińska Mazowieckiego oraz Gminy Mińsk Mazowiecki. Rozwiązuje problem dezinformacji, spamu, anonimowego hejtu i trolli w lokalnych grupach (np. na Facebooku), wprowadzając tożsamość sąsiedzką opartą na regule:  
 > **„[Imię] z ulicy [Nazwa Ulicy]”** (np. *Wojtek ze Spacerowej*, *Marek ze Stojadeł*).
 
-Zasięg terytorialny i pocztowy obejmuje:
+Zasięg terytorialny obejmuje:
 - **Miasto Mińsk Mazowiecki** (kody pocztowe: 05-300, 05-301, 05-302, 05-303).
 - **Gminę Mińsk Mazowiecki** (m.in. sołectwa: Stojadła, Karolina, Huta Mińska, Nowe Osiny, Stare Osiny, Arynów, Barcząca, Brzóze, Budy Barcząckie, Gliniak, Janów, Marianka, Niedziałka, Podrudzie, Tartak, Wólka Mińska, Zamienie itd. – kody: 05-300, 05-311, 05-332 oraz pokrewne).
 
-Dla innych użytkowników widoczne jest wyłącznie imię oraz nazwa ulicy/miejscowości. Pełne dane adresowe (numer domu, lokalu, kod pocztowy, miejscowość oraz nazwisko dla doręczyciela pocztowego) są **szyfrowane w bazie danych i dostępne wyłącznie dla Administratora** na potrzeby wysyłki listu weryfikacyjnego.
+Dla innych użytkowników widoczne jest wyłącznie imię oraz nazwa ulicy/miejscowości. Dane logowania i konta są w pełni poufne i chronione zgodnie z RODO.
 
-### 1.2. Model Dostępu Tymczasowego (Decyzja #1)
-- Użytkownik po rejestracji (podanie imienia, wybór ulicy oraz pełnego adresu do korespondencji) otrzymuje **dostęp tymczasowy na 14 dni**.
-- W okresie 14 dni użytkownik może w pełni testować aplikację, przeglądać treści i integrować się ze społecznością.
-- Po 14 dniach wymagane jest wprowadzenie 6-cyfrowego kodu PIN z listu doręczonego do skrzynki pocztowej. Brak wpisania kodu powoduje zablokowanie możliwości tworzenia nowych treści do czasu aktywacji.
+### 1.2. Rejestracja i Tożsamość Sąsiedzka
+- Rejestracja przebiega w 3 prostych krokach: dane logowania (imię, e-mail, hasło), wybór ulicy/sołectwa oraz losowanie awatara 3D.
+- Brak uciążliwych barier weryfikacyjnych (eliminacja listów papierowych i kodów PIN). Mieszkańcy mają natychmiastowy dostęp do wszystkich funkcji społecznościowych, ogłoszeń i dyskusji.
 
 ---
 
@@ -84,18 +83,11 @@ flowchart TD
 
 ---
 
-## 3. Logistyka Weryfikacji Pocztowej i Bezpieczeństwo Danych
+## 3. Bezpieczeństwo Danych i Prywatność (RODO)
 
-### 3.1. Standard Przesyłki i Koszty (Decyzje #2, #3, #5, #7)
-1. **Format przesyłki:** Tradycyjny list priorytetowy/ekonomiczny Poczty Polskiej wrzucany bezpośrednio do skrzynki eurozgodnej na klatce schodowej lub przy posesji.
-2. **Finansowanie wysyłki:** W 100% bezpłatne dla mieszkańca. Koszt druku i znaczków pocztowych jest w całości pokrywany z puli 2 500 zł od 5 sponsorów.
-3. **Materiały w kopercie:**
-   - Dedykowana, profesjonalnie zaprojektowana i wydrukowana **Książeczka / Karta Rabatowa** zawierająca 5 ekskluzywnych kuponów od partnerów z Mińska Mazowieckiego.
-   - Pismo powitalne od twórców mójMińsk z 6-cyfrowym unikalnym kodem aktywacyjnym PIN oraz kodem QR.
-4. **Reguła wielu domowników (Decyzja #4):**  
-   Jeden list wysłany pod dany adres fizyczny zawiera kod, który umożliwia aktywację **do 3 niezależnych kont domowników** (np. rodzice + pełnoletnie dziecko), co zapobiega dublowaniu kosztów korespondencji.
-5. **Ochrona danych RODO (Decyzja #28):**  
-   Pełne dane adresowe (ulica, numer budynku i lokalu) są **szyfrowane w bazie danych (AES-256)** i dostępne w panelu administracyjnym wyłącznie w widoku generowania korespondencji pocztowej.
+1. **Format tożsamości sąsiedzkiej:** Publicznie prezentowane jest wyłącznie imię oraz ulica (np. *Kasia ze Spacerowej*).
+2. **Ochrona danych logowania:** Hasła i dane konta są zabezpieczone za pośrednictwem Supabase Auth z zachowaniem pełnej zgodności z RODO.
+3. **Czat wewnętrzny bez upubliczniania numeru:** Bezpieczna komunikacja C2C bezpośrednio w aplikacji, bez konieczności udostępniania numeru telefonu czy adresu zamieszkania obcym osobom.
 
 ---
 
