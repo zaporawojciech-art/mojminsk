@@ -65,7 +65,7 @@ interface DbAd {
 }
 
 export async function fetchAdsFromSupabase(): Promise<Ad[] | null> {
-  const rows = await restFetch<DbAd[]>('ads?select=*&order=created_at.desc');
+  const rows = await restFetch<DbAd[]>('ogloszenia?select=*&order=created_at.desc');
   if (!rows) return null;
   return rows.map((r) => ({
     id: r.id,
@@ -113,7 +113,7 @@ export async function createAdInSupabase(ad: Ad): Promise<boolean> {
   }
 
   const res = await restFetch<DbAd[]>(
-    'ads',
+    'ogloszenia',
     {
       method: 'POST',
       body: JSON.stringify(payload),
@@ -124,7 +124,7 @@ export async function createAdInSupabase(ad: Ad): Promise<boolean> {
 }
 
 export async function renewAd14DaysInSupabase(adId: string): Promise<string | null> {
-  const res = await restFetch<string>('rpc/renew_ad_14_days', {
+  const res = await restFetch<string>('rpc/przedluz_ogloszenie_14_dni', {
     method: 'POST',
     body: JSON.stringify({ p_ad_id: adId }),
   });
@@ -133,7 +133,7 @@ export async function renewAd14DaysInSupabase(adId: string): Promise<string | nu
 
 export async function updateAdInSupabase(ad: Ad): Promise<boolean> {
   await restFetch(
-    `ads?id=eq.${encodeURIComponent(ad.id)}`,
+    `ogloszenia?id=eq.${encodeURIComponent(ad.id)}`,
     {
       method: 'PATCH',
       body: JSON.stringify({
@@ -159,7 +159,7 @@ export async function updateAdStatusInSupabase(
   status: 'active' | 'reserved' | 'sold',
 ): Promise<boolean> {
   await restFetch(
-    `ads?id=eq.${encodeURIComponent(adId)}`,
+    `ogloszenia?id=eq.${encodeURIComponent(adId)}`,
     {
       method: 'PATCH',
       body: JSON.stringify({ status }),
@@ -171,7 +171,7 @@ export async function updateAdStatusInSupabase(
 
 export async function deleteAdInSupabase(adId: string): Promise<boolean> {
   await restFetch(
-    `ads?id=eq.${encodeURIComponent(adId)}`,
+    `ogloszenia?id=eq.${encodeURIComponent(adId)}`,
     { method: 'DELETE' },
     'return=minimal',
   );
@@ -184,7 +184,7 @@ export async function reportAdInSupabase(
   details?: string,
 ): Promise<void> {
   await restFetch(
-    'ad_reports',
+    'zgloszenia_ogloszen',
     {
       method: 'POST',
       body: JSON.stringify({
@@ -214,7 +214,7 @@ export async function fetchAdReportsFromSupabase(): Promise<AdReportItem[] | nul
       details: string | null;
       created_at: string;
     }>
-  >('ad_reports?select=*&order=created_at.desc');
+  >('zgloszenia_ogloszen?select=*&order=created_at.desc');
   if (!rows) return null;
   return rows.map((r) => ({
     id: r.id,
@@ -227,7 +227,7 @@ export async function fetchAdReportsFromSupabase(): Promise<AdReportItem[] | nul
 
 export async function dismissAdReportInSupabase(reportId: string): Promise<boolean> {
   await restFetch(
-    `ad_reports?id=eq.${encodeURIComponent(reportId)}`,
+    `zgloszenia_ogloszen?id=eq.${encodeURIComponent(reportId)}`,
     { method: 'DELETE' },
     'return=minimal',
   );
@@ -235,7 +235,7 @@ export async function dismissAdReportInSupabase(reportId: string): Promise<boole
 }
 
 export async function incrementAdViewsInSupabase(adId: string): Promise<number | null> {
-  const res = await supabaseRpc<number>('increment_ad_views', { p_ad_id: adId });
+  const res = await supabaseRpc<number>('zwieksz_wyswietlenia_ogloszenia', { p_ad_id: adId });
   return res.data;
 }
 

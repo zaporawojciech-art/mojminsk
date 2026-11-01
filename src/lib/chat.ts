@@ -112,7 +112,7 @@ export async function fetchConversations(
       : Promise.resolve([]),
     adIds.length > 0
       ? supabaseRest<DbAdSummaryRow[]>(
-          `ads?id=in.(${adIds.map((id) => `"${id}"`).join(',')})&select=id,title,price,image,street`,
+          `ogloszenia?id=in.(${adIds.map((id) => `"${id}"`).join(',')})&select=id,title,price,image,street`,
         )
       : Promise.resolve([]),
   ]);
