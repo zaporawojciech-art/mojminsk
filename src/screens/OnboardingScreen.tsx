@@ -691,10 +691,10 @@ export function OnboardingScreen({
                       TWOJA TOŻSAMOŚĆ W APLIKACJI
                     </span>
                     <p className="font-display text-[15px] font-bold text-ink truncate mt-0.5">
-                      {displayName} {street?.as}
+                      {displayName}
                     </p>
                     <p className="text-[11.5px] text-ink-500 truncate">
-                      ul. {street?.name} · {city}
+                      Mieszkaniec Mińska · ul. {street?.name}
                     </p>
                   </div>
                 </div>

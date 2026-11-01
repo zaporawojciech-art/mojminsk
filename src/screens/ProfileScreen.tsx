@@ -136,32 +136,6 @@ export function ProfileScreen({
           title="Mój profil sąsiedzki"
           backLabel="Wróć"
           onBack={onBack}
-          right={
-            <div className="flex items-center gap-1.5 pr-1">
-              {onMyAds && (
-                <button
-                  type="button"
-                  onClick={onMyAds}
-                  className="flex h-9 items-center gap-1 rounded-full md:rounded-lg bg-mist px-3 text-[12px] font-bold text-ink transition-transform active:scale-95 hover:bg-mist-300"
-                  title="Moje ogłoszenia"
-                >
-                  <Megaphone className="h-3.5 w-3.5 text-ink-700" aria-hidden />
-                  <span>Moje ogłoszenia</span>
-                </button>
-              )}
-              {onAddAd && (
-                <button
-                  type="button"
-                  onClick={onAddAd}
-                  className="flex h-9 items-center gap-1 rounded-full md:rounded-lg bg-coral px-3 text-[12px] font-bold text-ink shadow-xs transition-transform active:scale-95 hover:bg-coral-400"
-                  title="Dodaj ogłoszenie"
-                >
-                  <Plus className="h-3.5 w-3.5" aria-hidden />
-                  <span>Dodaj</span>
-                </button>
-              )}
-            </div>
-          }
         />
 
         {/* ===================================================================
@@ -196,6 +170,9 @@ export function ProfileScreen({
             <h1 className="mt-3.5 font-display text-[26px] font-semibold leading-tight text-ink">
               {user.name}
             </h1>
+            <p className="mt-0.5 text-[12.5px] font-semibold text-ink-500">
+              Mieszkaniec Mińska · ul. {user.street.name}
+            </p>
             <div className="mt-1.5 flex justify-center">
               <StreetPill
                 street={`ul. ${user.street.name} · ${user.street.neighbors} sąsiadów`}
@@ -464,7 +441,7 @@ export function ProfileScreen({
                   {user.name}
                 </h2>
                 <p className="text-[12.5px] font-semibold text-ink-500 mt-0.5">
-                  {user.name} {user.street.as}
+                  Mieszkaniec Mińska · ul. {user.street.name}
                 </p>
 
                 <div className="mt-2.5 flex justify-center">
@@ -514,7 +491,7 @@ export function ProfileScreen({
                 <span>
                   Ochrona prywatności: sąsiedzi widzą wyłącznie podpis{' '}
                   <b className="text-ink">
-                    {user.name} {user.street.as}
+                    Mieszkaniec Mińska · ul. {user.street.name}
                   </b>
                   . Twój numer telefonu nie jest upubliczniany.
                 </span>

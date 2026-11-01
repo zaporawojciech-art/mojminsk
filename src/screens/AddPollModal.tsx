@@ -84,7 +84,7 @@ export function AddPollModal({
       id: `poll_${Date.now()}`,
       title: question.trim(),
       author: user.name,
-      authorStreet: user.street.as,
+      authorStreet: user.street.name,
       createdAt: new Date(now).toISOString(),
       expiresAt,
       durationDays,
@@ -256,7 +256,7 @@ export function AddPollModal({
                     </span>
                     <span>
                       Ankieta zostanie podpisana Twoją tożsamością:{' '}
-                      <b>{user.name} {user.street.as}</b>.
+                      <b>{user.name} · Mieszkaniec Mińska · ul. {user.street.name}</b>.
                     </span>
                   </div>
 

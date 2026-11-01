@@ -446,6 +446,27 @@ export const streets: Street[] = [
   { name: 'Żuków', as: 'z Żukowa', neighbors: 0 },
 ];
 
+export function resolveStreetName(streetOrAs?: string | null): string {
+  if (!streetOrAs) return 'Centrum';
+  const trimmed = streetOrAs.trim();
+  const byAs = streets.find((s) => s.as.toLowerCase() === trimmed.toLowerCase());
+  if (byAs) return byAs.name;
+  const byName = streets.find((s) => s.name.toLowerCase() === trimmed.toLowerCase());
+  if (byName) return byName.name;
+  for (const [city, asForm] of Object.entries(gminaLocalityAs)) {
+    if (asForm.toLowerCase() === trimmed.toLowerCase()) return city;
+  }
+  return trimmed
+    .replace(/^Mieszkaniec Mińska\s*·\s*/i, '')
+    .replace(/^z\s+ul\.\s*/i, '')
+    .replace(/^ul\.\s*/i, '')
+    .replace(/^ze?\s+/i, '');
+}
+
+export function formatResidentLabel(streetOrAs?: string | null): string {
+  return `Mieszkaniec Mińska · ul. ${resolveStreetName(streetOrAs)}`;
+}
+
 export const demoUser: User = {
   name: 'Wojtek',
   surname: 'Kowalski',

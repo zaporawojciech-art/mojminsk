@@ -14,7 +14,14 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import { avatarUrl, streets, type Post, type PostComment, type User } from '../data/mockData';
+import {
+  avatarUrl,
+  formatResidentLabel,
+  resolveStreetName,
+  type Post,
+  type PostComment,
+  type User,
+} from '../data/mockData';
 import { Img, cn } from '../components/ui';
 import {
   createCommentInSupabase,
@@ -103,20 +110,19 @@ export function PostThreadModal({
     };
   }, [post.id]);
 
-  const matchedStreet =
-    streets.find((s) => s.as === post.authorAs)?.name ?? post.authorAs.replace(/^ze?\s+/i, '');
+  const matchedStreet = resolveStreetName(post.authorAs);
 
   const isAuthor =
     Boolean(user) &&
     ((post.authorProfileId && post.authorProfileId === user?.profileId) ||
-      (post.author === user?.name && post.authorAs === user?.street.as));
+      (post.author === user?.name && matchedStreet === user?.street.name));
 
   const handleShare = async () => {
     const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/rozmowy?post=${post.id}` : '';
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Wpis ${post.author} ${post.authorAs} — mójMińsk`,
+          title: `Wpis ${post.author} (${formatResidentLabel(post.authorAs)}) — mójMińsk`,
           text: post.content,
           url: shareUrl,
         });
@@ -150,7 +156,7 @@ export function PostThreadModal({
       id: `c_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       postId: post.id,
       author: user.name,
-      authorAs: user.street.as,
+      authorAs: user.street.name,
       authorProfileId: user.profileId,
       content: trimmed,
       createdAt: new Date().toISOString(),
@@ -297,7 +303,7 @@ export function PostThreadModal({
                   <h3 className="font-display text-[16px] font-bold text-ink leading-tight">
                     {post.author}
                   </h3>
-                  <p className="text-[13px] font-medium text-ink-500">{post.authorAs}</p>
+                  <p className="text-[13px] font-medium text-ink-500">{formatResidentLabel(post.authorAs)}</p>
                 </div>
               </button>
               <span className="text-[12px] text-ink-400 font-medium">{post.time}</span>
@@ -373,13 +379,11 @@ export function PostThreadModal({
             ) : (
               <div className="space-y-3">
                 {comments.map((comment) => {
-                  const commentStreet =
-                    streets.find((s) => s.as === comment.authorAs)?.name ??
-                    comment.authorAs.replace(/^ze?\s+/i, '');
+                  const commentStreet = resolveStreetName(comment.authorAs);
                   const isCommentAuthor =
                     Boolean(user) &&
                     ((comment.authorProfileId && comment.authorProfileId === user?.profileId) ||
-                      (comment.author === user?.name && comment.authorAs === user?.street.as));
+                      (comment.author === user?.name && commentStreet === user?.street.name));
 
                   return (
                     <div
@@ -412,7 +416,7 @@ export function PostThreadModal({
                             className="flex flex-wrap items-center gap-1.5 text-left text-[13.5px] hover:underline"
                           >
                             <b className="text-ink">{comment.author}</b>
-                            <span className="text-ink-500 font-medium">{comment.authorAs}</span>
+                            <span className="text-ink-500 font-medium">{formatResidentLabel(comment.authorAs)}</span>
                           </button>
                           <div className="flex items-center gap-2">
                             <span className="text-[11.5px] text-ink-400">{comment.time}</span>

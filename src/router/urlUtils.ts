@@ -1,4 +1,5 @@
 import type { Ad, LineId } from '../data/mockData';
+import type { ServiceProvider } from '../data/servicesData';
 import type { TabId } from '../components/BottomNav';
 
 const PL_MAP: Record<string, string> = {
@@ -19,6 +20,7 @@ export function slugify(text: string): string {
 export const TAB_PATHS: Record<TabId, string> = {
   home: '/',
   ads: '/ogloszenia',
+  services: '/uslugi',
   rides: '/przejazdy',
   talks: '/rozmowy',
 };
@@ -29,6 +31,20 @@ export function buildAdUrl(ad: Pick<Ad, 'id' | 'title' | 'street'>): string {
 
 export function extractAdIdFromSlug(slugId?: string): string | null {
   if (!slugId) return null;
+  const parts = slugId.split('-');
+  return parts[parts.length - 1] || null;
+}
+
+export function buildServiceProviderUrl(
+  provider: Pick<ServiceProvider, 'id' | 'businessName' | 'street'>,
+): string {
+  return `/uslugi/${slugify(provider.businessName)}-${slugify(provider.street)}-${provider.id}`;
+}
+
+export function extractServiceProviderIdFromSlug(slugId?: string): string | null {
+  if (!slugId) return null;
+  const match = slugId.match(/(sp_[a-zA-Z0-9_]+)$/);
+  if (match) return match[1];
   const parts = slugId.split('-');
   return parts[parts.length - 1] || null;
 }

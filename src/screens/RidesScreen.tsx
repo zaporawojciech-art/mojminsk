@@ -11,7 +11,13 @@ import {
   Trash2,
   Users,
 } from 'lucide-react';
-import { avatarUrl, rides as initialRides, type Ride, type User } from '../data/mockData';
+import {
+  avatarUrl,
+  formatResidentLabel,
+  rides as initialRides,
+  type Ride,
+  type User,
+} from '../data/mockData';
 import { Chip, StandardTopBar, cn } from '../components/ui';
 import { GooglePlaceAutocompleteInput } from '../components/GooglePlaceAutocompleteInput';
 import { openGoogleMapsRoute } from '../services/googleMapsService';
@@ -313,7 +319,10 @@ export function RidesScreen({
                         <img src={avatarUrl(r.driver)} alt="" className="h-10 w-10 rounded-2xl bg-sand-100" />
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-[13.5px] font-bold text-ink">
-                            {r.driver} {r.driverAs}
+                            {r.driver}
+                          </p>
+                          <p className="truncate text-[11.5px] font-medium text-ink-500">
+                            {formatResidentLabel(r.driverAs)}
                           </p>
                           <p className="flex items-center gap-1 text-[11.5px] text-ink-400">
                             <Car className="h-3.5 w-3.5 text-ink-400" aria-hidden />

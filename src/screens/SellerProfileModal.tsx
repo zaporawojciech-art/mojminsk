@@ -71,7 +71,7 @@ export function SellerProfileModal({
             </h1>
             <div className="mt-1 flex items-center justify-center gap-1.5 text-[13px] text-ink-500">
               <MapPin className="h-4 w-4 text-coral-700" />
-              <span>ul. {sellerStreet} · Mińsk Mazowiecki</span>
+              <span>Mieszkaniec Mińska · ul. {sellerStreet}</span>
             </div>
 
             {/* Desktop Action Button */}

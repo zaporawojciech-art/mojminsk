@@ -6,8 +6,8 @@ import {
   Megaphone,
   MessageCircle,
   MessagesSquare,
-  Plus,
   Vote,
+  Wrench,
 } from 'lucide-react';
 import type { TabId } from './BottomNav';
 import { avatarUrl, type User } from '../data/mockData';
@@ -41,7 +41,6 @@ export function DesktopTopNavbar({
   user,
   unreadCount = 0,
   onOpenConversations,
-  onAddNewAd,
   onOpenZditm,
   onOpenPolls,
   onProfileClick,
@@ -50,6 +49,7 @@ export function DesktopTopNavbar({
   const primaryNavItems: { id: TabId; label: string; shortLabel?: string; href: string; icon: typeof House }[] = [
     { id: 'home', label: 'Start', href: TAB_PATHS.home, icon: House },
     { id: 'ads', label: 'Ogłoszenia', href: TAB_PATHS.ads, icon: Megaphone },
+    { id: 'services', label: 'Zaufane usługi', shortLabel: 'Usługi', href: TAB_PATHS.services, icon: Wrench },
     { id: 'rides', label: 'Wspólne przejazdy', shortLabel: 'Przejazdy', href: TAB_PATHS.rides, icon: Car },
   ];
 
@@ -78,7 +78,7 @@ export function DesktopTopNavbar({
             </span>
           </a>
 
-          <nav aria-label="Nawigacja główna" className="flex items-center gap-1 xl:gap-1.5 min-w-0">
+          <nav aria-label="Nawigacja główna" className="flex items-center gap-0.5 xl:gap-1 min-w-0">
             {primaryNavItems.map((item) => {
               const Icon = item.icon;
               const active = !hasActiveSubpage && currentTab === item.id;
@@ -93,7 +93,7 @@ export function DesktopTopNavbar({
                     handleNavClick(item.id);
                   }}
                   className={cn(
-                    'flex items-center gap-1.5 xl:gap-2 rounded-lg px-2.5 xl:px-3 py-1.5 text-[12.5px] xl:text-[13px] font-bold transition-all whitespace-nowrap cursor-pointer',
+                    'flex items-center gap-1.5 rounded-lg px-2 xl:px-2.5 py-1.5 text-[12px] xl:text-[12.5px] font-bold transition-all whitespace-nowrap cursor-pointer',
                     active
                       ? 'bg-ink text-white shadow-xs'
                       : 'text-ink-600 hover:bg-mist hover:text-ink',
@@ -102,8 +102,8 @@ export function DesktopTopNavbar({
                   <Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={active ? 2.4 : 2} />
                   {item.shortLabel ? (
                     <>
-                      <span className="hidden min-[1680px]:inline">{item.label}</span>
-                      <span className="min-[1680px]:hidden">{item.shortLabel}</span>
+                      <span className="hidden min-[1820px]:inline">{item.label}</span>
+                      <span className="min-[1820px]:hidden">{item.shortLabel}</span>
                     </>
                   ) : (
                     <span>{item.label}</span>
@@ -112,7 +112,7 @@ export function DesktopTopNavbar({
               );
             })}
 
-            <div className="hidden min-[1680px]:block mx-1 h-4 w-px bg-mist-300 shrink-0" />
+            <div className="hidden min-[1820px]:block mx-1 h-4 w-px bg-mist-300 shrink-0" />
 
             {/* Komunikacja miejska (Live Mapa) */}
             <a
@@ -123,11 +123,11 @@ export function DesktopTopNavbar({
                 onCloseAllLayers?.();
                 onOpenZditm();
               }}
-              className="flex items-center gap-1.5 rounded-lg px-2.5 xl:px-3 py-1.5 text-[12px] xl:text-[12.5px] font-bold text-ink-600 hover:bg-mist hover:text-ink transition-all whitespace-nowrap cursor-pointer"
+              className="flex items-center gap-1.5 rounded-lg px-2 xl:px-2.5 py-1.5 text-[12px] xl:text-[12.5px] font-bold text-ink-600 hover:bg-mist hover:text-ink transition-all whitespace-nowrap cursor-pointer"
             >
               <Bus className="h-3.5 w-3.5 text-sky-700 shrink-0" />
-              <span className="hidden min-[1680px]:inline">Komunikacja miejska</span>
-              <span className="min-[1680px]:hidden">Komunikacja</span>
+              <span className="hidden min-[1820px]:inline">Komunikacja miejska</span>
+              <span className="min-[1820px]:hidden">Komunikacja</span>
               <span className="ml-0.5 rounded-md bg-emerald-100 px-1.5 py-0.2 text-[9.5px] font-black text-emerald-800 uppercase tracking-wider">
                 Live
               </span>
@@ -142,13 +142,13 @@ export function DesktopTopNavbar({
                 onCloseAllLayers?.();
                 onOpenPolls();
               }}
-              className="hidden 2xl:flex items-center gap-1.5 rounded-lg px-2.5 xl:px-3 py-1.5 text-[12px] xl:text-[12.5px] font-bold text-ink-600 hover:bg-mist hover:text-ink transition-all whitespace-nowrap cursor-pointer"
+              className="hidden 2xl:flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] xl:text-[12.5px] font-bold text-ink-600 hover:bg-mist hover:text-ink transition-all whitespace-nowrap cursor-pointer"
             >
               <Vote className="h-3.5 w-3.5 text-coral-700 shrink-0" />
               <span>Ankiety</span>
             </a>
 
-            <div className="hidden min-[1680px]:block mx-1 h-4 w-px bg-mist-300 shrink-0" />
+            <div className="hidden min-[1820px]:block mx-1 h-4 w-px bg-mist-300 shrink-0" />
 
             {/* Rozmowy (na samym końcu nawigacji) */}
             <a
@@ -160,7 +160,7 @@ export function DesktopTopNavbar({
                 handleNavClick('talks');
               }}
               className={cn(
-                'flex items-center gap-1.5 xl:gap-2 rounded-lg px-2.5 xl:px-3 py-1.5 text-[12.5px] xl:text-[13px] font-bold transition-all whitespace-nowrap cursor-pointer',
+                'flex items-center gap-1.5 rounded-lg px-2 xl:px-2.5 py-1.5 text-[12px] xl:text-[12.5px] font-bold transition-all whitespace-nowrap cursor-pointer',
                 !hasActiveSubpage && currentTab === 'talks'
                   ? 'bg-ink text-white shadow-xs'
                   : 'text-ink-600 hover:bg-mist hover:text-ink',
@@ -176,10 +176,10 @@ export function DesktopTopNavbar({
         </div>
 
         {/* 2. RIGHT: Actions + Neighbor Identity */}
-        <div className="flex items-center justify-end gap-1.5 xl:gap-2.5 shrink-0">
+        <div className="flex items-center justify-end gap-1.5 xl:gap-2 shrink-0">
           <BuyCoffeeButton
             variant="desktop-nav"
-            className="hidden xl:flex [&>.coffee-label]:hidden min-[1680px]:[&>.coffee-label]:inline"
+            className="hidden min-[1340px]:flex [&>.coffee-label]:hidden min-[1820px]:[&>.coffee-label]:inline"
           />
 
           {/* Messages / Chat Button */}
@@ -193,7 +193,7 @@ export function DesktopTopNavbar({
             className="relative flex h-9 items-center gap-1.5 rounded-lg border border-mist-300 bg-white px-2.5 xl:px-3 text-[12.5px] font-bold text-ink hover:bg-mist/60 active:scale-95 transition-all shrink-0 cursor-pointer"
           >
             <MessageCircle className="h-3.5 w-3.5 text-ink-700" />
-            <span className="hidden min-[1680px]:inline">Wiadomości</span>
+            <span className="hidden min-[1820px]:inline">Wiadomości</span>
             {unreadCount > 0 && (
               <span className="grid h-4.5 min-w-4.5 place-items-center rounded-full bg-coral px-1 text-[10px] font-extrabold text-ink">
                 {unreadCount}
@@ -201,34 +201,20 @@ export function DesktopTopNavbar({
             )}
           </button>
 
-          {/* Primary CTA: Dodaj ogłoszenie */}
-          <button
-            type="button"
-            onClick={() => {
-              onCloseAllLayers?.();
-              onAddNewAd();
-            }}
-            className="flex h-9 items-center gap-1.5 rounded-lg bg-coral px-2.5 xl:px-3.5 text-[12px] xl:text-[12.5px] font-extrabold text-ink shadow-xs hover:bg-coral-400 active:scale-95 transition-all shrink-0 whitespace-nowrap cursor-pointer"
-          >
-            <Plus className="h-3.5 w-3.5 stroke-[2.6]" />
-            <span className="hidden xl:inline">Dodaj ogłoszenie</span>
-            <span className="xl:hidden">Dodaj</span>
-          </button>
-
           {/* Neighbor Profile Pill */}
           {user ? (
-            <div className="flex items-center gap-1.5 xl:gap-2 pl-2 xl:pl-2.5 ml-0.5 border-l border-mist-300 shrink-0">
+            <div className="flex items-center gap-1.5 pl-1.5 xl:pl-2 ml-0.5 border-l border-mist-300 shrink-0">
               <button
                 type="button"
                 onClick={onProfileClick}
-                className="flex items-center gap-2 rounded-xl bg-mist/70 py-1 pl-1.5 pr-2.5 xl:pr-3 border border-mist-300/70 hover:bg-mist transition-colors text-left cursor-pointer"
+                className="flex items-center gap-2 rounded-xl bg-mist/70 py-1 px-1.5 min-[1140px]:pr-2.5 xl:pr-3 border border-mist-300/70 hover:bg-mist transition-colors text-left cursor-pointer"
               >
                 <img
                   src={avatarUrl(user.seed)}
                   alt={user.name}
                   className="h-7 w-7 shrink-0 rounded-full bg-sand-100 object-cover ring-1 ring-mist-300"
                 />
-                <div className="leading-tight max-w-[85px] xl:max-w-[120px]">
+                <div className="hidden min-[1140px]:block leading-tight max-w-[85px] xl:max-w-[120px]">
                   <p className="truncate text-[12px] font-bold text-ink">{user.name}</p>
                   <p className="truncate text-[10px] font-medium text-ink-500 hidden xl:block">ul. {user.street.name}</p>
                 </div>

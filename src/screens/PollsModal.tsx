@@ -12,6 +12,7 @@ import { NativeHeader, cn } from '../components/ui';
 import {
   type PollItem,
   type User,
+  formatResidentLabel,
   getPollTimeLeftLabel,
   isPollActive,
 } from '../data/mockData';
@@ -193,7 +194,7 @@ export function PollsModal({
                   {/* Author & Votes count */}
                   <div className="flex items-center justify-between gap-2 text-[12px] text-ink-400">
                     <span className="truncate min-w-0">
-                      Autor: <b className="text-ink-700">{p.author}</b> {p.authorStreet}
+                      Autor: <b className="text-ink-700">{p.author}</b> · {formatResidentLabel(p.authorStreet)}
                     </span>
                     <span className="shrink-0 font-bold text-ink-600 tabular-nums">
                       {totalVotes} {totalVotes === 1 ? 'głos' : totalVotes < 5 ? 'głosy' : 'głosów'}

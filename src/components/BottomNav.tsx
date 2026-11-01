@@ -1,13 +1,14 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Car, House, Megaphone, MessagesSquare } from 'lucide-react';
+import { Car, House, Megaphone, MessagesSquare, Wrench } from 'lucide-react';
 import { TAB_PATHS } from '../router/urlUtils';
 import { cn } from './ui';
 
-export type TabId = 'home' | 'ads' | 'rides' | 'talks';
+export type TabId = 'home' | 'ads' | 'services' | 'rides' | 'talks';
 
 const items: { id: TabId; label: string; href: string; icon: typeof House }[] = [
   { id: 'home', label: 'Start', href: TAB_PATHS.home, icon: House },
   { id: 'ads', label: 'Ogłoszenia', href: TAB_PATHS.ads, icon: Megaphone },
+  { id: 'services', label: 'Usługi', href: TAB_PATHS.services, icon: Wrench },
   { id: 'rides', label: 'Przejazdy', href: TAB_PATHS.rides, icon: Car },
   { id: 'talks', label: 'Rozmowy', href: TAB_PATHS.talks, icon: MessagesSquare },
 ];
@@ -29,7 +30,7 @@ export function BottomNav({ tab, onChange }: { tab: TabId; onChange: (t: TabId) 
     ready: boolean;
   }>({
     innerWidth: 340,
-    labelWidths: [34, 72, 64, 60],
+    labelWidths: [34, 72, 44, 64, 60],
     ready: false,
   });
 
@@ -113,8 +114,8 @@ export function BottomNav({ tab, onChange }: { tab: TabId; onChange: (t: TabId) 
   const activeButtonW = 32 + 20 + 6 + activeLabelW;
   const inactiveButtonW =
     metrics.innerWidth > 0
-      ? Math.min(48, Math.max(40, Math.floor((metrics.innerWidth - activeButtonW) / (items.length - 1))))
-      : 46;
+      ? Math.min(46, Math.max(36, Math.floor((metrics.innerWidth - activeButtonW) / (items.length - 1))))
+      : 42;
   const totalButtonsW = (items.length - 1) * inactiveButtonW + activeButtonW;
   const gap =
     metrics.innerWidth > totalButtonsW ? (metrics.innerWidth - totalButtonsW) / (items.length - 1) : 0;

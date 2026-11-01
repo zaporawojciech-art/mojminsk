@@ -65,6 +65,13 @@ export function Footer({
               Ogłoszenia
             </a>
             <a
+              href={TAB_PATHS.services}
+              onClick={(e) => handleNavClick('services', e)}
+              className="hover:text-coral-600 transition-colors"
+            >
+              Zaufane usługi
+            </a>
+            <a
               href={TAB_PATHS.rides}
               onClick={(e) => handleNavClick('rides', e)}
               className="hover:text-coral-600 transition-colors"

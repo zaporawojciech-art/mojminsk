@@ -101,7 +101,7 @@ export function AddRideModal({
     const newRide: Ride = {
       id: `rd_${Date.now()}`,
       driver: user.name,
-      driverAs: user.street.as,
+      driverAs: user.street.name,
       rating: 5.0,
       rides: 1,
       from: from.trim(),

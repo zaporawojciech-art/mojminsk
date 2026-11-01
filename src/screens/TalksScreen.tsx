@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import {
   avatarUrl,
+  formatResidentLabel,
+  resolveStreetName,
   streets,
   talkTags as defaultTags,
   type Post,
@@ -185,7 +187,7 @@ export function TalksScreen({
     const newPost: Post = {
       id: `p_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       author: user.name,
-      authorAs: user.street.as,
+      authorAs: user.street.name,
       authorProfileId: user.profileId,
       time: 'przed chwilą',
       content: trimmed,
@@ -251,7 +253,7 @@ export function TalksScreen({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Wpis ${p.author} ${p.authorAs} — mójMińsk`,
+          title: `Wpis ${p.author} (${formatResidentLabel(p.authorAs)}) — mójMińsk`,
           text: p.content,
           url: shareUrl,
         });
@@ -444,12 +446,11 @@ export function TalksScreen({
             <div className="mx-5 md:mx-0 mt-4 divide-y divide-mist overflow-hidden rounded-4xl bg-white shadow-card border border-mist-200">
               {visible.map((p) => {
                 const isLiked = Boolean(likedMap[p.id]);
-                const matchedStreet =
-                  streets.find((s) => s.as === p.authorAs)?.name ?? p.authorAs.replace(/^ze?\s+/i, '');
+                const matchedStreet = resolveStreetName(p.authorAs);
                 const isAuthor =
                   Boolean(user) &&
                   ((p.authorProfileId && p.authorProfileId === user?.profileId) ||
-                    (p.author === user?.name && p.authorAs === user?.street.as));
+                    (p.author === user?.name && matchedStreet === user?.street.name));
 
                 return (
                   <article key={p.id} className="relative flex gap-4 p-4 md:p-6 hover:bg-mist/20 transition-colors">
@@ -475,9 +476,10 @@ export function TalksScreen({
                           onClick={() => onNeighborClick?.(p.author, matchedStreet)}
                           className="flex flex-wrap items-center gap-x-1.5 text-left text-[14.5px] hover:underline cursor-pointer"
                         >
-                          <b className="text-ink">
-                            {p.author} {p.authorAs}
-                          </b>
+                          <b className="text-ink">{p.author}</b>
+                          <span className="text-ink-500 text-[13px] font-medium">
+                            {formatResidentLabel(p.authorAs)}
+                          </span>
                           <span className="text-ink-400 text-[13px]">· {p.time}</span>
                         </button>
 

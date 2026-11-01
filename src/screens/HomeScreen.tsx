@@ -13,19 +13,26 @@ import {
   MapPin,
   Megaphone,
   MessageCircle,
-  MessagesSquare,
   Newspaper,
   Phone,
   Plus,
   RefreshCw,
   ShieldCheck,
   Sparkles,
+  Star,
   Tag,
   TriangleAlert,
   Users,
   Vote,
+  Wrench,
   X,
 } from 'lucide-react';
+import {
+  INITIAL_SERVICE_PROVIDERS,
+  computeProviderRatingStats,
+  getServiceCategoryById,
+  type ServiceProvider,
+} from '../data/servicesData';
 import {
   ads as initialAds,
   avatarUrl,
@@ -40,8 +47,9 @@ import {
   liveAlert,
   news,
   partner,
+  resolveStreetName,
+  formatResidentLabel,
   rides as initialRides,
-  streets,
   type Ad,
   type LineId,
   type PollItem,
@@ -53,7 +61,7 @@ import { fetchPostsFromSupabase } from '../lib/supabase';
 import { Card, Img, SectionHeader, StandardTopBar, cn, zl } from '../components/ui';
 import { BuyCoffeeButton } from '../components/BuyCoffeeButton';
 import { AppLink } from '../components/AppLink';
-import { buildAdUrl, TAB_PATHS } from '../router/urlUtils';
+import { buildAdUrl, buildServiceProviderUrl, TAB_PATHS } from '../router/urlUtils';
 import type { TabId } from '../components/BottomNav';
 import { useWeather } from '../hooks/useWeather';
 import {
@@ -1264,8 +1272,10 @@ interface HomeScreenProps {
   city?: string;
   adsList?: Ad[];
   ridesList?: Ride[];
+  serviceProviders?: ServiceProvider[];
   onAdClick?: (ad: Ad) => void;
   onAddAd?: () => void;
+  onProviderClick?: (provider: ServiceProvider) => void;
   onNeighborClick?: (name: string, street: string) => void;
 }
 
@@ -1283,8 +1293,10 @@ export function HomeScreen({
   city = 'Mińsk Mazowiecki',
   adsList = initialAds,
   ridesList = initialRides,
+  serviceProviders = INITIAL_SERVICE_PROVIDERS,
   onAdClick,
   onAddAd,
+  onProviderClick,
   onNeighborClick,
 }: HomeScreenProps) {
   const [desktopAlertDismissed, setDesktopAlertDismissed] = useState(false);
@@ -1306,11 +1318,14 @@ export function HomeScreen({
   const quick = [
     { label: 'Rozkład', href: '/zditm/m2', icon: Bus, cls: 'bg-sky-100 text-ink', onClick: () => (onZditm ? onZditm('M2') : onTab('home')) },
     { label: 'Ogłoszenia', href: TAB_PATHS.ads, icon: Megaphone, cls: 'bg-white text-ink', onClick: () => onTab('ads') },
+    { label: 'Fachowcy', href: TAB_PATHS.services, icon: Wrench, cls: 'bg-emerald-100 text-ink', onClick: () => onTab('services') },
     { label: 'Przejazd', href: TAB_PATHS.rides, icon: Car, cls: 'bg-coral-100 text-ink', onClick: () => onTab('rides') },
-    { label: 'Rozmowy', href: TAB_PATHS.talks, icon: MessagesSquare, cls: 'bg-sand text-ink', onClick: () => onTab('talks') },
   ];
 
   const latestAds = adsList.filter((a) => (a.status ?? 'active') === 'active').slice(0, 6);
+  const featuredProviders = serviceProviders
+    .filter((p) => p.status === 'verified')
+    .slice(0, 4);
   const latestPosts = postsList.slice(0, 3);
   const upcomingRides = ridesList.slice(0, 3);
 
@@ -1389,6 +1404,58 @@ export function HomeScreen({
           onOpenPolls={onOpenPolls}
           totalActiveCount={activePolls.length}
         />
+
+        {/* STREFA ZAUFANEJ USŁUGI — MOBILE LIST */}
+        {featuredProviders.length > 0 && (
+          <section>
+            <SectionHeader
+              title="Sprawdzeni fachowcy"
+              action="Katalog"
+              onAction={() => onTab('services')}
+            />
+            <div className="mx-5 rounded-2xl bg-white border border-mist-200 divide-y divide-mist-100 overflow-hidden shadow-xs">
+              {featuredProviders.map((provider) => {
+                const stats = computeProviderRatingStats(provider.reviews);
+                const cat = getServiceCategoryById(provider.categoryId);
+                return (
+                  <AppLink
+                    key={provider.id}
+                    to={buildServiceProviderUrl(provider)}
+                    onClick={() =>
+                      onProviderClick ? onProviderClick(provider) : onTab('services')
+                    }
+                    className="flex items-center justify-between gap-3 p-3.5 hover:bg-mist/40 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <img
+                        src={provider.logoUrl || avatarUrl(provider.avatarSeed)}
+                        alt={provider.businessName}
+                        className="h-10 w-10 shrink-0 rounded-xl bg-sand-100 object-cover ring-1 ring-mist-200"
+                      />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <p className="truncate font-display text-[14px] font-bold text-ink leading-tight">
+                            {provider.businessName}
+                          </p>
+                          <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                        </div>
+                        <p className="mt-0.5 truncate text-[11.5px] text-ink-500">
+                          {provider.name} · ul. {provider.street} ·{' '}
+                          <span className={cn('font-semibold', cat.tone.text)}>{cat.shortLabel}</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="shrink-0 flex items-center gap-1 text-[12px] font-bold text-ink">
+                      <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
+                      <span>{stats.count > 0 ? stats.average.toFixed(1) : 'Nowy'}</span>
+                    </div>
+                  </AppLink>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         <button
           onClick={onPartner}
@@ -1750,6 +1817,90 @@ export function HomeScreen({
           )}
         </section>
 
+        {/* ROW 3.5: STREFA ZAUFANEJ USŁUGI — POLECANI FACHOWCY Z MIŃSKA */}
+        {featuredProviders.length > 0 && (
+          <section className="rounded-2xl bg-white p-5 shadow-card border border-mist-200">
+            <div className="mb-4 flex items-center justify-between border-b border-mist pb-3">
+              <div className="flex items-baseline gap-3">
+                <h2 className="font-display text-[19px] font-extrabold tracking-tight text-ink">
+                  Sprawdzeni fachowcy i firmy z Mińska
+                </h2>
+                <span className="hidden xl:inline text-[12px] font-medium text-ink-400">
+                  Hydraulicy, elektrycy, budowa, stolarka, ogród i reklama
+                </span>
+              </div>
+
+              <AppLink
+                to="/uslugi"
+                onClick={() => onTab('services')}
+                className="flex items-center gap-1 rounded-lg bg-ink px-3.5 py-1.5 text-[12px] font-bold text-white hover:bg-ink-700 transition-colors"
+              >
+                <span>Katalog wykonawców ({serviceProviders.filter((p) => p.status === 'verified').length})</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </AppLink>
+            </div>
+
+            <div className="divide-y divide-mist-100">
+              {featuredProviders.map((provider) => {
+                const stats = computeProviderRatingStats(provider.reviews);
+                const cat = getServiceCategoryById(provider.categoryId);
+                return (
+                  <AppLink
+                    key={provider.id}
+                    to={buildServiceProviderUrl(provider)}
+                    onClick={() =>
+                      onProviderClick ? onProviderClick(provider) : onTab('services')
+                    }
+                    className="group flex items-center justify-between gap-4 py-3 first:pt-1 last:pb-1 hover:bg-mist/30 rounded-xl px-2 -mx-2 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <img
+                        src={provider.logoUrl || avatarUrl(provider.avatarSeed)}
+                        alt={provider.businessName}
+                        className="h-10 w-10 shrink-0 rounded-xl bg-sand-100 object-cover ring-1 ring-mist-200"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="truncate font-display text-[14.5px] font-bold text-ink group-hover:text-coral-700 transition-colors">
+                            {provider.businessName}
+                          </h3>
+                          <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                          <span
+                            className={cn(
+                              'rounded px-2 py-0.5 text-[10.5px] font-bold shrink-0 border',
+                              cat.tone.bg,
+                              cat.tone.text,
+                              cat.tone.border,
+                            )}
+                          >
+                            {cat.shortLabel}
+                          </span>
+                        </div>
+                        <p className="mt-0.5 truncate text-[12px] text-ink-500">
+                          <span className="font-semibold text-ink-700">{provider.name}</span> · ul. {provider.street} · {provider.description}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4 shrink-0">
+                      <span className="flex items-center gap-1 text-[12.5px] font-bold text-ink">
+                        <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
+                        {stats.count > 0 ? stats.average.toFixed(1) : 'Nowy'}
+                        <span className="text-[11px] font-medium text-ink-400">
+                          ({stats.count})
+                        </span>
+                      </span>
+                      <span className="text-[12px] font-bold text-ink-600 group-hover:text-ink flex items-center gap-1">
+                        Zobacz profil <ArrowRight className="h-3.5 w-3.5" />
+                      </span>
+                    </div>
+                  </AppLink>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
         {/* ROW 4: BOTTOM 2-COLUMN PORTAL ROW (Left 7 cols: Ostatnie wpisy z Rozmów | Right 5 cols: Wspólne przejazdy) */}
         <div className="grid grid-cols-12 gap-6 items-stretch">
           {/* LEFT 7 COLS: Ostatnie wpisy ze Strefy Rozmów */}
@@ -1795,9 +1946,7 @@ export function HomeScreen({
               ) : (
                 <div className="divide-y divide-mist">
                   {latestPosts.map((p) => {
-                    const matchedStreet =
-                      streets.find((s) => s.as === p.authorAs)?.name ??
-                      p.authorAs.replace(/^ze?\s+/i, '');
+                    const matchedStreet = resolveStreetName(p.authorAs);
                     return (
                       <article
                         key={p.id}
@@ -1822,7 +1971,9 @@ export function HomeScreen({
                           <div className="flex items-center justify-between gap-2">
                             <p className="text-[13px] font-bold text-ink">
                               {p.author}{' '}
-                              <span className="font-semibold text-ink-500">{p.authorAs}</span>
+                              <span className="font-semibold text-ink-500">
+                                · {formatResidentLabel(p.authorAs)}
+                              </span>
                             </p>
                             <span className="text-[11px] font-medium text-ink-400">{p.time}</span>
                           </div>
@@ -1915,7 +2066,7 @@ export function HomeScreen({
                             {r.from} ➔ {r.to}
                           </p>
                           <p className="truncate text-[11px] font-medium text-ink-500">
-                            {r.driver} {r.driverAs} · wyjazd <b className="text-ink">{r.depart}</b>
+                            {r.driver} · {formatResidentLabel(r.driverAs)} · wyjazd <b className="text-ink">{r.depart}</b>
                           </p>
                         </div>
                       </div>

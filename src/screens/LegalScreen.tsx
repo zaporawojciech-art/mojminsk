@@ -156,7 +156,7 @@ export function LegalScreen({ activeDoc, onBack, onSelectDoc }: LegalScreenProps
               </p>
               <p className="leading-relaxed">
                 {activeDoc === 'terms'
-                  ? 'Wszyscy użytkownicy występują publicznie w formacie „Imię z ulicy” (np. Kasia ze Spacerowej). Pełne dane adresowe podlegają ścisłej tajemnicy i służą wyłącznie doręczeniu tradycyjnego listu weryfikacyjnego.'
+                  ? 'Wszyscy użytkownicy występują publicznie w formacie imienia oraz oznaczenia „Mieszkaniec Mińska · ul. [Nazwa Ulicy]”. Pełne dane adresowe podlegają ścisłej tajemnicy i służą wyłącznie doręczeniu tradycyjnego listu weryfikacyjnego.'
                   : 'Twój dokładny adres (numer domu, lokalu) jest zaszyfrowany w bazie danych i nigdy nie jest prezentowany publicznie innym mieszkańcom. Nie handlujemy danymi ani nie udostępniamy ich podmiotom trzecim.'}
               </p>
             </div>
@@ -257,8 +257,7 @@ function TermsContent() {
           </li>
           <li>
             <strong>Tożsamość Sąsiedzka</strong> – format publicznej identyfikacji Użytkownika oparty
-            wyłącznie na regule <em>„[Imię] z ulicy [Nazwa Ulicy]”</em> (np. Wojtek ze Spacerowej, Anna
-            ze Stojadeł).
+            wyłącznie na regule imienia oraz oznaczenia <em>„Mieszkaniec Mińska · ul. [Nazwa Ulicy]”</em>.
           </li>
           <li>
             <strong>Obszar Działania</strong> – Miasto Mińsk Mazowiecki (kody pocztowe: 05-300, 05-301,
@@ -357,7 +356,7 @@ function TermsContent() {
         <p>
           2. Wpisy mają formę krótkich wiadomości do 280 znaków z opcją dołączenia 1 fotografii. Każdy
           wpis jest jednoznacznie podpisany tożsamością sąsiedzką autora (np.{' '}
-          <em>„Marek z Sosnkowskiego”</em>).
+          <em>„Marek · Mieszkaniec Mińska · ul. Sosnkowskiego”</em>).
         </p>
         <p>
           3. Obowiązuje bezwzględny zakaz publikowania treści wulgarnych, nawołujących do nienawiści,
@@ -538,7 +537,7 @@ function PrivacyContent() {
         </div>
         <p>
           1. <strong>Zasada minimalizmu tożsamości:</strong> Inni mieszkańcy Mińska Mazowieckiego widzą
-          wyłącznie Twoje imię oraz nazwę ulicy (np. <em>Wojtek ze Spacerowej</em>).
+          wyłącznie Twoje imię oraz oznaczenie ulicy (np. <em>Mieszkaniec Mińska · ul. Spacerowa</em>).
         </p>
         <p>
           2. Twój numer domu, lokalu oraz nazwisko nigdy nie są wyświetlane w aplikacji ani udostępniane

@@ -1,5 +1,4 @@
 import { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { RotateCcw, Smartphone } from 'lucide-react';
 import { BottomNav, type TabId } from './components/BottomNav';
 import {
   AdDetailSkeleton,
@@ -31,9 +30,19 @@ import {
 import { OnboardingScreen } from './screens/OnboardingScreen';
 import { HomeScreen } from './screens/HomeScreen';
 import { AdsScreen } from './screens/AdsScreen';
+import { ServicesScreen } from './screens/ServicesScreen';
 import { RidesScreen } from './screens/RidesScreen';
 import { TalksScreen } from './screens/TalksScreen';
 import { NotFoundScreen } from './screens/NotFoundScreen';
+import {
+  INITIAL_SERVICE_PROVIDERS,
+  getServiceCategoryBySlug,
+  getServiceCategoryById,
+  type ServiceCategoryId,
+  type ServiceProvider,
+  type ServiceReview,
+} from './data/servicesData';
+import { avatarUrl } from './data/mockData';
 import type { AdFilterState } from './screens/AdFiltersModal';
 import { AuthRequiredModal } from './components/AuthRequiredModal';
 import { DesktopTopNavbar } from './components/DesktopTopNavbar';
@@ -43,11 +52,13 @@ import { navigateTo } from './components/AppLink';
 import {
   buildAdUrl,
   buildNeighborUrl,
+  buildServiceProviderUrl,
   buildZditmUrl,
   buildZditmMapUrl,
   CATEGORY_SEO_META,
   CATEGORY_URL_MAP,
   extractAdIdFromSlug,
+  extractServiceProviderIdFromSlug,
   slugify,
   SLUG_TO_CATEGORY_ID,
   TAB_PATHS,
@@ -98,6 +109,12 @@ const PollsModal = lazy(() => import('./screens/PollsModal').then((m) => ({ defa
 const AddPollModal = lazy(() => import('./screens/AddPollModal').then((m) => ({ default: m.AddPollModal })));
 const LegalScreen = lazy(() => import('./screens/LegalScreen').then((m) => ({ default: m.LegalScreen })));
 const ZditmMapScreen = lazy(() => import('./screens/ZditmMapScreen').then((m) => ({ default: m.ZditmMapScreen })));
+const ServiceProviderModal = lazy(() =>
+  import('./screens/ServiceProviderModal').then((m) => ({ default: m.ServiceProviderModal })),
+);
+const AddServiceProviderModal = lazy(() =>
+  import('./screens/AddServiceProviderModal').then((m) => ({ default: m.AddServiceProviderModal })),
+);
 import type { LegalDocType } from './screens/LegalScreen';
 
 type Overlay = null | 'profile' | 'zditm' | 'zditmMap';
@@ -231,12 +248,14 @@ export default function App() {
   const [visitedTabs, setVisitedTabs] = useState<Record<TabId, boolean>>({
     home: true,
     ads: true,
+    services: false,
     rides: false,
     talks: false,
   });
   const scrollPositions = useRef<Record<TabId, number>>({
     home: 0,
     ads: 0,
+    services: 0,
     rides: 0,
     talks: 0,
   });
@@ -309,6 +328,31 @@ export default function App() {
 
   const [pollsModalOpen, setPollsModalOpen] = useState(false);
   const [addPollModalOpen, setAddPollModalOpen] = useState(false);
+
+  // Strefa Zaufanej Usługi (Katalog Fachowców)
+  const [serviceProviders, setServiceProviders] = useState<ServiceProvider[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('mojminsk_services_v4');
+        if (stored) return JSON.parse(stored);
+      } catch {
+        // fallback
+      }
+    }
+    return INITIAL_SERVICE_PROVIDERS;
+  });
+  const [selectedServiceCategory, setSelectedServiceCategory] = useState<ServiceCategoryId>('all');
+  const [selectedProvider, setSelectedProvider] = useState<ServiceProvider | null>(null);
+  const [addProviderOpen, setAddProviderOpen] = useState(false);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('mojminsk_services_v4', JSON.stringify(serviceProviders));
+    } catch {
+      // ignore
+    }
+  }, [serviceProviders]);
+
   const [authModal, setAuthModal] = useState<{
     isOpen: boolean;
     actionTitle?: string;
@@ -427,41 +471,12 @@ export default function App() {
     }
   }, []);
 
-  // 3. Lock device in portrait orientation on supported browsers/PWAs
-  useEffect(() => {
-    const lockPortrait = async () => {
-      try {
-        const orientation = (screen.orientation ||
-          (screen as unknown as { mozOrientation?: unknown }).mozOrientation ||
-          (screen as unknown as { msOrientation?: unknown }).msOrientation) as
-          | { lock?: (o: string) => Promise<void> }
-          | undefined;
-
-        if (orientation && typeof orientation.lock === 'function') {
-          await orientation.lock('portrait-primary').catch(async () => {
-            if (orientation.lock) {
-              await orientation.lock('portrait').catch(() => {});
-            }
-          });
-        }
-      } catch {
-        // Ignored if browser / OS restricts orientation lock (e.g. mobile Safari)
-      }
-    };
-
-    lockPortrait();
-    window.addEventListener('click', lockPortrait, { passive: true });
-    window.addEventListener('touchstart', lockPortrait, { passive: true });
-    return () => {
-      window.removeEventListener('click', lockPortrait);
-      window.removeEventListener('touchstart', lockPortrait);
-    };
-  }, []);
-
   const isChildScreenActive = Boolean(
     overlay ||
       partnerOpen ||
       selectedAd ||
+      selectedProvider ||
+      addProviderOpen ||
       myAdsOpen ||
       reportAd ||
       addAdOpen ||
@@ -543,6 +558,33 @@ export default function App() {
     [closeWithAnimation, routeCategoryId, routeStreetName, tab],
   );
   const closeAddRide = useCallback(() => closeWithAnimation('addRide', () => setAddRideOpen(false)), [closeWithAnimation]);
+  const closeSelectedProvider = useCallback(
+    () =>
+      closeWithAnimation('selectedProvider', () => {
+        setSelectedProvider(null);
+        if (window.location.pathname.startsWith('/uslugi/') && !window.location.pathname.startsWith('/uslugi/kategoria/')) {
+          const catMeta = getServiceCategoryById(selectedServiceCategory);
+          const fallbackUrl =
+            selectedServiceCategory !== 'all'
+              ? `/uslugi/kategoria/${catMeta.slug}`
+              : TAB_PATHS[tab] === '/'
+                ? '/'
+                : '/uslugi';
+          navigateTo(fallbackUrl, { replace: true });
+        }
+      }),
+    [closeWithAnimation, selectedServiceCategory, tab],
+  );
+  const closeAddProvider = useCallback(
+    () =>
+      closeWithAnimation('addProvider', () => {
+        setAddProviderOpen(false);
+        if (window.location.pathname === '/uslugi/dodaj') {
+          navigateTo(TAB_PATHS[tab], { replace: true });
+        }
+      }),
+    [closeWithAnimation, tab],
+  );
   const closeAddAd = useCallback(
     () =>
       closeWithAnimation('addAd', () => {
@@ -645,17 +687,20 @@ export default function App() {
       setMyAdsOpen(false);
       setConversationsOpen(false);
       setAddAdOpen(false);
+      setAddProviderOpen(false);
       setSellerProfile(null);
 
       // 1b. Regulamin & Polityka prywatności
       if (cleanPath === '/regulamin') {
         setSelectedAd(null);
+        setSelectedProvider(null);
         setLegalView('terms');
         if (mainRef.current) mainRef.current.scrollTop = 0;
         return;
       }
       if (cleanPath === '/polityka-prywatnosci') {
         setSelectedAd(null);
+        setSelectedProvider(null);
         setLegalView('privacy');
         if (mainRef.current) mainRef.current.scrollTop = 0;
         return;
@@ -665,7 +710,63 @@ export default function App() {
       // 2. Główne zakładki
       if (cleanPath === '/') {
         setSelectedAd(null);
+        setSelectedProvider(null);
         setTab('home');
+        return;
+      }
+
+      if (cleanPath === '/uslugi') {
+        setSelectedAd(null);
+        setSelectedProvider(null);
+        setSelectedServiceCategory('all');
+        setVisitedTabs((prev) => ({ ...prev, services: true }));
+        setTab('services');
+        return;
+      }
+
+      if (cleanPath === '/uslugi/dodaj') {
+        setSelectedAd(null);
+        setSelectedProvider(null);
+        setVisitedTabs((prev) => ({ ...prev, services: true }));
+        setTab('services');
+        setAddProviderOpen(true);
+        return;
+      }
+
+      if (cleanPath.startsWith('/uslugi/kategoria/')) {
+        const catSlug = cleanPath.replace('/uslugi/kategoria/', '');
+        const matchedCat = getServiceCategoryBySlug(catSlug);
+        setSelectedAd(null);
+        setSelectedProvider(null);
+        if (matchedCat) {
+          setSelectedServiceCategory(matchedCat.id);
+          setVisitedTabs((prev) => ({ ...prev, services: true }));
+          setTab('services');
+        } else {
+          setRouteNotFound(true);
+        }
+        return;
+      }
+
+      if (cleanPath.startsWith('/uslugi/')) {
+        const slugId = cleanPath.replace('/uslugi/', '');
+        const providerId = extractServiceProviderIdFromSlug(slugId);
+        const foundProvider = serviceProviders.find(
+          (p) => p.id === providerId || p.id === slugId,
+        );
+        setSelectedAd(null);
+        setVisitedTabs((prev) => ({ ...prev, services: true }));
+        setTab('services');
+        if (foundProvider) {
+          setSelectedProvider(foundProvider);
+          const canonical = buildServiceProviderUrl(foundProvider);
+          if (cleanPath !== canonical) {
+            window.history.replaceState({}, '', canonical);
+          }
+        } else {
+          setSelectedProvider(null);
+          setRouteNotFound(true);
+        }
         return;
       }
 
@@ -856,9 +957,10 @@ export default function App() {
 
       // 5. Fallback 404 dla nieznanych ścieżek
       setSelectedAd(null);
+      setSelectedProvider(null);
       setRouteNotFound(true);
     },
-    [adsList, user, conversations],
+    [adsList, serviceProviders, user, conversations],
   );
 
   // Inicjalny odczyt URL oraz nasłuchiwanie zdarzeń popstate (przyciski Wstecz / Dalej)
@@ -883,6 +985,8 @@ export default function App() {
     { active: !!sellerProfile, close: closeSellerProfile },
     { active: addPollModalOpen, close: closeAddPoll },
     { active: addRideOpen, close: closeAddRide },
+    { active: addProviderOpen, close: closeAddProvider },
+    { active: !!selectedProvider, close: closeSelectedProvider },
     { active: addAdOpen, close: closeAddAd },
     { active: !!selectedAd, close: closeSelectedAd },
     { active: filtersModalOpen, close: closeFiltersModal },
@@ -958,6 +1062,117 @@ export default function App() {
   const handleDeleteRide = useCallback((rideId: string) => {
     setRidesList((prev) => prev.filter((r) => r.id !== rideId));
     void deleteRideInSupabase(rideId);
+  }, []);
+
+  // Handlers for Strefa Zaufanej Usługi
+  const handleStartProviderChat = useCallback(
+    (provider: ServiceProvider) => {
+      requireAuth(
+        'Napisz do fachowca',
+        'Aby rozpocząć bezpośrednią rozmowę z usługodawcą na czacie mójMińsk, zaloguj się lub załóż bezpłatne konto sąsiedzkie.',
+        () => {
+          const serviceChatAd: Ad = {
+            id: `service_chat_${provider.id}`,
+            title: `Usługa: ${provider.businessName}`,
+            price: null,
+            kind: 'free',
+            category: getServiceCategoryById(provider.categoryId).shortLabel,
+            street: provider.street,
+            author: provider.name,
+            time: 'Zaufany Fachowiec',
+            image: provider.portfolio[0]?.imageUrl || avatarUrl(provider.avatarSeed),
+            status: 'active',
+            description: provider.description,
+          };
+          const existingConv = conversations.find((c) => c.adId === serviceChatAd.id);
+          setChatConversation(existingConv ?? null);
+          setChatAd(serviceChatAd);
+        },
+      );
+    },
+    [requireAuth, conversations],
+  );
+
+  const handleAddServiceReview = useCallback(
+    (
+      providerId: string,
+      reviewData: Omit<ServiceReview, 'id' | 'providerId' | 'createdAt' | 'timeLabel'>,
+    ) => {
+      const newReview: ServiceReview = {
+        ...reviewData,
+        id: `rev_${Date.now()}`,
+        providerId,
+        createdAt: new Date().toISOString().split('T')[0],
+        timeLabel: 'Przed chwilą',
+      };
+      setServiceProviders((prev) =>
+        prev.map((p) => {
+          if (p.id !== providerId) return p;
+          const updated = { ...p, reviews: [newReview, ...p.reviews] };
+          setSelectedProvider((curr) => (curr?.id === providerId ? updated : curr));
+          return updated;
+        }),
+      );
+    },
+    [],
+  );
+
+  const handleReplyServiceReview = useCallback(
+    (providerId: string, reviewId: string, replyText: string) => {
+      setServiceProviders((prev) =>
+        prev.map((p) => {
+          if (p.id !== providerId) return p;
+          const updated: ServiceProvider = {
+            ...p,
+            reviews: p.reviews.map((r) =>
+              r.id === reviewId
+                ? {
+                    ...r,
+                    providerReply: replyText,
+                    providerReplyAt: 'Przed chwilą',
+                  }
+                : r,
+            ),
+          };
+          setSelectedProvider((curr) => (curr?.id === providerId ? updated : curr));
+          return updated;
+        }),
+      );
+    },
+    [],
+  );
+
+  const handleTogglePromoteProvider = useCallback((providerId: string) => {
+    setServiceProviders((prev) =>
+      prev.map((p) => {
+        if (p.id !== providerId) return p;
+        const updated: ServiceProvider = {
+          ...p,
+          promoted: !p.promoted,
+        };
+        setSelectedProvider((curr) => (curr?.id === providerId ? updated : curr));
+        return updated;
+      }),
+    );
+  }, []);
+
+  const handleApproveServiceProvider = useCallback((providerId: string) => {
+    setServiceProviders((prev) =>
+      prev.map((p) => {
+        if (p.id !== providerId) return p;
+        const updated: ServiceProvider = {
+          ...p,
+          status: 'verified',
+          verifiedByAdmin: true,
+        };
+        setSelectedProvider((curr) => (curr?.id === providerId ? updated : curr));
+        return updated;
+      }),
+    );
+  }, []);
+
+  const handleServiceProviderCreated = useCallback((newProvider: ServiceProvider) => {
+    setServiceProviders((prev) => [newProvider, ...prev]);
   }, []);
 
   const handleReservationSuccess = useCallback(
@@ -1067,6 +1282,16 @@ export default function App() {
       };
     }
 
+    if (selectedProvider) {
+      const canonical = buildServiceProviderUrl(selectedProvider);
+      const catMeta = getServiceCategoryById(selectedProvider.categoryId);
+      return {
+        title: `${selectedProvider.businessName} (${selectedProvider.name} z ul. ${selectedProvider.street}) — ${catMeta.label} Mińsk Mazowiecki`,
+        description: selectedProvider.description,
+        canonicalPath: canonical,
+      };
+    }
+
     if (selectedAd) {
       const canonical = buildAdUrl(selectedAd);
       const priceLabel = selectedAd.kind === 'free' ? 'Za darmo' : `${selectedAd.price ?? 0} zł`;
@@ -1147,8 +1372,8 @@ export default function App() {
 
     if (sellerProfile) {
       return {
-        title: `${sellerProfile.name} z ul. ${sellerProfile.street} — Profil sąsiada`,
-        description: `Zobacz ogłoszenia i aktywność sąsiedzką użytkownika ${sellerProfile.name} (ul. ${sellerProfile.street}) w Mińsku Mazowieckim.`,
+        title: `${sellerProfile.name} · Mieszkaniec Mińska · ul. ${sellerProfile.street} — Profil sąsiada`,
+        description: `Zobacz ogłoszenia i aktywność sąsiedzką użytkownika ${sellerProfile.name} (Mieszkaniec Mińska · ul. ${sellerProfile.street}).`,
         canonicalPath: buildNeighborUrl(sellerProfile.name, sellerProfile.street),
         noindex: true,
       };
@@ -1194,6 +1419,21 @@ export default function App() {
           description: meta.description,
           url: `https://mojminsk.app${canonical}`,
         },
+      };
+    }
+
+    if (tab === 'services') {
+      const catMeta = getServiceCategoryById(selectedServiceCategory);
+      const canonical =
+        selectedServiceCategory === 'all' ? '/uslugi' : `/uslugi/kategoria/${catMeta.slug}`;
+      return {
+        title:
+          selectedServiceCategory === 'all'
+            ? 'Strefa Zaufanej Usługi — Katalog Fachowców i Usługodawców Mińsk Mazowiecki'
+            : `${catMeta.label} — Zaufane Usługi i Fachowcy Mińsk Mazowiecki`,
+        description:
+          'Zweryfikowani przez społeczność fachowcy, instalatorzy, elektrycy, hydraulicy i firmy z Mińska Mazowieckiego i Gminy. Opinie sąsiadów, realizacje i bezpośredni kontakt.',
+        canonicalPath: canonical,
       };
     }
 
@@ -1255,6 +1495,8 @@ export default function App() {
       void import('./screens/PollsModal');
       void import('./screens/AddPollModal');
       void import('./screens/LegalScreen');
+      void import('./screens/ServiceProviderModal');
+      void import('./screens/AddServiceProviderModal');
     }, 100);
     return () => {
       window.clearTimeout(id);
@@ -1280,6 +1522,8 @@ export default function App() {
             setLegalView(null);
             setPartnerOpen(false);
             setSelectedAd(null);
+            setSelectedProvider(null);
+            setAddProviderOpen(false);
             setMyAdsOpen(false);
             setReportAd(null);
             setAddAdOpen(false);
@@ -1442,6 +1686,11 @@ export default function App() {
                     setSellerProfile({ name, street });
                     navigateTo(buildNeighborUrl(name, street));
                   }}
+                  serviceProviders={serviceProviders}
+                  onProviderClick={(provider) => {
+                    setSelectedProvider(provider);
+                    navigateTo(buildServiceProviderUrl(provider));
+                  }}
                 />
               </div>
 
@@ -1493,6 +1742,40 @@ export default function App() {
                     initialStreetName={routeStreetName}
                     onCategoryRouteChange={setRouteCategoryId}
                     onStreetRouteChange={setRouteStreetName}
+                  />
+                </div>
+              )}
+
+              {visitedTabs.services && (
+                <div className={tab === 'services' ? 'min-h-full' : 'hidden'}>
+                  <ServicesScreen
+                    user={user}
+                    onProfile={handleOpenProfileOrAuth}
+                    providers={serviceProviders}
+                    activeCategoryId={selectedServiceCategory}
+                    onCategoryChange={(catId) => {
+                      setSelectedServiceCategory(catId);
+                      const catMeta = getServiceCategoryById(catId);
+                      const targetUrl =
+                        catId === 'all' ? '/uslugi' : `/uslugi/kategoria/${catMeta.slug}`;
+                      navigateTo(targetUrl, { replace: true });
+                    }}
+                    onOpenProvider={(provider) => {
+                      setSelectedProvider(provider);
+                      navigateTo(buildServiceProviderUrl(provider));
+                    }}
+                    onContactChat={handleStartProviderChat}
+                    onAddProviderClick={() =>
+                      requireAuth(
+                        'Zgłoś profil fachowca',
+                        'Aby utworzyć wizytówkę w Strefie Zaufanej Usługi, zaloguj się lub załóż bezpłatne konto sąsiedzkie.',
+                        () => {
+                          setAddProviderOpen(true);
+                          navigateTo('/uslugi/dodaj');
+                        },
+                      )
+                    }
+                    onApprovePendingProvider={handleApproveServiceProvider}
                   />
                 </div>
               )}
@@ -1949,6 +2232,50 @@ export default function App() {
           </AsyncViewBoundary>
         )}
 
+        {selectedProvider && (
+          <AsyncViewBoundary
+            viewKey={`service-provider-${selectedProvider.id}`}
+            level={3}
+            isClosing={!!exitingScreens['selectedProvider']}
+            skeleton={<AdDetailSkeleton />}
+          >
+            <ServiceProviderModal
+              provider={selectedProvider}
+              currentUser={user}
+              onClose={closeSelectedProvider}
+              isClosing={!!exitingScreens['selectedProvider']}
+              onContactChat={handleStartProviderChat}
+              onAddReview={handleAddServiceReview}
+              onReplyToReview={handleReplyServiceReview}
+              onTogglePromote={handleTogglePromoteProvider}
+              onApprovePending={handleApproveServiceProvider}
+              onAuthRequired={(title, desc) =>
+                setAuthModal({
+                  isOpen: true,
+                  actionTitle: title,
+                  actionDesc: desc,
+                })
+              }
+            />
+          </AsyncViewBoundary>
+        )}
+
+        {user && addProviderOpen && (
+          <AsyncViewBoundary
+            viewKey="modal-add-provider"
+            level={3}
+            isClosing={!!exitingScreens['addProvider']}
+            skeleton={<ModalFormSkeleton />}
+          >
+            <AddServiceProviderModal
+              user={user}
+              onClose={closeAddProvider}
+              isClosing={!!exitingScreens['addProvider']}
+              onSave={handleServiceProviderCreated}
+            />
+          </AsyncViewBoundary>
+        )}
+
         {user && addAdOpen && (
           <AsyncViewBoundary
             viewKey="modal-add-ad"
@@ -2127,26 +2454,6 @@ export default function App() {
             navigateTo('/logowanie');
           }}
         />
-
-        {/* Mobile Landscape Orientation Barrier */}
-        <div
-          role="alert"
-          aria-live="assertive"
-          className="landscape-barrier fixed inset-0 z-[9999] hidden flex-col items-center justify-center bg-ink/95 px-6 text-center text-white backdrop-blur-md select-none"
-        >
-          <div className="relative mb-4">
-            <div className="grid h-16 w-16 place-items-center rounded-3xl bg-sand text-ink shadow-lg animate-pulse">
-              <Smartphone className="h-9 w-9 rotate-90" aria-hidden />
-            </div>
-            <div className="absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full bg-coral text-ink shadow">
-              <RotateCcw className="h-4 w-4" aria-hidden />
-            </div>
-          </div>
-          <h2 className="font-display text-[20px] font-bold tracking-tight">Obróć telefon pionowo</h2>
-          <p className="mt-1.5 max-w-xs text-[13px] leading-relaxed text-white/75">
-            Aplikacja mójMińsk została zaprojektowana wyłącznie do pracy w widoku pionowym.
-          </p>
-        </div>
       </div>
     </div>
   );

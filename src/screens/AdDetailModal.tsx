@@ -970,7 +970,7 @@ export function AdDetailModal({
                 {user && (
                   <div className="mt-2 flex items-center gap-2 font-bold text-ink">
                     <span className="grid h-5 w-5 place-items-center rounded-full bg-sand-200 text-[11px] text-coral-800">✓</span>
-                    <span>{user.name} ze {user.street.as || user.street.name}</span>
+                    <span>{user.name} · Mieszkaniec Mińska · ul. {user.street.name}</span>
                   </div>
                 )}
               </div>
