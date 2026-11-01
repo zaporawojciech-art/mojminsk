@@ -66,6 +66,7 @@ export interface User {
   activationPin?: string;
   privacy?: UserPrivacy;
   isGuest?: boolean;
+  isAdmin?: boolean;
 }
 
 export const gminaCities: string[] = [

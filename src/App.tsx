@@ -1695,6 +1695,7 @@ export default function App() {
                 }
               >
                 <AdminScreen
+                  currentUser={user}
                   providers={serviceProviders}
                   ads={adsList}
                   posts={initialPosts}
@@ -1709,6 +1710,8 @@ export default function App() {
                   onDismissAdReport={handleDismissAdReport}
                   onDismissReportedReview={handleDismissReportedReview}
                   onDeleteReview={handleDeleteServiceReview}
+                  onAdminLoginSuccess={handleUpdateUser}
+                  onAdminLogout={() => handleUpdateUser(null)}
                   onExitAdmin={() => {
                     setAdminViewOpen(false);
                     navigateTo(TAB_PATHS[tab]);

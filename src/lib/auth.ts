@@ -39,6 +39,7 @@ interface DbProfileRow {
   verified: boolean;
   activation_pin: string | null;
   privacy: UserPrivacy | null;
+  is_admin?: boolean | null;
 }
 
 export function translateAuthError(rawMessage: string): string {
@@ -99,6 +100,7 @@ export async function fetchMyProfile(): Promise<User | null> {
       showPastAds: true,
       showRides: true,
     },
+    isAdmin: Boolean(row.is_admin),
   };
 }
 
@@ -213,6 +215,33 @@ export async function signInWithPassword(
       error: err instanceof Error ? translateAuthError(err.message) : 'Błąd połączenia z serwerem.',
     };
   }
+}
+
+export async function signInAdmin(
+  email: string,
+  password: string,
+): Promise<{ user: User | null; error: string | null }> {
+  const cleanEmail = email.trim().toLowerCase();
+  const res = await signInWithPassword(cleanEmail, password);
+  if (res.error || !res.user) {
+    return { user: null, error: res.error || 'Nieprawidłowe dane logowania.' };
+  }
+
+  // Weryfikacja uprawnień administratora (RBAC)
+  if (!res.user.isAdmin) {
+    await signOut();
+    return {
+      user: null,
+      error: 'To konto nie posiada uprawnień administratora platformy mójMińsk.',
+    };
+  }
+
+  return { user: res.user, error: null };
+}
+
+export async function checkIsCurrentUserAdmin(): Promise<boolean> {
+  const profile = await fetchMyProfile();
+  return Boolean(profile?.isAdmin);
 }
 
 export async function signOut(): Promise<void> {

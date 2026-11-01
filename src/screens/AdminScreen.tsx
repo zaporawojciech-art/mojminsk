@@ -31,8 +31,9 @@ import {
   Wrench,
   X,
 } from 'lucide-react';
-import type { Ad, Post } from '../data/mockData';
+import type { Ad, Post, User } from '../data/mockData';
 import { formatAdExactDate } from '../data/mockData';
+import { signInAdmin, signOut } from '../lib/auth';
 import {
   SERVICE_CATEGORIES,
   computeProviderRatingStats,
@@ -43,8 +44,6 @@ import {
 import { ProviderBrandMark, SERVICE_CATEGORY_ICONS } from './ServicesScreen';
 import { cn } from '../components/ui';
 import type { AdReportItem } from '../lib/supabase';
-
-const ADMIN_SESSION_STORAGE_KEY = 'mojminsk_admin_session_v1';
 
 export type AdminTabId = 'pending_services' | 'active_services' | 'moderation' | 'postal_pins';
 
@@ -101,6 +100,7 @@ const INITIAL_POSTAL_QUEUE: PostalPinVerificationItem[] = [
 ];
 
 interface AdminScreenProps {
+  currentUser?: User | null;
   providers: ServiceProvider[];
   ads: Ad[];
   posts: Post[];
@@ -115,10 +115,13 @@ interface AdminScreenProps {
   onDismissAdReport?: (reportId: string) => void;
   onDismissReportedReview?: (providerId: string, reviewId: string) => void;
   onDeleteReview?: (providerId: string, reviewId: string) => void;
+  onAdminLoginSuccess?: (user: User) => void;
+  onAdminLogout?: () => void;
   onExitAdmin: () => void;
 }
 
 export function AdminScreen({
+  currentUser,
   providers,
   ads,
   posts,
@@ -133,20 +136,17 @@ export function AdminScreen({
   onDismissAdReport,
   onDismissReportedReview,
   onDeleteReview,
+  onAdminLoginSuccess,
+  onAdminLogout,
   onExitAdmin,
 }: AdminScreenProps) {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem(ADMIN_SESSION_STORAGE_KEY) === 'true';
-    } catch {
-      return false;
-    }
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => Boolean(currentUser?.isAdmin));
 
-  // Login form state
-  const [loginEmail, setLoginEmail] = useState('admin@mojminsk.app');
+  // Login form state (zero hardcoded credentials)
+  const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
 
   // Dashboard state
@@ -271,48 +271,43 @@ export function AdminScreen({
     }, 4500);
   };
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoggingIn) return;
     const cleanEmail = loginEmail.trim().toLowerCase();
     const cleanPass = loginPassword.trim();
 
-    if (
-      (cleanEmail === 'admin@mojminsk.app' || cleanEmail === 'admin' || cleanEmail === 'wojtek@mojminsk.app') &&
-      (cleanPass === 'minsk2026' || cleanPass === 'admin123' || cleanPass === 'admin')
-    ) {
-      setLoginError(null);
-      setIsAuthenticated(true);
-      try {
-        localStorage.setItem(ADMIN_SESSION_STORAGE_KEY, 'true');
-      } catch {
-        // ignore
-      }
+    if (!cleanEmail || !cleanPass) {
+      setLoginError('Wprowadź adres e-mail oraz hasło administratora.');
       return;
     }
 
-    setLoginError('Nieprawidłowy login lub hasło administratora. Użyj danych dostępowych systemu.');
-  };
-
-  const handleQuickDemoLogin = () => {
-    setLoginEmail('admin@mojminsk.app');
-    setLoginPassword('minsk2026');
     setLoginError(null);
-    setIsAuthenticated(true);
+    setIsLoggingIn(true);
+
     try {
-      localStorage.setItem(ADMIN_SESSION_STORAGE_KEY, 'true');
+      const res = await signInAdmin(cleanEmail, cleanPass);
+      if (res.error || !res.user) {
+        setLoginError(res.error || 'Nieprawidłowe dane logowania administratora.');
+        setIsAuthenticated(false);
+      } else {
+        setIsAuthenticated(true);
+        setLoginPassword('');
+        onAdminLoginSuccess?.(res.user);
+      }
     } catch {
-      // ignore
+      setLoginError('Wystąpił błąd połączenia z serwerem autoryzacji.');
+      setIsAuthenticated(false);
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await signOut();
     setIsAuthenticated(false);
     setLoginPassword('');
-    try {
-      localStorage.removeItem(ADMIN_SESSION_STORAGE_KEY);
-    } catch {
-      // ignore
-    }
+    onAdminLogout?.();
   };
 
   const handleMarkLetterSent = (id: string) => {
@@ -371,18 +366,20 @@ export function AdminScreen({
                   htmlFor="admin-email"
                   className="block text-[11.5px] font-bold uppercase tracking-wider text-ink-500 mb-1.5"
                 >
-                  Login lub e-mail administratora
+                  Adres e-mail administratora
                 </label>
                 <div className="relative">
                   <Mail className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-400" />
                   <input
                     id="admin-email"
-                    type="text"
+                    type="email"
+                    autoComplete="email"
                     value={loginEmail}
                     onChange={(e) => setLoginEmail(e.target.value)}
-                    placeholder="admin@mojminsk.app"
+                    placeholder="Wprowadź e-mail konta admina"
                     required
-                    className="h-11 w-full rounded-xl border border-mist-300 bg-sand-50/40 pl-10 pr-3.5 text-[13.5px] font-semibold text-ink focus:border-ink focus:bg-white focus:outline-none"
+                    disabled={isLoggingIn}
+                    className="h-11 w-full rounded-xl border border-mist-300 bg-sand-50/40 pl-10 pr-3.5 text-[13.5px] font-semibold text-ink placeholder:text-ink-400 focus:border-ink focus:bg-white focus:outline-hidden disabled:opacity-60"
                   />
                 </div>
               </div>
@@ -399,11 +396,13 @@ export function AdminScreen({
                   <input
                     id="admin-password"
                     type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
-                    placeholder="Wpisz hasło (np. minsk2026)"
+                    placeholder="Wprowadź hasło"
                     required
-                    className="h-11 w-full rounded-xl border border-mist-300 bg-sand-50/40 pl-10 pr-10 text-[13.5px] font-semibold text-ink focus:border-ink focus:bg-white focus:outline-none"
+                    disabled={isLoggingIn}
+                    className="h-11 w-full rounded-xl border border-mist-300 bg-sand-50/40 pl-10 pr-10 text-[13.5px] font-semibold text-ink placeholder:text-ink-400 focus:border-ink focus:bg-white focus:outline-hidden disabled:opacity-60"
                   />
                   <button
                     type="button"
@@ -417,7 +416,7 @@ export function AdminScreen({
               </div>
 
               {loginError && (
-                <div className="flex items-start gap-2 rounded-xl bg-rose-50 border border-rose-200 p-3 text-[12px] font-semibold text-rose-900">
+                <div className="flex items-start gap-2 rounded-xl bg-rose-50 border border-rose-200 p-3 text-[12px] font-semibold text-rose-900 animate-in fade-in duration-150">
                   <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0 mt-0.5" />
                   <span>{loginError}</span>
                 </div>
@@ -425,34 +424,29 @@ export function AdminScreen({
 
               <button
                 type="submit"
-                className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-ink text-[13.5px] font-extrabold text-white shadow-sm hover:bg-ink-800 active:scale-[0.99] transition-all cursor-pointer"
+                disabled={isLoggingIn}
+                className={cn(
+                  'flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-ink text-[13.5px] font-extrabold text-white shadow-sm hover:bg-ink-800 active:scale-[0.99] transition-all cursor-pointer',
+                  isLoggingIn && 'opacity-70 cursor-not-allowed',
+                )}
               >
-                <ShieldCheck className="h-4 w-4 text-coral" />
-                <span>Zaloguj do Panelu Admina</span>
+                {isLoggingIn ? (
+                  <>
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    <span>Weryfikacja danych i uprawnień...</span>
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck className="h-4 w-4 text-coral" />
+                    <span>Zaloguj do Panelu Admina</span>
+                  </>
+                )}
               </button>
             </form>
 
-            {/* Quick 1-Click Login helper for testing */}
-            <div className="mt-5 pt-4 border-t border-mist-200">
-              <div className="rounded-2xl bg-sand-50 border border-sand-200 p-3.5">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-extrabold uppercase tracking-wider text-ink-500">
-                      Dane dostępowe (Tryb Demo)
-                    </p>
-                    <p className="mt-0.5 text-[12px] text-ink-600 font-mono">
-                      Login: <strong>admin@mojminsk.app</strong> · Hasło: <strong>minsk2026</strong>
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleQuickDemoLogin}
-                    className="shrink-0 rounded-xl bg-coral px-3 py-2 text-[11.5px] font-extrabold text-ink hover:bg-coral-400 active:scale-95 transition-all cursor-pointer shadow-2xs"
-                  >
-                    Wejdź 1-Click
-                  </button>
-                </div>
-              </div>
+            <div className="mt-5 pt-4 border-t border-mist-200 flex items-center justify-center gap-2 text-[11.5px] text-ink-500 font-medium text-center">
+              <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
+              <span>Autoryzacja Supabase Auth (RBAC) · Dostęp wyłącznie dla administratorów</span>
             </div>
           </div>
         </div>
