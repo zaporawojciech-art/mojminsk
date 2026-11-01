@@ -331,19 +331,16 @@ export const INITIAL_SERVICE_PROVIDERS: ServiceProvider[] = [
         id: 'port_1_1',
         imageUrl: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=900&q=80',
         caption: 'Montaż kotłowni z pompą ciepła i buforem',
-        locationLabel: 'ul. Spacerowa, Mińsk Maz.',
       },
       {
         id: 'port_1_2',
         imageUrl: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&w=900&q=80',
         caption: 'Rozdzielacz ogrzewania podłogowego — 11 pętli',
-        locationLabel: 'Stojadła',
       },
       {
         id: 'port_1_3',
         imageUrl: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=900&q=80',
         caption: 'Kompleksowa instalacja podtynkowa w łazience',
-        locationLabel: 'os. Serbinów',
       },
     ],
     reviews: [
@@ -433,13 +430,11 @@ export const INITIAL_SERVICE_PROVIDERS: ServiceProvider[] = [
         id: 'port_2_1',
         imageUrl: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&w=900&q=80',
         caption: 'Sznurowanie i opis rozdzielnicy 72-modułowej w domu jednorodzinnym',
-        locationLabel: 'Nowe Osiny',
       },
       {
         id: 'port_2_2',
         imageUrl: 'https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=900&q=80',
         caption: 'Montaż automatyki i wideodomofonu IP',
-        locationLabel: 'ul. Boczna, Mińsk Maz.',
       },
     ],
     reviews: [
@@ -514,13 +509,11 @@ export const INITIAL_SERVICE_PROVIDERS: ServiceProvider[] = [
         id: 'port_3_1',
         imageUrl: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=900&q=80',
         caption: 'Zabudowa kuchenna z wyspą — lakier mat + fornir dębowy',
-        locationLabel: 'ul. Kazikowskiego, Mińsk Maz.',
       },
       {
         id: 'port_3_2',
         imageUrl: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=900&q=80',
         caption: 'Garderoba pod skosem z oświetleniem LED w profilach',
-        locationLabel: 'Stare Osiny',
       },
     ],
     reviews: [
@@ -590,13 +583,11 @@ export const INITIAL_SERVICE_PROVIDERS: ServiceProvider[] = [
         id: 'port_4_1',
         imageUrl: 'https://images.unsplash.com/photo-1620626011761-996317b8d101?auto=format&fit=crop&w=900&q=80',
         caption: 'Łazienka w gresie wielkoformatowym 120x60 ze strefą walk-in',
-        locationLabel: 'ul. Sosnkowskiego, Mińsk Maz.',
       },
       {
         id: 'port_4_2',
         imageUrl: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=900&q=80',
         caption: 'Wykończenie salonu pod klucz — gładzie, sufity podwieszane LED',
-        locationLabel: 'os. Serbinów',
       },
     ],
     reviews: [
@@ -669,7 +660,6 @@ export const INITIAL_SERVICE_PROVIDERS: ServiceProvider[] = [
         id: 'port_5_1',
         imageUrl: 'https://images.unsplash.com/photo-1558904541-efa843a96f01?auto=format&fit=crop&w=900&q=80',
         caption: 'Założenie trawnika z rolki wraz z nawadnianiem i podjazdem',
-        locationLabel: 'Huta Mińska',
       },
     ],
     reviews: [
@@ -812,7 +802,6 @@ export const INITIAL_SERVICE_PROVIDERS: ServiceProvider[] = [
         id: 'port_8_1',
         imageUrl: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=900&q=80',
         caption: 'Montaż klimatyzatora ściennego Multisplit w mieszkaniu',
-        locationLabel: 'ul. Sosnkowskiego, Mińsk Maz.',
       },
     ],
     reviews: [],

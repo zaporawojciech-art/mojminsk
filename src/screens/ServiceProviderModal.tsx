@@ -1029,10 +1029,10 @@ export function ServiceProviderModal({
                   <div>
                     <h2 className="font-display text-[18px] font-bold text-ink flex items-center gap-2">
                       <Camera className="h-5 w-5 text-coral-700" />
-                      <span>Realizacje u sąsiadów ({provider.portfolio.length})</span>
+                      <span>Zdjęcia z realizacji ({provider.portfolio.length})</span>
                     </h2>
                     <p className="text-[12px] text-ink-500">
-                      Zdjęcia wykonanych prac na terenie Mińska Mazowieckiego i okolic
+                      Globalna lista zdjęć dokumentująca wykonane prace i projekty
                     </p>
                   </div>
                 </div>
@@ -1052,12 +1052,6 @@ export function ServiceProviderModal({
                           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                           loading="lazy"
                         />
-                        {item.locationLabel && (
-                          <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-lg bg-ink/80 backdrop-blur-xs px-2 py-0.5 text-[10px] font-bold text-white">
-                            <MapPin className="h-2.5 w-2.5 text-coral-300" />
-                            {item.locationLabel}
-                          </span>
-                        )}
                       </div>
                       <div className="p-2.5">
                         <p className="text-[12px] font-bold text-ink line-clamp-2 leading-snug">
@@ -1138,12 +1132,6 @@ export function ServiceProviderModal({
             <div className="p-4 bg-ink text-white flex items-center justify-between gap-4">
               <div>
                 <p className="text-[14px] font-bold">{provider.portfolio[lightboxIndex].caption}</p>
-                {provider.portfolio[lightboxIndex].locationLabel && (
-                  <p className="mt-0.5 text-[12px] text-sand flex items-center gap-1">
-                    <MapPin className="h-3.5 w-3.5 text-coral" />
-                    {provider.portfolio[lightboxIndex].locationLabel}
-                  </p>
-                )}
               </div>
 
               {provider.portfolio.length > 1 && (

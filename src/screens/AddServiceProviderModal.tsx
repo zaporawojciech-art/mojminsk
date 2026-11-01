@@ -33,32 +33,27 @@ interface AddServiceProviderModalProps {
 
 const SAMPLE_PORTFOLIO_BY_CATEGORY: Record<
   Exclude<ServiceCategoryId, 'all'>,
-  { imageUrl: string; caption: string; locationLabel: string }
+  { imageUrl: string; caption: string }
 > = {
   instalacje: {
     imageUrl: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=900&q=80',
     caption: 'Montaż kotłowni i instalacji u klienta',
-    locationLabel: 'Mińsk Mazowiecki',
   },
   remonty: {
     imageUrl: 'https://images.unsplash.com/photo-1620626011761-996317b8d101?auto=format&fit=crop&w=900&q=80',
     caption: 'Kompleksowe wykończenie wnętrza i łazienki pod klucz',
-    locationLabel: 'Mińsk Mazowiecki',
   },
   stolarz: {
     imageUrl: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=900&q=80',
     caption: 'Realizacja zabudowy meblowej na wymiar',
-    locationLabel: 'Mińsk Mazowiecki',
   },
   ogrod: {
     imageUrl: 'https://images.unsplash.com/photo-1558904541-efa843a96f01?auto=format&fit=crop&w=900&q=80',
     caption: 'Ułożenie kostki brukowej i zagospodarowanie ogrodu',
-    locationLabel: 'Mińsk Mazowiecki',
   },
   auto: {
     imageUrl: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=900&q=80',
     caption: 'Diagnostyka i serwis mechaniczny pojazdu',
-    locationLabel: 'Mińsk Mazowiecki',
   },
 };
 
@@ -102,7 +97,6 @@ export function AddServiceProviderModal({
 
   const [portfolio, setPortfolio] = useState<ServicePortfolioItem[]>([]);
   const [newPhotoCaption, setNewPhotoCaption] = useState('');
-  const [newPhotoLocation, setNewPhotoLocation] = useState(`ul. ${user.street.name}, Mińsk Maz.`);
   const [error, setError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -176,7 +170,6 @@ export function AddServiceProviderModal({
             id: `port_${Date.now()}`,
             imageUrl: reader.result as string,
             caption: newPhotoCaption.trim() || `Realizacja — ${currentCatMeta.shortLabel}`,
-            locationLabel: newPhotoLocation.trim() || 'Mińsk Mazowiecki',
           },
         ]);
         setNewPhotoCaption('');
@@ -195,7 +188,6 @@ export function AddServiceProviderModal({
         id: `port_${Date.now()}`,
         imageUrl: sample.imageUrl,
         caption: newPhotoCaption.trim() || sample.caption,
-        locationLabel: newPhotoLocation.trim() || sample.locationLabel,
       },
     ]);
     setNewPhotoCaption('');
@@ -564,29 +556,20 @@ export function AddServiceProviderModal({
                   <span>3. Zdjęcia z realizacji ({portfolio.length}/6)</span>
                 </h2>
                 <p className="text-[12px] text-ink-500">
-                  Pokaż sąsiadom efekty swojej pracy (do 6 zdjęć z krótkim podpisem)
+                  Pokaż efekty swojej pracy w globalnej galerii realizacji (do 6 zdjęć z podpisem)
                 </p>
               </div>
             </div>
 
             {portfolio.length < 6 && (
               <div className="rounded-2xl bg-mist/60 p-3.5 border border-mist-200 space-y-2.5">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 xl:grid-cols-2 gap-2.5">
-                  <input
-                    type="text"
-                    value={newPhotoCaption}
-                    onChange={(e) => setNewPhotoCaption(e.target.value)}
-                    placeholder="Podpis zdjęcia (np. Montaż kotłowni)"
-                    className="h-10 rounded-xl border border-mist-300 bg-white px-3 text-[12.5px] text-ink focus:border-ink focus:outline-none"
-                  />
-                  <input
-                    type="text"
-                    value={newPhotoLocation}
-                    onChange={(e) => setNewPhotoLocation(e.target.value)}
-                    placeholder="Lokalizacja (np. ul. Spacerowa, Mińsk Maz.)"
-                    className="h-10 rounded-xl border border-mist-300 bg-white px-3 text-[12.5px] text-ink focus:border-ink focus:outline-none"
-                  />
-                </div>
+                <input
+                  type="text"
+                  value={newPhotoCaption}
+                  onChange={(e) => setNewPhotoCaption(e.target.value)}
+                  placeholder="Podpis zdjęcia realizacji (np. Montaż kotłowni i instalacji C.O.)"
+                  className="h-10 w-full rounded-xl border border-mist-300 bg-white px-3 text-[12.5px] text-ink focus:border-ink focus:outline-none"
+                />
 
                 <div className="flex flex-wrap gap-2">
                   <input
@@ -640,7 +623,6 @@ export function AddServiceProviderModal({
                     </button>
                     <div className="p-2">
                       <p className="truncate text-[11px] font-bold text-ink">{item.caption}</p>
-                      <p className="truncate text-[10px] text-ink-500">{item.locationLabel}</p>
                     </div>
                   </div>
                 ))}

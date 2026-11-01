@@ -819,9 +819,6 @@ export function AdminScreen({
                                     />
                                     <div className="text-[11px]">
                                       <p className="font-bold text-ink line-clamp-1">{item.caption}</p>
-                                      {item.locationLabel && (
-                                        <p className="text-ink-400">{item.locationLabel}</p>
-                                      )}
                                     </div>
                                   </div>
                                 ))}
