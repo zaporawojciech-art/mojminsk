@@ -65,17 +65,26 @@ import {
   TAB_PATHS,
 } from './router/urlUtils';
 import {
+  addServiceReviewInSupabase,
+  approveServiceProviderInSupabase,
   castPollVoteInSupabase,
   createAdInSupabase,
   createPollInSupabase,
   createRideInSupabase,
+  createServiceProviderInSupabase,
   deleteAdInSupabase,
   deleteRideInSupabase,
+  deleteServiceReviewInSupabase,
   dismissAdReportInSupabase,
+  dismissReportedReviewInSupabase,
   fetchAdReportsFromSupabase,
   fetchAdsFromSupabase,
   fetchPollsFromSupabase,
   fetchRidesFromSupabase,
+  fetchServiceProvidersFromSupabase,
+  rejectOrDeleteServiceProviderInSupabase,
+  replyServiceReviewInSupabase,
+  revokeServiceProviderVerificationInSupabase,
   updateAdInSupabase,
   updateAdStatusInSupabase,
   type AdReportItem,
@@ -405,6 +414,9 @@ export default function App() {
     });
     void fetchAdReportsFromSupabase().then((remoteReports) => {
       if (remoteReports && remoteReports.length > 0) setAdReports(remoteReports);
+    });
+    void fetchServiceProvidersFromSupabase().then((remoteProviders) => {
+      if (remoteProviders && remoteProviders.length > 0) setServiceProviders(remoteProviders);
     });
     void fetchRidesFromSupabase().then((remoteRides) => {
       if (remoteRides !== null) setRidesList(remoteRides);
@@ -1156,6 +1168,7 @@ export default function App() {
           return updated;
         }),
       );
+      void addServiceReviewInSupabase(providerId, newReview);
     },
     [],
   );
@@ -1181,6 +1194,7 @@ export default function App() {
           return updated;
         }),
       );
+      void replyServiceReviewInSupabase(providerId, reviewId, replyText);
     },
     [],
   );
@@ -1212,11 +1226,13 @@ export default function App() {
         return updated;
       }),
     );
+    void approveServiceProviderInSupabase(providerId);
   }, []);
 
   const handleRejectOrDeleteServiceProvider = useCallback((providerId: string) => {
     setServiceProviders((prev) => prev.filter((p) => p.id !== providerId));
     setSelectedProvider((curr) => (curr?.id === providerId ? null : curr));
+    void rejectOrDeleteServiceProviderInSupabase(providerId);
   }, []);
 
   const handleRevokeServiceProviderVerification = useCallback((providerId: string) => {
@@ -1232,6 +1248,7 @@ export default function App() {
         return updated;
       }),
     );
+    void revokeServiceProviderVerificationInSupabase(providerId);
   }, []);
 
   const handleDismissReportedReview = useCallback((providerId: string, reviewId: string) => {
@@ -1246,6 +1263,7 @@ export default function App() {
         return updated;
       }),
     );
+    void dismissReportedReviewInSupabase(providerId, reviewId);
   }, []);
 
   const handleDeleteServiceReview = useCallback((providerId: string, reviewId: string) => {
@@ -1260,10 +1278,12 @@ export default function App() {
         return updated;
       }),
     );
+    void deleteServiceReviewInSupabase(providerId, reviewId);
   }, []);
 
   const handleServiceProviderCreated = useCallback((newProvider: ServiceProvider) => {
     setServiceProviders((prev) => [newProvider, ...prev]);
+    void createServiceProviderInSupabase(newProvider);
   }, []);
 
   const handleReservationSuccess = useCallback(

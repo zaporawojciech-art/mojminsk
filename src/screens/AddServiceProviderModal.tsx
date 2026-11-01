@@ -83,8 +83,18 @@ export function AddServiceProviderModal({
   const [street, setStreet] = useState(user.street.name);
   const [city] = useState('Mińsk Mazowiecki');
   const [phone, setPhone] = useState('+48 ');
-  const [yearsExperience, setYearsExperience] = useState<number>(8);
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const [businessStartDate, setBusinessStartDate] = useState<string>('2018-01-01');
   const [description, setDescription] = useState('');
+
+  const yearsExperience = (() => {
+    if (!businessStartDate) return 1;
+    const start = new Date(businessStartDate);
+    if (Number.isNaN(start.getTime())) return 1;
+    const diffMs = Date.now() - start.getTime();
+    const diffYears = Math.floor(diffMs / (1000 * 60 * 60 * 24 * 365.25));
+    return Math.max(1, diffYears);
+  })();
 
   // Logo vs Resident Avatar state
   const [brandMode, setBrandMode] = useState<'avatar' | 'logo'>('avatar');
@@ -220,6 +230,7 @@ export function AddServiceProviderModal({
       description: description.trim(),
       phone: phone.trim(),
       yearsExperience: Math.max(1, Number(yearsExperience) || 1),
+      businessStartDate,
       verifiedByAdmin: false,
       status: 'pending_verification',
       promoted: false,
@@ -508,16 +519,22 @@ export function AddServiceProviderModal({
 
               <div>
                 <label className="block text-[11.5px] font-bold uppercase tracking-wider text-ink-500 mb-1.5">
-                  Staż w branży (lata)
+                  Data rozpoczęcia działalności
                 </label>
                 <input
-                  type="number"
-                  min={1}
-                  max={50}
-                  value={yearsExperience}
-                  onChange={(e) => setYearsExperience(Number(e.target.value))}
+                  type="date"
+                  min="1960-01-01"
+                  max={todayIso}
+                  value={businessStartDate}
+                  onChange={(e) => setBusinessStartDate(e.target.value)}
                   className="h-11 w-full rounded-xl border border-mist-300 bg-mist/40 px-3.5 text-[13px] font-semibold text-ink focus:border-ink focus:bg-white focus:outline-none"
                 />
+                <p className="mt-1 text-[11px] font-semibold text-ink-500">
+                  Wyliczony staż:{' '}
+                  <span className="font-bold text-ink">
+                    {yearsExperience} {yearsExperience === 1 ? 'rok' : yearsExperience < 5 ? 'lata' : 'lat'}
+                  </span>
+                </p>
               </div>
             </div>
 

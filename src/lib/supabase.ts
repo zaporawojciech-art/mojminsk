@@ -7,6 +7,12 @@ import {
   type Ride,
   type Street,
 } from '../data/mockData';
+import type {
+  ServiceCategoryId,
+  ServicePortfolioItem,
+  ServiceProvider,
+  ServiceReview,
+} from '../data/servicesData';
 import { supabaseRest, supabaseRpc } from './supabaseClient';
 
 async function restFetch<T>(
@@ -589,6 +595,283 @@ export async function reportPostInSupabase(report: {
         reporter_profile_id: report.reporterProfileId ?? null,
         reason: report.reason,
         details: report.details ?? null,
+      }),
+    },
+    'return=minimal',
+  );
+  return res !== null;
+}
+
+/* ---------------- 6. Strefa Zaufanej Usługi (Fachowcy & Opinie) ---------------- */
+
+interface DbServiceReview {
+  id: string;
+  provider_id: string;
+  author_id: string | null;
+  author_name: string;
+  author_street: string;
+  author_seed: string;
+  rating: number;
+  comment: string;
+  service_tag: string | null;
+  provider_reply: string | null;
+  provider_reply_at: string | null;
+  reported: boolean;
+  report_reason: string | null;
+  created_at: string;
+}
+
+interface DbServiceProvider {
+  id: string;
+  author_id: string | null;
+  name: string;
+  business_name: string;
+  category_id: string;
+  tags: string[];
+  street: string;
+  city: string;
+  avatar_seed: string;
+  logo_url: string | null;
+  description: string;
+  phone: string;
+  years_experience: number;
+  verified_by_admin: boolean;
+  status: 'verified' | 'pending_verification' | 'rejected';
+  promoted: boolean;
+  portfolio: ServicePortfolioItem[];
+  created_at: string;
+  updated_at: string;
+  service_reviews?: DbServiceReview[];
+}
+
+export async function fetchServiceProvidersFromSupabase(): Promise<ServiceProvider[] | null> {
+  const rows = await restFetch<DbServiceProvider[]>(
+    'service_providers?select=*,service_reviews(*)&order=created_at.desc',
+  );
+  if (!rows) return null;
+
+  return rows.map((r) => {
+    const reviews: ServiceReview[] = (r.service_reviews || []).map((rev) => ({
+      id: rev.id,
+      providerId: rev.provider_id,
+      authorId: rev.author_id,
+      authorName: rev.author_name,
+      authorStreet: rev.author_street,
+      authorSeed: rev.author_seed,
+      rating: rev.rating,
+      comment: rev.comment,
+      serviceTag: rev.service_tag ?? undefined,
+      providerReply: rev.provider_reply ?? undefined,
+      providerReplyAt: rev.provider_reply_at ?? undefined,
+      createdAt: rev.created_at,
+      timeLabel: formatRelativeChatTime(rev.created_at) || 'niedawno',
+      reported: Boolean(rev.reported),
+    }));
+
+    return {
+      id: r.id,
+      authorId: r.author_id,
+      name: r.name,
+      businessName: r.business_name,
+      categoryId: r.category_id as Exclude<ServiceCategoryId, 'all'>,
+      tags: r.tags || [],
+      street: r.street,
+      city: r.city,
+      avatarSeed: r.avatar_seed,
+      logoUrl: r.logo_url,
+      description: r.description,
+      phone: r.phone,
+      yearsExperience: r.years_experience,
+      verifiedByAdmin: r.verified_by_admin,
+      status: r.status as 'verified' | 'pending_verification',
+      promoted: r.promoted,
+      portfolio: r.portfolio || [],
+      reviews,
+      createdAt: r.created_at,
+    };
+  });
+}
+
+export async function createServiceProviderInSupabase(
+  provider: ServiceProvider,
+): Promise<boolean> {
+  const payload: Record<string, unknown> = {
+    id: provider.id,
+    name: provider.name,
+    business_name: provider.businessName,
+    category_id: provider.categoryId,
+    tags: provider.tags,
+    street: provider.street,
+    city: provider.city || 'Mińsk Mazowiecki',
+    avatar_seed: provider.avatarSeed,
+    logo_url: provider.logoUrl ?? null,
+    description: provider.description,
+    phone: provider.phone,
+    years_experience: provider.yearsExperience || 1,
+    verified_by_admin: false,
+    status: provider.status || 'pending_verification',
+    promoted: provider.promoted ?? false,
+    portfolio: provider.portfolio || [],
+    created_at: provider.createdAt || new Date().toISOString(),
+  };
+
+  if (provider.authorId) {
+    payload.author_id = provider.authorId;
+  }
+
+  const res = await restFetch(
+    'service_providers',
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+    'return=minimal',
+  );
+  return res !== null;
+}
+
+export async function approveServiceProviderInSupabase(
+  providerId: string,
+): Promise<boolean> {
+  const res = await restFetch(
+    `service_providers?id=eq.${encodeURIComponent(providerId)}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({
+        status: 'verified',
+        verified_by_admin: true,
+      }),
+    },
+    'return=minimal',
+  );
+  return res !== null;
+}
+
+export async function revokeServiceProviderVerificationInSupabase(
+  providerId: string,
+): Promise<boolean> {
+  const res = await restFetch(
+    `service_providers?id=eq.${encodeURIComponent(providerId)}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({
+        status: 'pending_verification',
+        verified_by_admin: false,
+      }),
+    },
+    'return=minimal',
+  );
+  return res !== null;
+}
+
+export async function rejectOrDeleteServiceProviderInSupabase(
+  providerId: string,
+): Promise<boolean> {
+  const res = await restFetch(
+    `service_providers?id=eq.${encodeURIComponent(providerId)}`,
+    { method: 'DELETE' },
+    'return=minimal',
+  );
+  return res !== null;
+}
+
+export async function addServiceReviewInSupabase(
+  providerId: string,
+  review: ServiceReview,
+): Promise<boolean> {
+  const payload: Record<string, unknown> = {
+    id: review.id,
+    provider_id: providerId,
+    author_name: review.authorName,
+    author_street: review.authorStreet,
+    author_seed: review.authorSeed,
+    rating: review.rating,
+    comment: review.comment,
+    service_tag: review.serviceTag ?? null,
+    provider_reply: review.providerReply ?? null,
+    provider_reply_at: review.providerReplyAt ?? null,
+    reported: false,
+    created_at: review.createdAt || new Date().toISOString(),
+  };
+
+  if (review.authorId) {
+    payload.author_id = review.authorId;
+  }
+
+  const res = await restFetch(
+    'service_reviews',
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+    'return=minimal',
+  );
+  return res !== null;
+}
+
+export async function dismissReportedReviewInSupabase(
+  providerId: string,
+  reviewId: string,
+): Promise<boolean> {
+  void providerId;
+  const res = await restFetch(
+    `service_reviews?id=eq.${encodeURIComponent(reviewId)}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({
+        reported: false,
+        report_reason: null,
+      }),
+    },
+    'return=minimal',
+  );
+  return res !== null;
+}
+
+export async function deleteServiceReviewInSupabase(
+  providerId: string,
+  reviewId: string,
+): Promise<boolean> {
+  void providerId;
+  const res = await restFetch(
+    `service_reviews?id=eq.${encodeURIComponent(reviewId)}`,
+    { method: 'DELETE' },
+    'return=minimal',
+  );
+  return res !== null;
+}
+
+export async function replyServiceReviewInSupabase(
+  providerId: string,
+  reviewId: string,
+  replyText: string,
+): Promise<boolean> {
+  void providerId;
+  const res = await restFetch(
+    `service_reviews?id=eq.${encodeURIComponent(reviewId)}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({
+        provider_reply: replyText,
+        provider_reply_at: 'Przed chwilą',
+      }),
+    },
+    'return=minimal',
+  );
+  return res !== null;
+}
+
+export async function reportServiceReviewInSupabase(
+  reviewId: string,
+  reason: string,
+): Promise<boolean> {
+  const res = await restFetch(
+    `service_reviews?id=eq.${encodeURIComponent(reviewId)}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({
+        reported: true,
+        report_reason: reason,
       }),
     },
     'return=minimal',

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   AlertTriangle,
   ArrowLeft,
@@ -142,6 +142,12 @@ export function AdminScreen({
 }: AdminScreenProps) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => Boolean(currentUser?.isAdmin));
 
+  useEffect(() => {
+    if (currentUser?.isAdmin) {
+      setIsAuthenticated(true);
+    }
+  }, [currentUser?.isAdmin]);
+
   // Login form state (zero hardcoded credentials)
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -152,6 +158,12 @@ export function AdminScreen({
   // Dashboard state
   const [activeTab, setActiveTab] = useState<AdminTabId>('pending_services');
   const [catalogCategoryFilter, setCatalogCategoryFilter] = useState<ServiceCategoryId>('all');
+  const [providerSearchQuery, setProviderSearchQuery] = useState('');
+  const [providerToDelete, setProviderToDelete] = useState<ServiceProvider | null>(null);
+  const [reviewToDelete, setReviewToDelete] = useState<{
+    provider: ServiceProvider;
+    review: ServiceProvider['reviews'][number];
+  } | null>(null);
   const [postalQueue, setPostalQueue] = useState<PostalPinVerificationItem[]>(INITIAL_POSTAL_QUEUE);
 
   const pendingProviders = useMemo(
@@ -165,9 +177,23 @@ export function AdminScreen({
   );
 
   const filteredVerifiedProviders = useMemo(() => {
-    if (catalogCategoryFilter === 'all') return verifiedProviders;
-    return verifiedProviders.filter((p) => p.categoryId === catalogCategoryFilter);
-  }, [verifiedProviders, catalogCategoryFilter]);
+    let list = verifiedProviders;
+    if (catalogCategoryFilter !== 'all') {
+      list = list.filter((p) => p.categoryId === catalogCategoryFilter);
+    }
+    const q = providerSearchQuery.trim().toLowerCase();
+    if (q) {
+      list = list.filter(
+        (p) =>
+          p.businessName.toLowerCase().includes(q) ||
+          p.name.toLowerCase().includes(q) ||
+          p.street.toLowerCase().includes(q) ||
+          p.phone.includes(q) ||
+          p.tags.some((t) => t.toLowerCase().includes(q)),
+      );
+    }
+    return list;
+  }, [verifiedProviders, catalogCategoryFilter, providerSearchQuery]);
 
   const reportedReviews = useMemo(() => {
     const list: { provider: ServiceProvider; review: ServiceProvider['reviews'][number] }[] = [];
@@ -268,6 +294,33 @@ export function AdminScreen({
     }
     setTimeout(() => {
       setDeleteSuccessToast((prev) => (prev?.includes(targetTitle) ? null : prev));
+    }, 4500);
+  };
+
+  const handleConfirmDeleteProvider = () => {
+    if (!providerToDelete) return;
+    const targetName = providerToDelete.businessName;
+    const isPending = providerToDelete.status === 'pending_verification';
+    onRejectOrDeleteProvider(providerToDelete.id);
+    setProviderToDelete(null);
+    setDeleteSuccessToast(
+      isPending
+        ? `Wniosek „${targetName}” został odrzucony i usunięty z bazy danych.`
+        : `Fachowiec „${targetName}” został trwale usunięty z katalogu usług.`
+    );
+    setTimeout(() => {
+      setDeleteSuccessToast((prev) => (prev?.includes(targetName) ? null : prev));
+    }, 4500);
+  };
+
+  const handleConfirmDeleteReview = () => {
+    if (!reviewToDelete) return;
+    const { provider, review } = reviewToDelete;
+    onDeleteReview?.(provider.id, review.id);
+    setReviewToDelete(null);
+    setDeleteSuccessToast('Opinia została trwale usunięta z bazy danych Supabase.');
+    setTimeout(() => {
+      setDeleteSuccessToast((prev) => (prev?.includes('Opinia') ? null : prev));
     }, 4500);
   };
 
@@ -881,7 +934,10 @@ export function AdminScreen({
                         <div className="flex sm:flex-row lg:flex-col items-stretch gap-2 shrink-0 lg:w-56 pt-3 lg:pt-0 border-t lg:border-t-0 border-mist-200">
                           <button
                             type="button"
-                            onClick={() => onApproveProvider(provider.id)}
+                            onClick={() => {
+                              onApproveProvider(provider.id);
+                              setDeleteSuccessToast(`Wniosek „${provider.businessName}” został zatwierdzony i opublikowany w katalogu.`);
+                            }}
                             className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-[13px] font-extrabold text-white shadow-sm hover:bg-emerald-700 active:scale-[0.98] transition-all cursor-pointer"
                           >
                             <Check className="h-4 w-4 stroke-[2.8]" />
@@ -899,7 +955,7 @@ export function AdminScreen({
 
                           <button
                             type="button"
-                            onClick={() => onRejectOrDeleteProvider(provider.id)}
+                            onClick={() => setProviderToDelete(provider)}
                             className="flex h-9 items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50/70 px-3 text-[12px] font-bold text-rose-800 hover:bg-rose-100 transition-colors cursor-pointer"
                           >
                             <X className="h-3.5 w-3.5" />
@@ -920,7 +976,7 @@ export function AdminScreen({
         ===================================================================== */}
         {activeTab === 'active_services' && (
           <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
               <div>
                 <h2 className="font-display text-[20px] font-extrabold text-ink">
                   Zweryfikowani usługodawcy w katalogu ({filteredVerifiedProviders.length})
@@ -930,113 +986,169 @@ export function AdminScreen({
                 </p>
               </div>
 
-              {/* 1-Click category filter */}
-              <div className="flex flex-wrap items-center gap-1.5">
-                {SERVICE_CATEGORIES.map((cat) => {
-                  const active = catalogCategoryFilter === cat.id;
-                  return (
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                {/* Wyszukiwarka tekstowa */}
+                <div className="relative min-w-[200px] sm:min-w-[220px]">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-ink-400" />
+                  <input
+                    type="text"
+                    value={providerSearchQuery}
+                    onChange={(e) => setProviderSearchQuery(e.target.value)}
+                    placeholder="Szukaj fachowca, ulicy..."
+                    className="h-9 w-full rounded-xl bg-white border border-mist-300 pl-8 pr-7 text-[12px] font-medium text-ink placeholder:text-ink-400 focus:outline-hidden focus:border-ink shadow-2xs"
+                  />
+                  {providerSearchQuery && (
                     <button
-                      key={cat.id}
                       type="button"
-                      onClick={() => setCatalogCategoryFilter(cat.id)}
-                      className={cn(
-                        'rounded-xl px-3 py-1.5 text-[11.5px] font-bold transition-all cursor-pointer border',
-                        active
-                          ? 'bg-ink text-white border-ink'
-                          : 'bg-white text-ink-600 border-mist-200 hover:bg-mist/60',
-                      )}
+                      onClick={() => setProviderSearchQuery('')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-ink-400 hover:text-ink cursor-pointer p-0.5"
+                      title="Wyczyść szukanie"
                     >
-                      {cat.shortLabel}
+                      <X className="h-3.5 w-3.5" />
                     </button>
-                  );
-                })}
+                  )}
+                </div>
+
+                {/* 1-Click category filter */}
+                <div className="flex flex-wrap items-center gap-1">
+                  {SERVICE_CATEGORIES.map((cat) => {
+                    const active = catalogCategoryFilter === cat.id;
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setCatalogCategoryFilter(cat.id)}
+                        className={cn(
+                          'rounded-xl px-2.5 py-1.5 text-[11px] font-bold transition-all cursor-pointer border',
+                          active
+                            ? 'bg-ink text-white border-ink'
+                            : 'bg-white text-ink-600 border-mist-200 hover:bg-mist/60',
+                        )}
+                      >
+                        {cat.shortLabel}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
-            <div className="rounded-2xl bg-white border border-mist-200 divide-y divide-mist-200 overflow-hidden shadow-card">
-              {filteredVerifiedProviders.map((provider) => {
-                const cat = getServiceCategoryById(provider.categoryId);
-                const stats = computeProviderRatingStats(provider.reviews);
-
-                return (
-                  <div
-                    key={provider.id}
-                    className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-sand-50/40 transition-colors"
+            {filteredVerifiedProviders.length === 0 ? (
+              <div className="rounded-3xl bg-white border border-mist-200 p-10 text-center shadow-card">
+                <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-mist text-ink-500">
+                  <Search className="h-6 w-6" />
+                </div>
+                <h3 className="mt-3 font-display text-[17px] font-bold text-ink">
+                  Brak fachowców spełniających kryteria
+                </h3>
+                <p className="mx-auto mt-1 max-w-sm text-[12.5px] text-ink-500">
+                  {providerSearchQuery
+                    ? `Nie znaleziono wyników dla zapytania „${providerSearchQuery}”.`
+                    : 'Brak zweryfikowanych usługodawców w wybranej kategorii.'}
+                </p>
+                {(providerSearchQuery || catalogCategoryFilter !== 'all') && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setProviderSearchQuery('');
+                      setCatalogCategoryFilter('all');
+                    }}
+                    className="mt-3.5 inline-flex items-center gap-1.5 rounded-xl bg-ink px-3.5 py-1.5 text-[12px] font-bold text-white hover:bg-ink-800 cursor-pointer"
                   >
-                    <div className="flex items-start gap-3.5 min-w-0 flex-1">
-                      <ProviderBrandMark provider={provider} size="md" />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-display text-[15px] font-bold text-ink">
-                            {provider.businessName}
-                          </span>
-                          <span
-                            className={cn(
-                              'rounded-md px-2 py-0.5 text-[10.5px] font-bold border',
-                              cat.tone.bg,
-                              cat.tone.text,
-                              cat.tone.border,
-                            )}
-                          >
-                            {cat.shortLabel}
-                          </span>
-                          <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 border border-amber-200 px-1.5 py-0.5 text-[11px] font-bold text-amber-950">
-                            <Star className="h-3 w-3 fill-amber-400 text-amber-500" />
-                            <span>{stats.count > 0 ? stats.average.toFixed(1) : 'Nowy'}</span>
-                            <span className="text-[10px] text-amber-700">({stats.count})</span>
-                          </span>
-                        </div>
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    <span>Zresetuj filtry</span>
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="rounded-2xl bg-white border border-mist-200 divide-y divide-mist-200 overflow-hidden shadow-card">
+                {filteredVerifiedProviders.map((provider) => {
+                  const cat = getServiceCategoryById(provider.categoryId);
+                  const stats = computeProviderRatingStats(provider.reviews);
 
-                        <p className="mt-0.5 text-[12px] text-ink-500">
-                          <strong className="text-ink-700">{provider.name}</strong> · ul. {provider.street} · tel. {provider.phone} · {provider.yearsExperience} l. stażu
-                        </p>
-
-                        <div className="mt-1.5 flex flex-wrap gap-1">
-                          {provider.tags.map((t) => (
-                            <span
-                              key={t}
-                              className="rounded-md bg-mist/80 px-2 py-0.5 text-[10px] font-semibold text-ink-600"
-                            >
-                              {t}
+                  return (
+                    <div
+                      key={provider.id}
+                      className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-sand-50/40 transition-colors"
+                    >
+                      <div className="flex items-start gap-3.5 min-w-0 flex-1">
+                        <ProviderBrandMark provider={provider} size="md" />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-display text-[15px] font-bold text-ink">
+                              {provider.businessName}
                             </span>
-                          ))}
+                            <span
+                              className={cn(
+                                'rounded-md px-2 py-0.5 text-[10.5px] font-bold border',
+                                cat.tone.bg,
+                                cat.tone.text,
+                                cat.tone.border,
+                              )}
+                            >
+                              {cat.shortLabel}
+                            </span>
+                            <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 border border-amber-200 px-1.5 py-0.5 text-[11px] font-bold text-amber-950">
+                              <Star className="h-3 w-3 fill-amber-400 text-amber-500" />
+                              <span>{stats.count > 0 ? stats.average.toFixed(1) : 'Nowy'}</span>
+                              <span className="text-[10px] text-amber-700">({stats.count})</span>
+                            </span>
+                          </div>
+
+                          <p className="mt-0.5 text-[12px] text-ink-500">
+                            <strong className="text-ink-700">{provider.name}</strong> · ul. {provider.street} · tel. {provider.phone} · {provider.yearsExperience} l. stażu
+                          </p>
+
+                          <div className="mt-1.5 flex flex-wrap gap-1">
+                            {provider.tags.map((t) => (
+                              <span
+                                key={t}
+                                className="rounded-md bg-mist/80 px-2 py-0.5 text-[10px] font-semibold text-ink-600"
+                              >
+                                {t}
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => onOpenProviderProfile(provider)}
+                          className="inline-flex h-8 items-center gap-1 rounded-xl border border-mist-300 bg-white px-2.5 text-[11.5px] font-bold text-ink hover:bg-mist/70 cursor-pointer"
+                        >
+                          <Eye className="h-3.5 w-3.5 text-ink-500" />
+                          <span>Profil</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onRevokeProviderVerification(provider.id);
+                            setDeleteSuccessToast(`Cofnięto weryfikację fachowca „${provider.businessName}”. Profil przeniesiono do wniosków.`);
+                          }}
+                          title="Cofnij status weryfikacji (przenieś do oczekujących)"
+                          className="inline-flex h-8 items-center gap-1 rounded-xl border border-amber-300 bg-amber-50 px-2.5 text-[11.5px] font-bold text-amber-900 hover:bg-amber-100 cursor-pointer"
+                        >
+                          <RotateCcw className="h-3.5 w-3.5" />
+                          <span>Cofnij weryfikację</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setProviderToDelete(provider)}
+                          title="Usuń wykonawcę z katalogu"
+                          className="inline-flex h-8 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 px-2.5 text-rose-700 hover:bg-rose-100 cursor-pointer"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
                     </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => onOpenProviderProfile(provider)}
-                        className="inline-flex h-8 items-center gap-1 rounded-xl border border-mist-300 bg-white px-2.5 text-[11.5px] font-bold text-ink hover:bg-mist/70 cursor-pointer"
-                      >
-                        <Eye className="h-3.5 w-3.5 text-ink-500" />
-                        <span>Profil</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => onRevokeProviderVerification(provider.id)}
-                        title="Cofnij status weryfikacji (przenieś do oczekujących)"
-                        className="inline-flex h-8 items-center gap-1 rounded-xl border border-amber-300 bg-amber-50 px-2.5 text-[11.5px] font-bold text-amber-900 hover:bg-amber-100 cursor-pointer"
-                      >
-                        <RotateCcw className="h-3.5 w-3.5" />
-                        <span>Cofnij weryfikację</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => onRejectOrDeleteProvider(provider.id)}
-                        title="Usuń wykonawcę z katalogu"
-                        className="inline-flex h-8 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 px-2.5 text-rose-700 hover:bg-rose-100 cursor-pointer"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
@@ -1518,14 +1630,17 @@ export function AdminScreen({
                           <div className="flex items-center gap-2">
                             <button
                               type="button"
-                              onClick={() => onDismissReportedReview?.(provider.id, review.id)}
+                              onClick={() => {
+                                onDismissReportedReview?.(provider.id, review.id);
+                                setDeleteSuccessToast('Zgłoszenie opinii odrzucone. Opinia pozostała w katalogu.');
+                              }}
                               className="rounded-xl bg-white border border-mist-300 px-3 py-1.5 text-[11.5px] font-bold text-ink hover:bg-mist cursor-pointer"
                             >
                               Zostaw opinię (odrzuć zgłoszenie)
                             </button>
                             <button
                               type="button"
-                              onClick={() => onDeleteReview?.(provider.id, review.id)}
+                              onClick={() => setReviewToDelete({ provider, review })}
                               className="rounded-xl bg-rose-600 px-3 py-1.5 text-[11.5px] font-bold text-white hover:bg-rose-700 cursor-pointer"
                             >
                               Usuń opinię
@@ -1684,6 +1799,151 @@ export function AdminScreen({
                 >
                   <Trash2 className="h-4 w-4" />
                   <span>Tak, usuń trwale</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* =====================================================================
+            MODAL POTWIERDZENIA USUNIĘCIA USŁUGODAWCY / ODRZUCENIA WNIOSKU
+        ===================================================================== */}
+        {providerToDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/60 backdrop-blur-xs">
+            <div className="relative w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl border border-mist-200 space-y-5 animate-in fade-in zoom-in-95 duration-150">
+              <div className="flex items-start justify-between">
+                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-rose-100 text-rose-700">
+                  <AlertTriangle className="h-6 w-6 stroke-[2.2]" />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setProviderToDelete(null)}
+                  className="rounded-xl p-1.5 text-ink-400 hover:bg-mist hover:text-ink cursor-pointer"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div>
+                <h3 className="font-display text-[20px] font-extrabold text-ink">
+                  {providerToDelete.status === 'pending_verification'
+                    ? 'Odrzucić wniosek usługodawcy?'
+                    : 'Usunąć fachowca z bazy?'}
+                </h3>
+                <p className="mt-1 text-[13px] text-ink-500">
+                  {providerToDelete.status === 'pending_verification'
+                    ? 'Wniosek zostanie trwale usunięty z kolejki weryfikacyjnej. Profil nie pojawi się w katalogu.'
+                    : 'To działanie jest natychmiastowe i nieodwracalne. Wizytówka fachowca zniknie z katalogu usług.'}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 rounded-2xl border border-mist-200 bg-mist/40 p-3">
+                <ProviderBrandMark provider={providerToDelete} size="sm" />
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-bold text-[13.5px] text-ink truncate">
+                    {providerToDelete.businessName}
+                  </h4>
+                  <p className="text-[12px] text-ink-500 truncate">
+                    {providerToDelete.name} · ul. {providerToDelete.street}
+                  </p>
+                  <p className="text-[11px] font-semibold text-ink-400">
+                    Kategoria: {getServiceCategoryById(providerToDelete.categoryId).label}
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-rose-200 bg-rose-50/60 p-3 text-[12px] text-rose-800">
+                <strong>Skutek kaskadowy (ON DELETE CASCADE):</strong> Wraz z profilem zostaną trwale skasowane wszystkie powiązane opinie mieszkańców oraz zdjęcia z portfolio w bazie PostgreSQL Supabase.
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setProviderToDelete(null)}
+                  className="rounded-xl border border-mist-300 bg-white px-4 py-2 text-[13px] font-bold text-ink hover:bg-mist cursor-pointer"
+                >
+                  Anuluj
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleConfirmDeleteProvider}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 px-4 py-2 text-[13px] font-bold text-white hover:bg-rose-700 cursor-pointer shadow-xs"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span>
+                    {providerToDelete.status === 'pending_verification'
+                      ? 'Odrzuć i usuń wniosek'
+                      : 'Tak, usuń trwale'}
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* =====================================================================
+            MODAL POTWIERDZENIA USUNIĘCIA OPINII
+        ===================================================================== */}
+        {reviewToDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/60 backdrop-blur-xs">
+            <div className="relative w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl border border-mist-200 space-y-5 animate-in fade-in zoom-in-95 duration-150">
+              <div className="flex items-start justify-between">
+                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-rose-100 text-rose-700">
+                  <AlertTriangle className="h-6 w-6 stroke-[2.2]" />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setReviewToDelete(null)}
+                  className="rounded-xl p-1.5 text-ink-400 hover:bg-mist hover:text-ink cursor-pointer"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div>
+                <h3 className="font-display text-[20px] font-extrabold text-ink">
+                  Usunąć opinię mieszkańca?
+                </h3>
+                <p className="mt-1 text-[13px] text-ink-500">
+                  Ta opinia zostanie bezpowrotnie skasowana z bazy danych Supabase, a średnia ocen wykonawcy zostanie automatycznie przeliczona.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-mist-200 bg-sand-50/60 p-3.5 space-y-1.5">
+                <div className="flex items-center justify-between text-[12px]">
+                  <span className="font-bold text-ink">
+                    {reviewToDelete.review.authorName} z ul. {reviewToDelete.review.authorStreet}
+                  </span>
+                  <span className="inline-flex items-center gap-1 font-bold text-amber-700">
+                    <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
+                    <span>{reviewToDelete.review.rating}/5</span>
+                  </span>
+                </div>
+                <p className="text-[12.5px] italic text-ink-700 bg-white p-2.5 rounded-xl border border-mist-200">
+                  „{reviewToDelete.review.comment}”
+                </p>
+                <p className="text-[11.5px] text-ink-500">
+                  Dotyczy: <strong>{reviewToDelete.provider.businessName}</strong>
+                </p>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setReviewToDelete(null)}
+                  className="rounded-xl border border-mist-300 bg-white px-4 py-2 text-[13px] font-bold text-ink hover:bg-mist cursor-pointer"
+                >
+                  Anuluj
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleConfirmDeleteReview}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 px-4 py-2 text-[13px] font-bold text-white hover:bg-rose-700 cursor-pointer shadow-xs"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span>Tak, usuń opinię</span>
                 </button>
               </div>
             </div>

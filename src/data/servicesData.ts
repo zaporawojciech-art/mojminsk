@@ -62,6 +62,7 @@ export interface ServiceProvider {
   description: string;
   phone: string;
   yearsExperience: number;
+  businessStartDate?: string;
   verifiedByAdmin: boolean;
   status: 'verified' | 'pending_verification';
   promoted?: boolean;
