@@ -1,30 +1,37 @@
 import { useState } from 'react';
 import {
+  BadgeCheck,
   Camera,
   Check,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
   Clock,
-  CornerDownRight,
-  Flag,
+  FileCheck,
+  Lightbulb,
   MapPin,
   MessageCircle,
   Phone,
   Send,
   Share2,
   ShieldCheck,
+  Smile,
   Sparkles,
   Star,
+  ThumbsDown,
+  ThumbsUp,
   Wrench,
   X,
+  Zap,
 } from 'lucide-react';
 import { NativeHeader, cn } from '../components/ui';
 import { avatarUrl, type User } from '../data/mockData';
 import {
   computeProviderRatingStats,
   getServiceCategoryById,
+  SERVICE_REVIEW_HIGHLIGHTS,
   type ServiceProvider,
+  type ServiceRecommendation,
   type ServiceReview,
 } from '../data/servicesData';
 import { buildServiceProviderUrl } from '../router/urlUtils';
@@ -35,11 +42,51 @@ interface ServiceProviderModalProps {
   onClose: () => void;
   onContactChat: (provider: ServiceProvider) => void;
   onAddReview: (providerId: string, review: Omit<ServiceReview, 'id' | 'providerId' | 'createdAt' | 'timeLabel'>) => void;
-  onReplyToReview: (providerId: string, reviewId: string, replyText: string) => void;
+  onReplyToReview?: (providerId: string, reviewId: string, replyText: string) => void;
   onTogglePromote?: (providerId: string) => void;
   onApprovePending?: (providerId: string) => void;
   onAuthRequired?: (title: string, desc: string) => void;
   isClosing?: boolean;
+}
+
+function renderHighlightIcon(iconName: string, className?: string) {
+  switch (iconName) {
+    case 'Sparkles':
+      return <Sparkles className={className} />;
+    case 'BadgeCheck':
+      return <BadgeCheck className={className} />;
+    case 'Lightbulb':
+      return <Lightbulb className={className} />;
+    case 'Clock':
+      return <Clock className={className} />;
+    case 'Zap':
+      return <Zap className={className} />;
+    case 'Wrench':
+      return <Wrench className={className} />;
+    case 'Smile':
+      return <Smile className={className} />;
+    case 'FileCheck':
+      return <FileCheck className={className} />;
+    default:
+      return <Sparkles className={className} />;
+  }
+}
+
+function getRatingWord(val: number): string {
+  switch (val) {
+    case 5:
+      return 'Perfekcyjna (5/5)';
+    case 4:
+      return 'Bardzo dobra (4/5)';
+    case 3:
+      return 'Przeciętna (3/5)';
+    case 2:
+      return 'Do poprawy (2/5)';
+    case 1:
+      return 'Niezadowalająca (1/5)';
+    default:
+      return `${val}/5`;
+  }
 }
 
 export function ServiceProviderModal({
@@ -48,7 +95,6 @@ export function ServiceProviderModal({
   onClose,
   onContactChat,
   onAddReview,
-  onReplyToReview,
   onApprovePending,
   onAuthRequired,
   isClosing = false,
@@ -60,21 +106,17 @@ export function ServiceProviderModal({
   // Lightbox state for portfolio gallery
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  // Add review form state
+  // Closed evaluation form state
   const [reviewFormOpen, setReviewFormOpen] = useState(false);
-  const [ratingInput, setRatingInput] = useState<number>(5);
-  const [hoverRating, setHoverRating] = useState<number | null>(null);
-  const [serviceTagInput, setServiceTagInput] = useState<string>(provider.tags[0] || '');
-  const [commentInput, setCommentInput] = useState('');
+  const [serviceTagInput, setServiceTagInput] = useState<string>(provider.tags[0] || 'Usługa ogólna');
+  const [qualityRating, setQualityRating] = useState<number>(5);
+  const [punctualityRating, setPunctualityRating] = useState<number>(5);
+  const [priceFairnessRating, setPriceFairnessRating] = useState<number>(5);
+  const [communicationRating, setCommunicationRating] = useState<number>(5);
+  const [recommendation, setRecommendation] = useState<ServiceRecommendation>('definitely');
+  const [selectedHighlights, setSelectedHighlights] = useState<string[]>(['cleanliness', 'fair_price']);
   const [reviewError, setReviewError] = useState<string | null>(null);
   const [reviewSuccess, setReviewSuccess] = useState(false);
-
-  // Provider reply state
-  const [replyingToReviewId, setReplyingToReviewId] = useState<string | null>(null);
-  const [replyText, setReplyText] = useState('');
-
-  // Reported reviews state
-  const [reportedReviewIds, setReportedReviewIds] = useState<Record<string, boolean>>({});
   const [copiedShare, setCopiedShare] = useState(false);
 
   const hasAlreadyReviewed = Boolean(
@@ -90,8 +132,8 @@ export function ServiceProviderModal({
   const handleOpenReviewForm = () => {
     if (!currentUser) {
       onAuthRequired?.(
-        'Wystaw opinię wykonawcy',
-        'Opinie w Strefie Zaufanej Usługi mogą wystawiać wyłącznie zalogowani mieszkańcy Mińska Mazowieckiego i Gminy.',
+        'Oceń wykonawcę',
+        'Oceny w Strefie Zaufanej Usługi mogą wystawiać wyłącznie zalogowani mieszkańcy Mińska Mazowieckiego i Gminy.',
       );
       return;
     }
@@ -99,39 +141,50 @@ export function ServiceProviderModal({
     setReviewError(null);
   };
 
+  const handleToggleHighlight = (id: string) => {
+    setSelectedHighlights((prev) => {
+      if (prev.includes(id)) {
+        return prev.filter((item) => item !== id);
+      }
+      if (prev.length >= 3) {
+        return [...prev.slice(1), id];
+      }
+      return [...prev, id];
+    });
+  };
+
   const handleSubmitReview = (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUser) return;
 
-    const trimmed = commentInput.trim();
-    if (trimmed.length < 10) {
-      setReviewError('Napisz przynajmniej krótkie zdanie (min. 10 znaków), aby pomóc innym sąsiadom.');
+    if (!serviceTagInput) {
+      setReviewError('Wybierz usługę z zakresu prac wykonawcy.');
       return;
     }
+
+    const calculatedAvg =
+      Math.round(((qualityRating + punctualityRating + priceFairnessRating + communicationRating) / 4) * 10) / 10;
 
     onAddReview(provider.id, {
       authorId: currentUser.profileId,
       authorName: currentUser.name,
       authorStreet: currentUser.street.name,
       authorSeed: currentUser.seed,
-      rating: ratingInput,
-      comment: trimmed,
-      serviceTag: serviceTagInput || undefined,
+      rating: calculatedAvg,
+      qualityRating,
+      punctualityRating,
+      priceFairnessRating,
+      communicationRating,
+      recommendation,
+      highlightTags: selectedHighlights,
+      serviceTag: serviceTagInput,
+      comment: '',
     });
 
-    setCommentInput('');
     setReviewError(null);
     setReviewFormOpen(false);
     setReviewSuccess(true);
-    setTimeout(() => setReviewSuccess(false), 4000);
-  };
-
-  const handleSubmitReply = (reviewId: string) => {
-    const trimmed = replyText.trim();
-    if (!trimmed) return;
-    onReplyToReview(provider.id, reviewId, trimmed);
-    setReplyingToReviewId(null);
-    setReplyText('');
+    setTimeout(() => setReviewSuccess(false), 4500);
   };
 
   const handleShare = async () => {
@@ -404,15 +457,15 @@ export function ServiceProviderModal({
               </section>
             )}
 
-            {/* 3. NEIGHBOR REVIEWS & RATING BREAKDOWN */}
+            {/* 3. NEIGHBOR TRUST & MULTIDIMENSIONAL QUALITY EVALUATION (NO TEXT COMMENTS) */}
             <section className="rounded-3xl bg-white p-5 md:p-6 shadow-card border border-mist-200">
               <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-mist-200">
                 <div>
                   <h2 className="font-display text-[18px] md:text-[20px] font-bold text-ink">
-                    Opinie mieszkańców ({stats.count})
+                    Ocena jakości i zaufania ({stats.count})
                   </h2>
                   <p className="text-[12px] text-ink-500">
-                    Komentarze podpisane imieniem i ulicą sąsiada z Mińska Mazowieckiego
+                    Wielowymiarowy indeks zaufania zweryfikowanych mieszkańców Mińska i Gminy
                   </p>
                 </div>
 
@@ -423,12 +476,12 @@ export function ServiceProviderModal({
                     className="flex h-10 items-center gap-1.5 rounded-xl bg-ink px-4 text-[12.5px] font-bold text-white shadow-xs hover:bg-ink-800 active:scale-95 transition-all cursor-pointer"
                   >
                     <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                    <span>{reviewFormOpen ? 'Zamknij formularz' : '+ Wystaw opinię'}</span>
+                    <span>{reviewFormOpen ? 'Zamknij formularz' : '+ Wystaw ocenę'}</span>
                   </button>
                 ) : (
                   <span className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-100 px-3 py-1.5 text-[11.5px] font-bold text-emerald-900">
                     <Check className="h-3.5 w-3.5 text-emerald-700" />
-                    Dodałeś już swoją opinię
+                    Dodałeś już swoją ocenę
                   </span>
                 )}
               </div>
@@ -436,339 +489,569 @@ export function ServiceProviderModal({
               {reviewSuccess && (
                 <div className="mt-4 rounded-2xl bg-emerald-50 border border-emerald-200 p-3.5 flex items-center gap-2.5 text-[12.5px] font-bold text-emerald-950">
                   <CheckCircle2 className="h-4.5 w-4.5 text-emerald-700 shrink-0" />
-                  <span>Dziękujemy! Twoja sąsiedzka opinia została opublikowana na profilu wykonawcy.</span>
+                  <span>Dziękujemy! Twoja ocena została zapisana i zaktualizowała indeks jakości wykonawcy.</span>
                 </div>
               )}
 
-              {/* RATING BREAKDOWN BARS */}
-              {stats.count > 0 && (
-                <div className="mt-4 grid grid-cols-1 sm:grid-cols-12 gap-4 items-center rounded-2xl bg-mist/60 p-4 border border-mist-200/80">
-                  <div className="sm:col-span-4 text-center sm:border-r sm:border-mist-300/80 sm:pr-4">
-                    <p className="font-display text-[34px] font-extrabold text-ink leading-none">
-                      {stats.average.toFixed(1)}
-                    </p>
-                    <div className="mt-1.5 flex items-center justify-center gap-0.5 text-amber-400">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className={cn(
-                            'h-4 w-4',
-                            star <= Math.round(stats.average)
-                              ? 'fill-amber-400 text-amber-500'
-                              : 'text-mist-300',
-                          )}
-                        />
-                      ))}
-                    </div>
-                    <p className="mt-1 text-[11.5px] font-semibold text-ink-500">
-                      Na podstawie {stats.count}{' '}
-                      {stats.count === 1 ? 'opinii' : 'opinii sąsiadów'}
-                    </p>
-                  </div>
-
-                  <div className="sm:col-span-8 space-y-1.5">
-                    {([5, 4, 3, 2, 1] as const).map((star) => {
-                      const c = stats.distribution[star] || 0;
-                      const pct = stats.count > 0 ? Math.round((c / stats.count) * 100) : 0;
-                      return (
-                        <div key={star} className="flex items-center gap-2.5 text-[11.5px]">
-                          <span className="w-8 font-bold text-ink-700 flex items-center gap-0.5">
-                            {star} <Star className="h-3 w-3 fill-amber-400 text-amber-500" />
-                          </span>
-                          <div className="h-2 flex-1 overflow-hidden rounded-full bg-mist-300/70">
-                            <div
-                              className="h-full rounded-full bg-amber-400 transition-all duration-300"
-                              style={{ width: `${pct}%` }}
-                            />
-                          </div>
-                          <span className="w-9 text-right font-semibold text-ink-500">{c}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* ADD REVIEW FORM */}
+              {/* STRICTLY CLOSED EVALUATION FORM (NO TEXT COMMENTS) */}
               {reviewFormOpen && currentUser && (
                 <form
                   onSubmit={handleSubmitReview}
-                  className="mt-4 rounded-3xl bg-mist/90 p-4 md:p-5 border border-mist-300 space-y-3.5"
+                  className="mt-4 rounded-3xl bg-mist/80 p-4 md:p-6 border border-mist-300 space-y-5"
                 >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-[13.5px] font-bold text-ink">
-                        Wystawiasz opinię jako: {currentUser.name} · Mieszkaniec Mińska · ul. {currentUser.street.name}
-                      </p>
-                      <p className="text-[11.5px] text-ink-500">
-                        Twoja ocena pomoże innym mieszkańcom Mińska wybrać sprawdzonego fachowca.
-                      </p>
+                  {/* Resident Identity Header */}
+                  <div className="rounded-2xl bg-white p-3.5 border border-mist-200 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <img
+                        src={avatarUrl(currentUser.seed)}
+                        alt={currentUser.name}
+                        className="h-9 w-9 rounded-full bg-sand-100 object-cover ring-1 ring-mist-300 shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <p className="text-[13px] font-bold text-ink truncate">
+                          Wystawiasz ocenę jako: {currentUser.name}
+                        </p>
+                        <p className="text-[11.5px] text-ink-500 truncate">
+                          Mieszkaniec Mińska · ul. {currentUser.street.name}
+                        </p>
+                      </div>
                     </div>
+                    <span className="shrink-0 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10.5px] font-bold text-emerald-900">
+                      Formularz zamknięty
+                    </span>
                   </div>
 
-                  {/* Interactive Stars */}
+                  {/* STEP 1: SERVICE SCOPE PICKER */}
                   <div>
-                    <label className="block text-[11.5px] font-bold uppercase tracking-wider text-ink-500 mb-1.5">
-                      Twoja ocena (1–5 gwiazdek)
+                    <label className="block text-[11.5px] font-bold uppercase tracking-wider text-ink-600 mb-2">
+                      1. Jakiej usługi dotyczyła realizacja?
                     </label>
-                    <div className="flex items-center gap-1.5">
-                      {[1, 2, 3, 4, 5].map((star) => {
-                        const active = star <= (hoverRating ?? ratingInput);
+                    <div className="flex flex-wrap gap-2">
+                      {provider.tags.map((tag) => {
+                        const active = serviceTagInput === tag;
                         return (
                           <button
-                            key={star}
+                            key={tag}
                             type="button"
-                            onMouseEnter={() => setHoverRating(star)}
-                            onMouseLeave={() => setHoverRating(null)}
-                            onClick={() => setRatingInput(star)}
-                            aria-label={`Ocena ${star} na 5`}
-                            className="p-1 transition-transform active:scale-90 cursor-pointer"
+                            onClick={() => setServiceTagInput(tag)}
+                            className={cn(
+                              'rounded-xl px-3.5 py-2 text-[12px] font-bold transition-all cursor-pointer',
+                              active
+                                ? 'bg-ink text-white shadow-xs scale-[1.02]'
+                                : 'bg-white text-ink-700 border border-mist-300 hover:bg-mist-200',
+                            )}
                           >
-                            <Star
-                              className={cn(
-                                'h-7 w-7 transition-colors',
-                                active ? 'fill-amber-400 text-amber-500' : 'text-ink-300',
-                              )}
-                            />
+                            {tag}
                           </button>
                         );
                       })}
-                      <span className="ml-2 text-[13px] font-extrabold text-ink">
-                        {hoverRating ?? ratingInput} / 5
-                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setServiceTagInput('Inna usługa / zlecenie ogólne')}
+                        className={cn(
+                          'rounded-xl px-3.5 py-2 text-[12px] font-bold transition-all cursor-pointer',
+                          serviceTagInput === 'Inna usługa / zlecenie ogólne'
+                            ? 'bg-ink text-white shadow-xs scale-[1.02]'
+                            : 'bg-white text-ink-700 border border-mist-300 hover:bg-mist-200',
+                        )}
+                      >
+                        Inna usługa z branży
+                      </button>
                     </div>
                   </div>
 
-                  {/* Service Tag Picker */}
-                  {provider.tags.length > 0 && (
-                    <div>
-                      <label className="block text-[11.5px] font-bold uppercase tracking-wider text-ink-500 mb-1.5">
-                        Jakiej usługi dotyczyła realizacja?
-                      </label>
-                      <div className="flex flex-wrap gap-1.5">
-                        {provider.tags.map((tag) => {
-                          const active = serviceTagInput === tag;
-                          return (
-                            <button
-                              key={tag}
-                              type="button"
-                              onClick={() => setServiceTagInput(tag)}
+                  {/* STEP 2: 4 QUALITY PILLARS */}
+                  <div className="space-y-2.5">
+                    <label className="block text-[11.5px] font-bold uppercase tracking-wider text-ink-600">
+                      2. Oceń 4 kluczowe filary współpracy (skala 1–5):
+                    </label>
+
+                    {/* Pillar A: Quality & Craftsmanship */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-2xl bg-white p-3.5 border border-mist-300">
+                      <div className="flex items-center gap-2.5">
+                        <span className="grid h-8 w-8 place-items-center rounded-xl bg-sky-100 text-sky-700">
+                          <Wrench className="h-4 w-4" />
+                        </span>
+                        <div>
+                          <p className="text-[12.5px] font-bold text-ink">Jakość i fachowość wykonania</p>
+                          <p className="text-[11px] font-semibold text-sky-700">{getRatingWord(qualityRating)}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 self-end sm:self-auto">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <button
+                            key={s}
+                            type="button"
+                            onClick={() => setQualityRating(s)}
+                            className="p-1 hover:scale-110 active:scale-90 transition-transform cursor-pointer"
+                            aria-label={`Jakość: ${s} na 5`}
+                          >
+                            <Star
                               className={cn(
-                                'rounded-xl px-3 py-1.5 text-[11.5px] font-bold transition-colors cursor-pointer',
-                                active
-                                  ? 'bg-ink text-white'
-                                  : 'bg-white text-ink-700 border border-mist-300 hover:bg-mist-200',
+                                'h-6 w-6 transition-colors',
+                                s <= qualityRating ? 'fill-amber-400 text-amber-500' : 'text-mist-300',
                               )}
-                            >
-                              {tag}
-                            </button>
-                          );
-                        })}
+                            />
+                          </button>
+                        ))}
                       </div>
                     </div>
-                  )}
 
-                  {/* Comment Textarea */}
+                    {/* Pillar B: Punctuality */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-2xl bg-white p-3.5 border border-mist-300">
+                      <div className="flex items-center gap-2.5">
+                        <span className="grid h-8 w-8 place-items-center rounded-xl bg-amber-100 text-amber-700">
+                          <Clock className="h-4 w-4" />
+                        </span>
+                        <div>
+                          <p className="text-[12.5px] font-bold text-ink">Terminowość i punktualność</p>
+                          <p className="text-[11px] font-semibold text-amber-700">{getRatingWord(punctualityRating)}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 self-end sm:self-auto">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <button
+                            key={s}
+                            type="button"
+                            onClick={() => setPunctualityRating(s)}
+                            className="p-1 hover:scale-110 active:scale-90 transition-transform cursor-pointer"
+                            aria-label={`Terminowość: ${s} na 5`}
+                          >
+                            <Star
+                              className={cn(
+                                'h-6 w-6 transition-colors',
+                                s <= punctualityRating ? 'fill-amber-400 text-amber-500' : 'text-mist-300',
+                              )}
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Pillar C: Price Fairness */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-2xl bg-white p-3.5 border border-mist-300">
+                      <div className="flex items-center gap-2.5">
+                        <span className="grid h-8 w-8 place-items-center rounded-xl bg-emerald-100 text-emerald-700">
+                          <BadgeCheck className="h-4 w-4" />
+                        </span>
+                        <div>
+                          <p className="text-[12.5px] font-bold text-ink">Przejrzystość i uczciwość wyceny</p>
+                          <p className="text-[11px] font-semibold text-emerald-700">{getRatingWord(priceFairnessRating)}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 self-end sm:self-auto">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <button
+                            key={s}
+                            type="button"
+                            onClick={() => setPriceFairnessRating(s)}
+                            className="p-1 hover:scale-110 active:scale-90 transition-transform cursor-pointer"
+                            aria-label={`Wycena: ${s} na 5`}
+                          >
+                            <Star
+                              className={cn(
+                                'h-6 w-6 transition-colors',
+                                s <= priceFairnessRating ? 'fill-amber-400 text-amber-500' : 'text-mist-300',
+                              )}
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Pillar D: Communication & Culture */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-2xl bg-white p-3.5 border border-mist-300">
+                      <div className="flex items-center gap-2.5">
+                        <span className="grid h-8 w-8 place-items-center rounded-xl bg-indigo-100 text-indigo-700">
+                          <Smile className="h-4 w-4" />
+                        </span>
+                        <div>
+                          <p className="text-[12.5px] font-bold text-ink">Komunikacja i kultura pracy</p>
+                          <p className="text-[11px] font-semibold text-indigo-700">{getRatingWord(communicationRating)}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 self-end sm:self-auto">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <button
+                            key={s}
+                            type="button"
+                            onClick={() => setCommunicationRating(s)}
+                            className="p-1 hover:scale-110 active:scale-90 transition-transform cursor-pointer"
+                            aria-label={`Komunikacja: ${s} na 5`}
+                          >
+                            <Star
+                              className={cn(
+                                'h-6 w-6 transition-colors',
+                                s <= communicationRating ? 'fill-amber-400 text-amber-500' : 'text-mist-300',
+                              )}
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* STEP 3: CLOSED HIGHLIGHT BADGES */}
                   <div>
-                    <label
-                      htmlFor="review-comment"
-                      className="block text-[11.5px] font-bold uppercase tracking-wider text-ink-500 mb-1.5"
-                    >
-                      Komentarz sąsiedzki
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <label className="block text-[11.5px] font-bold uppercase tracking-wider text-ink-600">
+                        3. Co najbardziej wyróżnia tego fachowca? (wybierz do 3):
+                      </label>
+                      <span className="text-[11px] font-bold text-ink-500">
+                        Wybrano: {selectedHighlights.length}/3
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {SERVICE_REVIEW_HIGHLIGHTS.map((hl) => {
+                        const isSelected = selectedHighlights.includes(hl.id);
+                        return (
+                          <button
+                            key={hl.id}
+                            type="button"
+                            onClick={() => handleToggleHighlight(hl.id)}
+                            className={cn(
+                              'flex items-center gap-2.5 rounded-2xl p-3 text-left transition-all cursor-pointer border',
+                              isSelected
+                                ? 'bg-ink text-white border-ink shadow-xs'
+                                : 'bg-white text-ink-800 border-mist-300 hover:bg-mist-200',
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                'grid h-7 w-7 place-items-center rounded-xl shrink-0',
+                                isSelected ? 'bg-white/20 text-white' : 'bg-mist-200 text-ink-700',
+                              )}
+                            >
+                              {renderHighlightIcon(hl.iconName, 'h-4 w-4')}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[12px] font-bold leading-tight">{hl.label}</p>
+                              <p
+                                className={cn(
+                                  'text-[10.5px] truncate mt-0.5',
+                                  isSelected ? 'text-white/80' : 'text-ink-400',
+                                )}
+                              >
+                                {hl.description}
+                              </p>
+                            </div>
+                            {isSelected && <Check className="h-4 w-4 text-emerald-400 shrink-0" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* STEP 4: RECOMMENDATION */}
+                  <div>
+                    <label className="block text-[11.5px] font-bold uppercase tracking-wider text-ink-600 mb-2">
+                      4. Czy polecasz tego wykonawcę sąsiadom z Mińska?
                     </label>
-                    <textarea
-                      id="review-comment"
-                      rows={3}
-                      value={commentInput}
-                      onChange={(e) => setCommentInput(e.target.value)}
-                      placeholder="Opisz krótko jak przebiegła współpraca, terminowość i jakość wykonania..."
-                      className="w-full rounded-2xl border border-mist-300 bg-white p-3.5 text-[13px] text-ink placeholder:text-ink-400 focus:border-ink focus:outline-none"
-                    />
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setRecommendation('definitely')}
+                        className={cn(
+                          'flex flex-col items-center justify-center gap-1 rounded-2xl p-3 border transition-all cursor-pointer',
+                          recommendation === 'definitely'
+                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                            : 'bg-white text-ink-800 border-mist-300 hover:bg-mist-200',
+                        )}
+                      >
+                        <ThumbsUp className="h-5 w-5" />
+                        <span className="text-[11.5px] font-bold text-center leading-tight">Zdecydowanie tak</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setRecommendation('rather')}
+                        className={cn(
+                          'flex flex-col items-center justify-center gap-1 rounded-2xl p-3 border transition-all cursor-pointer',
+                          recommendation === 'rather'
+                            ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
+                            : 'bg-white text-ink-800 border-mist-300 hover:bg-mist-200',
+                        )}
+                      >
+                        <Smile className="h-5 w-5" />
+                        <span className="text-[11.5px] font-bold text-center leading-tight">Raczej tak</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setRecommendation('not_recommended')}
+                        className={cn(
+                          'flex flex-col items-center justify-center gap-1 rounded-2xl p-3 border transition-all cursor-pointer',
+                          recommendation === 'not_recommended'
+                            ? 'bg-coral-700 text-white border-coral-700 shadow-xs'
+                            : 'bg-white text-ink-800 border-mist-300 hover:bg-mist-200',
+                        )}
+                      >
+                        <ThumbsDown className="h-5 w-5" />
+                        <span className="text-[11.5px] font-bold text-center leading-tight">Nie polecam</span>
+                      </button>
+                    </div>
                   </div>
 
                   {reviewError && (
                     <p className="text-[12px] font-bold text-coral-800">{reviewError}</p>
                   )}
 
-                  <div className="flex items-center justify-end gap-2">
+                  <div className="flex items-center justify-end gap-2.5 pt-2">
                     <button
                       type="button"
                       onClick={() => setReviewFormOpen(false)}
-                      className="rounded-xl px-4 py-2 text-[12.5px] font-bold text-ink-600 hover:bg-mist-200 cursor-pointer"
+                      className="rounded-xl px-4 py-2.5 text-[12.5px] font-bold text-ink-600 hover:bg-mist-200 cursor-pointer"
                     >
                       Anuluj
                     </button>
                     <button
                       type="submit"
-                      className="flex items-center gap-1.5 rounded-xl bg-coral px-5 py-2.5 text-[13px] font-extrabold text-ink shadow-xs hover:bg-coral-400 cursor-pointer"
+                      className="flex items-center gap-1.5 rounded-xl bg-coral px-5 py-2.5 text-[13px] font-extrabold text-ink shadow-xs hover:bg-coral-400 active:scale-95 transition-all cursor-pointer"
                     >
                       <Send className="h-3.5 w-3.5" />
-                      <span>Opublikuj opinię</span>
+                      <span>Zapisz ocenę wykonawcy</span>
                     </button>
                   </div>
                 </form>
               )}
 
-              {/* REVIEWS LIST */}
-              <div className="mt-5 space-y-4">
-                {provider.reviews.length === 0 ? (
-                  <div className="rounded-2xl bg-mist/50 p-6 text-center">
-                    <Sparkles className="mx-auto h-6 w-6 text-ink-400" />
-                    <p className="mt-2 text-[13.5px] font-bold text-ink">
-                      Ten wykonawca nie ma jeszcze opinii
-                    </p>
-                    <p className="mt-0.5 text-[12px] text-ink-500">
-                      Korzystałeś z usług tego fachowca? Bądź pierwszym sąsiadem, który podzieli się opinią!
-                    </p>
+              {/* EMPTY STATE */}
+              {stats.count === 0 && !reviewFormOpen && (
+                <div className="mt-4 rounded-3xl bg-mist/60 p-6 text-center border border-mist-200">
+                  <Sparkles className="mx-auto h-7 w-7 text-amber-500" />
+                  <p className="mt-2.5 text-[14px] font-bold text-ink">
+                    Ten wykonawca nie ma jeszcze ocen w Strefie Zaufanej Usługi
+                  </p>
+                  <p className="mt-1 text-[12px] text-ink-500 max-w-sm mx-auto">
+                    Korzystałeś z usług tego fachowca? Bądź pierwszym mieszkańcem Mińska, który oceni jakość współpracy!
+                  </p>
+                  {!hasAlreadyReviewed && (
+                    <button
+                      type="button"
+                      onClick={handleOpenReviewForm}
+                      className="mt-3.5 inline-flex items-center gap-1.5 rounded-xl bg-ink px-4 py-2 text-[12.5px] font-bold text-white hover:bg-ink-800 transition-all cursor-pointer"
+                    >
+                      <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                      <span>Wystaw pierwszą ocenę</span>
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* RICH EVALUATION DASHBOARD (WHEN REVIEWS EXIST) */}
+              {stats.count > 0 && (
+                <div className="mt-4 space-y-4">
+                  {/* HERO SCORE & RECOMMENDATION BANNER */}
+                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center rounded-3xl bg-mist/70 p-4 md:p-5 border border-mist-200">
+                    {/* Big Score */}
+                    <div className="sm:col-span-5 text-center sm:border-r sm:border-mist-300 sm:pr-4">
+                      <div className="inline-flex items-baseline gap-1">
+                        <span className="font-display text-[42px] font-black text-ink leading-none">
+                          {stats.average.toFixed(1)}
+                        </span>
+                        <span className="text-[16px] font-bold text-ink-400">/ 5.0</span>
+                      </div>
+                      <div className="mt-1.5 flex items-center justify-center gap-1 text-amber-400">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className={cn(
+                              'h-4.5 w-4.5',
+                              star <= Math.round(stats.average)
+                                ? 'fill-amber-400 text-amber-500'
+                                : 'text-mist-300',
+                            )}
+                          />
+                        ))}
+                      </div>
+                      <p className="mt-1.5 text-[11.5px] font-semibold text-ink-600">
+                        Na podstawie {stats.count}{' '}
+                        {stats.count === 1 ? 'oceny' : stats.count < 5 ? 'ocen' : 'ocen'} mieszkańców
+                      </p>
+                    </div>
+
+                    {/* Recommendation KPI */}
+                    <div className="sm:col-span-7 flex flex-col justify-center sm:pl-2 space-y-2">
+                      <div className="inline-flex items-center gap-2 rounded-2xl bg-emerald-100/90 border border-emerald-300 px-3.5 py-2 text-[13px] font-extrabold text-emerald-950">
+                        <ThumbsUp className="h-4 w-4 text-emerald-700 shrink-0" />
+                        <span>{stats.recommendPercent}% sąsiadów poleca tego wykonawcę</span>
+                      </div>
+                      <p className="text-[11.5px] text-ink-500 leading-snug">
+                        Indeks wyliczony z zamkniętych ankiet porealizacyjnych. Profil nie zawiera subiektywnych komentarzy — liczą się wyłącznie twarde fakty i jakość robót.
+                      </p>
+                    </div>
                   </div>
-                ) : (
-                  provider.reviews.map((review) => {
-                    const isReported = reportedReviewIds[review.id];
-                    const isReplying = replyingToReviewId === review.id;
 
-                    return (
-                      <article
-                        key={review.id}
-                        className="rounded-2xl border border-mist-200 bg-mist/30 p-4 transition-colors"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-center gap-2.5">
-                            <img
-                              src={avatarUrl(review.authorSeed)}
-                              alt={review.authorName}
-                              className="h-9 w-9 rounded-full bg-sand-100 object-cover ring-1 ring-mist-300"
-                            />
-                            <div>
-                              <div className="flex flex-wrap items-center gap-1.5">
-                                <span className="text-[13.5px] font-bold text-ink">
-                                  {review.authorName}
-                                </span>
-                                <span className="text-[12px] font-semibold text-ink-500">
-                                  · Mieszkaniec Mińska · ul. {review.authorStreet}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2 mt-0.5">
-                                <div className="flex items-center gap-0.5">
-                                  {[1, 2, 3, 4, 5].map((s) => (
-                                    <Star
-                                      key={s}
-                                      className={cn(
-                                        'h-3.5 w-3.5',
-                                        s <= review.rating
-                                          ? 'fill-amber-400 text-amber-500'
-                                          : 'text-mist-300',
-                                      )}
-                                    />
-                                  ))}
-                                </div>
-                                <span className="text-[11px] font-medium text-ink-400">
-                                  · {review.timeLabel}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
+                  {/* 4 QUALITY PILLARS BREAKDOWN */}
+                  <div className="rounded-3xl bg-white p-4 md:p-5 border border-mist-200 space-y-3">
+                    <p className="text-[12px] font-bold uppercase tracking-wider text-ink-500">
+                      Filary jakości i standardu pracy:
+                    </p>
 
-                          <div className="flex items-center gap-2">
-                            {review.serviceTag && (
-                              <span className="hidden sm:inline-flex rounded-lg bg-white border border-mist-200 px-2.5 py-0.5 text-[10.5px] font-bold text-ink-600">
-                                {review.serviceTag}
-                              </span>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setReportedReviewIds((prev) => ({ ...prev, [review.id]: true }))
-                              }
-                              title="Zgłoś naruszenie lub spam moderatorowi"
-                              className="text-[11px] font-semibold text-ink-400 hover:text-coral-700 flex items-center gap-1 cursor-pointer"
-                            >
-                              <Flag className="h-3 w-3" />
-                              <span>{isReported ? 'Zgłoszono do moderacji' : 'Zgłoś'}</span>
-                            </button>
-                          </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {/* Quality */}
+                      <div className="rounded-2xl bg-mist/50 p-3 border border-mist-200">
+                        <div className="flex items-center justify-between text-[12px] mb-1.5">
+                          <span className="font-bold text-ink flex items-center gap-1.5">
+                            <Wrench className="h-3.5 w-3.5 text-sky-600" />
+                            Jakość i fachowość
+                          </span>
+                          <span className="font-display font-extrabold text-ink">
+                            {stats.dimensions.quality.toFixed(1)} / 5
+                          </span>
                         </div>
+                        <div className="h-2 w-full overflow-hidden rounded-full bg-mist-300/70">
+                          <div
+                            className="h-full rounded-full bg-sky-500 transition-all duration-500"
+                            style={{ width: `${(stats.dimensions.quality / 5) * 100}%` }}
+                          />
+                        </div>
+                      </div>
 
-                        <p className="mt-3 text-[13px] leading-relaxed text-ink-700">
-                          {review.comment}
-                        </p>
+                      {/* Punctuality */}
+                      <div className="rounded-2xl bg-mist/50 p-3 border border-mist-200">
+                        <div className="flex items-center justify-between text-[12px] mb-1.5">
+                          <span className="font-bold text-ink flex items-center gap-1.5">
+                            <Clock className="h-3.5 w-3.5 text-amber-600" />
+                            Terminowość i czas
+                          </span>
+                          <span className="font-display font-extrabold text-ink">
+                            {stats.dimensions.punctuality.toFixed(1)} / 5
+                          </span>
+                        </div>
+                        <div className="h-2 w-full overflow-hidden rounded-full bg-mist-300/70">
+                          <div
+                            className="h-full rounded-full bg-amber-500 transition-all duration-500"
+                            style={{ width: `${(stats.dimensions.punctuality / 5) * 100}%` }}
+                          />
+                        </div>
+                      </div>
 
-                        {/* OFFICIAL PROVIDER REPLY */}
-                        {review.providerReply ? (
-                          <div className="mt-3 ml-3 sm:ml-6 rounded-2xl bg-white p-3.5 border border-mist-200 shadow-2xs">
-                            <div className="flex items-center justify-between gap-2 text-[11.5px]">
-                              <span className="inline-flex items-center gap-1.5 font-extrabold text-ink">
-                                <CornerDownRight className="h-3.5 w-3.5 text-coral-700" />
-                                <Wrench className="h-3 w-3 text-emerald-700" />
-                                Odpowiedź wykonawcy ({provider.name})
+                      {/* Price Fairness */}
+                      <div className="rounded-2xl bg-mist/50 p-3 border border-mist-200">
+                        <div className="flex items-center justify-between text-[12px] mb-1.5">
+                          <span className="font-bold text-ink flex items-center gap-1.5">
+                            <BadgeCheck className="h-3.5 w-3.5 text-emerald-600" />
+                            Uczciwość i wycena
+                          </span>
+                          <span className="font-display font-extrabold text-ink">
+                            {stats.dimensions.priceFairness.toFixed(1)} / 5
+                          </span>
+                        </div>
+                        <div className="h-2 w-full overflow-hidden rounded-full bg-mist-300/70">
+                          <div
+                            className="h-full rounded-full bg-emerald-500 transition-all duration-500"
+                            style={{ width: `${(stats.dimensions.priceFairness / 5) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Communication */}
+                      <div className="rounded-2xl bg-mist/50 p-3 border border-mist-200">
+                        <div className="flex items-center justify-between text-[12px] mb-1.5">
+                          <span className="font-bold text-ink flex items-center gap-1.5">
+                            <Smile className="h-3.5 w-3.5 text-indigo-600" />
+                            Kultura i kontakt
+                          </span>
+                          <span className="font-display font-extrabold text-ink">
+                            {stats.dimensions.communication.toFixed(1)} / 5
+                          </span>
+                        </div>
+                        <div className="h-2 w-full overflow-hidden rounded-full bg-mist-300/70">
+                          <div
+                            className="h-full rounded-full bg-indigo-500 transition-all duration-500"
+                            style={{ width: `${(stats.dimensions.communication / 5) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* TOP HIGHLIGHTS CONFIRMED BY RESIDENTS */}
+                  {stats.topHighlights.length > 0 && (
+                    <div className="rounded-3xl bg-white p-4 md:p-5 border border-mist-200 space-y-3">
+                      <p className="text-[12px] font-bold uppercase tracking-wider text-ink-500">
+                        Mocne strony potwierdzone przez sąsiadów:
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {stats.topHighlights.map((hl) => (
+                          <div
+                            key={hl.id}
+                            className="flex items-center justify-between gap-2 rounded-2xl bg-mist/40 px-3.5 py-2.5 border border-mist-200"
+                          >
+                            <span className="inline-flex items-center gap-2 text-[12px] font-bold text-ink">
+                              <span className="grid h-6 w-6 place-items-center rounded-lg bg-emerald-100 text-emerald-800">
+                                {renderHighlightIcon(hl.iconName, 'h-3.5 w-3.5')}
                               </span>
-                              {review.providerReplyAt && (
-                                <span className="text-ink-400 font-medium">
-                                  {review.providerReplyAt}
-                                </span>
-                              )}
+                              {hl.label}
+                            </span>
+                            <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-extrabold text-emerald-900">
+                              {hl.percent}% sąsiadów
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* BREAKDOWN BY SCOPE OF SERVICES (ZAKRES USŁUG) */}
+                  <div className="rounded-3xl bg-white p-4 md:p-5 border border-mist-200 space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-[12px] font-bold uppercase tracking-wider text-ink-500">
+                        Oceny według zakresu usług:
+                      </p>
+                      <span className="text-[11px] font-semibold text-ink-400">
+                        Sprawdzone realizacje
+                      </span>
+                    </div>
+
+                    <div className="divide-y divide-mist-200 rounded-2xl border border-mist-200 overflow-hidden bg-mist/30">
+                      {stats.servicesBreakdown.length > 0 ? (
+                        stats.servicesBreakdown.map((item) => (
+                          <div
+                            key={item.tag}
+                            className="flex items-center justify-between gap-3 p-3 bg-white hover:bg-sand-50/50 transition-colors"
+                          >
+                            <div className="min-w-0">
+                              <p className="text-[13px] font-bold text-ink truncate">{item.tag}</p>
+                              <p className="text-[11px] text-ink-500">
+                                {item.count} {item.count === 1 ? 'oceniona realizacja' : 'ocenione realizacje'}
+                              </p>
                             </div>
-                            <p className="mt-1.5 text-[12.5px] leading-relaxed text-ink-600">
-                              {review.providerReply}
-                            </p>
+                            <div className="flex items-center gap-1.5 shrink-0 rounded-xl bg-amber-50 border border-amber-200 px-2.5 py-1 text-amber-950 font-bold text-[12px]">
+                              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
+                              <span>{item.avgRating.toFixed(1)}</span>
+                            </div>
                           </div>
-                        ) : (
-                          <div className="mt-2.5 flex items-center justify-end">
-                            {!isReplying ? (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  if (!currentUser) {
-                                    onAuthRequired?.(
-                                      'Odpowiedź wykonawcy',
-                                      'Zaloguj się na swoje konto w mójMińsk, aby odpowiedzieć pod recenzją klienta.',
-                                    );
-                                    return;
-                                  }
-                                  setReplyingToReviewId(review.id);
-                                  setReplyText('');
-                                }}
-                                className="inline-flex items-center gap-1 text-[11.5px] font-bold text-ink-500 hover:text-ink cursor-pointer"
-                              >
-                                <CornerDownRight className="h-3 w-3" />
-                                <span>Odpowiedz jako wykonawca</span>
-                              </button>
-                            ) : (
-                              <div className="w-full mt-2 rounded-2xl bg-white p-3 border border-mist-300 space-y-2">
-                                <p className="text-[11.5px] font-bold text-ink">
-                                  Oficjalna odpowiedź wykonawcy ({provider.businessName}):
-                                </p>
-                                <textarea
-                                  rows={2}
-                                  value={replyText}
-                                  onChange={(e) => setReplyText(e.target.value)}
-                                  placeholder="Podziękuj za opinię lub odnieś się do komentarza sąsiada..."
-                                  className="w-full rounded-xl border border-mist-300 p-2.5 text-[12.5px] text-ink focus:border-ink focus:outline-none"
-                                />
-                                <div className="flex justify-end gap-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => setReplyingToReviewId(null)}
-                                    className="rounded-lg px-3 py-1 text-[11.5px] font-bold text-ink-500 hover:bg-mist cursor-pointer"
-                                  >
-                                    Anuluj
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleSubmitReply(review.id)}
-                                    className="rounded-lg bg-ink px-3.5 py-1 text-[11.5px] font-bold text-white hover:bg-ink-800 cursor-pointer"
-                                  >
-                                    Opublikuj odpowiedź
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-                          </div>
+                        ))
+                      ) : (
+                        <div className="p-3 text-[12px] text-ink-500 text-center bg-white">
+                          Oceny ogólne wykonawcy obejmują cały profil usługowy.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* NEIGHBORHOOD VERIFICATION & SECURITY PASSPORT */}
+                  <div className="rounded-3xl bg-sand-50/70 p-4 border border-sand-300 flex items-start gap-3 text-[12px] text-ink-700">
+                    <ShieldCheck className="h-5 w-5 text-emerald-700 shrink-0 mt-0.5" />
+                    <div className="space-y-1">
+                      <p className="font-bold text-ink">
+                        Weryfikacja tożsamości sąsiedzkiej mójMińsk
+                      </p>
+                      <p className="text-[11.5px] leading-relaxed text-ink-600">
+                        W profilu wykonawcy zrezygnowaliśmy z otwartych, subiektywnych komentarzy. Wszystkie parametry jakości opierają się na zamkniętym formularzu wypełnianym przez zweryfikowanych mieszkańców.
+                        {stats.verifiedStreets.length > 0 && (
+                          <span className="block mt-1 font-semibold text-ink-800">
+                            Oceny pochodzą z ulic: {stats.verifiedStreets.join(', ')}.
+                          </span>
                         )}
-                      </article>
-                    );
-                  })
-                )}
-              </div>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </section>
           </div>
         </div>

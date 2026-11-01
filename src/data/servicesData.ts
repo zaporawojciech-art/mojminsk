@@ -30,6 +30,75 @@ export interface ServicePortfolioItem {
   locationLabel?: string;
 }
 
+export type ServiceRecommendation = 'definitely' | 'rather' | 'not_recommended';
+
+export interface ServiceReviewHighlightDef {
+  id: string;
+  label: string;
+  shortLabel: string;
+  iconName: string;
+  description: string;
+}
+
+export const SERVICE_REVIEW_HIGHLIGHTS: ServiceReviewHighlightDef[] = [
+  {
+    id: 'cleanliness',
+    label: 'Wzorowy porządek po pracy',
+    shortLabel: 'Czystość po pracy',
+    iconName: 'Sparkles',
+    description: 'Zabezpieczenie miejsca pracy i posprzątanie po zakończeniu robót.',
+  },
+  {
+    id: 'fair_price',
+    label: 'Uczciwa wycena bez ukrytych dopłat',
+    shortLabel: 'Uczciwa wycena',
+    iconName: 'BadgeCheck',
+    description: 'Rachunek w 100% zgodny z wcześniejszymi ustaleniami.',
+  },
+  {
+    id: 'technical_advice',
+    label: 'Fachowe doradztwo techniczne i dobór materiałów',
+    shortLabel: 'Świetne doradztwo',
+    iconName: 'Lightbulb',
+    description: 'Cenne wskazówki i pomoc w doborze optymalnych rozwiązań.',
+  },
+  {
+    id: 'punctual',
+    label: 'Punktualność i dotrzymanie terminu',
+    shortLabel: 'Punktualność co do minuty',
+    iconName: 'Clock',
+    description: 'Przyjazd o umówionej godzinie i terminowe zakończenie zlecenia.',
+  },
+  {
+    id: 'fast_response',
+    label: 'Błyskawiczny czas reakcji i dostępność',
+    shortLabel: 'Szybki czas reakcji',
+    iconName: 'Zap',
+    description: 'Sprawny kontakt i szybkie podjęcie pilnego zlecenia.',
+  },
+  {
+    id: 'pro_equipment',
+    label: 'Własny profesjonalny sprzęt i narzędzia',
+    shortLabel: 'Profesjonalny sprzęt',
+    iconName: 'Wrench',
+    description: 'Kompletne, nowoczesne narzędzia wykonawcy.',
+  },
+  {
+    id: 'culture',
+    label: 'Wysoka kultura osobista i spokój',
+    shortLabel: 'Kultura osobista',
+    iconName: 'Smile',
+    description: 'Bezkonfliktowa, kulturalna i rzeczowa współpraca.',
+  },
+  {
+    id: 'warranty_invoice',
+    label: 'Gwarancja na wykonaną pracę i faktura',
+    shortLabel: 'Gwarancja i faktura',
+    iconName: 'FileCheck',
+    description: 'Pewność prawna, protokół i gwarancja powykonawcza.',
+  },
+];
+
 export interface ServiceReview {
   id: string;
   providerId: string;
@@ -37,9 +106,15 @@ export interface ServiceReview {
   authorName: string;
   authorStreet: string;
   authorSeed: string;
-  rating: number; // 1 - 5
-  comment: string;
-  serviceTag?: string;
+  rating: number; // 1 - 5 (średnia zagregowana)
+  qualityRating?: number; // 1 - 5: Jakość i fachowość
+  punctualityRating?: number; // 1 - 5: Terminowość i punktualność
+  priceFairnessRating?: number; // 1 - 5: Uczciwość i przejrzystość wyceny
+  communicationRating?: number; // 1 - 5: Komunikacja i kultura pracy
+  recommendation?: ServiceRecommendation; // 'definitely' | 'rather' | 'not_recommended'
+  highlightTags?: string[]; // IDs from SERVICE_REVIEW_HIGHLIGHTS
+  serviceTag?: string; // Zakres zrealizowanej usługi
+  comment?: string; // Pole opcjonalne / archiwalne (nieprezentowane w profilu)
   providerReply?: string;
   providerReplyAt?: string;
   createdAt: string;
@@ -279,6 +354,12 @@ export const INITIAL_SERVICE_PROVIDERS: ServiceProvider[] = [
         authorStreet: 'Spacerowa',
         authorSeed: 'Kasia-Spacerowa',
         rating: 5,
+        qualityRating: 5,
+        punctualityRating: 5,
+        priceFairnessRating: 5,
+        communicationRating: 5,
+        recommendation: 'definitely',
+        highlightTags: ['cleanliness', 'pro_equipment', 'technical_advice'],
         serviceTag: 'Pompy ciepła i kotłownie',
         comment:
           'Pan Marek wykonywał u nas całą kotłownię i podłogówkę. Wszystko ułożone od linijki, rzetelnie wytłumaczone działanie sterowników i zostawiony idealny porządek.',
@@ -295,6 +376,12 @@ export const INITIAL_SERVICE_PROVIDERS: ServiceProvider[] = [
         authorStreet: 'Sosnkowskiego',
         authorSeed: 'Tomasz-Sosnkowskiego',
         rating: 5,
+        qualityRating: 5,
+        punctualityRating: 5,
+        priceFairnessRating: 5,
+        communicationRating: 5,
+        recommendation: 'definitely',
+        highlightTags: ['fast_response', 'fair_price', 'punctual'],
         serviceTag: 'Pogotowie hydrauliczne',
         comment:
           'Pęknięty zawór pod zlewem w sobotnie popołudnie. Pan Marek przyjechał w 40 minut z częściami na wymianę i uratował nam parkiet w kuchni.',
@@ -308,6 +395,12 @@ export const INITIAL_SERVICE_PROVIDERS: ServiceProvider[] = [
         authorStreet: 'Dąbrówki',
         authorSeed: 'Andrzej-Dabrowki',
         rating: 5,
+        qualityRating: 5,
+        punctualityRating: 5,
+        priceFairnessRating: 5,
+        communicationRating: 5,
+        recommendation: 'definitely',
+        highlightTags: ['warranty_invoice', 'fair_price', 'culture'],
         serviceTag: 'Instalacje gazowe',
         comment:
           'Szybka próba szczelności gazu wraz z protokołem do spółdzielni i podłączenie nowej płyty. Konkretny i słowny sąsiad.',
@@ -357,6 +450,12 @@ export const INITIAL_SERVICE_PROVIDERS: ServiceProvider[] = [
         authorStreet: 'Piękna',
         authorSeed: 'Michal-Piekna',
         rating: 5,
+        qualityRating: 5,
+        punctualityRating: 5,
+        priceFairnessRating: 5,
+        communicationRating: 5,
+        recommendation: 'definitely',
+        highlightTags: ['pro_equipment', 'warranty_invoice', 'technical_advice'],
         serviceTag: 'Instalacje elektryczne SEP',
         comment:
           'Rozdzielnica zrobiona jak dzieło sztuki – każdy obwód czytelnie opisany, wykonane pełne pomiary rezystancji izolacji pod odbiór budynku.',
@@ -372,6 +471,12 @@ export const INITIAL_SERVICE_PROVIDERS: ServiceProvider[] = [
         authorStreet: 'Siennicka',
         authorSeed: 'Ewelina-Siennicka',
         rating: 5,
+        qualityRating: 5,
+        punctualityRating: 5,
+        priceFairnessRating: 4,
+        communicationRating: 5,
+        recommendation: 'definitely',
+        highlightTags: ['fast_response', 'cleanliness', 'punctual'],
         serviceTag: 'Instalacje elektryczne SEP',
         comment:
           'Szybka diagnoza zwarcia w instalacji i wymiana bezpieczników w mieszkaniu. Punktualnie i bardzo czysto.',
@@ -426,6 +531,12 @@ export const INITIAL_SERVICE_PROVIDERS: ServiceProvider[] = [
         authorStreet: 'Kazikowskiego',
         authorSeed: 'Marta-Kazikowskiego',
         rating: 5,
+        qualityRating: 5,
+        punctualityRating: 5,
+        priceFairnessRating: 5,
+        communicationRating: 5,
+        recommendation: 'definitely',
+        highlightTags: ['technical_advice', 'pro_equipment', 'punctual'],
         serviceTag: 'Kuchnie na wymiar',
         comment:
           'Kuchnia marzeń wykonana co do milimetra! Pan Krzysztof doradził świetne rozwiązania w narożnikach, a montaż trwał dokładnie dwa dni.',
@@ -441,6 +552,12 @@ export const INITIAL_SERVICE_PROVIDERS: ServiceProvider[] = [
         authorStreet: 'Tartaczna',
         authorSeed: 'Pawel-Tartaczna',
         rating: 5,
+        qualityRating: 5,
+        punctualityRating: 5,
+        priceFairnessRating: 5,
+        communicationRating: 5,
+        recommendation: 'definitely',
+        highlightTags: ['fair_price', 'cleanliness', 'culture'],
         serviceTag: 'Szafy wnękowe i garderoby',
         comment:
           'Trzy szafy w zabudowie i szafka łazienkowa. Lokalny producent ze Stojadeł, wszystko mogliśmy obejrzeć na żywo w stolarni.',
@@ -490,6 +607,12 @@ export const INITIAL_SERVICE_PROVIDERS: ServiceProvider[] = [
         authorStreet: 'Sosnkowskiego',
         authorSeed: 'Karolina-Sosnkowskiego',
         rating: 5,
+        qualityRating: 5,
+        punctualityRating: 5,
+        priceFairnessRating: 5,
+        communicationRating: 5,
+        recommendation: 'definitely',
+        highlightTags: ['pro_equipment', 'cleanliness', 'punctual'],
         serviceTag: 'Łazienki i glazurnik',
         comment:
           'Płytki 120x60 położone idealnie, szlifowanie narożników na 45 stopni bez listew wyszło przepięknie. Ekipa punktualna.',
@@ -503,6 +626,12 @@ export const INITIAL_SERVICE_PROVIDERS: ServiceProvider[] = [
         authorStreet: 'Okrzei',
         authorSeed: 'Grzegorz-Okrzei',
         rating: 5,
+        qualityRating: 5,
+        punctualityRating: 4,
+        priceFairnessRating: 5,
+        communicationRating: 5,
+        recommendation: 'definitely',
+        highlightTags: ['fair_price', 'cleanliness', 'culture'],
         serviceTag: 'Malowanie i gładzie',
         comment:
           'Bardzo wysoka jakość gładzi i malowania całego piętra. Zdecydowanie warto polecić sąsiadom.',
@@ -551,6 +680,12 @@ export const INITIAL_SERVICE_PROVIDERS: ServiceProvider[] = [
         authorStreet: 'Huta Mińska',
         authorSeed: 'Robert-HutaMinska',
         rating: 5,
+        qualityRating: 5,
+        punctualityRating: 5,
+        priceFairnessRating: 5,
+        communicationRating: 5,
+        recommendation: 'definitely',
+        highlightTags: ['pro_equipment', 'punctual', 'warranty_invoice'],
         serviceTag: 'Układanie kostki brukowej',
         comment:
           '180 m² podjazdu i trawnik wokół domu zrobione w 6 dni. Porządna podbudowa, spadki wyprowadzone z niwelatorem – po ulewach zero kałuż.',
@@ -592,6 +727,12 @@ export const INITIAL_SERVICE_PROVIDERS: ServiceProvider[] = [
         authorStreet: 'Tuwima',
         authorSeed: 'Kamil-Tuwima',
         rating: 5,
+        qualityRating: 5,
+        punctualityRating: 5,
+        priceFairnessRating: 5,
+        communicationRating: 5,
+        recommendation: 'definitely',
+        highlightTags: ['fair_price', 'technical_advice', 'fast_response'],
         serviceTag: 'Mechanika pojazdowa',
         comment:
           'Uczciwy warsztat – stare części zawsze do wglądu, kosztorys podany przed naprawą co do złotówki. Rozrząd i hamulce zrobione jednego dnia.',
@@ -628,6 +769,12 @@ export const INITIAL_SERVICE_PROVIDERS: ServiceProvider[] = [
         authorStreet: 'Kopernika',
         authorSeed: 'Beata-Kopernika',
         rating: 5,
+        qualityRating: 5,
+        punctualityRating: 5,
+        priceFairnessRating: 5,
+        communicationRating: 5,
+        recommendation: 'definitely',
+        highlightTags: ['cleanliness', 'culture', 'fair_price'],
         serviceTag: 'Malowanie i gładzie',
         comment:
           'Pomalowane trzy pokoje i przedpokój w dwa dni. Wszystko dokładnie oklejone folią, po pracy ani jednej kropli farby na podłodze.',
@@ -701,23 +848,168 @@ export function getServiceCategoryBySlug(slug: string): ServiceCategory | undefi
   return SERVICE_CATEGORIES.find((c) => c.slug === slug);
 }
 
-export function computeProviderRatingStats(reviews: ServiceReview[]): {
+export interface ProviderRatingStats {
   average: number;
   count: number;
   distribution: Record<1 | 2 | 3 | 4 | 5, number>;
-} {
+  recommendPercent: number;
+  recommendCounts: {
+    definitely: number;
+    rather: number;
+    not_recommended: number;
+  };
+  dimensions: {
+    quality: number;
+    punctuality: number;
+    priceFairness: number;
+    communication: number;
+  };
+  topHighlights: {
+    id: string;
+    label: string;
+    shortLabel: string;
+    iconName: string;
+    count: number;
+    percent: number;
+  }[];
+  servicesBreakdown: {
+    tag: string;
+    count: number;
+    avgRating: number;
+  }[];
+  verifiedStreets: string[];
+}
+
+export function computeProviderRatingStats(reviews: ServiceReview[]): ProviderRatingStats {
   const distribution: Record<1 | 2 | 3 | 4 | 5, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  const emptyResult: ProviderRatingStats = {
+    average: 0,
+    count: 0,
+    distribution,
+    recommendPercent: 100,
+    recommendCounts: { definitely: 0, rather: 0, not_recommended: 0 },
+    dimensions: { quality: 0, punctuality: 0, priceFairness: 0, communication: 0 },
+    topHighlights: [],
+    servicesBreakdown: [],
+    verifiedStreets: [],
+  };
+
   if (!reviews || reviews.length === 0) {
-    return { average: 0, count: 0, distribution };
+    return emptyResult;
   }
+
   let sum = 0;
+  let qualitySum = 0;
+  let punctualitySum = 0;
+  let priceFairnessSum = 0;
+  let communicationSum = 0;
+
+  const recommendCounts = { definitely: 0, rather: 0, not_recommended: 0 };
+  const highlightCounts: Record<string, number> = {};
+  const serviceMap = new Map<string, { count: number; sum: number }>();
+  const streetsSet = new Set<string>();
+
   for (const r of reviews) {
     const clamped = Math.min(5, Math.max(1, Math.round(r.rating))) as 1 | 2 | 3 | 4 | 5;
     distribution[clamped] += 1;
     sum += r.rating;
+
+    // Dimensions with fallback to general rating
+    const q = typeof r.qualityRating === 'number' ? r.qualityRating : r.rating;
+    const p = typeof r.punctualityRating === 'number' ? r.punctualityRating : r.rating;
+    const pr = typeof r.priceFairnessRating === 'number' ? r.priceFairnessRating : r.rating;
+    const c = typeof r.communicationRating === 'number' ? r.communicationRating : r.rating;
+
+    qualitySum += Math.min(5, Math.max(1, q));
+    punctualitySum += Math.min(5, Math.max(1, p));
+    priceFairnessSum += Math.min(5, Math.max(1, pr));
+    communicationSum += Math.min(5, Math.max(1, c));
+
+    // Recommendation
+    if (r.recommendation) {
+      recommendCounts[r.recommendation] = (recommendCounts[r.recommendation] || 0) + 1;
+    } else {
+      if (r.rating >= 4) {
+        recommendCounts.definitely += 1;
+      } else if (r.rating === 3) {
+        recommendCounts.rather += 1;
+      } else {
+        recommendCounts.not_recommended += 1;
+      }
+    }
+
+    // Highlights
+    if (Array.isArray(r.highlightTags)) {
+      for (const hid of r.highlightTags) {
+        highlightCounts[hid] = (highlightCounts[hid] || 0) + 1;
+      }
+    }
+
+    // Service Tag breakdown
+    if (r.serviceTag && r.serviceTag.trim()) {
+      const tag = r.serviceTag.trim();
+      const current = serviceMap.get(tag) || { count: 0, sum: 0 };
+      current.count += 1;
+      current.sum += r.rating;
+      serviceMap.set(tag, current);
+    }
+
+    // Street
+    if (r.authorStreet && r.authorStreet.trim()) {
+      streetsSet.add(r.authorStreet.trim());
+    }
   }
-  const average = Math.round((sum / reviews.length) * 10) / 10;
-  return { average, count: reviews.length, distribution };
+
+  const count = reviews.length;
+  const average = Math.round((sum / count) * 10) / 10;
+  const quality = Math.round((qualitySum / count) * 10) / 10;
+  const punctuality = Math.round((punctualitySum / count) * 10) / 10;
+  const priceFairness = Math.round((priceFairnessSum / count) * 10) / 10;
+  const communication = Math.round((communicationSum / count) * 10) / 10;
+
+  const positiveRecommends = recommendCounts.definitely + recommendCounts.rather;
+  const recommendPercent = count > 0 ? Math.round((positiveRecommends / count) * 100) : 100;
+
+  // Build top highlights
+  const topHighlights = Object.entries(highlightCounts)
+    .map(([id, c]) => {
+      const def = SERVICE_REVIEW_HIGHLIGHTS.find((h) => h.id === id);
+      return {
+        id,
+        label: def ? def.label : id,
+        shortLabel: def ? def.shortLabel : id,
+        iconName: def ? def.iconName : 'Sparkles',
+        count: c,
+        percent: Math.round((c / count) * 100),
+      };
+    })
+    .sort((a, b) => b.count - a.count);
+
+  // Build services breakdown
+  const servicesBreakdown = Array.from(serviceMap.entries())
+    .map(([tag, data]) => ({
+      tag,
+      count: data.count,
+      avgRating: Math.round((data.sum / data.count) * 10) / 10,
+    }))
+    .sort((a, b) => b.count - a.count);
+
+  return {
+    average,
+    count,
+    distribution,
+    recommendPercent,
+    recommendCounts,
+    dimensions: {
+      quality,
+      punctuality,
+      priceFairness,
+      communication,
+    },
+    topHighlights,
+    servicesBreakdown,
+    verifiedStreets: Array.from(streetsSet),
+  };
 }
 
 export function filterAndSortServiceProviders(

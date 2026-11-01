@@ -1520,9 +1520,18 @@ export function AdminScreen({
                           </span>
                           <span className="text-rose-700 font-bold">Zgłoszono do moderacji</span>
                         </div>
-                        <p className="text-[13px] text-ink-800 bg-white p-3 rounded-lg border border-mist-200">
-                          „{review.comment}”
-                        </p>
+                        <div className="text-[12.5px] text-ink-800 bg-white p-3 rounded-lg border border-mist-200 space-y-1">
+                          <p className="font-semibold">
+                            Usługa: <strong>{review.serviceTag || 'Ogólna usługa'}</strong> · Ocena łączna: <strong>{review.rating}/5</strong>
+                          </p>
+                          {review.comment ? (
+                            <p className="italic text-ink-600">„{review.comment}”</p>
+                          ) : (
+                            <p className="text-[11.5px] text-emerald-800 font-medium">
+                              Wystawiono w formularzu zamkniętym bez komentarza tekstowego.
+                            </p>
+                          )}
+                        </div>
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-1 gap-2">
                           <span className="text-[11.5px] text-ink-500">
                             Autor opinii: {review.authorName} z ul. {review.authorStreet} · Ocena: {review.rating}/5
@@ -1744,9 +1753,18 @@ export function AdminScreen({
                     <span>{reviewToDelete.review.rating}/5</span>
                   </span>
                 </div>
-                <p className="text-[12.5px] italic text-ink-700 bg-white p-2.5 rounded-xl border border-mist-200">
-                  „{reviewToDelete.review.comment}”
-                </p>
+                <div className="text-[12px] text-ink-700 bg-white p-2.5 rounded-xl border border-mist-200 space-y-1">
+                  <p className="font-semibold">
+                    Usługa: {reviewToDelete.review.serviceTag || 'Usługa ogólna'}
+                  </p>
+                  {reviewToDelete.review.comment ? (
+                    <p className="italic text-ink-600">„{reviewToDelete.review.comment}”</p>
+                  ) : (
+                    <p className="text-[11px] text-emerald-800 font-medium">
+                      Ocena wielowymiarowa z formularza zamkniętego.
+                    </p>
+                  )}
+                </div>
                 <p className="text-[11.5px] text-ink-500">
                   Dotyczy: <strong>{reviewToDelete.provider.businessName}</strong>
                 </p>

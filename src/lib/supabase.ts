@@ -612,7 +612,13 @@ interface DbServiceReview {
   author_street: string;
   author_seed: string;
   rating: number;
-  comment: string;
+  quality_rating?: number | null;
+  punctuality_rating?: number | null;
+  price_fairness_rating?: number | null;
+  communication_rating?: number | null;
+  recommendation?: 'definitely' | 'rather' | 'not_recommended' | null;
+  highlight_tags?: string[] | null;
+  comment?: string | null;
   service_tag: string | null;
   provider_reply: string | null;
   provider_reply_at: string | null;
@@ -659,7 +665,13 @@ export async function fetchServiceProvidersFromSupabase(): Promise<ServiceProvid
       authorStreet: rev.author_street,
       authorSeed: rev.author_seed,
       rating: rev.rating,
-      comment: rev.comment,
+      qualityRating: typeof rev.quality_rating === 'number' ? rev.quality_rating : undefined,
+      punctualityRating: typeof rev.punctuality_rating === 'number' ? rev.punctuality_rating : undefined,
+      priceFairnessRating: typeof rev.price_fairness_rating === 'number' ? rev.price_fairness_rating : undefined,
+      communicationRating: typeof rev.communication_rating === 'number' ? rev.communication_rating : undefined,
+      recommendation: rev.recommendation ?? undefined,
+      highlightTags: Array.isArray(rev.highlight_tags) ? rev.highlight_tags : undefined,
+      comment: rev.comment ?? undefined,
       serviceTag: rev.service_tag ?? undefined,
       providerReply: rev.provider_reply ?? undefined,
       providerReplyAt: rev.provider_reply_at ?? undefined,
@@ -786,7 +798,13 @@ export async function addServiceReviewInSupabase(
     author_street: review.authorStreet,
     author_seed: review.authorSeed,
     rating: review.rating,
-    comment: review.comment,
+    quality_rating: review.qualityRating ?? null,
+    punctuality_rating: review.punctualityRating ?? null,
+    price_fairness_rating: review.priceFairnessRating ?? null,
+    communication_rating: review.communicationRating ?? null,
+    recommendation: review.recommendation ?? null,
+    highlight_tags: review.highlightTags ?? null,
+    comment: review.comment ?? '',
     service_tag: review.serviceTag ?? null,
     provider_reply: review.providerReply ?? null,
     provider_reply_at: review.providerReplyAt ?? null,
@@ -798,6 +816,7 @@ export async function addServiceReviewInSupabase(
     payload.author_id = review.authorId;
   }
 
+  // Attempt with extended payload first
   const res = await restFetch(
     'service_reviews',
     {
@@ -806,7 +825,38 @@ export async function addServiceReviewInSupabase(
     },
     'return=minimal',
   );
-  return res !== null;
+
+  if (res !== null) return true;
+
+  // Fallback: If remote table does not have the extended columns yet, try legacy payload
+  const fallbackPayload: Record<string, unknown> = {
+    id: review.id,
+    provider_id: providerId,
+    author_name: review.authorName,
+    author_street: review.authorStreet,
+    author_seed: review.authorSeed,
+    rating: review.rating,
+    comment: review.comment ?? '',
+    service_tag: review.serviceTag ?? null,
+    provider_reply: review.providerReply ?? null,
+    provider_reply_at: review.providerReplyAt ?? null,
+    reported: false,
+    created_at: review.createdAt || new Date().toISOString(),
+  };
+  if (review.authorId) {
+    fallbackPayload.author_id = review.authorId;
+  }
+
+  const fallbackRes = await restFetch(
+    'service_reviews',
+    {
+      method: 'POST',
+      body: JSON.stringify(fallbackPayload),
+    },
+    'return=minimal',
+  );
+
+  return fallbackRes !== null;
 }
 
 export async function dismissReportedReviewInSupabase(
