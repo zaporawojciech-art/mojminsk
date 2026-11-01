@@ -9,6 +9,26 @@ import { registerSW } from 'virtual:pwa-register';
 export function initPWAAutoReload() {
   if (typeof window === 'undefined') return;
 
+  // Automatyczny reload w przypadku błędu ładowania dynamicznych chunków lub arkuszy CSS po nowym deployu
+  window.addEventListener(
+    'error',
+    (event) => {
+      const target = event.target as HTMLElement | null;
+      const isCssError = target instanceof HTMLLinkElement && target.rel === 'stylesheet';
+      const isChunkError =
+        typeof event.message === 'string' &&
+        (event.message.includes('Failed to fetch dynamically imported module') ||
+          event.message.includes('error loading dynamically imported module') ||
+          event.message.includes('Loading chunk'));
+
+      if (isCssError || isChunkError) {
+        console.warn('Wykryto nieaktualny zasób (CSS/JS chunk) po nowym deployu — czyszczę i odświeżam...');
+        window.location.reload();
+      }
+    },
+    true,
+  );
+
   // Nasłuchiwanie na przejęcie kontroli przez nowego Service Workera
   if ('serviceWorker' in navigator) {
     let refreshing = false;

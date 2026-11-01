@@ -70,6 +70,7 @@ export function ProviderBrandMark({
   size?: 'sm' | 'md' | 'lg';
 }) {
   const hasLogo = Boolean(provider.logoUrl);
+  const px = size === 'sm' ? 40 : size === 'lg' ? 80 : 48;
 
   const dims =
     size === 'sm'
@@ -85,11 +86,15 @@ export function ProviderBrandMark({
           'relative shrink-0 overflow-hidden bg-white p-0.5 ring-1 ring-mist-200 shadow-2xs',
           dims,
         )}
+        style={{ width: px, height: px, minWidth: px, minHeight: px, maxWidth: px, maxHeight: px }}
         title={`Logotyp firmy: ${provider.businessName}`}
       >
         <img
           src={provider.logoUrl}
           alt={`Logo ${provider.businessName}`}
+          width={px}
+          height={px}
+          style={{ width: px, height: px, objectFit: 'cover' }}
           className="h-full w-full rounded-[inherit] object-cover"
         />
       </div>
@@ -102,11 +107,15 @@ export function ProviderBrandMark({
         'relative shrink-0 overflow-hidden bg-sand-100 ring-1 ring-sand-300/80 shadow-2xs',
         dims,
       )}
+      style={{ width: px, height: px, minWidth: px, minHeight: px, maxWidth: px, maxHeight: px }}
       title={`Profil wykonawcy: ${provider.name}`}
     >
       <img
         src={avatarUrl(provider.avatarSeed)}
         alt={provider.name}
+        width={px}
+        height={px}
+        style={{ width: px, height: px, objectFit: 'cover' }}
         className="h-full w-full object-cover"
       />
     </div>

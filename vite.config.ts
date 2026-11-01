@@ -16,8 +16,10 @@ export default defineConfig({
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [
           /^\/api\//,
+          /^\/assets\//,
           /^\/sitemap.*\.xml$/,
           /^\/robots\.txt$/,
+          /[.][a-zA-Z0-9]+$/,
         ],
       },
       includeAssets: ['apple-touch-icon.png', 'icons/*.png', 'icons/*.svg', 'push-sw.js'],

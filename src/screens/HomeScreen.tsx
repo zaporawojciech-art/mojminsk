@@ -61,7 +61,7 @@ import { fetchPostsFromSupabase } from '../lib/supabase';
 import { Card, Img, SectionHeader, StandardTopBar, cn, zl } from '../components/ui';
 import { BuyCoffeeButton } from '../components/BuyCoffeeButton';
 import { AppLink } from '../components/AppLink';
-import { buildAdUrl, buildServiceProviderUrl, TAB_PATHS } from '../router/urlUtils';
+import { buildAdUrl, buildServiceProviderUrl, buildZditmMapUrl, TAB_PATHS } from '../router/urlUtils';
 import type { TabId } from '../components/BottomNav';
 import { useWeather } from '../hooks/useWeather';
 import {
@@ -1316,7 +1316,13 @@ export function HomeScreen({
   const userVoteForFeatured = featuredPoll ? userVotes[featuredPoll.id] : undefined;
 
   const quick = [
-    { label: 'Rozkład', href: '/zditm/m2', icon: Bus, cls: 'bg-sky-100 text-ink', onClick: () => (onZditm ? onZditm('M2') : onTab('home')) },
+    {
+      label: 'Rozkład',
+      href: buildZditmMapUrl('M2'),
+      icon: Bus,
+      cls: 'bg-sky-100 text-ink',
+      onClick: () => (onZditmMap ? onZditmMap('M2') : onTab('home')),
+    },
     { label: 'Ogłoszenia', href: TAB_PATHS.ads, icon: Megaphone, cls: 'bg-white text-ink', onClick: () => onTab('ads') },
     { label: 'Fachowcy', href: TAB_PATHS.services, icon: Wrench, cls: 'bg-emerald-100 text-ink', onClick: () => onTab('services') },
     { label: 'Przejazd', href: TAB_PATHS.rides, icon: Car, cls: 'bg-coral-100 text-ink', onClick: () => onTab('rides') },
