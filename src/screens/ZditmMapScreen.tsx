@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import {
@@ -34,12 +34,15 @@ import {
   searchRealBusStops,
   type RealBusStop,
 } from '../data/realBusStops';
+import { buildZditmMapUrl } from '../router/urlUtils';
 
 interface ZditmMapScreenProps {
   onBack: () => void;
   initialLine?: LineId;
   initialStopName?: string;
   onOpenTimetable?: (lineId: LineId, stopName?: string) => void;
+  onLineChange?: (lineId: LineId) => void;
+  onStopChange?: (lineId: LineId, stopName: string | null) => void;
   isClosing?: boolean;
 }
 
@@ -82,6 +85,8 @@ export function ZditmMapScreen({
   initialLine = 'M2',
   initialStopName,
   onOpenTimetable,
+  onLineChange,
+  onStopChange,
   isClosing = false,
 }: ZditmMapScreenProps) {
   const [selectedLineId, setSelectedLineId] = useState<LineId>(initialLine);
@@ -89,6 +94,64 @@ export function ZditmMapScreen({
   const [selectedStopName, setSelectedStopName] = useState<string | null>(initialStopName || null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Synchronizacja URL i stanu przy zmianie linii
+  const handleSelectLine = useCallback(
+    (lineId: LineId) => {
+      setSelectedLineId(lineId);
+      setSelectedStopName(null);
+      onLineChange?.(lineId);
+      onStopChange?.(lineId, null);
+      const targetUrl = buildZditmMapUrl(lineId);
+      if (typeof window !== 'undefined' && window.location.pathname !== targetUrl) {
+        window.history.replaceState({}, '', targetUrl);
+      }
+    },
+    [onLineChange, onStopChange],
+  );
+
+  // Synchronizacja URL i stanu przy wyborze/odznaczeniu przystanku
+  const handleSelectStop = useCallback(
+    (stopName: string | null) => {
+      setSelectedStopName(stopName);
+      onStopChange?.(selectedLineId, stopName);
+      const targetUrl = buildZditmMapUrl(selectedLineId, stopName || undefined);
+      if (typeof window !== 'undefined' && window.location.pathname !== targetUrl) {
+        window.history.replaceState({}, '', targetUrl);
+      }
+      if (stopName && mapInstanceRef.current) {
+        const targetPos = getStopCoordinates(stopName);
+        mapInstanceRef.current.panTo(targetPos, { animate: true });
+      }
+    },
+    [selectedLineId, onStopChange],
+  );
+
+  // Synchronizacja z zewnętrznymi zmianami propsów (np. nawigacja deep-link / historia wstecz)
+  useEffect(() => {
+    if (initialLine && initialLine !== selectedLineId) {
+      setSelectedLineId(initialLine);
+    }
+  }, [initialLine, selectedLineId]);
+
+  useEffect(() => {
+    if (initialStopName !== undefined && initialStopName !== selectedStopName) {
+      setSelectedStopName(initialStopName);
+      if (initialStopName && mapInstanceRef.current) {
+        const targetPos = getStopCoordinates(initialStopName);
+        mapInstanceRef.current.setView(targetPos, 16, { animate: true });
+      }
+    }
+  }, [initialStopName, selectedStopName]);
+
+  // Dynamiczny tytuł strony dla zakładek i wyszukiwarek (SEO & UX)
+  useEffect(() => {
+    if (selectedStopName) {
+      document.title = `${selectedStopName} — Linia ${selectedLineId} Mapa ZDiTM | mójMińsk`;
+    } else {
+      document.title = `Linia ${selectedLineId} — Mapa ZDiTM Mińsk Mazowiecki | mójMińsk`;
+    }
+  }, [selectedLineId, selectedStopName]);
 
   // Wyszukiwanie w pełnej bazie 244 przystanków Mińska Mazowieckiego
   const searchResults = useMemo(() => {
@@ -180,7 +243,7 @@ export function ZditmMapScreen({
       if (orig && (orig.target as HTMLElement)?.closest?.('.custom-bus-stop-icon, .custom-bus-marker, [data-stop]')) {
         return;
       }
-      setSelectedStopName(null);
+      handleSelectStop(null);
     });
 
     mapInstanceRef.current = map;
@@ -219,19 +282,18 @@ export function ZditmMapScreen({
 
     routePolylineRef.current = polyline;
 
-    // Dopasowanie widoku do całej trasy
-    if (coords.length > 0) {
+    // Dopasowanie widoku do wybranego przystanku lub całej trasy
+    if (selectedStopName) {
+      const targetPos = getStopCoordinates(selectedStopName);
+      map.setView(targetPos, 16, { animate: true });
+    } else if (coords.length > 0) {
       const bounds = L.latLngBounds(coords);
       map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
     }
 
     // Rejestracja globalnego callbacka dla natywnych kliknięć DOM
     (window as any).__selectZditmStop = (name: string) => {
-      setSelectedStopName(name);
-      const targetPos = getStopCoordinates(name);
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.panTo(targetPos, { animate: true });
-      }
+      handleSelectStop(name);
     };
 
     // Dodawanie markerów przystanków
@@ -269,8 +331,7 @@ export function ZditmMapScreen({
         .addTo(map)
         .on('click', (e) => {
           L.DomEvent.stop(e);
-          setSelectedStopName(stopName);
-          map.panTo(pos, { animate: true });
+          handleSelectStop(stopName);
         });
 
       // Bezpośrednie podpięcie zdarzenia DOM do elementu markera (niezawodne na iOS i Android)
@@ -279,8 +340,7 @@ export function ZditmMapScreen({
         L.DomEvent.disableClickPropagation(el);
         el.addEventListener('click', (ev) => {
           ev.stopPropagation();
-          setSelectedStopName(stopName);
-          map.panTo(pos, { animate: true });
+          handleSelectStop(stopName);
         });
       }
 
@@ -427,11 +487,23 @@ export function ZditmMapScreen({
   const handleSelectSearchStop = (stop: RealBusStop) => {
     setIsSearchOpen(false);
     setSearchQuery('');
-    setSelectedStopName(stop.name);
 
     // Jeśli przystanek jest na innej linii, a nie na bieżącej, przełącz linię
-    if (stop.lines.length > 0 && !stop.lines.includes(selectedLineId)) {
-      setSelectedLineId(stop.lines[0] as LineId);
+    const targetLine =
+      stop.lines.length > 0 && !stop.lines.includes(selectedLineId)
+        ? (stop.lines[0] as LineId)
+        : selectedLineId;
+
+    if (targetLine !== selectedLineId) {
+      setSelectedLineId(targetLine);
+      onLineChange?.(targetLine);
+    }
+
+    setSelectedStopName(stop.name);
+    onStopChange?.(targetLine, stop.name);
+    const targetUrl = buildZditmMapUrl(targetLine, stop.name);
+    if (typeof window !== 'undefined' && window.location.pathname !== targetUrl) {
+      window.history.replaceState({}, '', targetUrl);
     }
 
     if (mapInstanceRef.current) {
@@ -471,10 +543,7 @@ export function ZditmMapScreen({
                   <button
                     key={lineId}
                     type="button"
-                    onClick={() => {
-                      setSelectedLineId(lineId);
-                      setSelectedStopName(null);
-                    }}
+                    onClick={() => handleSelectLine(lineId)}
                     className={cn(
                       'h-10 rounded-xl font-extrabold text-[13.5px] flex items-center justify-center gap-1 transition-all cursor-pointer border',
                       isSelected
@@ -687,7 +756,7 @@ export function ZditmMapScreen({
 
               <button
                 type="button"
-                onClick={() => setSelectedStopName(null)}
+                onClick={() => handleSelectStop(null)}
                 className="grid h-8 w-8 place-items-center rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
                 aria-label="Zamknij podgląd przystanku"
               >

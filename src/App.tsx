@@ -898,13 +898,28 @@ export default function App() {
         return;
       }
 
-      // 3a. Mapa linii ZDiTM (/zditm/mapa, /zditm/mapa/m2)
+      // 3a. Mapa linii ZDiTM (/zditm/mapa, /zditm/mapa/m2, /zditm/mapa/m2/plac-dworcowy)
       if (cleanPath === '/zditm/mapa' || cleanPath.startsWith('/zditm/mapa/')) {
-        const parts = cleanPath.split('/').filter(Boolean); // ['zditm', 'mapa', 'm2']
+        const parts = cleanPath.split('/').filter(Boolean); // ['zditm', 'mapa', 'm2', 'plac-dworcowy']
         const lineUpper = parts[2]?.toUpperCase();
         const validLine: LineId =
           lineUpper === 'M1' || lineUpper === 'M2' || lineUpper === 'M3' || lineUpper === 'M4' ? lineUpper : 'M2';
+        const lineData = busLines.find((l) => l.id === validLine) || busLines[0];
+
+        let matchedStop: string | undefined = undefined;
+        if (parts[3]) {
+          const allLineStops = [
+            ...(lineData.directions[0]?.stops || lineData.stops),
+            ...(lineData.directions[1]?.stops || lineData.stops),
+          ];
+          matchedStop =
+            allLineStops.find(
+              (s) => slugify(s) === parts[3] || s.toLowerCase() === parts[3].toLowerCase().replace(/-/g, ' '),
+            ) || parts[3].replace(/-/g, ' ');
+        }
+
         setSelectedZditmLine(validLine);
+        setSelectedZditmStop(matchedStop);
         setOverlay('zditmMap');
         return;
       }
@@ -2186,6 +2201,14 @@ export default function App() {
                 navigateTo(buildZditmUrl(lineId, stopName), {
                   state: { fromMap: true, fromMapLine: lineId },
                 });
+              }}
+              onLineChange={(lineId) => {
+                setSelectedZditmLine(lineId);
+                setSelectedZditmStop(undefined);
+              }}
+              onStopChange={(lineId, stopName) => {
+                setSelectedZditmLine(lineId);
+                setSelectedZditmStop(stopName || undefined);
               }}
               isClosing={!!exitingScreens['overlay']}
             />

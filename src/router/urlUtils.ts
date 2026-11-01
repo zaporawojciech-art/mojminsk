@@ -55,8 +55,10 @@ export function buildZditmUrl(lineId?: LineId, stopName?: string): string {
   return stopName ? `${base}/${slugify(stopName)}` : base;
 }
 
-export function buildZditmMapUrl(lineId?: LineId): string {
-  return lineId ? `/zditm/mapa/${lineId.toLowerCase()}` : '/zditm/mapa';
+export function buildZditmMapUrl(lineId?: LineId, stopName?: string): string {
+  if (!lineId) return '/zditm/mapa';
+  const base = `/zditm/mapa/${lineId.toLowerCase()}`;
+  return stopName ? `${base}/${slugify(stopName)}` : base;
 }
 
 export function buildNeighborUrl(name: string, street: string): string {
