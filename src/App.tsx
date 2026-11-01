@@ -16,6 +16,7 @@ import {
 import {
   ads as initialAds,
   rides as initialRides,
+  posts as initialPosts,
   streets,
   busLines,
   type Ad,
@@ -70,11 +71,14 @@ import {
   createRideInSupabase,
   deleteAdInSupabase,
   deleteRideInSupabase,
+  dismissAdReportInSupabase,
+  fetchAdReportsFromSupabase,
   fetchAdsFromSupabase,
   fetchPollsFromSupabase,
   fetchRidesFromSupabase,
   updateAdInSupabase,
   updateAdStatusInSupabase,
+  type AdReportItem,
 } from './lib/supabase';
 import {
   fetchMyProfile,
@@ -114,6 +118,9 @@ const ServiceProviderModal = lazy(() =>
 );
 const AddServiceProviderModal = lazy(() =>
   import('./screens/AddServiceProviderModal').then((m) => ({ default: m.AddServiceProviderModal })),
+);
+const AdminScreen = lazy(() =>
+  import('./screens/AdminScreen').then((m) => ({ default: m.AdminScreen })),
 );
 import type { LegalDocType } from './screens/LegalScreen';
 
@@ -213,6 +220,13 @@ export default function App() {
     return null;
   });
 
+  const [adminViewOpen, setAdminViewOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.location.pathname.startsWith('/admin');
+    }
+    return false;
+  });
+
   const handleUpdateUser = useCallback((nextUser: User | null) => {
     setUser(nextUser);
     userRef.current = nextUser;
@@ -269,6 +283,15 @@ export default function App() {
 
   // Dynamic ads & rides list
   const [adsList, setAdsList] = useState<Ad[]>(initialAds);
+  const [adReports, setAdReports] = useState<AdReportItem[]>(() => [
+    {
+      id: 'rep_1',
+      adId: 'ad_2',
+      reason: 'Podejrzenie nieaktualnej oferty / brak kontaktu',
+      details: 'Sąsiad nie odpowiada na zapytania na czacie, ogłoszenie prawdopodobnie nieaktualne.',
+      createdAt: new Date().toISOString(),
+    },
+  ]);
   const [likedAds, setLikedAds] = useState<Record<string, boolean>>({});
   const [ridesList, setRidesList] = useState<Ride[]>(initialRides);
   const [addRideOpen, setAddRideOpen] = useState(false);
@@ -333,7 +356,7 @@ export default function App() {
   const [serviceProviders, setServiceProviders] = useState<ServiceProvider[]>(() => {
     if (typeof window !== 'undefined') {
       try {
-        const stored = localStorage.getItem('mojminsk_services_v4');
+        const stored = localStorage.getItem('mojminsk_services_v5');
         if (stored) return JSON.parse(stored);
       } catch {
         // fallback
@@ -347,7 +370,7 @@ export default function App() {
 
   useEffect(() => {
     try {
-      localStorage.setItem('mojminsk_services_v4', JSON.stringify(serviceProviders));
+      localStorage.setItem('mojminsk_services_v5', JSON.stringify(serviceProviders));
     } catch {
       // ignore
     }
@@ -379,6 +402,9 @@ export default function App() {
   useEffect(() => {
     void fetchAdsFromSupabase().then((remoteAds) => {
       if (remoteAds !== null) setAdsList(remoteAds);
+    });
+    void fetchAdReportsFromSupabase().then((remoteReports) => {
+      if (remoteReports && remoteReports.length > 0) setAdReports(remoteReports);
     });
     void fetchRidesFromSupabase().then((remoteRides) => {
       if (remoteRides !== null) setRidesList(remoteRides);
@@ -690,7 +716,18 @@ export default function App() {
       setAddProviderOpen(false);
       setSellerProfile(null);
 
-      // 1b. Regulamin & Polityka prywatności
+      // 1b. Panel Administratora (/admin)
+      if (cleanPath === '/admin' || cleanPath.startsWith('/admin/')) {
+        setSelectedAd(null);
+        setSelectedProvider(null);
+        setLegalView(null);
+        setAdminViewOpen(true);
+        if (mainRef.current) mainRef.current.scrollTop = 0;
+        return;
+      }
+      setAdminViewOpen(false);
+
+      // 1c. Regulamin & Polityka prywatności
       if (cleanPath === '/regulamin') {
         setSelectedAd(null);
         setSelectedProvider(null);
@@ -1050,7 +1087,13 @@ export default function App() {
   const handleDeleteAd = useCallback((adId: string) => {
     setAdsList((prev) => prev.filter((a) => a.id !== adId));
     setSelectedAd((prev) => (prev && prev.id === adId ? null : prev));
+    setAdReports((prev) => prev.filter((r) => r.adId !== adId));
     void deleteAdInSupabase(adId);
+  }, []);
+
+  const handleDismissAdReport = useCallback((reportId: string) => {
+    setAdReports((prev) => prev.filter((r) => r.id !== reportId));
+    void dismissAdReportInSupabase(reportId);
   }, []);
 
   const handleAdUpdated = useCallback((updatedAd: Ad) => {
@@ -1171,6 +1214,54 @@ export default function App() {
     );
   }, []);
 
+  const handleRejectOrDeleteServiceProvider = useCallback((providerId: string) => {
+    setServiceProviders((prev) => prev.filter((p) => p.id !== providerId));
+    setSelectedProvider((curr) => (curr?.id === providerId ? null : curr));
+  }, []);
+
+  const handleRevokeServiceProviderVerification = useCallback((providerId: string) => {
+    setServiceProviders((prev) =>
+      prev.map((p) => {
+        if (p.id !== providerId) return p;
+        const updated: ServiceProvider = {
+          ...p,
+          status: 'pending_verification',
+          verifiedByAdmin: false,
+        };
+        setSelectedProvider((curr) => (curr?.id === providerId ? updated : curr));
+        return updated;
+      }),
+    );
+  }, []);
+
+  const handleDismissReportedReview = useCallback((providerId: string, reviewId: string) => {
+    setServiceProviders((prev) =>
+      prev.map((p) => {
+        if (p.id !== providerId) return p;
+        const updated: ServiceProvider = {
+          ...p,
+          reviews: p.reviews.map((r) => (r.id === reviewId ? { ...r, reported: false } : r)),
+        };
+        setSelectedProvider((curr) => (curr?.id === providerId ? updated : curr));
+        return updated;
+      }),
+    );
+  }, []);
+
+  const handleDeleteServiceReview = useCallback((providerId: string, reviewId: string) => {
+    setServiceProviders((prev) =>
+      prev.map((p) => {
+        if (p.id !== providerId) return p;
+        const updated: ServiceProvider = {
+          ...p,
+          reviews: p.reviews.filter((r) => r.id !== reviewId),
+        };
+        setSelectedProvider((curr) => (curr?.id === providerId ? updated : curr));
+        return updated;
+      }),
+    );
+  }, []);
+
   const handleServiceProviderCreated = useCallback((newProvider: ServiceProvider) => {
     setServiceProviders((prev) => [newProvider, ...prev]);
   }, []);
@@ -1220,6 +1311,7 @@ export default function App() {
     (nextTab: TabId) => {
       setRouteNotFound(false);
       setLegalView(null);
+      setAdminViewOpen(false);
       const targetUrl = TAB_PATHS[nextTab];
       if (typeof window !== 'undefined' && window.location.pathname !== targetUrl) {
         navigateTo(targetUrl);
@@ -1513,84 +1605,118 @@ export default function App() {
         className="relative mx-auto flex h-full h-[100dvh] w-full max-w-md md:max-w-none flex-col overflow-hidden bg-mist shadow-2xl md:shadow-none"
       >
         {/* TOP HORIZONTAL NAVBAR (Desktop Only >= 768px) */}
-        <DesktopTopNavbar
-          currentTab={tab}
-          onTabChange={handleTabChange}
-          hasActiveSubpage={isChildScreenActive}
-          onCloseAllLayers={() => {
-            setOverlay(null);
-            setLegalView(null);
-            setPartnerOpen(false);
-            setSelectedAd(null);
-            setSelectedProvider(null);
-            setAddProviderOpen(false);
-            setMyAdsOpen(false);
-            setReportAd(null);
-            setAddAdOpen(false);
-            setAddRideOpen(false);
-            setChatAd(null);
-            setConversationsOpen(false);
-            setEditAd(null);
-            setSellerProfile(null);
-            setReserveAd(null);
-            setFiltersModalOpen(false);
-            setInstallModalOpen(false);
-            setPollsModalOpen(false);
-            setAddPollModalOpen(false);
-          }}
-          user={user}
-          unreadCount={unreadConversationsCount}
-          onOpenConversations={() =>
-            requireAuth(
-              'Wiadomości sąsiedzkie',
-              'Dostęp do czatu wymaga konta mieszkańca.',
-              () => {
-                setConversationsOpen(true);
-                navigateTo('/wiadomosci');
-              },
-            )
-          }
-          onAddNewAd={() =>
-            requireAuth(
-              'Dodaj ogłoszenie',
-              'Publikacja ogłoszeń na tablicy Mińska wymaga konta mieszkańca.',
-              () => {
-                setAddAdOpen(true);
-                navigateTo('/ogloszenia/dodaj');
-              },
-            )
-          }
-          onOpenZditm={() => {
-            setZditmSource(null);
-            setSelectedZditmLine('M2');
-            setSelectedZditmStop(undefined);
-            setOverlay('zditmMap');
-            navigateTo(buildZditmMapUrl('M2'));
-          }}
-          onOpenPolls={() => {
-            setPollsModalOpen(true);
-            navigateTo('/ankiety');
-          }}
-          onProfileClick={handleOpenProfileOrAuth}
-          onLogout={() => handleUpdateUser(null)}
-          searchQuery={desktopSearchQuery}
-          onSearchChange={(q) => {
-            setDesktopSearchQuery(q);
-            if (q && tab !== 'ads') {
-              setTab('ads');
-              setVisitedTabs((prev) => ({ ...prev, ads: true }));
-              navigateTo('/ogloszenia');
+        {!adminViewOpen && (
+          <DesktopTopNavbar
+            currentTab={tab}
+            onTabChange={handleTabChange}
+            hasActiveSubpage={isChildScreenActive}
+            onCloseAllLayers={() => {
+              setOverlay(null);
+              setLegalView(null);
+              setAdminViewOpen(false);
+              setPartnerOpen(false);
+              setSelectedAd(null);
+              setSelectedProvider(null);
+              setAddProviderOpen(false);
+              setMyAdsOpen(false);
+              setReportAd(null);
+              setAddAdOpen(false);
+              setAddRideOpen(false);
+              setChatAd(null);
+              setConversationsOpen(false);
+              setEditAd(null);
+              setSellerProfile(null);
+              setReserveAd(null);
+              setFiltersModalOpen(false);
+              setInstallModalOpen(false);
+              setPollsModalOpen(false);
+              setAddPollModalOpen(false);
+            }}
+            user={user}
+            unreadCount={unreadConversationsCount}
+            onOpenConversations={() =>
+              requireAuth(
+                'Wiadomości sąsiedzkie',
+                'Dostęp do czatu wymaga konta mieszkańca.',
+                () => {
+                  setConversationsOpen(true);
+                  navigateTo('/wiadomosci');
+                },
+              )
             }
-          }}
-          onSearchClear={() => setDesktopSearchQuery('')}
-        />
+            onAddNewAd={() =>
+              requireAuth(
+                'Dodaj ogłoszenie',
+                'Publikacja ogłoszeń na tablicy Mińska wymaga konta mieszkańca.',
+                () => {
+                  setAddAdOpen(true);
+                  navigateTo('/ogloszenia/dodaj');
+                },
+              )
+            }
+            onOpenZditm={() => {
+              setZditmSource(null);
+              setSelectedZditmLine('M2');
+              setSelectedZditmStop(undefined);
+              setOverlay('zditmMap');
+              navigateTo(buildZditmMapUrl('M2'));
+            }}
+            onOpenPolls={() => {
+              setPollsModalOpen(true);
+              navigateTo('/ankiety');
+            }}
+            onProfileClick={handleOpenProfileOrAuth}
+            onLogout={() => handleUpdateUser(null)}
+            searchQuery={desktopSearchQuery}
+            onSearchChange={(q) => {
+              setDesktopSearchQuery(q);
+              if (q && tab !== 'ads') {
+                setTab('ads');
+                setVisitedTabs((prev) => ({ ...prev, ads: true }));
+                navigateTo('/ogloszenia');
+              }
+            }}
+            onSearchClear={() => setDesktopSearchQuery('')}
+          />
+        )}
 
         {/* FULL-WIDTH MAIN WORKSPACE */}
         <main
           ref={mainRef}
           className="h-full w-full flex-1 overscroll-contain overflow-y-auto"
         >
-          {authScreenOpen ? (
+          {adminViewOpen ? (
+            <div className="min-h-full w-full">
+              <Suspense
+                fallback={
+                  <div className="min-h-[60vh] flex items-center justify-center p-8 text-ink-400">
+                    Wczytywanie Panelu Administratora...
+                  </div>
+                }
+              >
+                <AdminScreen
+                  providers={serviceProviders}
+                  ads={adsList}
+                  posts={initialPosts}
+                  adReports={adReports}
+                  onApproveProvider={handleApproveServiceProvider}
+                  onRejectOrDeleteProvider={handleRejectOrDeleteServiceProvider}
+                  onRevokeProviderVerification={handleRevokeServiceProviderVerification}
+                  onOpenProviderProfile={(provider) => setSelectedProvider(provider)}
+                  onOpenAddProviderModal={() => setAddProviderOpen(true)}
+                  onDeleteAd={handleDeleteAd}
+                  onUpdateAdStatus={handleStatusChange}
+                  onDismissAdReport={handleDismissAdReport}
+                  onDismissReportedReview={handleDismissReportedReview}
+                  onDeleteReview={handleDeleteServiceReview}
+                  onExitAdmin={() => {
+                    setAdminViewOpen(false);
+                    navigateTo(TAB_PATHS[tab]);
+                  }}
+                />
+              </Suspense>
+            </div>
+          ) : authScreenOpen ? (
             <div className="min-h-full">
               <OnboardingScreen
                 initialMode={authScreenMode}
@@ -1820,7 +1946,7 @@ export default function App() {
             </div>
           )}
 
-          {!authScreenOpen && !routeNotFound && (
+          {!authScreenOpen && !adminViewOpen && !routeNotFound && (
             <Footer
               onTabChange={handleTabChange}
               onOpenZditm={(line) => {
@@ -1855,7 +1981,9 @@ export default function App() {
         </main>
 
         <div className="md:hidden">
-          {showChrome && !isChildScreenActive && <BottomNav tab={tab} onChange={handleTabChange} />}
+          {showChrome && !adminViewOpen && !isChildScreenActive && (
+            <BottomNav tab={tab} onChange={handleTabChange} />
+          )}
         </div>
 
         {depth > 0 && (

@@ -494,7 +494,7 @@ function DesktopWeatherWidget({
           </div>
 
           {/* 6 key infographics */}
-          <WeatherInfographicsRow weather={weather} className="grid-cols-3 2xl:grid-cols-6" />
+          <WeatherInfographicsRow weather={weather} className="grid-cols-2 sm:grid-cols-3" />
         </div>
       )}
 

@@ -656,9 +656,9 @@ export function AirTile({ pm25, pm10, label }: { pm25: number; pm10: number; lab
             style={{ left: `${pos}%` }}
           />
         </div>
-        <div className="mt-1 flex justify-between text-[7.5px] font-extrabold text-ink-400">
+        <div className="mt-1 flex justify-between text-[7.5px] font-extrabold text-ink-400 whitespace-nowrap">
           <span>0</span>
-          <span>norma 15</span>
+          <span>15</span>
           <span>110</span>
         </div>
       </div>

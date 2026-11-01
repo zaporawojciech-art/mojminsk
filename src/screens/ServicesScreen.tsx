@@ -133,7 +133,6 @@ export function ServicesScreen({
   onOpenProvider,
   onAddProviderClick,
   onContactChat,
-  onApprovePendingProvider,
   onProfile,
 }: ServicesScreenProps) {
   const [selectedCategory, setSelectedCategory] = useState<ServiceCategoryId>(activeCategoryId);
@@ -612,17 +611,14 @@ export function ServicesScreen({
                       <div className="mb-2.5 flex items-center justify-between gap-2 rounded-xl bg-amber-100/80 px-3 py-1.5 text-[11px] text-amber-950 border border-amber-300">
                         <span className="inline-flex items-center gap-1.5 font-semibold">
                           <Clock className="h-3.5 w-3.5 text-amber-700 shrink-0" />
-                          Oczekuje na weryfikację
+                          Twój profil oczekuje na weryfikację w Panelu Administratora
                         </span>
-                        {onApprovePendingProvider && (
-                          <button
-                            type="button"
-                            onClick={() => onApprovePendingProvider(provider.id)}
-                            className="shrink-0 rounded-lg bg-ink px-2.5 py-1 text-[10.5px] font-bold text-white hover:bg-ink-700 cursor-pointer"
-                          >
-                            Zatwierdź
-                          </button>
-                        )}
+                        <AppLink
+                          to="/admin"
+                          className="shrink-0 rounded-lg bg-ink px-2.5 py-1 text-[10.5px] font-bold text-white hover:bg-ink-700 cursor-pointer"
+                        >
+                          Panel Admina
+                        </AppLink>
                       </div>
                     )}
 

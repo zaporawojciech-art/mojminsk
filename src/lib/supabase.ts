@@ -191,6 +191,43 @@ export async function reportAdInSupabase(
   );
 }
 
+export interface AdReportItem {
+  id: string;
+  adId: string;
+  reason: string;
+  details?: string | null;
+  createdAt: string;
+}
+
+export async function fetchAdReportsFromSupabase(): Promise<AdReportItem[] | null> {
+  const rows = await restFetch<
+    Array<{
+      id: string;
+      ad_id: string;
+      reason: string;
+      details: string | null;
+      created_at: string;
+    }>
+  >('ad_reports?select=*&order=created_at.desc');
+  if (!rows) return null;
+  return rows.map((r) => ({
+    id: r.id,
+    adId: r.ad_id,
+    reason: r.reason,
+    details: r.details,
+    createdAt: r.created_at,
+  }));
+}
+
+export async function dismissAdReportInSupabase(reportId: string): Promise<boolean> {
+  await restFetch(
+    `ad_reports?id=eq.${encodeURIComponent(reportId)}`,
+    { method: 'DELETE' },
+    'return=minimal',
+  );
+  return true;
+}
+
 export async function incrementAdViewsInSupabase(adId: string): Promise<number | null> {
   const res = await supabaseRpc<number>('increment_ad_views', { p_ad_id: adId });
   return res.data;

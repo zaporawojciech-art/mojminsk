@@ -146,6 +146,13 @@ export function Footer({
             >
               Polityka prywatności
             </AppLink>
+            <span>•</span>
+            <AppLink
+              to="/admin"
+              className="font-semibold text-ink-600 hover:text-coral-600 transition-colors"
+            >
+              Panel Admina
+            </AppLink>
           </div>
         </div>
       </div>
