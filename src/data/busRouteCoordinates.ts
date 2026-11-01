@@ -20,81 +20,44 @@ export interface StopGeoInfo {
 }
 
 // Baza dokładnych współrzędnych przystanków ZDiTM w Mińsku Mazowieckim
-export const BUS_STOPS_GEO: Record<string, GeoPoint> = {
-  // Linia M1 & Centrum
-  'Plac Dworcowy': { lat: 52.17654, lon: 21.55398 },
-  'Kazikowskiego': { lat: 52.179655, lon: 21.560556 },
-  'Konstytucji 3 Maja': { lat: 52.18252, lon: 21.55615 },
-  'Warszawska': { lat: 52.186687, lon: 21.543835 },
-  'Stojadła Handlowa': { lat: 52.1915, lon: 21.5332 },
-  'Stojadła Pętla': { lat: 52.1952, lon: 21.5245 },
-
-  // Linia M2 & Serbinów
-  'Piękna': { lat: 52.176947, lon: 21.549884 },
-  'Licealna': { lat: 52.179486, lon: 21.548827 },
-  'Tartaczna': { lat: 52.181193, lon: 21.549632 },
-  'Urząd Miasta': { lat: 52.180998, lon: 21.559419 },
-  'Mireckiego': { lat: 52.176664, lon: 21.566793 },
-  'Chemik': { lat: 52.1752, lon: 21.57263 },
-  'Szpital': { lat: 52.174221, lon: 21.578786 },
-  'Cmentarz Żydowski': { lat: 52.173201, lon: 21.584188 },
-  'Serbinów': { lat: 52.177354, lon: 21.588721 },
-
-  // Linia M3
-  'Rondo Żołnierzy Wyklętych': { lat: 52.188071, lon: 21.542577 },
-  'Warszawskie Przedmieście': { lat: 52.188565, lon: 21.5444 },
-  'Sienkiewicza': { lat: 52.186549, lon: 21.55225 },
-  'Kościuszki': { lat: 52.18162, lon: 21.5587 },
-  'Szpitalna': { lat: 52.173555, lon: 21.570236 },
-  'Spacerowa': { lat: 52.165884, lon: 21.568127 },
-  'Klonowa Osiedle': { lat: 52.166099, lon: 21.571904 },
-  'FUD': { lat: 52.173806, lon: 21.557942 },
-  'Osiedlowa': { lat: 52.165211, lon: 21.52465 },
-  'Szkoła Podstawowa nr 6 20': { lat: 52.175008, lon: 21.554149 },
-  'Szkoła Podstawowa nr 6 19': { lat: 52.175115, lon: 21.554312 },
-  'Szkoła Podstawowa nr 6': { lat: 52.175008, lon: 21.554149 },
-  'Mechanik': { lat: 52.1722, lon: 21.5512 },
-  'Widok': { lat: 52.1734, lon: 21.5528 },
-  'Rudzkiego': { lat: 52.1745, lon: 21.5601 },
-  'Dźwigowa': { lat: 52.1731, lon: 21.5632 },
-  'Łąkowa': { lat: 52.1718, lon: 21.5654 },
-  'Langiewicza': { lat: 52.1695, lon: 21.5672 },
-  'Klonowa 45': { lat: 52.1672, lon: 21.5735 },
-  'Śniadeckich': { lat: 52.1748, lon: 21.5715 },
-  'Przedszkole Miejskie nr 5': { lat: 52.1795, lon: 21.5622 },
-  '11 Listopada': { lat: 52.1822, lon: 21.5558 },
-  'Targowisko': { lat: 52.1848, lon: 21.5539 },
-
-  // Linia M4
-  'Urząd Skarbowy': { lat: 52.183616, lon: 21.562263 },
-  'Chełmońskiego': { lat: 52.184311, lon: 21.568304 },
-  'Kościelna': { lat: 52.180858, lon: 21.573843 },
-  'Dąbrówki': { lat: 52.17514, lon: 21.58153 },
-  'PKP Anielina': { lat: 52.16864, lon: 21.586307 },
-  'Sosnkowskiego': { lat: 52.1685, lon: 21.5621 },
-};
+// Pobierana bezpośrednio z oficjalnego rejestru REAL_BUS_STOPS
+export const BUS_STOPS_GEO: Record<string, GeoPoint> = {};
 
 /**
  * Zwraca precyzyjne współrzędne GPS przystanku (ze słupka lub bazy realBusStops)
  */
 export function getStopCoordinates(stopName: string): [number, number] {
-  if (BUS_STOPS_GEO[stopName]) {
-    return [BUS_STOPS_GEO[stopName].lat, BUS_STOPS_GEO[stopName].lon];
-  }
-
-  const clean = stopName.replace(/\s+\d+$/, '').trim().toLowerCase();
-  const found = REAL_BUS_STOPS.find(
-    (s) =>
-      s.name.toLowerCase() === clean ||
-      s.name.toLowerCase().includes(clean) ||
-      clean.includes(s.name.toLowerCase()) ||
-      s.fullName.toLowerCase().includes(stopName.toLowerCase())
+  // 1. Dopasowanie po dokładnej pełnej nazwie ze słupkiem (np. "11 Listopada 02", "PLAC DWORCOWY 01")
+  const exact = REAL_BUS_STOPS.find(
+    (s) => s.fullName.toLowerCase() === stopName.toLowerCase()
   );
-  if (found) {
-    return [found.lat, found.lon];
+  if (exact) {
+    return [exact.lat, exact.lon];
   }
 
-  // Centrum Mińska Mazowieckiego jako bezpieczny fallback
+  // 2. Dopasowanie po nazwie bazowej i słupku
+  const refMatch = stopName.match(/\s+(\d+)$/);
+  const ref = refMatch ? refMatch[1] : null;
+  const cleanName = stopName.replace(/\s+\d+$/, '').trim().toLowerCase();
+
+  if (ref) {
+    const withRef = REAL_BUS_STOPS.find(
+      (s) => s.name.toLowerCase() === cleanName && s.ref === ref
+    );
+    if (withRef) {
+      return [withRef.lat, withRef.lon];
+    }
+  }
+
+  // 3. Dopasowanie po samej nazwie bazowej
+  const foundByName = REAL_BUS_STOPS.find(
+    (s) => s.name.toLowerCase() === cleanName
+  );
+  if (foundByName) {
+    return [foundByName.lat, foundByName.lon];
+  }
+
+  // 4. Bezpieczny fallback do centrum Mińska Mazowieckiego
   return [52.1793, 21.5658];
 }
 
@@ -273,6 +236,7 @@ export function getActiveBuses(
     }
 
     const dirData = lineOfficial.directions[trip.directionIdx];
+    const streetData = BUS_STREET_ROUTES[lineId];
     const fullRoadCoords = getLineRouteCoordinates(lineId, trip.directionIdx);
 
     // Znajdź segment między którymi przystankami znajduje się autobus
@@ -329,9 +293,14 @@ export function getActiveBuses(
       // Płynna krzywa przyspieszania i hamowania (Smooth-Step: 3x^2 - 2x^3)
       const smoothFraction = rawFraction * rawFraction * (3 - 2 * rawFraction);
 
-      // Wycięcie punktów drogi i wyznaczenie pozycji wzdłuż geometrii ulic
-      const roadSubsegment = extractRoadSubsegment(fullRoadCoords, stopACoord, stopBCoord);
-      const interpolation = interpolateAlongRoadPoints(roadSubsegment, smoothFraction);
+      // Pobranie geometrii drogi bezpośrednio z segmentu międzreprzystankowego (HopSegment)
+      const hops = trip.directionIdx === 1 ? streetData?.hopsBackward : streetData?.hopsForward;
+      const hopCoords =
+        hops && hops[hopIndex] && hops[hopIndex].coords && hops[hopIndex].coords.length >= 2
+          ? hops[hopIndex].coords
+          : extractRoadSubsegment(fullRoadCoords, stopACoord, stopBCoord);
+
+      const interpolation = interpolateAlongRoadPoints(hopCoords, smoothFraction);
       busPosition = interpolation.position;
       busBearing = interpolation.bearing;
     }
