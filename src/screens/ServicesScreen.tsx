@@ -345,12 +345,12 @@ export function ServicesScreen({
         <div className="md:col-span-8 lg:col-span-9 mt-2 md:mt-0 space-y-3.5">
           {/* MOBILE HORIZONTAL CATEGORY BAR — COLORFUL ICON TILES LIKE IN ADS */}
           <div className="md:hidden">
-            <div className="mb-2 flex items-center justify-between px-5">
+            <div className="mb-1.5 flex items-center justify-between px-4">
               <div className="flex items-center gap-1.5">
-                <span className="grid h-6 w-6 place-items-center rounded-lg bg-sand-200 text-ink">
-                  <Sparkles className="h-3.5 w-3.5" />
+                <span className="grid h-5 w-5 place-items-center rounded-md bg-sand-200 text-ink">
+                  <Sparkles className="h-3 w-3" />
                 </span>
-                <h2 className="font-display text-[15px] font-bold tracking-tight text-ink">
+                <h2 className="font-display text-[14px] font-bold tracking-tight text-ink">
                   Kategorie usług
                 </h2>
               </div>
@@ -358,14 +358,14 @@ export function ServicesScreen({
                 <button
                   type="button"
                   onClick={() => handleSelectCategory('all')}
-                  className="text-[12px] font-bold text-coral-700"
+                  className="text-[11.5px] font-bold text-coral-700 cursor-pointer"
                 >
                   Pokaż wszystkie
                 </button>
               )}
             </div>
 
-            <div className="flex gap-2 overflow-x-auto no-scrollbar px-5 pb-1.5">
+            <div className="flex gap-2 overflow-x-auto no-scrollbar px-4 pb-1">
               {SERVICE_CATEGORIES.map((cat) => {
                 const Icon = SERVICE_CATEGORY_ICONS[cat.id] || Wrench;
                 const active = currentCategory === cat.id;
@@ -376,27 +376,27 @@ export function ServicesScreen({
                     type="button"
                     onClick={() => handleSelectCategory(cat.id)}
                     className={cn(
-                      'group flex shrink-0 items-center gap-2.5 rounded-2xl py-2 pl-2 pr-3.5 transition-all active:scale-95 border cursor-pointer',
+                      'group flex shrink-0 items-center gap-2 rounded-xl py-1.5 pl-1.5 pr-3 transition-all active:scale-95 border cursor-pointer',
                       active
-                        ? 'bg-ink text-white border-ink shadow-card'
-                        : 'bg-white text-ink-700 border-mist-300 shadow-card hover:bg-mist/40',
+                        ? 'bg-ink text-white border-ink shadow-2xs'
+                        : 'bg-white text-ink-700 border-mist-300 shadow-2xs hover:bg-mist/40',
                     )}
                   >
                     <span
                       className={cn(
-                        'grid h-8 w-8 shrink-0 place-items-center rounded-xl transition-colors',
+                        'grid h-7 w-7 shrink-0 place-items-center rounded-lg transition-colors',
                         active ? 'bg-white/20 text-white' : cn(cat.tone.bg, cat.tone.text),
                       )}
                     >
-                      <Icon className="h-4 w-4" aria-hidden />
+                      <Icon className="h-3.5 w-3.5" aria-hidden />
                     </span>
                     <div className="text-left min-w-0">
-                      <span className="block truncate text-[12px] font-bold leading-tight">
+                      <span className="block truncate text-[11.5px] font-bold leading-tight">
                         {cat.shortLabel}
                       </span>
                       <span
                         className={cn(
-                          'text-[9.5px] font-medium leading-none block mt-0.5',
+                          'text-[9px] font-medium leading-none block mt-0.5',
                           active ? 'text-white/80' : 'text-ink-400',
                         )}
                       >
@@ -410,7 +410,7 @@ export function ServicesScreen({
           </div>
 
           {/* 1-CLICK SUBCATEGORY BADGES + 1-CLICK SORT TOOLBAR */}
-          <div className="mx-5 md:mx-0 rounded-2xl bg-white border border-mist-200 p-3.5 shadow-card space-y-3">
+          <div className="mx-4 md:mx-0 rounded-xl md:rounded-2xl bg-white border border-mist-200 p-2.5 md:p-3.5 shadow-card space-y-2 md:space-y-3">
             {/* Row 1: Subcategory Badges (1-Click) */}
             {subcategoryBadges.length > 0 && (
               <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar md:flex-wrap">
@@ -418,7 +418,7 @@ export function ServicesScreen({
                   type="button"
                   onClick={() => setSelectedTags([])}
                   className={cn(
-                    'inline-flex h-8 shrink-0 items-center gap-1.5 rounded-xl px-3 text-[12px] font-bold transition-all cursor-pointer border',
+                    'inline-flex h-7 md:h-8 shrink-0 items-center gap-1.5 rounded-lg md:rounded-xl px-2.5 md:px-3 text-[11px] md:text-[12px] font-bold transition-all cursor-pointer border',
                     selectedTags.length === 0
                       ? 'bg-ink text-white border-ink shadow-2xs'
                       : 'bg-mist/60 text-ink-600 border-mist-200 hover:bg-mist hover:text-ink',
@@ -427,7 +427,7 @@ export function ServicesScreen({
                   <span>Wszystkie</span>
                   <span
                     className={cn(
-                      'rounded-md px-1.5 py-0.2 text-[10px] font-extrabold',
+                      'rounded-md px-1.5 py-0.2 text-[9.5px] md:text-[10px] font-extrabold',
                       selectedTags.length === 0
                         ? 'bg-white/20 text-white'
                         : 'bg-white text-ink-500',
@@ -450,17 +450,17 @@ export function ServicesScreen({
                       type="button"
                       onClick={() => toggleSubcategoryTag(tag)}
                       className={cn(
-                        'inline-flex h-8 shrink-0 items-center gap-1.5 rounded-xl px-3 text-[12px] font-semibold transition-all cursor-pointer border active:scale-95',
+                        'inline-flex h-7 md:h-8 shrink-0 items-center gap-1.5 rounded-lg md:rounded-xl px-2.5 md:px-3 text-[11px] md:text-[12px] font-semibold transition-all cursor-pointer border active:scale-95',
                         isSelected
                           ? cn(catTone.active, 'border-transparent font-bold shadow-2xs')
                           : 'bg-sand-50/80 text-ink-700 border-sand-200 hover:border-ink-300 hover:bg-sand-100',
                       )}
                     >
-                      {isSelected && <Check className="h-3.5 w-3.5 shrink-0" />}
+                      {isSelected && <Check className="h-3 w-3 shrink-0" />}
                       <span>{tag}</span>
                       <span
                         className={cn(
-                          'text-[10.5px] font-bold',
+                          'text-[10px] md:text-[10.5px] font-bold',
                           isSelected ? 'text-white/80' : 'text-ink-400',
                         )}
                       >
@@ -474,12 +474,12 @@ export function ServicesScreen({
                   <button
                     type="button"
                     onClick={() => setShowAllSubcategories((v) => !v)}
-                    className="inline-flex h-8 shrink-0 items-center gap-1 rounded-xl bg-mist/80 border border-mist-300 px-3 text-[11.5px] font-bold text-ink-700 hover:bg-mist-300/70 transition-colors cursor-pointer"
+                    className="inline-flex h-7 md:h-8 shrink-0 items-center gap-1 rounded-lg md:rounded-xl bg-mist/80 border border-mist-300 px-2.5 md:px-3 text-[11px] md:text-[11.5px] font-bold text-ink-700 hover:bg-mist-300/70 transition-colors cursor-pointer"
                   >
                     <span>
                       {showAllSubcategories
-                        ? 'Pokaż mniej'
-                        : `+ Więcej (${subcategoryBadges.length - 9})`}
+                        ? 'Mniej'
+                        : `+${subcategoryBadges.length - 9}`}
                     </span>
                   </button>
                 )}
@@ -488,21 +488,21 @@ export function ServicesScreen({
                   <button
                     type="button"
                     onClick={() => setSelectedTags([])}
-                    className="inline-flex h-8 shrink-0 items-center gap-1 rounded-xl bg-coral/20 px-2.5 text-[11.5px] font-extrabold text-coral-800 hover:bg-coral/30 transition-colors cursor-pointer"
+                    className="inline-flex h-7 md:h-8 shrink-0 items-center gap-1 rounded-lg md:rounded-xl bg-coral/20 px-2 text-[11px] md:text-[11.5px] font-extrabold text-coral-800 hover:bg-coral/30 transition-colors cursor-pointer"
                   >
                     <RotateCcw className="h-3 w-3" />
-                    <span>Wyczyść ({selectedTags.length})</span>
+                    <span>Wyczyść</span>
                   </button>
                 )}
               </div>
             )}
 
             {/* Row 2: 1-Click Sorting Pills */}
-            <div className="pt-2.5 border-t border-mist-200/80 flex items-center justify-between gap-2">
+            <div className="pt-2 border-t border-mist-200/80 flex items-center justify-between gap-2">
               <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-                <span className="inline-flex items-center gap-1 mr-1 text-[10.5px] font-extrabold uppercase tracking-wider text-ink-400 shrink-0">
-                  <ArrowUpDown className="h-3 w-3 text-ink-400" />
-                  <span>Sortuj:</span>
+                <span className="inline-flex items-center gap-1 mr-0.5 text-[10px] md:text-[10.5px] font-extrabold uppercase tracking-wider text-ink-400 shrink-0">
+                  <ArrowUpDown className="h-2.5 w-2.5 md:h-3 md:w-3 text-ink-400" />
+                  <span className="hidden xs:inline">Sortuj:</span>
                 </span>
 
                 {SORT_OPTIONS.map((opt) => {
@@ -514,7 +514,7 @@ export function ServicesScreen({
                       type="button"
                       onClick={() => setSortBy(opt.id)}
                       className={cn(
-                        'inline-flex h-8 shrink-0 items-center gap-1.5 rounded-xl px-2.5 text-[11.5px] font-semibold transition-all cursor-pointer border active:scale-95',
+                        'inline-flex h-7 md:h-8 shrink-0 items-center gap-1.5 rounded-lg md:rounded-xl px-2 md:px-2.5 text-[11px] md:text-[11.5px] font-semibold transition-all cursor-pointer border active:scale-95',
                         active
                           ? 'bg-ink text-white border-ink font-bold shadow-2xs'
                           : 'bg-mist/60 text-ink-600 border-mist-200 hover:bg-mist hover:text-ink',
@@ -522,7 +522,7 @@ export function ServicesScreen({
                     >
                       <Icon
                         className={cn(
-                          'h-3 w-3 shrink-0',
+                          'h-2.5 w-2.5 md:h-3 md:w-3 shrink-0',
                           active
                             ? opt.id === 'rating'
                               ? 'fill-amber-400 text-amber-400'
@@ -536,14 +536,14 @@ export function ServicesScreen({
                 })}
               </div>
 
-              <span className="hidden sm:inline-flex shrink-0 rounded-full bg-mist/70 border border-mist-200 px-2.5 py-0.5 text-[11px] font-bold text-ink-600">
+              <span className="shrink-0 rounded-full bg-mist/70 border border-mist-200 px-2 py-0.5 text-[10.5px] md:text-[11px] font-bold text-ink-600">
                 Wyników: {filteredProviders.length}
               </span>
             </div>
           </div>
 
-          {/* ACTIVE CATEGORY HEADER BAR WITH COLORFUL ICON */}
-          <div className="px-5 md:px-0 flex items-center justify-between gap-3 pt-0.5">
+          {/* ACTIVE CATEGORY HEADER BAR WITH COLORFUL ICON (DESKTOP ONLY) */}
+          <div className="hidden md:flex px-0 items-center justify-between gap-3 pt-0.5">
             <div className="flex items-center gap-3 min-w-0">
               <span
                 className={cn(
@@ -562,21 +562,21 @@ export function ServicesScreen({
                 <p className="text-[12px] text-ink-500 truncate">{activeCategoryMeta.description}</p>
               </div>
             </div>
-            <span className="sm:hidden shrink-0 rounded-full bg-white border border-mist-300 px-3 py-1 text-[11.5px] font-bold text-ink-600 shadow-2xs">
+            <span className="shrink-0 rounded-full bg-white border border-mist-300 px-3 py-1 text-[11.5px] font-bold text-ink-600 shadow-2xs">
               Wyników: {filteredProviders.length}
             </span>
           </div>
 
           {/* PROVIDERS LIST */}
           {filteredProviders.length === 0 ? (
-            <div className="mx-5 md:mx-0 rounded-3xl bg-white p-8 text-center shadow-card border border-mist-200">
-              <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-mist text-ink-500">
-                <Wrench className="h-6 w-6" />
+            <div className="mx-4 md:mx-0 rounded-2xl md:rounded-3xl bg-white p-6 md:p-8 text-center shadow-card border border-mist-200">
+              <div className="mx-auto grid h-12 w-12 md:h-14 md:w-14 place-items-center rounded-2xl bg-mist text-ink-500">
+                <Wrench className="h-5 w-5 md:h-6 md:w-6" />
               </div>
-              <h3 className="mt-3 font-display text-[19px] font-bold text-ink">
+              <h3 className="mt-3 font-display text-[17px] md:text-[19px] font-bold text-ink">
                 Brak wykonawców w tej podkategorii
               </h3>
-              <p className="mx-auto mt-1 max-w-md text-[13px] text-ink-500">
+              <p className="mx-auto mt-1 max-w-md text-[12.5px] md:text-[13px] text-ink-500">
                 Nie znaleźliśmy wykonawcy spełniającego podane kryteria. Wyczyść wybrane podkategorie lub dodaj profil sprawdzonego fachowca z Mińska.
               </p>
               <div className="mt-4 flex flex-wrap items-center justify-center gap-2.5">
@@ -587,7 +587,7 @@ export function ServicesScreen({
                       setSelectedTags([]);
                       handleSelectCategory('all');
                     }}
-                    className="rounded-full bg-mist px-4 py-2.5 text-[13px] font-bold text-ink hover:bg-mist-300 transition-colors cursor-pointer"
+                    className="rounded-full bg-mist px-4 py-2 text-[12px] md:text-[13px] font-bold text-ink hover:bg-mist-300 transition-colors cursor-pointer"
                   >
                     Pokaż wszystkie usługi
                   </button>
@@ -595,14 +595,14 @@ export function ServicesScreen({
                 <button
                   type="button"
                   onClick={onAddProviderClick}
-                  className="rounded-full bg-coral px-4 py-2.5 text-[13px] font-extrabold text-ink hover:bg-coral-400 transition-colors cursor-pointer"
+                  className="rounded-full bg-coral px-4 py-2 text-[12px] md:text-[13px] font-extrabold text-ink hover:bg-coral-400 transition-colors cursor-pointer"
                 >
                   + Dodaj swój profil
                 </button>
               </div>
             </div>
           ) : (
-            <div className="mx-5 md:mx-0 rounded-2xl bg-white border border-mist-200 divide-y divide-mist-200 overflow-hidden shadow-card">
+            <div className="mx-4 md:mx-0 rounded-2xl bg-white border border-mist-200 divide-y divide-mist-200 overflow-hidden shadow-card">
               {filteredProviders.map((provider) => {
                 const stats = computeProviderRatingStats(provider.reviews);
                 const cat = getServiceCategoryById(provider.categoryId);
@@ -613,161 +613,150 @@ export function ServicesScreen({
                   <article
                     key={provider.id}
                     className={cn(
-                      'group p-3.5 md:px-4 md:py-3.5 transition-colors hover:bg-sand-50/50',
+                      'group relative p-3 sm:p-3.5 md:p-4 transition-colors hover:bg-sand-50/60',
                       isPending && 'bg-amber-50/30',
                     )}
                   >
                     {isPending && (
-                      <div className="mb-2.5 flex items-center justify-between gap-2 rounded-xl bg-amber-100/80 px-3 py-1.5 text-[11px] text-amber-950 border border-amber-300">
+                      <div className="mb-2 flex items-center justify-between gap-2 rounded-lg bg-amber-100/80 px-2.5 py-1 text-[10.5px] text-amber-950 border border-amber-300">
                         <span className="inline-flex items-center gap-1.5 font-semibold">
-                          <Clock className="h-3.5 w-3.5 text-amber-700 shrink-0" />
-                          Twój profil oczekuje na weryfikację w Panelu Administratora
+                          <Clock className="h-3 w-3 text-amber-700 shrink-0" />
+                          Oczekuje na weryfikację w Panelu Administratora
                         </span>
                         <AppLink
                           to="/admin"
-                          className="shrink-0 rounded-lg bg-ink px-2.5 py-1 text-[10.5px] font-bold text-white hover:bg-ink-700 cursor-pointer"
+                          className="shrink-0 rounded-md bg-ink px-2 py-0.5 text-[10px] font-bold text-white hover:bg-ink-700 cursor-pointer"
                         >
                           Panel Admina
                         </AppLink>
                       </div>
                     )}
 
-                    <div className="flex items-start gap-3">
-                      {/* LEFT: COMPACT LOGO OR AVATAR (48x48) */}
+                    <div className="flex items-start gap-2.5 sm:gap-3.5">
+                      {/* LEFT: COMPACT LOGO OR AVATAR WITH VERIFIED BADGE */}
                       <AppLink
                         to={providerUrl}
                         onClick={() => onOpenProvider(provider)}
-                        className="shrink-0 mt-0.5 cursor-pointer"
+                        className="relative shrink-0 mt-0.5 cursor-pointer block"
                       >
-                        <ProviderBrandMark provider={provider} size="md" />
+                        <ProviderBrandMark provider={provider} size="sm" />
+                        {!isPending && (
+                          <span
+                            className="absolute -bottom-1 -right-1 grid h-4 w-4 place-items-center rounded-full bg-white text-emerald-600 shadow-2xs ring-1 ring-emerald-200"
+                            title="Zweryfikowany wykonawca"
+                          >
+                            <ShieldCheck className="h-2.5 w-2.5 stroke-[2.8]" />
+                          </span>
+                        )}
                       </AppLink>
 
-                      {/* RIGHT: FULL CONTENT COLUMN */}
+                      {/* RIGHT: COMPACT CONTENT COLUMN */}
                       <div className="min-w-0 flex-1">
-                        {/* TOP ROW: TITLE + BADGES ON LEFT, "ZOBACZ PROFIL" IN TOP-RIGHT CORNER */}
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                              <AppLink
-                                to={providerUrl}
-                                onClick={() => onOpenProvider(provider)}
-                                className="font-display text-[15px] font-bold text-ink leading-snug hover:text-coral-700 transition-colors cursor-pointer"
-                              >
-                                {provider.businessName}
-                              </AppLink>
-
-                              {/* COLORFUL CATEGORY BADGE */}
-                              <button
-                                type="button"
-                                onClick={() => handleSelectCategory(provider.categoryId)}
-                                className={cn(
-                                  'rounded-md px-2 py-0.5 text-[10.5px] font-bold border transition-opacity hover:opacity-85 cursor-pointer',
-                                  cat.tone.bg,
-                                  cat.tone.text,
-                                  cat.tone.border,
-                                )}
-                              >
-                                {cat.shortLabel}
-                              </button>
-
-                              {/* WARM AMBER RATING PILL */}
-                              <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 border border-amber-200/80 px-1.5 py-0.5 text-[11px] font-bold text-amber-950">
-                                <Star className="h-3 w-3 fill-amber-400 text-amber-500" />
-                                <span>{stats.count > 0 ? stats.average.toFixed(1) : 'Nowy'}</span>
-                                {stats.count > 0 && (
-                                  <span className="text-[10px] font-semibold text-amber-700">
-                                    ({stats.count})
-                                  </span>
-                                )}
-                              </span>
-
-                              {/* NEIGHBOR RECOMMENDATION PILL */}
-                              {stats.count > 0 && (
-                                <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800">
-                                  <ThumbsUp className="h-2.5 w-2.5 text-emerald-600 shrink-0" />
-                                  <span>{stats.recommendPercent}% poleca</span>
-                                </span>
-                              )}
-
-                              {/* EMERALD VERIFIED PILL */}
-                              {!isPending && (
-                                <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800">
-                                  <ShieldCheck className="h-3 w-3 text-emerald-600 shrink-0" />
-                                  <span>Zweryfikowany</span>
-                                </span>
-                              )}
-                            </div>
-
-                            <p className="mt-0.5 text-[11.5px] text-ink-500 flex flex-wrap items-center gap-x-1.5">
-                              <span className="font-semibold text-ink-700">{provider.name}</span>
-                              <span>·</span>
-                              <span className="inline-flex items-center gap-0.5 text-ink-600">
-                                <MapPin className="h-3 w-3 text-coral-600 shrink-0" />
-                                ul. {provider.street}
-                              </span>
-                              <span>·</span>
-                              <span>{provider.yearsExperience} l. doświadczenia</span>
-                            </p>
-                          </div>
-
-                          {/* TOP-RIGHT CORNER: ZOBACZ PROFIL */}
+                        {/* ROW 1: BUSINESS NAME + RATING & CHEVRON */}
+                        <div className="flex items-center justify-between gap-2">
                           <AppLink
                             to={providerUrl}
                             onClick={() => onOpenProvider(provider)}
-                            className="shrink-0 inline-flex h-7 items-center gap-0.5 rounded-lg px-2 text-[11.5px] font-bold text-ink-600 hover:bg-mist hover:text-ink transition-colors cursor-pointer"
+                            className="font-display text-[13.5px] sm:text-[15px] font-bold text-ink leading-tight line-clamp-1 group-hover:text-coral-700 transition-colors cursor-pointer"
                           >
-                            <span>Zobacz profil</span>
-                            <ChevronRight className="h-3.5 w-3.5 text-ink-400" />
+                            {provider.businessName}
                           </AppLink>
+
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {/* RATING PILL */}
+                            <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 border border-amber-200/80 px-1.5 py-0.5 text-[10px] sm:text-[10.5px] font-bold text-amber-950">
+                              <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-500" />
+                              <span>{stats.count > 0 ? stats.average.toFixed(1) : 'Nowy'}</span>
+                              {stats.count > 0 && (
+                                <span className="text-[9px] font-normal text-amber-700">
+                                  ({stats.count})
+                                </span>
+                              )}
+                            </span>
+
+                            <AppLink
+                              to={providerUrl}
+                              onClick={() => onOpenProvider(provider)}
+                              className="hidden sm:inline-flex items-center text-[11px] font-bold text-ink-400 group-hover:text-ink transition-colors cursor-pointer"
+                            >
+                              <ChevronRight className="h-3.5 w-3.5" />
+                            </AppLink>
+                          </div>
                         </div>
 
-                        {/* MIDDLE: MORE ROOM FOR DESCRIPTION TEXT */}
-                        <p className="mt-1.5 text-[12.5px] leading-relaxed text-ink-600 line-clamp-2">
+                        {/* ROW 2: RESIDENT NAME · STREET · EXPERIENCE · CATEGORY */}
+                        <div className="mt-0.5 flex items-center gap-1.5 text-[10.5px] sm:text-[11.5px] text-ink-500 min-w-0">
+                          <span className="font-semibold text-ink-700 truncate">{provider.name}</span>
+                          <span className="text-ink-300">·</span>
+                          <span className="inline-flex items-center gap-0.5 text-ink-600 truncate">
+                            <MapPin className="h-2.5 w-2.5 text-coral-600 shrink-0" />
+                            ul. {provider.street}
+                          </span>
+                          {provider.yearsExperience > 0 && (
+                            <>
+                              <span className="text-ink-300 hidden xs:inline">·</span>
+                              <span className="hidden xs:inline shrink-0">{provider.yearsExperience} l. stażu</span>
+                            </>
+                          )}
+                          <span className="text-ink-300">·</span>
+                          <button
+                            type="button"
+                            onClick={() => handleSelectCategory(provider.categoryId)}
+                            className={cn(
+                              'text-[9.5px] sm:text-[10px] font-bold px-1.5 py-0.2 rounded border shrink-0 transition-opacity hover:opacity-85 cursor-pointer',
+                              cat.tone.bg,
+                              cat.tone.text,
+                              cat.tone.border,
+                            )}
+                          >
+                            {cat.shortLabel}
+                          </button>
+                        </div>
+
+                        {/* DESKTOP-ONLY SNIPPET */}
+                        <p className="hidden md:block mt-1 text-[12px] text-ink-500 line-clamp-1">
                           {provider.description}
                         </p>
 
-                        {/* BOTTOM ROW: SUBCATEGORY BADGES ON LEFT + CZAT & ZADZWOŃ IN BOTTOM-RIGHT CORNER */}
-                        <div className="mt-2.5 flex flex-wrap items-end justify-between gap-2">
-                          <div className="flex flex-wrap items-center gap-1.5 min-w-0">
-                            {provider.tags.map((tag) => {
-                              const isTagSelected = selectedTags.includes(tag);
-                              return (
-                                <button
-                                  key={tag}
-                                  type="button"
-                                  onClick={() => toggleSubcategoryTag(tag)}
-                                  title={`Filtruj po podkategorii: ${tag}`}
-                                  className={cn(
-                                    'rounded-md px-2 py-0.5 text-[10.5px] font-semibold transition-all cursor-pointer',
-                                    isTagSelected
-                                      ? cn(cat.tone.active, 'font-bold shadow-2xs')
-                                      : 'bg-mist/80 text-ink-600 hover:bg-mist-300/70 hover:text-ink',
-                                  )}
-                                >
-                                  {tag}
-                                </button>
-                              );
-                            })}
+                        {/* ROW 3: COMPACT SPECIALIZATION TAGS ON LEFT + ACTIONS (CHAT & CALL) ON RIGHT */}
+                        <div className="mt-1.5 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1 min-w-0 overflow-hidden">
+                            {provider.tags.slice(0, 2).map((tag) => (
+                              <button
+                                key={tag}
+                                type="button"
+                                onClick={() => toggleSubcategoryTag(tag)}
+                                title={`Filtruj po podkategorii: ${tag}`}
+                                className="truncate max-w-[120px] sm:max-w-[160px] rounded-md bg-mist/80 hover:bg-mist-300/80 px-1.5 py-0.5 text-[9.5px] sm:text-[10px] font-medium text-ink-600 transition-colors cursor-pointer"
+                              >
+                                {tag}
+                              </button>
+                            ))}
+                            {provider.tags.length > 2 && (
+                              <span className="rounded-md bg-mist/50 px-1 py-0.5 text-[9px] font-semibold text-ink-400 shrink-0">
+                                +{provider.tags.length - 2}
+                              </span>
+                            )}
                           </div>
 
-                          {/* BOTTOM-RIGHT CORNER: CZAT & ZADZWOŃ */}
+                          {/* ACTION BUTTONS (CALL & CHAT) */}
                           <div className="flex items-center gap-1.5 shrink-0 ml-auto">
                             <button
                               type="button"
                               onClick={() => onContactChat(provider)}
                               title="Napisz na czacie w mójMińsk"
-                              className="flex h-8 items-center justify-center gap-1.5 rounded-xl border border-mist-300 bg-white px-2.5 text-[11.5px] font-bold text-ink hover:bg-mist/70 active:scale-[0.98] transition-all cursor-pointer"
+                              className="flex h-7 items-center justify-center gap-1 rounded-lg border border-mist-300 bg-white px-2 text-[10.5px] sm:text-[11px] font-bold text-ink hover:bg-mist/70 active:scale-95 transition-all cursor-pointer"
                             >
-                              <MessageCircle className="h-3.5 w-3.5 text-ink-600" />
-                              <span>Czat</span>
+                              <MessageCircle className="h-3 w-3 text-ink-600" />
+                              <span className="hidden xs:inline">Czat</span>
                             </button>
 
                             <a
                               href={`tel:${provider.phone.replace(/\s+/g, '')}`}
                               title={`Zadzwoń: ${provider.phone}`}
-                              className="flex h-8 items-center justify-center gap-1.5 rounded-xl bg-coral px-3 text-[11.5px] font-extrabold text-ink hover:bg-coral-400 active:scale-[0.98] transition-all cursor-pointer shadow-2xs"
+                              className="flex h-7 items-center justify-center gap-1 rounded-lg bg-coral px-2.5 text-[10.5px] sm:text-[11px] font-extrabold text-ink hover:bg-coral-400 active:scale-95 transition-all cursor-pointer shadow-2xs"
                             >
-                              <Phone className="h-3.5 w-3.5" />
+                              <Phone className="h-3 w-3" />
                               <span>Zadzwoń</span>
                             </a>
                           </div>
