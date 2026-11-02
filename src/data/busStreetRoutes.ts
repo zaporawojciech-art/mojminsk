@@ -18144,7 +18144,7 @@ export const BUS_STREET_ROUTES: Record<'M1' | 'M2' | 'M3' | 'M4', LineStreetData
         21.569584
       ],
       [
-        52.17346,
+        52.173407,
         21.569635
       ],
       [
@@ -18176,7 +18176,7 @@ export const BUS_STREET_ROUTES: Record<'M1' | 'M2' | 'M3' | 'M4', LineStreetData
         21.570081
       ],
       [
-        52.17353,
+        52.173555,
         21.570236
       ],
       [
@@ -20118,7 +20118,7 @@ export const BUS_STREET_ROUTES: Record<'M1' | 'M2' | 'M3' | 'M4', LineStreetData
         21.570483
       ],
       [
-        52.17353,
+        52.173555,
         21.570236
       ],
       [
@@ -20150,7 +20150,7 @@ export const BUS_STREET_ROUTES: Record<'M1' | 'M2' | 'M3' | 'M4', LineStreetData
         21.569718
       ],
       [
-        52.17346,
+        52.173407,
         21.569635
       ],
       [
@@ -22808,7 +22808,7 @@ export const BUS_STREET_ROUTES: Record<'M1' | 'M2' | 'M3' | 'M4', LineStreetData
             21.569584
           ],
           [
-            52.17346,
+            52.173407,
             21.569635
           ]
         ]
@@ -22818,7 +22818,7 @@ export const BUS_STREET_ROUTES: Record<'M1' | 'M2' | 'M3' | 'M4', LineStreetData
         "to": "Śniadeckich 01",
         "coords": [
           [
-            52.17346,
+            52.173407,
             21.569635
           ],
           [
@@ -22850,7 +22850,7 @@ export const BUS_STREET_ROUTES: Record<'M1' | 'M2' | 'M3' | 'M4', LineStreetData
             21.570081
           ],
           [
-            52.17353,
+            52.173555,
             21.570236
           ],
           [
@@ -25342,7 +25342,7 @@ export const BUS_STREET_ROUTES: Record<'M1' | 'M2' | 'M3' | 'M4', LineStreetData
             21.569584
           ],
           [
-            52.17346,
+            52.173407,
             21.569635
           ]
         ]
@@ -25352,7 +25352,7 @@ export const BUS_STREET_ROUTES: Record<'M1' | 'M2' | 'M3' | 'M4', LineStreetData
         "to": "Śniadeckich 01",
         "coords": [
           [
-            52.17346,
+            52.173407,
             21.569635
           ],
           [
@@ -25384,7 +25384,7 @@ export const BUS_STREET_ROUTES: Record<'M1' | 'M2' | 'M3' | 'M4', LineStreetData
             21.570081
           ],
           [
-            52.17353,
+            52.173555,
             21.570236
           ],
           [
@@ -27532,7 +27532,7 @@ export const BUS_STREET_ROUTES: Record<'M1' | 'M2' | 'M3' | 'M4', LineStreetData
             21.570483
           ],
           [
-            52.17353,
+            52.173555,
             21.570236
           ]
         ]
@@ -27542,7 +27542,7 @@ export const BUS_STREET_ROUTES: Record<'M1' | 'M2' | 'M3' | 'M4', LineStreetData
         "to": "Spacerowa 04",
         "coords": [
           [
-            52.17353,
+            52.173555,
             21.570236
           ],
           [
@@ -27574,7 +27574,7 @@ export const BUS_STREET_ROUTES: Record<'M1' | 'M2' | 'M3' | 'M4', LineStreetData
             21.569718
           ],
           [
-            52.17346,
+            52.173407,
             21.569635
           ],
           [
