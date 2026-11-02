@@ -13,6 +13,7 @@ interface AdConversationsModalProps {
   conversations: AdConversation[];
   ads: Ad[];
   initialConversationId?: string | null;
+  backLabel?: string;
   onClose: () => void;
   onOpenChat: (ad: Ad, conversation?: AdConversation) => void;
   onRefreshConversations?: () => void;
@@ -24,6 +25,7 @@ export function AdConversationsModal({
   conversations,
   ads,
   initialConversationId = null,
+  backLabel = 'Wróć',
   onClose,
   onOpenChat,
   onRefreshConversations,
@@ -89,7 +91,9 @@ export function AdConversationsModal({
     }
   };
 
-  const activeConv = conversations.find((c) => c.id === selectedConvId) ?? conversations[0];
+  const activeConv = selectedConvId
+    ? conversations.find((c) => c.id === selectedConvId) ?? null
+    : null;
   const activeAd = activeConv ? getAdForConversation(activeConv) : null;
 
   return (
@@ -105,7 +109,7 @@ export function AdConversationsModal({
           {/* Top Native Header */}
           <NativeHeader
             title="Czat sąsiedzki"
-            backLabel="Profil"
+            backLabel={backLabel}
             onBack={onClose}
             right={
               unreadTotal > 0 ? (
@@ -270,6 +274,7 @@ export function AdConversationsModal({
               otherUser={activeConv.otherUser}
               onClose={() => setSelectedConvId(null)}
               onConversationUpdated={onRefreshConversations}
+              hideBackOnDesktop={true}
             />
           ) : (
             <div className="flex h-full w-full flex-col items-center justify-center p-8 text-center text-ink-400">

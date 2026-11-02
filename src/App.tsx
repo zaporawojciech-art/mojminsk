@@ -316,6 +316,7 @@ export default function App() {
   // Extended Classifieds Views State
   const [conversations, setConversations] = useState<AdConversation[]>([]);
   const [conversationsOpen, setConversationsOpen] = useState(false);
+  const [conversationsSource, setConversationsSource] = useState<'profile' | 'tab' | null>(null);
   const [editAd, setEditAd] = useState<Ad | null>(null);
   const [sellerProfile, setSellerProfile] = useState<{ name: string; street: string } | null>(null);
   const [reserveAd, setReserveAd] = useState<Ad | null>(null);
@@ -571,11 +572,16 @@ export default function App() {
     () =>
       closeWithAnimation('conversations', () => {
         setConversationsOpen(false);
-        if (window.location.pathname === '/wiadomosci') {
-          navigateTo(TAB_PATHS[tab], { replace: true });
+        if (window.location.pathname.startsWith('/wiadomosci')) {
+          if (conversationsSource === 'profile') {
+            navigateTo('/profil', { replace: true });
+          } else {
+            navigateTo(TAB_PATHS[tab], { replace: true });
+          }
         }
+        setConversationsSource(null);
       }),
-    [closeWithAnimation, tab],
+    [closeWithAnimation, conversationsSource, tab],
   );
   const closeSelectedAd = useCallback(
     () =>
@@ -719,7 +725,12 @@ export default function App() {
       setAuthScreenOpen(false);
 
       // Reset modal layers before applying route-matched layer
-      if (cleanPath !== '/profil' && cleanPath !== '/moje-ogloszenia' && !cleanPath.startsWith('/zditm')) {
+      if (
+        cleanPath !== '/profil' &&
+        cleanPath !== '/moje-ogloszenia' &&
+        (cleanPath !== '/wiadomosci' || conversationsSource !== 'profile') &&
+        !cleanPath.startsWith('/zditm')
+      ) {
         setOverlay(null);
       }
       setPartnerOpen(false);
@@ -989,6 +1000,9 @@ export default function App() {
       }
 
       if (cleanPath === '/wiadomosci' || cleanPath.startsWith('/wiadomosci/')) {
+        if (conversationsSource === 'profile') {
+          setOverlay('profile');
+        }
         const targetConvId = cleanPath.startsWith('/wiadomosci/')
           ? cleanPath.replace('/wiadomosci/', '')
           : null;
@@ -1036,7 +1050,7 @@ export default function App() {
       setSelectedProvider(null);
       setRouteNotFound(true);
     },
-    [adsList, serviceProviders, user, conversations],
+    [adsList, serviceProviders, user, conversations, conversationsSource],
   );
 
   // Inicjalny odczyt URL oraz nasłuchiwanie zdarzeń popstate (przyciski Wstecz / Dalej)
@@ -1686,6 +1700,7 @@ export default function App() {
                 'Wiadomości sąsiedzkie',
                 'Dostęp do czatu wymaga konta mieszkańca.',
                 () => {
+                  setConversationsSource('tab');
                   setConversationsOpen(true);
                   navigateTo('/wiadomosci');
                 },
@@ -1906,6 +1921,7 @@ export default function App() {
                         'Wiadomości sąsiedzkie',
                         'Dostęp do czatu i historii rozmów z sąsiadami wymaga posiadania konta.',
                         () => {
+                          setConversationsSource('tab');
                           setConversationsOpen(true);
                           navigateTo('/wiadomosci');
                         },
@@ -2093,6 +2109,7 @@ export default function App() {
                   'Wiadomości sąsiedzkie',
                   'Dostęp do czatu wymaga konta mieszkańca.',
                   () => {
+                    setConversationsSource('profile');
                     setConversationsOpen(true);
                     navigateTo('/wiadomosci');
                   },
@@ -2305,6 +2322,7 @@ export default function App() {
               user={user}
               conversations={conversations}
               ads={adsList}
+              backLabel={conversationsSource === 'profile' ? 'Profil' : 'Wróć'}
               onClose={closeConversations}
               isClosing={!!exitingScreens['conversations']}
               onRefreshConversations={refreshConversations}

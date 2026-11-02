@@ -349,28 +349,35 @@ export function NativeHeader({
   backLabel = 'Wróć',
   onBack,
   right,
+  hideBackOnDesktop = false,
 }: {
   title?: string;
   backLabel?: string;
-  onBack: () => void;
+  onBack?: () => void;
   right?: ReactNode;
+  hideBackOnDesktop?: boolean;
 }) {
   return (
     <header className="z-20 shrink-0 border-b border-mist-300 bg-white pt-[max(env(safe-area-inset-top),12px)] md:pt-0">
       <div className="relative flex h-14 items-center justify-between px-2 md:px-8 lg:px-12">
         {/* Lewa strona: Przycisk powrotu */}
         <div className="z-10 flex min-w-11 items-center justify-start gap-3">
-          <button
-            type="button"
-            onClick={onBack}
-            aria-label={`Wróć do: ${backLabel}`}
-            className="flex h-11 md:h-9 items-center gap-1 rounded-full md:rounded-lg pl-1 md:px-3 pr-3 text-[15px] md:text-[13px] font-semibold md:font-bold text-ink md:bg-mist/70 md:hover:bg-mist transition-colors active:bg-mist"
-          >
-            <ChevronLeft className="h-6 w-6 md:h-4 md:w-4 shrink-0" aria-hidden />
-            <span className="max-w-[88px] md:max-w-none truncate">{backLabel}</span>
-          </button>
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              aria-label={`Wróć do: ${backLabel}`}
+              className={cn(
+                'flex h-11 md:h-9 items-center gap-1 rounded-full md:rounded-lg pl-1 md:px-3 pr-3 text-[15px] md:text-[13px] font-semibold md:font-bold text-ink md:bg-mist/70 md:hover:bg-mist transition-colors active:bg-mist',
+                hideBackOnDesktop && 'md:hidden',
+              )}
+            >
+              <ChevronLeft className="h-6 w-6 md:h-4 md:w-4 shrink-0" aria-hidden />
+              <span className="max-w-[88px] md:max-w-none truncate">{backLabel}</span>
+            </button>
+          )}
           {title && (
-            <h1 className="hidden md:block truncate font-display text-[18px] font-extrabold text-ink">
+            <h1 className={cn('truncate font-display text-[18px] font-extrabold text-ink', hideBackOnDesktop ? 'block' : 'hidden md:block')}>
               {title}
             </h1>
           )}

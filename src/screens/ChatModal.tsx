@@ -24,6 +24,7 @@ interface ChatModalProps {
   onClose: () => void;
   onConversationUpdated?: () => void;
   isClosing?: boolean;
+  hideBackOnDesktop?: boolean;
 }
 
 export function ChatModal({
@@ -33,6 +34,7 @@ export function ChatModal({
   otherUser,
   onClose,
   onConversationUpdated,
+  hideBackOnDesktop = false,
 }: ChatModalProps) {
   const [activeConvId, setActiveConvId] = useState<string | null>(initialConversationId);
   const [messages, setMessages] = useState<ChatMessageItem[]>([]);
@@ -237,6 +239,7 @@ export function ChatModal({
         title={`${headerName} · ul. ${headerStreet}`}
         backLabel="Wróć"
         onBack={onClose}
+        hideBackOnDesktop={hideBackOnDesktop}
       />
 
       {/* Ad Context Bar */}
