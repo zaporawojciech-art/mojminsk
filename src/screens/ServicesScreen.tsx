@@ -19,7 +19,6 @@ import {
   Sparkles,
   Star,
   Trees,
-  ThumbsUp,
   Wrench,
   Zap,
   type LucideIcon,
