@@ -98,11 +98,6 @@ export function RidesSkeleton() {
     <div className="space-y-5 pb-36" role="status" aria-label="Ładowanie Strefy Przejazdu">
       <HeaderSkeleton />
 
-      {/* Nova Taxi Banner Skeleton */}
-      <div className="px-5">
-        <Bone className="h-44 w-full rounded-4xl" />
-      </div>
-
       {/* Route Picker Card Skeleton */}
       <div className="px-5 space-y-3">
         <Bone className="h-11 w-full rounded-full" />

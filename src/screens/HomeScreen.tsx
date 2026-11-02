@@ -14,7 +14,6 @@ import {
   Megaphone,
   MessageCircle,
   Newspaper,
-  Phone,
   Plus,
   RefreshCw,
   ShieldCheck,
@@ -2016,7 +2015,7 @@ export function HomeScreen({
             </div>
           </section>
 
-          {/* RIGHT 5 COLS: Wspólne przejazdy (Carpooling) + Nova Taxi */}
+          {/* RIGHT 5 COLS: Wspólne przejazdy (Carpooling) */}
           <section className="col-span-12 lg:col-span-5 flex flex-col justify-between rounded-2xl bg-white p-5 shadow-card border border-mist-200">
             <div>
               <div className="mb-3.5 flex items-center justify-between border-b border-mist pb-3">
@@ -2089,26 +2088,6 @@ export function HomeScreen({
                   ))}
                 </div>
               )}
-            </div>
-
-            {/* Compact Nova Taxi Bar */}
-            <div className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-ink px-4 py-3 text-white">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-display text-[14.5px] font-bold text-white">Nova Taxi Mińsk Maz.</span>
-                  <span className="rounded bg-sand/20 px-1.5 py-0.2 text-[10px] font-bold text-sand">
-                    −10% MOJMINSK
-                  </span>
-                </div>
-                <p className="text-[11px] text-white/70">Wyłączny partner przejazdów · podjazd 5–10 min</p>
-              </div>
-              <a
-                href="tel:+48257582222"
-                className="flex items-center gap-1.5 rounded-lg bg-coral px-3 py-1.5 text-[12px] font-extrabold text-ink hover:bg-coral-400 transition-colors shrink-0"
-              >
-                <Phone className="h-3.5 w-3.5" />
-                <span>25 758 22 22</span>
-              </a>
             </div>
           </section>
         </div>

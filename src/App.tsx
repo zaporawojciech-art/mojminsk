@@ -719,10 +719,14 @@ export default function App() {
       setAuthScreenOpen(false);
 
       // Reset modal layers before applying route-matched layer
-      setOverlay(null);
+      if (cleanPath !== '/profil' && cleanPath !== '/moje-ogloszenia' && !cleanPath.startsWith('/zditm')) {
+        setOverlay(null);
+      }
       setPartnerOpen(false);
       setPollsModalOpen(false);
-      setMyAdsOpen(false);
+      if (cleanPath !== '/moje-ogloszenia') {
+        setMyAdsOpen(false);
+      }
       setConversationsOpen(false);
       setAddAdOpen(false);
       setAddProviderOpen(false);
@@ -972,7 +976,15 @@ export default function App() {
       }
 
       if (cleanPath === '/moje-ogloszenia') {
-        setMyAdsOpen(true);
+        const currentUser = userRef.current;
+        if (!currentUser) {
+          setAuthScreenMode('login');
+          setAuthScreenOpen(true);
+        } else {
+          setAuthScreenOpen(false);
+          setOverlay('profile');
+          setMyAdsOpen(true);
+        }
         return;
       }
 
@@ -1566,9 +1578,9 @@ export default function App() {
 
     if (tab === 'rides') {
       return {
-        title: 'Wspólne przejazdy (Carpooling) Mińsk Mazowiecki ↔ Warszawa & Nova Taxi',
+        title: 'Wspólne przejazdy (Carpooling) Mińsk Mazowiecki ↔ Warszawa',
         description:
-          'Dojeżdżaj wygodnie z sąsiadami z Mińska Mazowieckiego do Warszawy i po powiecie mińskim lub zamów Nova Taxi z rabatem −10%.',
+          'Dojeżdżaj wygodnie z sąsiadami z Mińska Mazowieckiego do Warszawy i po powiecie mińskim. Umawiaj wspólne trasy i oszczędzaj na paliwie.',
         canonicalPath: '/przejazdy',
       };
     }

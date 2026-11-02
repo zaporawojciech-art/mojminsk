@@ -109,7 +109,7 @@ Wszystkie ekrany korzystają z geometrycznego, czystego kroju sans-serif o wysok
   - `( 🥖 Piekarnie & Cukiernie )`
   - `( 💼 Oferty Pracy )`
   - `( 📦 Ogłoszenia Sąsiedzkie )`
-  - `( 🚗 Carpooling & Taxi )`
+  - `( 🚗 Carpooling )`
 
 ### 4.6. Dedykowana Strefa mGrocery: Motylek Market (Decyzja #14)
 - **Szmaragdowy baner Hero:** Głęboka zieleń `#059669` z hasłem: *„Motylek Market – świeże zakupy spożywcze u Twoich drzwi w 35 min!”*.
@@ -225,7 +225,7 @@ Poniżej zestawiono finalne wytyczne UX/UI wynikające z Twoich 20 odpowiedzi:
 
 ### 6.4. Wyszukiwarka, Pomocnik AI i Alerty Live (Decyzje #58, #61, #62, #64)
 - **Czipy Sugestii (Search Chips):** Przewijany rząd pod wyszukiwarką:  
-  `[ 🚌 Rozkład M2 ]` `[ 🍕 Najlepsza pizza ]` `[ 🥦 Motylek gazetka ]` `[ 💼 Praca Mińsk ]` `[ 🚕 Nova Taxi ]`.
+  `[ 🚌 Rozkład M2 ]` `[ 🍕 Najlepsza pizza ]` `[ 🥦 Motylek gazetka ]` `[ 💼 Praca Mińsk ]` `[ 🚗 Carpooling ]`.
 - **„Miński Pomocnik AI”:** Przyjazny wirtualny asystent miejski dostępny pod ikoną bąbla, który odpowiada na pytania mieszkańców o rozkłady ZDiTM, poleca dania z restauracji i podpowiada godziny otwarcia sklepów.
 - **Alert Kryzysowy / Wypadek LIVE:** Wyrazisty czerwono-pomarańczowy pasek z wykrzyknikiem i pulsującą czerwoną kropką `● LIVE` na samej górze ekranu HOME.
 

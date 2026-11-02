@@ -34,7 +34,6 @@ Interfejs aplikacji bazuje na unikalnej, nowoczesnej palecie barw:
 - **Live Alert DK92:** Ostrzeżenia o utrudnieniach i wypadkach na trasie tranzytowej na żywo.
 - **Odjazdy ZDiTM na żywo:** Podgląd linii M2, M3, M4 z najbliższymi minutami do odjazdu.
 - **Sonda Tygodnia:** Interaktywne głosowanie w czasie rzeczywistym z animowanymi słupkami poparcia (np. *„Gdzie najlepsza pizza w Mińsku?”*).
-- **Strefa Sponsora Nova Taxi:** Szybki kontakt telefoniczny z rabatem dla mieszkańców.
 - **Szybkie wsparcie BLIK:** Mikrodotacja na utrzymanie niezależnego medium miejskiego.
 
 ### 3. Dedykowany Ekran Motylek Market
@@ -71,7 +70,6 @@ Interfejs aplikacji bazuje na unikalnej, nowoczesnej palecie barw:
 
 ### 8. Transport i Podwózki (Carpooling)
 - Tablica podwózek do Warszawy, Halinowa i Sulejówka z ocenami kierowców i wolnymi miejscami.
-- Szybkie zamówienie Nova Taxi.
 
 ### 9. Strefa Rozmów (Sąsiedzki Mikroblog)
 - Mikroblog w stylu X/Twittera do 280 znaków.

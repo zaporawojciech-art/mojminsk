@@ -6,7 +6,6 @@ import {
   ExternalLink,
   Minus,
   Navigation,
-  Phone,
   Plus,
   Trash2,
   Users,
@@ -106,7 +105,7 @@ export function RidesScreen({
         user={user}
         onProfile={onProfile}
         title="Przejazdy"
-        subtitle="Sąsiedzki carpooling i taxi"
+        subtitle="Sąsiedzki carpooling"
       />
 
       {/* Desktop Header */}
@@ -116,7 +115,7 @@ export function RidesScreen({
             Strefa Przejazdu · Mińsk Mazowiecki ↔ Warszawa i powiat
           </p>
           <h1 className="mt-0.5 font-display text-[23px] font-extrabold tracking-tight text-ink">
-            Sąsiedzki Carpooling & Nova Taxi
+            Sąsiedzki Carpooling
           </h1>
         </div>
         <p className="text-[12.5px] font-medium text-ink-500">
@@ -125,31 +124,10 @@ export function RidesScreen({
       </div>
 
       <div className="md:grid md:grid-cols-12 md:gap-6 lg:gap-7 items-start">
-        {/* LEFT COLUMN: Search Form + Nova Taxi Partner Card */}
-        <div className="md:col-span-4 lg:col-span-3 space-y-4 md:sticky md:top-5">
-          {/* Nova Taxi Official Partner Banner */}
-          <div className="mx-5 md:mx-0 relative overflow-hidden rounded-4xl bg-ink p-5 md:p-6 text-white shadow-card">
-            <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-sand/20" aria-hidden />
-            <div className="absolute -bottom-14 right-10 h-32 w-32 rounded-full bg-coral/25" aria-hidden />
-            <span className="relative text-[10.5px] font-bold uppercase tracking-[.16em] text-sand">Oficjalny partner</span>
-            <p className="relative mt-1 font-display text-[26px] font-semibold leading-none">Nova Taxi</p>
-            <p className="relative mt-1.5 text-[13px] text-white/70">Podjazd w Mińsku w 5–10 min</p>
-            <div className="relative mt-4 flex items-center gap-2">
-              <a
-                href="tel:+48257582222"
-                className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-coral text-[14.5px] font-bold text-ink active:scale-[.98] hover:bg-coral-400 transition-colors"
-              >
-                <Phone className="h-4 w-4" aria-hidden />
-                Zadzwoń po taxi
-              </a>
-              <span className="rounded-full border border-white/20 px-3 py-3 text-[11.5px] font-bold text-sand">
-                −10% MOJMINSK
-              </span>
-            </div>
-          </div>
-
+        {/* LEFT COLUMN: Search & Filter Form */}
+        <div className="md:col-span-5 lg:col-span-4 space-y-4 md:sticky md:top-5">
           {/* Interactive Search & Filter Form */}
-          <div className="mx-5 md:mx-0 mt-5 md:mt-0 rounded-4xl bg-white p-4 md:p-5 shadow-card border border-mist-200">
+          <div className="mx-5 md:mx-0 rounded-4xl bg-white p-4 md:p-5 shadow-card border border-mist-200">
             <p className="hidden md:block text-[11px] font-extrabold uppercase tracking-wider text-ink-400 mb-3">
               Wyszukaj wspólny przejazd
             </p>
@@ -249,7 +227,7 @@ export function RidesScreen({
         </div>
 
         {/* RIGHT COLUMN: Destination Chips & Matching Rides Grid */}
-        <div className="md:col-span-8 lg:col-span-9">
+        <div className="md:col-span-7 lg:col-span-8">
           {/* Destination Quick Chips */}
           <div className="mt-5 md:mt-0 flex gap-2 overflow-x-auto md:flex-wrap px-5 md:px-0 pb-1 no-scrollbar">
             {dests.map((d) => (

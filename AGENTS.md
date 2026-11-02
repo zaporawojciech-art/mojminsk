@@ -41,7 +41,7 @@ Projekt został zaprojektowany w myśl zasady *„Małą łyżką dłużej się 
 flowchart TD
     subgraph Filar 1: B2B & Pakiety Partnerskie
         A1["Kupony powitalne w liście: 5 x 500 zł = 2 500 zł na start (w tym Motylek)"]
-        A2["Strefa Przejazdu: Wyłączność Nova Taxi 500-1000 zł/mc"]
+        A2["Strefa Przejazdu: Sponsoring lokalny / Carpooling 500-1000 zł/mc"]
         A3["Strefa mGrocery: Wyłączność Motylek Market 1000-1500 zł/mc + prowizja 5-8%"]
         A4["Strefa Partnera (np. Jubiler): Pakiet łączony 400-800 zł/mc"]
         A5["Ogłoszenia o pracę dla firm: 10 zł / ogłoszenie (One-Click BLIK)"]
@@ -70,7 +70,7 @@ flowchart TD
 | :--- | :--- | :--- | :--- |
 | **Kupony w Listach Powitalnych** | Płatność jednorazowa od 5 partnerów na start | **2 500 zł** (5 x 500 zł, w tym Motylek Market) | Podniesienie stawki po osiągnięciu pierwszych 500 zweryfikowanych mieszkańców |
 | **Wyłączność mGrocery (Motylek Market)** | Abonament miesięczny + prowizja koszykowa | **1 000 – 1 500 zł / mc** + 5–8% prowizji | Skalowanie wraz z obrotem e-grocery w Mińsku |
-| **Sponsoring Strefy Przejazdu (Nova Taxi)** | Abonament miesięczny za wyłączność branżową | **500 – 1 000 zł / mc** | Możliwość rozszerzenia o dodatkowe formaty ekspozycji |
+| **Sponsoring Strefy Przejazdu (Opcja B2B)** | Abonament miesięczny za wyłączność branżową | **500 – 1 000 zł / mc** | Możliwość rozszerzenia o dodatkowe formaty ekspozycji |
 | **Płatne Ogłoszenia o Pracę** | Opłata za publikację na 14 dni | **10 zł brutto** (BLIK One-Click) | Pakiety dla agencji i większych pracodawców |
 | **Strefa Kuchni (Restauracje)** | Prowizja od wartości zamówienia (GMV) | **8% – 12%** | Konkurencyjna alternatywa dla 25–35% w Glovo/Pyszne |
 | **Strefa Partnera (np. Jubiler)** | Pakiet łączony (menu + baner + kod rabatowy) | **400 – 800 zł / mc** | Rotacja partnerów co miesiąc lub kwartał |
@@ -266,15 +266,14 @@ Zgodnie z decyzją produktową zrezygnowano z wielorestauracyjnego marketplace'u
 
 ---
 
-### 4.4. Widok „STREFA PRZEJAZDU” (Carpooling & Nova Taxi)
+### 4.4. Widok „STREFA PRZEJAZDU” (Sąsiedzki Carpooling)
 
-1. **Sponsoring i Zamawianie Taxi (Decyzje #16, #17):**
-   - **Nova Taxi Mińsk Mazowiecki** jako **wyłączny partner branżowy** (500 – 1 000 zł/mc sponsoringu).
-   - Przycisk szybkiego wybierania połączenia **Click-to-Call** łączący bezpośrednio z dyspozytornią Nova Taxi + unikalny kod rabatowy dla użytkowników aplikacji.
-2. **Sąsiedzki Carpooling (Decyzje #18, #19, #20):**
+1. **Sąsiedzki Carpooling (Decyzje #18, #19, #20):**
    - Przejazdy na trasach do Warszawy (do pracy, szkół, uczelni) oraz wewnątrz powiatu mińskiego (Stojadła, Halinów, Dębe Wielkie, Sulejówek).
    - Rozliczenie kosztów paliwa odbywa się **całkowicie bezgotówkowo i bezpośrednio między pasażerami a kierowcą poza aplikacją**.
    - System dwustronnych ocen i recenzji (gwiazdki i komentarze sąsiedzkie) budujący bezpieczeństwo i reputację.
+2. **Potencjał Sponsoringu B2B (Decyzje #16, #17):**
+   - Możliwość dołączenia lokalnego sponsora strefy transportowej po zawarciu partnerstwa.
 
 ---
 
@@ -511,7 +510,7 @@ CREATE TABLE grocery_products (
 
 1. **Sprint 1 (Koncepcja i Partnerzy):**
    - Przygotowanie szablonu Książeczki Rabatowej dla 5 sponsorów.
-   - Pozyskanie 5 lokalnych firm po 500 zł (2 500 zł kapitału na start) oraz podpisanie umowy sponsoringowej z Nova Taxi (500–1000 zł/mc).
+   - Pozyskanie 5 lokalnych firm po 500 zł (2 500 zł kapitału na start) oraz pozyskanie partnerów sponsoringowych (500–1000 zł/mc).
 2. **Sprint 2 (Frontend PWA & Integracje Danych):**
    - Implementacja widoku HOME: integracja Open-Meteo, GIOŚ Mińsk Mazowiecki oraz rozkładu M2, M3, M4.
    - Moduł rejestracji z losowaniem awatarów 3D i wyborem ulic.
@@ -635,7 +634,7 @@ Wszystkie ekrany korzystają z geometrycznego, czystego kroju sans-serif o wysok
   - `( 🥖 Piekarnie & Cukiernie )`
   - `( 💼 Oferty Pracy )`
   - `( 📦 Ogłoszenia Sąsiedzkie )`
-  - `( 🚗 Carpooling & Taxi )`
+  - `( 🚗 Carpooling )`
 
 ### 4.6. Dedykowana Strefa mGrocery: Motylek Market (Decyzja #14)
 - **Szmaragdowy baner Hero:** Głęboka zieleń `#059669` z hasłem: *„Motylek Market – świeże zakupy spożywcze u Twoich drzwi w 35 min!”*.
@@ -751,7 +750,7 @@ Poniżej zestawiono finalne wytyczne UX/UI wynikające z Twoich 20 odpowiedzi:
 
 ### 6.4. Wyszukiwarka, Pomocnik AI i Alerty Live (Decyzje #58, #61, #62, #64)
 - **Czipy Sugestii (Search Chips):** Przewijany rząd pod wyszukiwarką:  
-  `[ 🚌 Rozkład M2 ]` `[ 🍕 Najlepsza pizza ]` `[ 🥦 Motylek gazetka ]` `[ 💼 Praca Mińsk ]` `[ 🚕 Nova Taxi ]`.
+  `[ 🚌 Rozkład M2 ]` `[ 🍕 Najlepsza pizza ]` `[ 🥦 Motylek gazetka ]` `[ 💼 Praca Mińsk ]` `[ 🚗 Carpooling ]`.
 - **„Miński Pomocnik AI”:** Przyjazny wirtualny asystent miejski dostępny pod ikoną bąbla, który odpowiada na pytania mieszkańców o rozkłady ZDiTM, poleca dania z restauracji i podpowiada godziny otwarcia sklepów.
 - **Alert Kryzysowy / Wypadek LIVE:** Wyrazisty czerwono-pomarańczowy pasek z wykrzyknikiem i pulsującą czerwoną kropką `● LIVE` na samej górze ekranu HOME.
 
