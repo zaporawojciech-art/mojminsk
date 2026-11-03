@@ -1070,7 +1070,7 @@ export const REAL_BUS_STOPS: RealBusStop[] = [
     "fullName": "Jasna 02",
     "ref": "02",
     "lat": 52.186717,
-    "lon": 21.570438,
+    "lon": 21.57033,
     "zone": "Mińsk Mazowiecki",
     "lines": [
       "M1"
