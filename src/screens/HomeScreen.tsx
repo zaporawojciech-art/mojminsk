@@ -37,6 +37,8 @@ import {
   avatarUrl,
   busLines,
   getAdAuthorSeed,
+  getPostAuthorSeed,
+  getRideDriverSeed,
   getCurrentTimetableDay,
   getNextScheduledBus,
   getOfficialStopTimetable,
@@ -1967,7 +1969,7 @@ export function HomeScreen({
                           className="shrink-0 self-start"
                         >
                           <img
-                            src={avatarUrl(p.author)}
+                            src={avatarUrl(getPostAuthorSeed(p, user))}
                             alt={p.author}
                             className="h-9 w-9 rounded-full bg-sand-100 object-cover ring-1 ring-mist-300"
                           />
@@ -2062,7 +2064,7 @@ export function HomeScreen({
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <img
-                          src={avatarUrl(r.driver)}
+                          src={avatarUrl(getRideDriverSeed(r, user))}
                           alt={r.driver}
                           className="h-8 w-8 shrink-0 rounded-full bg-sand-100 object-cover"
                         />

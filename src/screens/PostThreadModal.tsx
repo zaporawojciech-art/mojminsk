@@ -17,6 +17,7 @@ import {
 import {
   avatarUrl,
   formatResidentLabel,
+  getPostAuthorSeed,
   resolveStreetName,
   type Post,
   type PostComment,
@@ -158,6 +159,7 @@ export function PostThreadModal({
       author: user.name,
       authorAs: user.street.name,
       authorProfileId: user.profileId,
+      authorAvatarSeed: user.seed,
       content: trimmed,
       createdAt: new Date().toISOString(),
       time: 'przed chwilą',
@@ -298,7 +300,7 @@ export function PostThreadModal({
                 className="flex items-center gap-3 text-left hover:opacity-85 transition-opacity"
               >
                 <img
-                  src={avatarUrl(post.author)}
+                  src={avatarUrl(getPostAuthorSeed(post, user))}
                   alt=""
                   className="h-13 w-13 rounded-2xl bg-sand-100 object-cover shadow-2xs"
                 />
@@ -402,7 +404,7 @@ export function PostThreadModal({
                         className="shrink-0"
                       >
                         <img
-                          src={avatarUrl(comment.author)}
+                          src={avatarUrl(getPostAuthorSeed(comment, user))}
                           alt=""
                           className="h-10 w-10 rounded-xl bg-sand-100 object-cover"
                         />

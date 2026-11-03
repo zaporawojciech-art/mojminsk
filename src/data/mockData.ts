@@ -24,6 +24,38 @@ export const getAdAuthorSeed = (
   return ad.authorAvatarSeed || `${ad.author}-${ad.street}`;
 };
 
+export const getPostAuthorSeed = (
+  post: { author: string; authorAs?: string; authorProfileId?: string; authorAvatarSeed?: string },
+  currentUser?: User | null,
+): string => {
+  const isAuthor = Boolean(
+    currentUser && (
+      (post.authorProfileId && currentUser.profileId && post.authorProfileId === currentUser.profileId) ||
+      (currentUser.name && post.author.toLowerCase().trim() === currentUser.name.toLowerCase().trim())
+    )
+  );
+  if (isAuthor && currentUser?.seed) {
+    return currentUser.seed;
+  }
+  return post.authorAvatarSeed || `${post.author}-${post.authorAs || 'minsk'}`;
+};
+
+export const getRideDriverSeed = (
+  ride: { driver: string; driverAs?: string; driverId?: string; driverAvatarSeed?: string },
+  currentUser?: User | null,
+): string => {
+  const isDriver = Boolean(
+    currentUser && (
+      (ride.driverId && currentUser.profileId && ride.driverId === currentUser.profileId) ||
+      (currentUser.name && ride.driver.toLowerCase().trim() === currentUser.name.toLowerCase().trim())
+    )
+  );
+  if (isDriver && currentUser?.seed) {
+    return currentUser.seed;
+  }
+  return ride.driverAvatarSeed || `${ride.driver}-${ride.driverAs || 'minsk'}`;
+};
+
 /* ---------------- Użytkownik i ulice ---------------- */
 export interface Street {
   name: string;
@@ -1127,6 +1159,7 @@ export interface Post {
   author: string;
   authorAs: string;
   authorProfileId?: string;
+  authorAvatarSeed?: string;
   time: string;
   content: string;
   image?: string;
@@ -1143,6 +1176,7 @@ export interface PostComment {
   author: string;
   authorAs: string;
   authorProfileId?: string;
+  authorAvatarSeed?: string;
   content: string;
   createdAt: string;
   time?: string;

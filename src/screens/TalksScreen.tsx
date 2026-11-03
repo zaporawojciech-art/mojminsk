@@ -13,6 +13,7 @@ import {
 import {
   avatarUrl,
   formatResidentLabel,
+  getPostAuthorSeed,
   resolveStreetName,
   streets,
   talkTags as defaultTags,
@@ -189,6 +190,7 @@ export function TalksScreen({
       author: user.name,
       authorAs: user.street.name,
       authorProfileId: user.profileId,
+      authorAvatarSeed: user.seed,
       time: 'przed chwilą',
       content: trimmed,
       image: selectedImage ?? undefined,
@@ -462,7 +464,7 @@ export function TalksScreen({
                       title={`Zobacz profil: ${p.author}`}
                     >
                       <img
-                        src={avatarUrl(p.author)}
+                        src={avatarUrl(getPostAuthorSeed(p, user))}
                         alt=""
                         className="h-12 w-12 rounded-2xl bg-sand-100 object-cover"
                       />

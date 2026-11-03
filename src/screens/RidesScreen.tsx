@@ -13,6 +13,7 @@ import {
 import {
   avatarUrl,
   formatResidentLabel,
+  getRideDriverSeed,
   rides as initialRides,
   type Ride,
   type User,
@@ -294,7 +295,7 @@ export function RidesScreen({
                         </div>
                       </div>
                       <div className="mt-4 flex items-center gap-3 border-t border-mist pt-3">
-                        <img src={avatarUrl(r.driver)} alt="" className="h-10 w-10 rounded-2xl bg-sand-100" />
+                        <img src={avatarUrl(getRideDriverSeed(r, user))} alt="" className="h-10 w-10 rounded-2xl bg-sand-100" />
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-[13.5px] font-bold text-ink">
                             {r.driver}
