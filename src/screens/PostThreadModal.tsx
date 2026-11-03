@@ -198,12 +198,15 @@ export function PostThreadModal({
 
   return (
     <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
       className={cn(
-        'fixed inset-0 z-50 flex justify-center bg-ink/60 backdrop-blur-xs md:p-6 overflow-y-auto',
+        'fixed inset-0 z-[80] flex items-start md:items-center justify-center bg-ink/60 backdrop-blur-xs md:p-6 overflow-y-auto',
         isClosing ? 'animate-out fade-out duration-200' : 'animate-in fade-in duration-200',
       )}
     >
-      <div className="relative flex w-full max-w-2xl flex-col bg-white shadow-2xl md:rounded-3xl min-h-screen md:min-h-0 md:max-h-[92vh] overflow-hidden">
+      <div className="relative flex w-full max-w-2xl flex-col bg-white shadow-2xl md:rounded-3xl min-h-screen md:min-h-0 md:max-h-[92vh] overflow-hidden my-auto">
         {/* TOP BAR */}
         <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-mist-300 bg-white/95 px-4 backdrop-blur-md">
           <div className="flex items-center gap-2">
@@ -498,7 +501,7 @@ export function PostThreadModal({
 
         {/* MODAL: ZGŁOŚ WPIS */}
         {showReportDialog && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/70 p-4">
+          <div className="fixed inset-0 z-[90] flex items-center justify-center bg-ink/70 p-4">
             <div className="w-full max-w-md rounded-3xl bg-white p-5 shadow-2xl animate-in zoom-in-95">
               <div className="flex items-center justify-between pb-3 border-b border-mist">
                 <div className="flex items-center gap-2 text-ink">
