@@ -58,6 +58,7 @@ import {
   type Ride,
   type User,
 } from '../data/mockData';
+import { formatRideDate } from '../utils/rideDateUtils';
 import { fetchPostsFromSupabase } from '../lib/supabase';
 import { Card, Img, SectionHeader, StandardTopBar, cn, zl } from '../components/ui';
 import { BuyCoffeeButton } from '../components/BuyCoffeeButton';
@@ -2073,7 +2074,7 @@ export function HomeScreen({
                             {r.from} ➔ {r.to}
                           </p>
                           <p className="truncate text-[11px] font-medium text-ink-500">
-                            {r.driver} · {formatResidentLabel(r.driverAs)} · <span className="font-bold text-ink-700">{r.date || 'Jutro'}</span>, wyjazd <b className="text-ink">{r.depart}</b>
+                            {r.driver} · {formatResidentLabel(r.driverAs)} · <span className="font-bold text-ink-700">{formatRideDate(r.date)}</span>, wyjazd <b className="text-ink">{r.depart}</b>
                           </p>
                         </div>
                       </div>

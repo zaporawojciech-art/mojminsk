@@ -18,6 +18,11 @@ import { NativeHeader, cn } from '../components/ui';
 import type { Ride, User } from '../data/mockData';
 import { GooglePlaceAutocompleteInput } from '../components/GooglePlaceAutocompleteInput';
 import { openGoogleMapsRoute } from '../services/googleMapsService';
+import {
+  formatRideDate,
+  formatRideDateFull,
+  getTodayIso,
+} from '../utils/rideDateUtils';
 
 interface AddRideModalProps {
   user: User;
@@ -61,7 +66,8 @@ export function AddRideModal({
   const [from, setFrom] = useState(defaultOrigin);
   const [to, setTo] = useState('Warszawa · Rondo Wiatraczna');
   const [destTag, setDestTag] = useState<string>('Warszawa');
-  const [dayMode, setDayMode] = useState<'today' | 'tomorrow' | 'weekdays'>('tomorrow');
+  const [dayMode, setDayMode] = useState<'today' | 'tomorrow' | 'weekdays' | 'custom'>('tomorrow');
+  const [customDate, setCustomDate] = useState<string>('');
   const [departTime, setDepartTime] = useState('07:15');
   const [seats, setSeats] = useState(3);
   const [price, setPrice] = useState('15');
@@ -100,7 +106,9 @@ export function AddRideModal({
     if (!from.trim() || !to.trim()) return;
 
     const dateLabel =
-      dayMode === 'today'
+      dayMode === 'custom' && customDate
+        ? customDate
+        : dayMode === 'today'
         ? 'Dziś'
         : dayMode === 'tomorrow'
         ? 'Jutro'
@@ -244,8 +252,15 @@ export function AddRideModal({
                 {/* Card 2: Termin, godzina, miejsca i zrzutka */}
                 <div className="space-y-3.5 rounded-3xl md:rounded-2xl md:border md:border-mist-200 bg-white p-4 md:p-5 shadow-card md:shadow-xs">
                   <div>
-                    <label className="text-[12px] font-bold text-ink-700">Kiedy jedziesz?</label>
-                    <div className="mt-1.5 grid grid-cols-3 gap-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[12px] font-bold text-ink-700">Kiedy jedziesz?</label>
+                      {dayMode === 'custom' && customDate ? (
+                        <span className="text-[11px] font-bold text-sky-850 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-200">
+                          {formatRideDateFull(customDate)}
+                        </span>
+                      ) : null}
+                    </div>
+                    <div className="mt-1.5 grid grid-cols-4 gap-1.5">
                       {(
                         [
                           { id: 'today', label: 'Dziś' },
@@ -256,10 +271,13 @@ export function AddRideModal({
                         <button
                           key={d.id}
                           type="button"
-                          onClick={() => setDayMode(d.id)}
+                          onClick={() => {
+                            setDayMode(d.id);
+                            setCustomDate('');
+                          }}
                           className={cn(
                             'rounded-xl py-2 text-[12px] font-bold transition-all cursor-pointer',
-                            dayMode === d.id
+                            dayMode === d.id && !customDate
                               ? 'bg-ink text-white shadow-xs'
                               : 'bg-mist text-ink-600 hover:bg-mist-200',
                           )}
@@ -267,6 +285,35 @@ export function AddRideModal({
                           {d.label}
                         </button>
                       ))}
+
+                      {/* Native Custom Date Picker */}
+                      <div className="relative">
+                        <button
+                          type="button"
+                          className={cn(
+                            'w-full h-full rounded-xl py-2 px-1 text-[11.5px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer',
+                            dayMode === 'custom' && customDate
+                              ? 'bg-ink text-white shadow-xs'
+                              : 'bg-mist text-ink-600 hover:bg-mist-200',
+                          )}
+                        >
+                          <Calendar className="h-3.5 w-3.5 shrink-0" />
+                          <span className="truncate">{customDate ? formatRideDate(customDate) : 'Data 📅'}</span>
+                        </button>
+                        <input
+                          type="date"
+                          min={getTodayIso()}
+                          value={customDate}
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              setCustomDate(e.target.value);
+                              setDayMode('custom');
+                            }
+                          }}
+                          aria-label="Wybierz dokładną datę wyjazdu z kalendarza"
+                          className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -423,7 +470,7 @@ export function AddRideModal({
                             <div className="flex items-center gap-1.5 mb-1">
                               <span className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-0.5 text-[10.5px] font-extrabold text-ink-700 shadow-2xs border border-mist-200">
                                 <Calendar className="h-3 w-3 text-ink-500" />
-                                {r.date || 'Jutro'}
+                                {formatRideDate(r.date)}
                               </span>
                             </div>
                             <p className="truncate text-[13px] font-bold text-ink">

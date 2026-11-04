@@ -22,38 +22,13 @@ import {
 import { Chip, StandardTopBar, cn } from '../components/ui';
 import { GooglePlaceAutocompleteInput } from '../components/GooglePlaceAutocompleteInput';
 import { openGoogleMapsRoute } from '../services/googleMapsService';
-
-export function formatRideDate(date?: string): string {
-  if (!date) return 'Jutro';
-  const lower = date.toLowerCase();
-  if (lower === 'today' || lower === 'dziś' || lower === 'dzis') return 'Dziś';
-  if (lower === 'tomorrow' || lower === 'jutro') return 'Jutro';
-  if (lower === 'weekdays' || lower.includes('pn') || lower.includes('robocz')) return 'Pn – Pt (dni robocze)';
-  return date;
-}
-
-export function getRideDateBadgeStyle(date?: string): { bg: string; text: string; border: string } {
-  const formatted = formatRideDate(date);
-  if (formatted === 'Dziś') {
-    return {
-      bg: 'bg-amber-50',
-      text: 'text-amber-900',
-      border: 'border-amber-200/90',
-    };
-  }
-  if (formatted.includes('Pn – Pt')) {
-    return {
-      bg: 'bg-emerald-50',
-      text: 'text-emerald-900',
-      border: 'border-emerald-200/90',
-    };
-  }
-  return {
-    bg: 'bg-sky-50',
-    text: 'text-sky-900',
-    border: 'border-sky-200/90',
-  };
-}
+import {
+  formatRideDate,
+  formatRideDateFull,
+  getRideDateBadgeStyle,
+  doesRideMatchDateFilter,
+  getTodayIso,
+} from '../utils/rideDateUtils';
 
 function cleanCarDescription(carText: string): string {
   if (!carText) return 'Samochód osobowy';
@@ -85,8 +60,10 @@ export function RidesScreen({
   const [searchFrom, setSearchFrom] = useState(defaultOrigin);
   const [searchTo, setSearchTo] = useState('');
   const [dest, setDest] = useState('Wszystkie');
-  const [dayFilter, setDayFilter] = useState<'all' | 'today' | 'tomorrow' | 'weekdays'>('all');
+  const [dateFilter, setDateFilter] = useState<string>('all');
   const [seatsNeeded, setSeatsNeeded] = useState(1);
+
+  const todayIso = getTodayIso();
 
   const handleSwapSearch = () => {
     setSearchFrom(searchTo || 'Warszawa · Centrum');
@@ -120,11 +97,8 @@ export function RidesScreen({
     if (dest !== 'Wszystkie' && r.dest.toLowerCase() !== dest.toLowerCase()) {
       return false;
     }
-    if (dayFilter !== 'all') {
-      const formatted = formatRideDate(r.date);
-      if (dayFilter === 'today' && formatted !== 'Dziś') return false;
-      if (dayFilter === 'tomorrow' && formatted !== 'Jutro') return false;
-      if (dayFilter === 'weekdays' && !formatted.includes('Pn – Pt')) return false;
+    if (!doesRideMatchDateFilter(r.date, dateFilter)) {
+      return false;
     }
     if (searchTo.trim() && dest === 'Wszystkie') {
       const q = searchTo.trim().toLowerCase();
@@ -226,9 +200,9 @@ export function RidesScreen({
               </div>
             )}
 
-            {/* Day & Seats Controls */}
+            {/* Day & Date Filter Controls */}
             <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-2">
-              {/* Day Filter Pills */}
+              {/* Date Filter Pills */}
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1 flex-1 no-scrollbar">
                 {(
                   [
@@ -241,11 +215,11 @@ export function RidesScreen({
                   <button
                     key={d.id}
                     type="button"
-                    onClick={() => setDayFilter(d.id)}
-                    aria-pressed={dayFilter === d.id}
+                    onClick={() => setDateFilter(d.id)}
+                    aria-pressed={dateFilter === d.id}
                     className={cn(
                       'h-9 px-3 rounded-full text-[12px] font-bold transition-all whitespace-nowrap cursor-pointer',
-                      dayFilter === d.id
+                      dateFilter === d.id
                         ? 'bg-ink text-white shadow-xs'
                         : 'bg-mist text-ink-600 hover:bg-mist-200',
                     )}
@@ -253,6 +227,50 @@ export function RidesScreen({
                     {d.label}
                   </button>
                 ))}
+
+                {/* Native System Date Picker Button */}
+                <div className="relative shrink-0">
+                  <button
+                    type="button"
+                    aria-label="Wybierz dokładną datę wyjazdu z kalendarza"
+                    className={cn(
+                      'h-9 px-3 rounded-full text-[12px] font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer',
+                      /^\d{4}-\d{2}-\d{2}$/.test(dateFilter)
+                        ? 'bg-sky-100 text-sky-950 border border-sky-300 shadow-2xs font-extrabold'
+                        : 'bg-mist text-ink-600 hover:bg-mist-200',
+                    )}
+                  >
+                    <Calendar className="h-3.5 w-3.5 text-ink-600 shrink-0" />
+                    <span>
+                      {/^\d{4}-\d{2}-\d{2}$/.test(dateFilter)
+                        ? formatRideDate(dateFilter)
+                        : 'Data 📅'}
+                    </span>
+                  </button>
+                  <input
+                    type="date"
+                    min={todayIso}
+                    value={/^\d{4}-\d{2}-\d{2}$/.test(dateFilter) ? dateFilter : ''}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        setDateFilter(e.target.value);
+                      }
+                    }}
+                    className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
+                  />
+                </div>
+
+                {/^\d{4}-\d{2}-\d{2}$/.test(dateFilter) && (
+                  <button
+                    type="button"
+                    onClick={() => setDateFilter('all')}
+                    aria-label="Wyczyść filtr wybranej daty"
+                    className="grid h-7 w-7 place-items-center rounded-full bg-mist-300 text-ink-600 hover:bg-mist-400 text-[11px] font-bold cursor-pointer shrink-0"
+                    title="Wyczyść datę"
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
 
               {/* Seats Stepper */}
@@ -280,6 +298,25 @@ export function RidesScreen({
                 </button>
               </div>
             </div>
+
+            {/* Active custom date summary alert badge */}
+            {/^\d{4}-\d{2}-\d{2}$/.test(dateFilter) && (
+              <div className="mt-2.5 flex items-center justify-between rounded-xl bg-sky-50/90 px-3 py-1.5 border border-sky-200/80 text-[11.5px]">
+                <span className="font-medium text-sky-950 flex items-center gap-1.5 truncate">
+                  <Calendar className="h-3.5 w-3.5 text-sky-700 shrink-0" />
+                  <span className="truncate">
+                    Wybrana data: <b className="font-extrabold">{formatRideDateFull(dateFilter)}</b>
+                  </span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setDateFilter('all')}
+                  className="text-sky-700 font-bold hover:underline cursor-pointer shrink-0 ml-2"
+                >
+                  Wszystkie dni
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -314,6 +351,7 @@ export function RidesScreen({
                   onClick={() => {
                     setDest('Wszystkie');
                     setSearchTo('');
+                    setDateFilter('all');
                     setSeatsNeeded(1);
                   }}
                   className="mt-4 inline-flex h-10 items-center justify-center rounded-full bg-ink px-5 text-[12.5px] font-bold text-white active:scale-95 cursor-pointer"
