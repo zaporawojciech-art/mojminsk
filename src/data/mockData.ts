@@ -1149,6 +1149,7 @@ export interface Ride {
   seats: number;
   price: number;
   car: string;
+  date?: string;
 }
 
 export const rides: Ride[] = [];

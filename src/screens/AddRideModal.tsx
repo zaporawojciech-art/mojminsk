@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   ArrowRight,
   ArrowUpDown,
+  Calendar,
   Car,
   CheckCircle2,
   Clock,
@@ -98,6 +99,13 @@ export function AddRideModal({
     e.preventDefault();
     if (!from.trim() || !to.trim()) return;
 
+    const dateLabel =
+      dayMode === 'today'
+        ? 'Dziś'
+        : dayMode === 'tomorrow'
+        ? 'Jutro'
+        : 'Pn – Pt';
+
     const newRide: Ride = {
       id: `rd_${Date.now()}`,
       driver: user.name,
@@ -112,6 +120,7 @@ export function AddRideModal({
       seats,
       price: Math.max(0, parseInt(price || '0', 10) || 0),
       car: car.trim() || 'Samochód osobowy',
+      date: dateLabel,
     };
 
     setIsCreated(true);
@@ -411,6 +420,12 @@ export function AddRideModal({
                           className="flex items-center justify-between gap-3 rounded-2xl md:rounded-xl bg-mist/70 p-3"
                         >
                           <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-0.5 text-[10.5px] font-extrabold text-ink-700 shadow-2xs border border-mist-200">
+                                <Calendar className="h-3 w-3 text-ink-500" />
+                                {r.date || 'Jutro'}
+                              </span>
+                            </div>
                             <p className="truncate text-[13px] font-bold text-ink">
                               {r.from} → {r.to}
                             </p>

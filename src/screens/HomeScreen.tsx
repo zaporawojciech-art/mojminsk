@@ -2073,7 +2073,7 @@ export function HomeScreen({
                             {r.from} ➔ {r.to}
                           </p>
                           <p className="truncate text-[11px] font-medium text-ink-500">
-                            {r.driver} · {formatResidentLabel(r.driverAs)} · wyjazd <b className="text-ink">{r.depart}</b>
+                            {r.driver} · {formatResidentLabel(r.driverAs)} · <span className="font-bold text-ink-700">{r.date || 'Jutro'}</span>, wyjazd <b className="text-ink">{r.depart}</b>
                           </p>
                         </div>
                       </div>

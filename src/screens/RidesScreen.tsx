@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import {
   ArrowUpDown,
+  Calendar,
   Car,
   Check,
   ExternalLink,
@@ -21,6 +22,43 @@ import {
 import { Chip, StandardTopBar, cn } from '../components/ui';
 import { GooglePlaceAutocompleteInput } from '../components/GooglePlaceAutocompleteInput';
 import { openGoogleMapsRoute } from '../services/googleMapsService';
+
+export function formatRideDate(date?: string): string {
+  if (!date) return 'Jutro';
+  const lower = date.toLowerCase();
+  if (lower === 'today' || lower === 'dziś' || lower === 'dzis') return 'Dziś';
+  if (lower === 'tomorrow' || lower === 'jutro') return 'Jutro';
+  if (lower === 'weekdays' || lower.includes('pn') || lower.includes('robocz')) return 'Pn – Pt (dni robocze)';
+  return date;
+}
+
+export function getRideDateBadgeStyle(date?: string): { bg: string; text: string; border: string } {
+  const formatted = formatRideDate(date);
+  if (formatted === 'Dziś') {
+    return {
+      bg: 'bg-amber-50',
+      text: 'text-amber-900',
+      border: 'border-amber-200/90',
+    };
+  }
+  if (formatted.includes('Pn – Pt')) {
+    return {
+      bg: 'bg-emerald-50',
+      text: 'text-emerald-900',
+      border: 'border-emerald-200/90',
+    };
+  }
+  return {
+    bg: 'bg-sky-50',
+    text: 'text-sky-900',
+    border: 'border-sky-200/90',
+  };
+}
+
+function cleanCarDescription(carText: string): string {
+  if (!carText) return 'Samochód osobowy';
+  return carText.replace(/\s*·\s*(Jutro|Dziś|Dni robocze|Pn\s*–\s*Pt)\s*$/i, '').trim() || carText;
+}
 
 const dests = ['Wszystkie', 'Warszawa', 'Halinów', 'Sulejówek', 'Stojadła', 'Dębe Wielkie'];
 
@@ -47,7 +85,7 @@ export function RidesScreen({
   const [searchFrom, setSearchFrom] = useState(defaultOrigin);
   const [searchTo, setSearchTo] = useState('');
   const [dest, setDest] = useState('Wszystkie');
-  const [day, setDay] = useState<'today' | 'tomorrow'>('tomorrow');
+  const [dayFilter, setDayFilter] = useState<'all' | 'today' | 'tomorrow' | 'weekdays'>('all');
   const [seatsNeeded, setSeatsNeeded] = useState(1);
 
   const handleSwapSearch = () => {
@@ -81,6 +119,12 @@ export function RidesScreen({
   const filteredRides = ridesList.filter((r) => {
     if (dest !== 'Wszystkie' && r.dest.toLowerCase() !== dest.toLowerCase()) {
       return false;
+    }
+    if (dayFilter !== 'all') {
+      const formatted = formatRideDate(r.date);
+      if (dayFilter === 'today' && formatted !== 'Dziś') return false;
+      if (dayFilter === 'tomorrow' && formatted !== 'Jutro') return false;
+      if (dayFilter === 'weekdays' && !formatted.includes('Pn – Pt')) return false;
     }
     if (searchTo.trim() && dest === 'Wszystkie') {
       const q = searchTo.trim().toLowerCase();
@@ -183,44 +227,56 @@ export function RidesScreen({
             )}
 
             {/* Day & Seats Controls */}
-            <div className="mt-3 flex items-center gap-2">
-              {(['today', 'tomorrow'] as const).map((d) => (
-                <button
-                  key={d}
-                  type="button"
-                  onClick={() => setDay(d)}
-                  aria-pressed={day === d}
-                  className={cn(
-                    'h-10 flex-1 rounded-full text-[13px] font-bold transition-colors',
-                    day === d ? 'bg-sky text-ink shadow-xs' : 'bg-mist text-ink-500 hover:text-ink',
-                  )}
-                >
-                  {d === 'today' ? 'Dziś' : 'Jutro'}
-                </button>
-              ))}
+            <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-2">
+              {/* Day Filter Pills */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 flex-1 no-scrollbar">
+                {(
+                  [
+                    { id: 'all', label: 'Wszystkie' },
+                    { id: 'today', label: 'Dziś' },
+                    { id: 'tomorrow', label: 'Jutro' },
+                    { id: 'weekdays', label: 'Pn – Pt' },
+                  ] as const
+                ).map((d) => (
+                  <button
+                    key={d.id}
+                    type="button"
+                    onClick={() => setDayFilter(d.id)}
+                    aria-pressed={dayFilter === d.id}
+                    className={cn(
+                      'h-9 px-3 rounded-full text-[12px] font-bold transition-all whitespace-nowrap cursor-pointer',
+                      dayFilter === d.id
+                        ? 'bg-ink text-white shadow-xs'
+                        : 'bg-mist text-ink-600 hover:bg-mist-200',
+                    )}
+                  >
+                    {d.label}
+                  </button>
+                ))}
+              </div>
 
               {/* Seats Stepper */}
-              <div className="flex h-10 items-center gap-1.5 rounded-full bg-mist px-2">
+              <div className="flex h-9 items-center justify-between sm:justify-start gap-1.5 rounded-full bg-mist px-2 self-start sm:self-auto shrink-0">
                 <button
                   type="button"
                   onClick={() => setSeatsNeeded((s) => Math.max(1, s - 1))}
                   aria-label="Mniej miejsc"
-                  className="grid h-7 w-7 place-items-center rounded-full bg-white text-ink shadow-xs active:scale-90 disabled:opacity-40"
+                  className="grid h-6 w-6 place-items-center rounded-full bg-white text-ink shadow-xs active:scale-90 disabled:opacity-40"
                   disabled={seatsNeeded <= 1}
                 >
-                  <Minus className="h-3.5 w-3.5" />
+                  <Minus className="h-3 w-3" />
                 </button>
-                <span className="min-w-[54px] text-center text-[12.5px] font-bold text-ink">
+                <span className="min-w-[46px] text-center text-[12px] font-bold text-ink">
                   {seatsNeeded} {seatsNeeded === 1 ? 'osoba' : 'osoby'}
                 </span>
                 <button
                   type="button"
                   onClick={() => setSeatsNeeded((s) => Math.min(4, s + 1))}
                   aria-label="Więcej miejsc"
-                  className="grid h-7 w-7 place-items-center rounded-full bg-white text-ink shadow-xs active:scale-90 disabled:opacity-40"
+                  className="grid h-6 w-6 place-items-center rounded-full bg-white text-ink shadow-xs active:scale-90 disabled:opacity-40"
                   disabled={seatsNeeded >= 4}
                 >
-                  <Plus className="h-3.5 w-3.5" />
+                  <Plus className="h-3 w-3" />
                 </button>
               </div>
             </div>
@@ -273,10 +329,43 @@ export function RidesScreen({
                   r.driver.toLowerCase() === user.name.toLowerCase() &&
                   r.id.startsWith('rd_');
                 const availableSeats = Math.max(0, r.seats - (isBooked ? seatsNeeded : 0));
+                const rideDateLabel = formatRideDate(r.date);
+                const dateStyle = getRideDateBadgeStyle(r.date);
 
                 return (
-                  <article key={r.id} className="rounded-4xl bg-white p-5 shadow-card border border-mist-200 flex flex-col justify-between">
+                  <article
+                    key={r.id}
+                    className="rounded-4xl bg-white p-5 shadow-card border border-mist-200 flex flex-col justify-between hover:border-mist-300 transition-colors"
+                  >
                     <div>
+                      {/* Top Header: Prominent Date Badge + Seats Badge */}
+                      <div className="flex items-center justify-between gap-2 border-b border-mist/80 pb-3 mb-3.5">
+                        <div
+                          className={cn(
+                            'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-extrabold border shadow-2xs',
+                            dateStyle.bg,
+                            dateStyle.text,
+                            dateStyle.border,
+                          )}
+                        >
+                          <Calendar className="h-3.5 w-3.5 shrink-0" />
+                          <span>{rideDateLabel}</span>
+                        </div>
+
+                        <div className="flex items-center gap-1 text-[11.5px] font-semibold text-ink-500">
+                          <Users className="h-3.5 w-3.5 text-ink-400" />
+                          <span>
+                            <b className="text-ink">{availableSeats}</b>{' '}
+                            {availableSeats === 1
+                              ? 'wolne miejsce'
+                              : availableSeats >= 2 && availableSeats <= 4
+                              ? 'wolne miejsca'
+                              : 'wolnych miejsc'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Route & Times */}
                       <div className="flex gap-4">
                         <div className="flex flex-col items-center pt-1" aria-hidden>
                           <span className="h-2.5 w-2.5 rounded-full bg-ink" />
@@ -286,16 +375,28 @@ export function RidesScreen({
                         <div className="min-w-0 flex-1 space-y-3">
                           <div className="flex items-baseline justify-between gap-2">
                             <p className="truncate text-[14.5px] font-semibold text-ink-700">{r.from}</p>
-                            <p className="font-display text-[20px] font-semibold">{r.depart}</p>
+                            <div className="text-right shrink-0">
+                              <span className="text-[10px] uppercase font-bold text-ink-400 block -mb-0.5">wyjazd</span>
+                              <p className="font-display text-[20px] font-extrabold text-ink leading-tight">{r.depart}</p>
+                            </div>
                           </div>
                           <div className="flex items-baseline justify-between gap-2">
                             <p className="truncate text-[14.5px] font-semibold text-ink-700">{r.to}</p>
-                            <p className="font-display text-[20px] font-semibold text-ink-400">{r.arrive}</p>
+                            <div className="text-right shrink-0">
+                              <span className="text-[10px] uppercase font-bold text-ink-400 block -mb-0.5">przyjazd</span>
+                              <p className="font-display text-[20px] font-semibold text-ink-400 leading-tight">{r.arrive}</p>
+                            </div>
                           </div>
                         </div>
                       </div>
+
+                      {/* Driver & Car Details */}
                       <div className="mt-4 flex items-center gap-3 border-t border-mist pt-3">
-                        <img src={avatarUrl(getRideDriverSeed(r, user))} alt="" className="h-10 w-10 rounded-2xl bg-sand-100" />
+                        <img
+                          src={avatarUrl(getRideDriverSeed(r, user))}
+                          alt=""
+                          className="h-10 w-10 rounded-2xl bg-sand-100 object-cover shrink-0"
+                        />
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-[13.5px] font-bold text-ink">
                             {r.driver}
@@ -303,16 +404,15 @@ export function RidesScreen({
                           <p className="truncate text-[11.5px] font-medium text-ink-500">
                             {formatResidentLabel(r.driverAs)}
                           </p>
-                          <p className="flex items-center gap-1 text-[11.5px] text-ink-400">
-                            <Car className="h-3.5 w-3.5 text-ink-400" aria-hidden />
-                            {r.car} · {day === 'today' ? 'Dziś' : 'Jutro'}
+                          <p className="flex items-center gap-1.5 text-[11.5px] text-ink-500 mt-0.5">
+                            <Car className="h-3.5 w-3.5 text-ink-400 shrink-0" aria-hidden />
+                            <span className="truncate">{cleanCarDescription(r.car)}</span>
                           </p>
                         </div>
-                        <div className="text-right">
-                          <p className="font-display text-[20px] font-semibold">{r.price} zł</p>
-                          <p className="flex items-center justify-end gap-1 text-[11px] text-ink-400">
-                            <Users className="h-3 w-3" aria-hidden />
-                            {availableSeats} {availableSeats === 1 ? 'miejsce' : 'miejsca'}
+                        <div className="text-right shrink-0">
+                          <p className="font-display text-[20px] font-extrabold text-ink leading-none">{r.price} zł</p>
+                          <p className="mt-0.5 text-[10.5px] font-semibold text-ink-400">
+                            zrzutka / os.
                           </p>
                         </div>
                       </div>

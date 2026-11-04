@@ -360,6 +360,7 @@ interface DbRide {
   seats: number;
   price: number;
   car: string;
+  ride_date?: string | null;
 }
 
 export async function fetchRidesFromSupabase(): Promise<Ride[] | null> {
@@ -379,6 +380,7 @@ export async function fetchRidesFromSupabase(): Promise<Ride[] | null> {
     seats: r.seats,
     price: Number(r.price),
     car: r.car,
+    date: r.ride_date || 'Jutro',
   }));
 }
 
@@ -401,6 +403,7 @@ export async function createRideInSupabase(ride: Ride): Promise<void> {
         seats: ride.seats,
         price: ride.price,
         car: ride.car,
+        ride_date: ride.date || 'Jutro',
       }),
     },
     'return=minimal',
