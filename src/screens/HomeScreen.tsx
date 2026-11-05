@@ -13,12 +13,14 @@ import {
   MapPin,
   Megaphone,
   MessageCircle,
+  Moon,
   Newspaper,
   Plus,
   RefreshCw,
   ShieldCheck,
   Sparkles,
   Star,
+  Sun,
   Tag,
   TriangleAlert,
   Users,
@@ -278,10 +280,10 @@ function WeatherCard({
                         <span>Bez opadów</span>
                       )}
                     </div>
-                    <div className="text-right shrink-0">
-                      <span className="text-slate-600 font-bold text-[12.5px]">{d.minTemp}°</span>{' '}
-                      <span className="text-slate-400 font-normal text-[10.5px]">/</span>{' '}
-                      <span className="text-ink font-black font-display text-[14px]">{d.maxTemp}°</span>
+                    <div className="text-right shrink-0 flex items-center justify-end gap-1.5">
+                      <span className="text-ink font-black font-display text-[14px]" title="Temperatura w dzień">{d.maxTemp}°</span>
+                      <span className="text-slate-300 text-[11px]">/</span>
+                      <span className="text-slate-500 font-bold text-[12px]" title="Temperatura w nocy">{d.minTemp}°</span>
                     </div>
                   </div>
                 ))}
@@ -359,10 +361,6 @@ function DesktopWeatherWidget({
 }) {
   const [tab, setTab] = useState<'today' | 'daily' | 'biomet'>('today');
   const alert = weather.alerts[0];
-
-  const allMax = Math.max(...weather.daily.map((d) => d.maxTemp), weather.max);
-  const allMin = Math.min(...weather.daily.map((d) => d.minTemp), weather.min);
-  const tempRange = Math.max(1, allMax - allMin);
 
   return (
     <section className="h-full rounded-2xl bg-gradient-to-br from-sky/45 via-sky/20 to-white/90 p-4 shadow-xs border border-sky-200/80 text-ink flex flex-col justify-between gap-3">
@@ -503,63 +501,70 @@ function DesktopWeatherWidget({
       {/* TAB 2: NEXT 7 DAYS INLINE */}
       {tab === 'daily' && (
         <div className="grid grid-cols-7 gap-2 items-stretch py-1">
-          {weather.daily.map((d, idx) => {
-            const leftPercent = Math.max(0, Math.min(100, ((d.minTemp - allMin) / tempRange) * 100));
-            const widthPercent = Math.max(16, Math.min(100 - leftPercent, ((d.maxTemp - d.minTemp) / tempRange) * 100));
+          {weather.daily.map((d, idx) => (
+            <div
+              key={d.date}
+              className={cn(
+                'flex flex-col items-center justify-between rounded-xl p-2.5 text-center border shadow-2xs transition-colors',
+                idx === 0
+                  ? 'bg-white/95 border-sky-300 ring-1 ring-sky-300'
+                  : 'bg-white/80 border-white/80 hover:bg-white'
+              )}
+            >
+              <div>
+                <p className="text-[11px] font-extrabold text-ink leading-tight">
+                  {d.dayName}
+                </p>
+                <p className="text-[9.5px] text-ink-400 font-medium">{d.fullDate}</p>
+              </div>
 
-            return (
-              <div
-                key={d.date}
-                className={cn(
-                  'flex flex-col items-center justify-between rounded-xl p-2.5 text-center border shadow-2xs transition-colors',
-                  idx === 0
-                    ? 'bg-white/95 border-sky-300 ring-1 ring-sky-300'
-                    : 'bg-white/80 border-white/80 hover:bg-white'
+              <div className="my-1.5 flex flex-col items-center">
+                <WeatherIllustration icon={d.icon} isDay animated={false} className="h-11 w-11" />
+                <p className="text-[10px] font-bold text-ink line-clamp-1 mt-1 max-w-[85px]" title={d.condition}>
+                  {d.condition}
+                </p>
+                {d.rainChance > 0 ? (
+                  <span className="text-[9.5px] font-extrabold text-sky-700 mt-0.5">
+                    {d.rainChance}% ({d.rainSum} mm)
+                  </span>
+                ) : (
+                  <span className="text-[9px] font-semibold text-ink-400 mt-0.5">Bez opadów</span>
                 )}
-              >
-                <div>
-                  <p className="text-[11px] font-extrabold text-ink leading-tight">
-                    {d.dayName}
-                  </p>
-                  <p className="text-[9.5px] text-ink-400 font-medium">{d.fullDate}</p>
-                </div>
+              </div>
 
-                <div className="my-1.5 flex flex-col items-center">
-                  <WeatherIllustration icon={d.icon} isDay animated={false} className="h-11 w-11" />
-                  <p className="text-[10px] font-bold text-ink line-clamp-1 mt-1 max-w-[85px]" title={d.condition}>
-                    {d.condition}
-                  </p>
-                  {d.rainChance > 0 ? (
-                    <span className="text-[9.5px] font-extrabold text-sky-700 mt-0.5">
-                      {d.rainChance}% ({d.rainSum} mm)
-                    </span>
-                  ) : (
-                    <span className="text-[9px] font-semibold text-ink-400 mt-0.5">Bez opadów</span>
+              {/* DZIEN / NOC TEMPERATURE PILL */}
+              <div className="w-full pt-2 border-t border-slate-200/70">
+                <div
+                  className={cn(
+                    'grid grid-cols-2 gap-0.5 rounded-lg p-1 border transition-colors',
+                    idx === 0
+                      ? 'bg-sky-50/70 border-sky-200/70'
+                      : 'bg-slate-50/90 border-slate-200/70'
                   )}
-                </div>
-
-                <div className="w-full pt-2 border-t border-slate-200/80">
-                  <div className="flex items-baseline justify-between px-1">
-                    <span className="text-[13px] font-bold text-slate-600">
-                      {d.minTemp}°
-                    </span>
-                    <span className="font-display text-[16px] font-black text-ink">
+                >
+                  <div className="text-center py-0.5">
+                    <div className="flex items-center justify-center gap-0.5 text-[8.5px] font-bold text-amber-700 uppercase tracking-tight">
+                      <Sun className="h-2.5 w-2.5 text-amber-500 shrink-0" aria-hidden />
+                      <span>Dzień</span>
+                    </div>
+                    <span className="font-display text-[15px] font-black text-ink leading-tight block mt-0.5">
                       {d.maxTemp}°
                     </span>
                   </div>
-                  <div className="relative h-2 w-full rounded-full bg-slate-200 mt-1.5 overflow-hidden">
-                    <div
-                      className="absolute top-0 bottom-0 rounded-full bg-gradient-to-r from-sky-500 via-amber-500 to-rose-500"
-                      style={{
-                        left: `${leftPercent}%`,
-                        width: `${widthPercent}%`,
-                      }}
-                    />
+
+                  <div className="border-l border-slate-200/80 text-center py-0.5">
+                    <div className="flex items-center justify-center gap-0.5 text-[8.5px] font-bold text-slate-500 uppercase tracking-tight">
+                      <Moon className="h-2.5 w-2.5 text-indigo-400 shrink-0" aria-hidden />
+                      <span>Noc</span>
+                    </div>
+                    <span className="font-display text-[14px] font-bold text-slate-600 leading-tight block mt-0.5">
+                      {d.minTemp}°
+                    </span>
                   </div>
                 </div>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       )}
 
